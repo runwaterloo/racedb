@@ -1,0 +1,218 @@
+from collections import namedtuple
+from django.db.models import Min, Count                                          
+from .models import *      
+
+namedresult = namedtuple('nr', ['place', 'guntime', 'athlete',               
+                                'year', 'category',                          
+                                'city', 'age',
+                                'race_slug', 'member'])                             
+namedteamrecord = namedtuple('ntr', ['team_category_name', 'team_category_slug', 'total_time', 'winning_team', 'year', 'avg_time', 'race_slug'])
+def getwinnersdict():
+    namedwinner = namedtuple('nw', ['athlete', 'guntime'])
+    malewinners = Event.objects.filter(result__gender='M') \
+                                       .annotate(max_score=Min('result__place')) \
+                                       .values_list('id', 'result__athlete', 'result__guntime')
+    malewinnersdict = dict([(a, namedwinner(b, c)) for a, b, c in malewinners])
+    femalewinners = Event.objects.filter(result__gender='F') \
+                                         .annotate(max_score=Min('result__place')) \
+                                         .values_list('id', 'result__athlete', 'result__guntime')
+    femalewinnersdict = dict([(a, namedwinner(b, c)) for a, b, c in femalewinners])
+    return malewinnersdict, femalewinnersdict
+
+def getracerecords(race, distance, division_choice=False):
+    membership = get_membership()
+    race = Race.objects.get(id=race.id)                                      
+    races = create_samerace_list(race)
+    if distance.slug == 'combined':
+        events = []
+        rawresults = Endurraceresult.objects.all()
+        mrtime = rawresults.filter(gender="M").order_by('guntime')[:1][0].guntime              
+        mr = rawresults.filter(gender="M", guntime=mrtime).order_by('year')
+        frtime = rawresults.filter(gender="F").order_by('guntime')[:1][0].guntime              
+        fr = rawresults.filter(gender="F", guntime=frtime).order_by('year')
+        try:                                                                         
+            mmrtime = rawresults.filter(gender="M", category__ismasters=True).order_by('guntime')[:1][0].guntime
+        except:                                                                      
+            mmr = False                                                              
+        else:
+            mmr = rawresults.filter(gender="M", category__ismasters=True, guntime=mmrtime).order_by('year')
+        try:                                                                         
+            fmrtime = rawresults.filter(gender="F", category__ismasters=True).order_by('guntime')[:1][0].guntime
+        except:                                                                      
+            fmr = False                                                              
+        else:
+            fmr = rawresults.filter(gender="F", category__ismasters=True, guntime=fmrtime).order_by('year')
+    else:
+        events = Event.objects.filter(race__in=races, distance=distance)                                      
+        if division_choice and division_choice != 'All' and race.slug == 'endurrun':
+            rawresults = Result.objects.filter(event__race=race, event__distance=distance, division=division_choice)
+        else:
+            rawresults = Result.objects.filter(event__race__in=races, event__distance=distance)
+        mrtime = rawresults.filter(gender="M").order_by('guntime')[:1][0].guntime              
+        mr = rawresults.filter(gender="M", guntime=mrtime).order_by('event__date')
+        frtime = rawresults.filter(gender="F").order_by('guntime')[:1][0].guntime              
+        fr = rawresults.filter(gender="F", guntime=frtime).order_by('event__date')
+        if race.slug != 'endurrun':
+            try:                                                                         
+                mmrtime = rawresults.filter(gender="M", category__ismasters=True).order_by('guntime')[:1][0].guntime
+            except:                                                                      
+                mmr = False                                                              
+            else:
+                mmr = rawresults.filter(gender="M", category__ismasters=True, guntime=mmrtime).order_by('event__date')
+            try:                                                                         
+                fmrtime = rawresults.filter(gender="F", category__ismasters=True).order_by('guntime')[:1][0].guntime
+            except:                                                                      
+                fmr = False                                                              
+            else:
+                fmr = rawresults.filter(gender="F", category__ismasters=True, guntime=fmrtime).order_by('event__date')
+        elif race.slug == 'endurrun':
+            try:                                                                         
+                mmrtime = rawresults.filter(gender="M", age__gte=40).order_by('guntime')[:1][0].guntime
+            except:                                                                      
+                mmr = False                                                              
+            else:
+                mmr = rawresults.filter(gender="M", age__gte=40, guntime=mmrtime).order_by('event__date')
+            try:                                                                         
+                fmrtime = rawresults.filter(gender="F", age__gte=40).order_by('guntime')[:1][0].guntime
+            except:                                                                      
+                fmr = False                                                              
+            else:
+                fmr = rawresults.filter(gender="F", age__gte=40, guntime=fmrtime).order_by('event__date')
+    records = []
+    records += makerecords('Overall Male', mrtime, mr, distance, membership)
+    records += makerecords('Overall Female', frtime, fr, distance, membership)
+    if mmr:                                                                      
+        records += makerecords('Masters Male', mmrtime, mmr, distance, membership)
+    if fmr:                                                                      
+        records += makerecords('Masters Female', fmrtime, fmr, distance, membership)
+
+    team_records = []
+    team_categories = Teamcategory.objects.all().exclude(name="Family").exclude(name="Open 8").exclude(name="Masters 4").exclude(name="Masters 5").exclude(name="Open 10").exclude(name="Open 4").exclude(name="Open 15").exclude(name="Corporate 5").exclude(name="Corporate 3 Mixed").exclude(name="Corporate 3 Men")
+    if race.slug == 'waterloo-classic':
+        team_categories = team_categories.exclude(name="2 Person Relay")
+    category_records = {}
+    for event in events:
+        winning_teams = Teamresult.objects.of_event(event)
+        for w in winning_teams:
+            for t in team_categories:
+                if w.team_category.name == t.name:
+                    if t.name in category_records:
+                        if w.total_time < category_records[t.name][0].total_time:
+                            category_records[t.name] = [w,]
+                        elif w.total_time == category_records[t.name][0].total_time:
+                            category_records[t.name] += w
+                    else:
+                        category_records[t.name] = [w,]
+    for t in team_categories:
+        if t.name in category_records:
+            for record in category_records[t.name]:
+                # Bug workaround, weird behaviour without this
+                try:
+                    record.team_category
+                except:
+                    continue
+                # End bug workaround
+                team_records.append(namedteamrecord(record.team_category.name,
+                                                    record.team_category.slug,
+                                                    str(record.total_time),
+                                                    record.winning_team,
+                                                    record.event.date.year,
+                                                    str(record.avg_time),
+                                                    record.event.race.slug))
+    hill_records = []
+    if race.slug == 'baden-road-races' and distance.slug == '7-mi':
+        primeresults = Prime.objects.filter(event__race__slug=race.slug,
+                                            event__distance__slug=distance.slug)
+        results = Result.objects.filter(event__race__slug=race.slug,
+                                        event__distance__slug=distance.slug)
+        mptime = primeresults.filter(gender='M').order_by('time')[:1][0].time
+        mptimes = primeresults.filter(gender='M', time=mptime)
+        male_results = []
+        for m in mptimes:
+            result = results.get(event=m.event, place=m.place)
+            male_results.append([m, result])
+        for r in male_results:
+            member = get_member(r[1], membership)
+            hill_records.append(namedresult('Overall Male', str(r[0].time).lstrip('0:'), r[1].athlete, r[1].event.date.year, r[1].category.name, r[1].city, False, r[1].event.race.slug, member))
+        fptime = primeresults.filter(gender='F').order_by('time')[:1][0].time
+        fptimes = primeresults.filter(gender='F', time=fptime)
+        female_results = []
+        for f in fptimes:
+            result = results.get(event=f.event, place=f.place)
+            female_results.append([f, result])
+        for r in female_results:
+            member = get_member(r[1], membership)
+            hill_records.append(namedresult('Overall Female', str(r[0].time).lstrip('0:'), r[1].athlete, r[1].event.date.year, r[1].category.name, r[1].city, False, r[1].event.race.slug, member))
+    return records, team_records, hill_records
+
+def makerecords(place, rtime, results, distance, membership):
+    records = []
+    for result in results:
+        if distance.slug == 'combined':
+            member = get_member_endurrace(result, membership)
+            records.append(namedresult(place, rtime, result.athlete, result.year, result.category.name, result.city, False, 'endurrace', member))
+        else:
+            member = get_member(result, membership)
+            records.append(namedresult(place, rtime, result.athlete, result.event.date.year, result.category.name, result.city, result.age, result.event.race.slug, member))
+    return records
+
+def create_samerace_list(race):
+    """ Make a list of races that are the same """
+    races = [race, ]
+    for i in Samerace.objects.filter(current_race=race):
+        races.append(i.old_race)
+    for i in Samerace.objects.filter(old_race=race):
+        races.append(i.current_race)
+    return races
+
+def get_membership(event=False):
+    named_membership = namedtuple('nm', ['names', 'includes', 'excludes'])
+    names = {}
+    for m in Rwmember.objects.filter(active=True):
+        names[m.name.lower()] = m
+        if m.altname != '':
+            names[m.altname.lower()] = m
+    includes = {}
+    dbinclude = Rwmembercorrection.objects.filter(correction_type='include')
+    if event:
+        dbinclude = dbinclude.filter(event=event)
+    for i in dbinclude:
+        includes['{}-{}'.format(i.event.id, i.place)] = i.rwmember
+    excludes = {}
+    dbexclude = Rwmembercorrection.objects.filter(correction_type='exclude')
+    if event:
+        dbexclude = dbexclude.filter(event=event)
+    for e in dbexclude:
+        if e.place in excludes:
+            excludes['{}-{}'.format(e.event.id, e.place)] += e.rwmember
+        else:
+            excludes['{}-{}'.format(e.event.id, e.place)] = [e.rwmember, ]
+    membership = named_membership(names, includes, excludes)
+    return membership
+
+def get_member_dict():
+    dbmembers = Rwmember.objects.filter(active=True)
+    member_dict = {}
+    for m in dbmembers:
+        member_dict[m.name.lower()] = m
+    return member_dict
+
+def get_member(result, membership):
+    member = False
+    lower_athlete = result.athlete.lower()
+    if lower_athlete in membership.names:
+        member = membership.names[lower_athlete]
+    if '{}-{}'.format(result.event.id, result.place) in membership.includes:
+        member = membership.includes['{}-{}'.format(result.event.id, result.place)]
+    if member:
+        if '{}-{}'.format(result.event.id, result.place) in membership.excludes:
+            if member in membership.excludes['{}-{}'.format(result.event.id, result.place)]:
+                member = False
+    return member
+
+def get_member_endurrace(result, membership):
+    member = False
+    lower_athlete = result.athlete.lower()
+    if lower_athlete in membership.names:
+        member = membership.names[lower_athlete]
+    return member

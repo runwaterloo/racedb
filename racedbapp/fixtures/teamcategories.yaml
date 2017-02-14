@@ -1,0 +1,102 @@
+- model: racedbapp.teamcategory
+  pk: 1
+  fields:
+    name: Open
+    slug: open
+    sortorder: 1
+- model: racedbapp.teamcategory
+  pk: 2
+  fields:
+    name: Corporate
+    slug: corporate
+    sortorder: 2
+- model: racedbapp.teamcategory
+  pk: 3
+  fields:
+    name: School
+    slug: school
+    sortorder: 3
+- model: racedbapp.teamcategory
+  pk: 4
+  fields:
+    name: Parent Child
+    slug: parent-child
+    sortorder: 4
+- model: racedbapp.teamcategory
+  pk: 5
+  fields:
+    name: Spouse
+    slug: spouse
+    sortorder: 5
+- model: racedbapp.teamcategory
+  pk: 6
+  fields:
+    name: "2 Person Relay"
+    slug: 2-person-relay
+    sortorder: 7
+- model: racedbapp.teamcategory
+  pk: 7
+  fields:
+    name: "4 Person Relay"
+    slug: 4-person-relay
+    sortorder: 8
+- model: racedbapp.teamcategory
+  pk: 8
+  fields:
+    name: Family
+    slug: family
+    sortorder: 6
+- model: racedbapp.teamcategory
+  pk: 9
+  fields:
+    name: Open 8
+    slug: open-8
+    sortorder: 1
+- model: racedbapp.teamcategory
+  pk: 10
+  fields:
+    name: Masters 4
+    slug: masters-4
+    sortorder: 2
+- model: racedbapp.teamcategory
+  pk: 11
+  fields:
+    name: Masters 5
+    slug: masters-5
+    sortorder: 2
+- model: racedbapp.teamcategory
+  pk: 12
+  fields:
+    name: Open 10
+    slug: open-10
+    sortorder: 1
+- model: racedbapp.teamcategory
+  pk: 13
+  fields:
+    name: Open 4
+    slug: open-4
+    sortorder: 1
+- model: racedbapp.teamcategory
+  pk: 14
+  fields:
+    name: Open 15
+    slug: open-15
+    sortorder: 1
+- model: racedbapp.teamcategory
+  pk: 15
+  fields:
+    name: Corporate 5
+    slug: corporate-5
+    sortorder: 2
+- model: racedbapp.teamcategory
+  pk: 16
+  fields:
+    name: Corporate 3 Mixed
+    slug: corporate-3-mixed
+    sortorder: 2
+- model: racedbapp.teamcategory
+  pk: 17
+  fields:
+    name: Corporate 3 Men
+    slug: corporate-3-men
+    sortorder: 2

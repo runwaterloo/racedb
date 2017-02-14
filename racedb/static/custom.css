@@ -1,0 +1,64 @@
+/*
+.table tr.tr_dark_topborder td {
+        border-top: 1px solid darkgrey;
+}
+*/
+.pagination {
+    margin: 0px !important;
+}
+
+.starter-template {
+            padding: 60px 0px;
+                    text-align: left;
+}
+.navbar-brand{padding:0px 0px}
+form {
+        display: inline;
+}
+html { 
+      overflow-y: scroll; 
+}
+
+.navbar-fixed-top {
+        height: 70px; /* Whatever you want. */
+        padding: 10px 0px;
+}
+
+
+
+/* navbar */
+
+.navbar-default, .navbar, .navbar-inner {
+  padding-top: 15px;
+  background-color: #01293F;
+  background-image: none;
+  background-repeat: no-repeat;
+  border-color: transparent;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+ }
+
+.navbar .nav > li > a {
+    color: lightgrey;
+}
+.navbar .nav > li > a:hover {
+    color: #ffffff;
+}
+
+@media only screen and (max-width: 766px) {
+.collapsing, .in {background-color: #01293F;}
+.collapsing ul li a, .in ul li a {color: lightgrey!important;}
+.collapsing ul li a:hover, .in ul li a:hover {color: #ffffff!important;}
+}
+
+.yellow {
+        color: #FFF200!important;
+}
+
+.table > tbody > tr > td {
+         vertical-align: middle;
+}
+.vcenter {
+    display: inline-block;
+    vertical-align: middle;
+    float: none;
+}

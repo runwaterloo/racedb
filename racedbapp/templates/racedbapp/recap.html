@@ -1,0 +1,68 @@
+{% extends "racedbapp/base.html" %}
+{% block content %}
+<h4>
+{% if distance_slug == 'combined' %}
+  <a href="/endurrace/{{ year }}/" target="_blank">Combined Results -  {{ year }} ENDURrace</a>
+{% else %}
+  <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}" target="_blank">{{ event.distance }} Results - {{ event.date.year }} {{ event.race.name }}</a>
+{% endif %}
+</h4>
+<table class="table table-condensed">
+  <tr class="info">
+    <th>Place</th>
+    <th>Female</th>
+    <th>Time</th>
+    <th>Male</th>
+    <th>Time</th>
+  </tr>
+  {% for result in individual_results %}
+  <tr>
+    <td>{{ result.place }}</td>
+    <td>{{ result.female_athlete }}</td>
+    <td>{{ result.female_time }}</td>
+    <td>{{ result.male_athlete }}</td>
+    <td>{{ result.male_time }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% if hill_results %}
+<table class="table table-condensed">
+  <tr class="info">
+    <th>Hill Sprint</th>
+    <th>Female</th>
+    <th>Time</th>
+    <th>Male</th>
+    <th>Time</th>
+  </tr>
+  {% for result in hill_results %}
+  <tr>
+    <td><a target="_blank" href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/?hill=true">{{ result.place }}</a></td>
+    <td>{{ result.female_athlete }}</td>
+    <td>{{ result.female_time }}</td>
+    <td>{{ result.male_athlete }}</td>
+    <td>{{ result.male_time }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% if team_results|length > 0 %}
+<table class="table table-condensed">
+  <tr class="info">
+    <th>Team Category</th>
+    <th>Count</th>
+    <th>Winning Team</th>
+    <th>Total Time</th>
+    <th>Avg Time</th>
+  </tr>
+  {% for result in team_results %}
+  <tr>
+    <td><a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/team/{{ result.team_category.slug }}" target="_blank">{{ result.team_category }}</a></td>
+    <td>{{ result.top }}</td>
+    <td>{{ result.winning_team }}</td>
+    <td>{{ result.total_time }}</td>
+    <td>{{ result.avg_time }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock content %}

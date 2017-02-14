@@ -1,0 +1,153 @@
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.db.models import Min, Count
+from django import db
+from collections import namedtuple
+from datetime import timedelta
+from operator import attrgetter
+import datetime
+import urllib
+
+from .models import *
+namedfilter = namedtuple('nf', ['current', 'choices'])
+namedchoice = namedtuple('nc', ['name', 'url'])
+
+def index(request, bow_slug):
+    qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
+    bow = Bow.objects.get(slug=bow_slug)
+    bows = Bow.objects.all()
+    event_ids = eval(Bow.objects.get(slug=bow_slug).events)
+    events = Event.objects.filter(id__in=(event_ids)).order_by('date')
+    filter_choice = ''
+    if 'filter' in qstring:
+        filter_choice = qstring['filter'][0]
+    stop_event = 999999
+    phase_choice = 'Final Results'
+    if 'phase' in qstring:
+        phase_choice = qstring['phase'][0]
+        stop_event = int(phase_choice.split('-')[2])
+    results = []
+    namedresult = namedtuple('na', ['athlete', 'stages', 'total_time',
+                                    'total_seconds', 'stage_times'])
+    athletes = Bowathlete.objects.filter(bow=bow)
+    if filter_choice == 'Female':
+        athletes = athletes.filter(gender='F')
+    elif filter_choice == 'Male':
+        athletes = athletes.filter(gender='M')
+    elif filter_choice == 'Masters':
+        athletes = athletes.filter(category__ismasters=True)
+    elif filter_choice == 'F-Masters':
+        athletes = athletes.filter(gender='F', category__ismasters=True)
+    elif filter_choice == 'M-Masters':
+        athletes = athletes.filter(gender='M', category__ismasters=True)
+    elif filter_choice != '':
+        athletes = athletes.filter(category__name=filter_choice)
+    hasmasters = True
+    category_ids = Bowathlete.objects.filter(bow=bow).values_list('category', flat=True).distinct()
+    categories = Category.objects.filter(id__in=(category_ids)).order_by('name')
+    all_event_results = []
+    events_results_count = []
+    for event in events:
+        event_results = Result.objects.filter(event=event)
+        events_results_count.append(event_results.count())
+        event_dict = dict(event_results.values_list('athlete', 'guntime'))
+        all_event_results.append(event_dict)
+    for athlete in athletes:
+        stages = 0
+        stage_times = []
+        total_time = timedelta(seconds=0)
+        count = 1
+        for er in all_event_results:
+            try:
+                stage_time = er[athlete.name]
+            except: 
+                stage_time = ''
+            else: 
+                if count <= stop_event:
+                    stages += 1
+                    total_time += stage_time
+                else:
+                    stage_time = ''
+            stage_times.append(stage_time)
+            count += 1
+        if total_time == timedelta(seconds=0):
+            total_seconds = 0
+            total_time = ''
+        else:
+            total_seconds = total_time.total_seconds()
+        results.append(namedresult(athlete, stages, total_time, total_seconds,
+                                   stage_times))
+    results = sorted(results, key=attrgetter('total_seconds'))
+    results = sorted(results, key=attrgetter('stages'), reverse=True)
+    resultfilter = getresultfilter(filter_choice, phase_choice, categories, bow_slug, hasmasters)
+    phasefilter = getphasefilter(phase_choice, filter_choice, events_results_count, bow_slug)
+    context = {'events': events,
+               'events_results_count': events_results_count,
+               'resultfilter': resultfilter,
+               'phasefilter': phasefilter,
+               'bow': bow,
+               'bows': bows,
+               'results': results}
+    return render(request, 'racedbapp/bow.html', context)
+
+def getresultfilter(filter_choice, phase_choice, categories, bow_slug, hasmasters):
+    if phase_choice == 'Final Results':
+        choices = [namedchoice('', '/bow/{}/'.format(bow_slug)),
+                   namedchoice('Female', '/bow/{}/?filter=Female'.format(bow_slug)),
+                   namedchoice('Male', '/bow/{}/?filter=Male'.format(bow_slug))]
+        if hasmasters:
+            choices.append(namedchoice('Masters', '/bow/{}/?filter=Masters'.format(bow_slug)))
+            choices.append(namedchoice('F-Masters', '/bow/{}/?filter=F-Masters'.format(bow_slug)))
+            choices.append(namedchoice('M-Masters', '/bow/{}/?filter=M-Masters'.format(bow_slug)))
+    else:
+        choices = [namedchoice('', '/bow/{}/?phase={}'.format(bow_slug, phase_choice)),
+                   namedchoice('Female', '/bow/{}/?filter=Female&phase={}'.format(bow_slug, phase_choice)),
+                   namedchoice('Male', '/bow/{}/?filter=Male&phase={}'.format(bow_slug, phase_choice))]
+        if hasmasters:
+            choices.append(namedchoice('Masters', '/bow/{}/?filter=Masters&phase={}'.format(bow_slug, phase_choice)))
+            choices.append(namedchoice('F-Masters', '/bow/{}/?filter=F-Masters&phase={}'.format(bow_slug, phase_choice)))
+            choices.append(namedchoice('M-Masters', '/bow/{}/?filter=M-Masters&phase={}'.format(bow_slug, phase_choice)))
+
+    for k in categories:
+        cleanchoice = k.name.replace('+','%2B')
+        if cleanchoice != '':
+            if phase_choice == 'Final Results':
+                choices.append(namedchoice(k.name, '/bow/{}/?filter={}'.format(bow_slug, cleanchoice)))
+            else:
+                choices.append(namedchoice(k.name, '/bow/{}/?filter={}&phase={}'.format(bow_slug, cleanchoice, phase_choice)))
+    choices = [x for x in choices if x.name != filter_choice]
+    resultfilter = namedfilter(filter_choice, choices)
+    return resultfilter
+
+def getphasefilter(phase_choice, filter_choice, events_results_count, bow_slug):
+    choices = []
+    if phase_choice == 'Final Results':
+        loopcount = 1
+        for count in events_results_count:
+            if count == 0:
+                phase_choice = 'after-event-{}'.format(loopcount - 1)
+                break
+            loopcount += 1
+    if set(events_results_count) == {0}:
+        phase_choice = False
+    else:
+        loopcount = 1
+        for count in events_results_count:
+            if count > 0:
+                if loopcount == len(events_results_count):
+                    if phase_choice != 'Final Results':
+                        if filter_choice == '':
+                            choices.append(namedchoice('Final Results', '/bow/{}/'.format(bow_slug)))
+                        else:
+                            choices.append(namedchoice('Final Results', '/bow/{}/?filter={}'.format(bow_slug, filter_choice)))
+                else:
+                    if phase_choice != 'after-event-{}'.format(loopcount):
+                        if filter_choice == '':
+                            choices.append(namedchoice('After Event {}'.format(loopcount), '/bow/{}/?phase=after-event-{}'.format(bow_slug, loopcount)))
+                        else:
+                            choices.append(namedchoice('After Event {}'.format(loopcount), '/bow/{}/?filter={}&phase=after-event-{}'.format(bow_slug, filter_choice, loopcount)))
+                    else:
+                        phase_choice = 'After Event {}'.format(loopcount)
+            loopcount += 1
+    phasefilter = namedfilter(phase_choice, choices)
+    return phasefilter

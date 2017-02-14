@@ -1,0 +1,64 @@
+{% extends "racedbapp/base.html" %}
+
+{% block ogmeta %}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="RunWaterloo Results" />
+  <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
+  <meta property="og:image" content="/static/ogimage.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <script src="/static/jquery.filtertable.min.js"></script>
+{% endblock ogmeta %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-xs-12 col-sm-10 col-md-8 col-lg-6">
+      <h3>Multi-Race Winners</h3>
+   <p>
+   Gender: <select onchange="location = this.options[this.selectedIndex].value;">
+   <option>{{ genderfilter.current }}</option>
+     {% for choice in genderfilter.choices %}
+       <option value="{{ choice.url }}">{{ choice.name }}</option>
+     {% endfor %}
+    </select>
+   </p>
+
+      <!-- search input -->
+      <div class="row">
+        <div class="col-xs-6">
+          <div class="form-group">
+            <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search table..." size="12">
+          </div>
+        </div>
+      </div>
+      <!-- end search input -->
+  <table class="table table-bordered table-condensed table-striped table-hover">
+   <thead>
+   <tr class="info">
+   <th class="text-center">Rank</th>
+   <th>Name</th>
+   <th class="text-center">Gender</th>
+   <th class="text-center">Wins</th>
+   </tr>
+   </thead>
+   <tbody>
+   {% for winner in winners %}
+   <tr>
+   <td class="text-center">{{ winner.rank }}</td>
+   {% if winner.member %}
+      <td class="text-left"><a href="/member/{{ winner.member.slug }}/">{{ winner.athlete }}</a></td>
+   {% else %}
+      <td class="text-left">{{ winner.athlete }}</td>
+   {% endif %}
+   <td class="text-center">{{ winner.gender }}</td>
+   <td class="text-center">{{ winner.wins }}</td>
+   </tr>
+   {% endfor %}
+   </tbody>
+  </table>
+      <script>
+        $('table').filterTable({inputSelector: '#input-filter', minRows: 0}); // apply filterTable to all tables on this page
+      </script>
+</div>
+</div>
+{% endblock content %}

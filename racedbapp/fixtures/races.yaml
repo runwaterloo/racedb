@@ -1,0 +1,112 @@
+- model: racedbapp.race
+  pk: 1
+  fields:
+    prename: Re-Fridgee-Eighter
+    name: Re-Fridgee-Eighter
+    shortname: Re-Fridgee-Eighter
+    slug: re-fridgee-eighter
+- model: racedbapp.race
+  pk: 2
+  fields:
+    prename: Pancake
+    name: Pancake Mile
+    shortname: Pancake
+    slug: pancake
+- model: racedbapp.race
+  pk: 3
+  fields:
+    prename: ENDURrace
+    name: ENDURrace
+    shortname: ENDURrace
+    slug: endurrace
+- model: racedbapp.race
+  pk: 4
+  fields:
+    prename: Baden Road Race
+    name: Baden Road Races
+    shortname: Baden Road Races
+    slug: baden-road-races
+- model: racedbapp.race
+  pk: 5
+  fields:
+    prename: Waterloo Classic
+    name: Waterloo Classic Road Races
+    shortname: Waterloo Classic
+    slug: waterloo-classic
+- model: racedbapp.race
+  pk: 6
+  fields:
+    prename: Dirty Dash
+    name: Dirty Dash
+    shortname: Dirty Dash
+    slug: dirty-dash
+- model: racedbapp.race
+  pk: 7
+  fields:
+    prename: ENDURrun
+    name: ENDURrun
+    shortname: ENDURrun
+    slug: endurrun
+- model: racedbapp.race
+  pk: 8
+  fields:
+    prename: The Runway
+    name: The Runway
+    shortname: The Runway
+    slug: runway
+- model: racedbapp.race
+  pk: 9
+  fields:
+    prename: Harvest
+    name: Harvest Half
+    shortname: Harvest
+    slug: harvest
+- model: racedbapp.race
+  pk: 10
+  fields:
+    prename: Laurier Loop
+    name: Laurier Loop
+    shortname: Laurier Loop
+    slug: laurier-loop
+- model: racedbapp.race
+  pk: 11
+  fields:
+    prename: Oktoberfest Run
+    name: Oktoberfest Run
+    shortname: Oktoberfest Run
+    slug: oktoberfest-run
+- model: racedbapp.race
+  pk: 12
+  fields:
+    prename: REMEMBERrun
+    name: RememberRun
+    shortname: RememberRun
+    slug: rememberrun
+- model: racedbapp.race
+  pk: 13
+  fields:
+    prename: Santa Pur-Suit
+    name: Santa Pur-suit
+    shortname: Santa Pur-suit
+    slug: santa-pur-suit
+- model: racedbapp.race
+  pk: 14
+  fields:
+    prename: Downtown Kitchener
+    name: Downtown Kitchener Mile
+    shortname: Downtown Kitchener
+    slug: downtown-kitchener
+- model: racedbapp.race
+  pk: 15
+  fields:
+    prename: Kitchener Kids with Cancer
+    name: Kitchener Kids With Cancer Run
+    shortname: Kitchener Kids With Cancer Run
+    slug: kitchener-kids-with-cancer-run
+- model: racedbapp.race
+  pk: 16
+  fields:
+    prename: Fall 5 KM Classic
+    name: Fall 5 KM Classic
+    shortname: Fall Classic
+    slug: fall-classic

@@ -1,0 +1,125 @@
+{% extends "racedbapp/base.html" %}
+
+{% load racedbapp_extras %}
+
+{% block title %}
+  {{ member.name }} 
+  |
+{% endblock title %}
+
+{% block ogmeta %}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="RunWaterloo Results" />
+  <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
+  <meta property="og:image" content="/static/ogimage.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <script src="/static/jquery.filtertable.min.js"></script>
+{% endblock ogmeta %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+    <h3><strong>{{ member.name }}</strong></h3>
+    <h5>Run Waterloo Member since {{ member.joindate.year }}</h5>
+    <h5>Member #{{ member.id }} | {{ member.city }}</h5>
+    <table class="table table-bordered table-striped table-hover">
+      <thead>
+        <tr class="info">
+          <th class="text-left" colspan="2" scope="col">Career Run Waterloo Stats</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Racing Since</td>
+          <td class="text-right">{{ racing_since }}</td>
+        </tr>
+        <tr>
+          <td>Total Events</td>
+          <td class="text-right">{{ results|length }}</td>
+        </tr>
+        <tr>
+          <td>Total KMs Raced</td>
+          <td class="text-right">{{ total_distance }}</td>
+        </tr>
+        <tr>
+          <td>5 KM Personal Best</td>
+          <td class="text-right"><a href="/event/{{ fivek_pb.result.event.date.year }}/{{ fivek_pb.result.event.race.slug }}/{{ fivek_pb.result.event.distance.slug }}" title="{{ fivek_pb.result.event.date.year }} {{ fivek_pb.result.event.race.shortname }} {{ fivek_pb.result.event.distance.name }}">{{ fivek_pb.guntime }}</a></td>
+        </tr>
+        <tr>
+          <td>10 KM Personal Best</td>
+          <td class="text-right"><a href="/event/{{ tenk_pb.result.event.date.year }}/{{ tenk_pb.result.event.race.slug }}/{{ tenk_pb.result.event.distance.slug }}" title="{{ tenk_pb.result.event.date.year }} {{ tenk_pb.result.event.race.shortname }} {{ tenk_pb.result.event.distance.name }}">{{ tenk_pb.guntime }}</a></td>
+        </tr>
+        <tr>
+          <td>Best Gender Place</td>
+          <td class="text-right"><a href="/event/{{ best_gender_place.result.event.date.year }}/{{ best_gender_place.result.event.race.slug }}/{{ best_gender_place.result.event.distance.slug}}/" title="{{ best_gender_place.result.event.date.year }} {{ best_gender_place.result.event.race.shortname }} {{ best_gender_place.result.event.distance.name }}">{{ best_gender_place.gender_place }}</a></td>
+        </tr>
+        <tr>
+          <td>Best Category Place</td>
+          <td class="text-right"><a href="/event/{{ best_category_place.result.event.date.year }}/{{ best_category_place.result.event.race.slug }}/{{ best_category_place.result.event.distance.slug }}/" title="{{ best_category_place.result.event.date.year }} {{ best_category_place.result.event.race.shortname }} {{ best_category_place.result.event.distance.name }}">{{ best_category_place.category_place }}</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+    <div style="padding-top: 20px; padding-bottom: 20px">
+      <center>
+        <a href="{{ member.photourl }}">
+          <img class="img-rounded" src="{{ member.photourl }}" height="400">
+        </a>
+      </center>
+    </div>
+  </div>
+</div>
+
+{% if badges %}
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <h4>Achievements</h4>
+      {% for badge in badges %}
+        <img src="{{ badge.image }}" title="{{ badge.name }}&#10;{{ badge.date }}" height="100" width="100" hspace="15" vspace="15">
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+<div class="row">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+    <h4>All Results</h4>
+    <table class="table table-bordered table-condensed table-striped table-hover">
+      <thead>
+        <tr class="info">
+          <th class="text-left" scope="col">Event</th>
+          <th class="text-center" scope="col">Place</th>
+          <th class="text-center" scope="col">Bib</th>
+          <th class="text-center" scope="col">Time</th>
+          <th class="text-center" scope="col">GP</th>
+          <th class="text-center" scope="col">Cat</th>
+          <th class="text-center" scope="col">CP</th>
+          <th class="text-center" scope="col">Pace</th>
+          <th class="text-center" scope="col">Chiptime</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+          <tr>
+            <td class="text-left" scope="col">
+              <a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.date.year }} {{ r.result.event.race.shortname }} {{ r.result.event.distance.name }}</a>
+            </td>
+            <td class="text-center" scope="col">{{ r.result.place|get_place }}</td>
+            <td class="text-center" scope="col">{{ r.result.bib }}</td>
+            <td class="text-center" scope="col">{{ r.guntime }}</td>
+            <td class="text-center" scope="col">{{ r.gender_place }}</td>
+            <td class="text-center" scope="col">{{ r.result.category }}</td>
+            <td class="text-center" scope="col">{{ r.category_place }}</td>
+            <td class="text-center" scope="col">{{ r.guntime|get_pace:r.result.event.distance.km }}</td>
+            <td class="text-center" scope="col">{{ r.chiptime }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock content %}

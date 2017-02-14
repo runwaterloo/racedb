@@ -1,0 +1,63 @@
+{% extends "racedbapp/base.html" %}
+
+{% block title %}
+  Members 
+  |
+{% endblock title %}
+
+{% block ogmeta %}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="RunWaterloo Results" />
+  <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
+  <meta property="og:image" content="/static/ogimage.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <script src="/static/jquery.filtertable.min.js"></script>
+{% endblock ogmeta %}
+
+{% block content %}
+
+<h3>Members</h3>
+
+  <div class="row">
+    <div class="col-xs-12 col-sm-10 col-md-8 col-lg-6">
+
+      <!-- search input -->
+      <div class="row">
+        <div class="col-xs-6">
+          <div class="form-group">
+            <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search members..." size="12">
+          </div>
+        </div>
+      </div>
+      <!-- end search input -->
+
+      <table class="table table-bordered table-condensed table-striped table-hover">
+        <thead>
+          <tr class="info">
+            <th class="text-center" scope="col">#</th>
+            <th class="text-left" scope="col">Name</th>
+            <th class="text-center" scope="col">G</th>
+            <th class="text-left" scope="col">City</th>
+            <th class="text-center" scope="col">Member Since</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in members %}
+            <tr>
+              <td class="text-center">{{ m.id }}</td>
+              <td class="text-left"><a href="/member/{{ m.slug }}/">{{ m.name }}</a></td>
+              <td class="text-center">{{ m.gender }}</td>
+              <td class="text-left">{{ m.city }}</td>
+              <td class="text-center">{{ m.joindate.year }}</td>
+            </tr>
+         {% endfor %}
+       </tbody>
+      </table>
+      <script>
+        $('table').filterTable({inputSelector: '#input-filter', minRows: 0}); // apply filterTable to all tables on this page
+      </script>
+    </div>
+  </div>
+
+{% endblock content %}

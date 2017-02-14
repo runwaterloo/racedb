@@ -1,0 +1,28 @@
+- model: racedbapp.bow
+  pk: 1
+  fields:
+    year: 2014
+    name: BOW I
+    slug: bow-i
+    events: '[2, 18, 34]'
+- model: racedbapp.bow
+  pk: 2
+  fields:
+    year: 2015
+    name: BOW II
+    slug: bow-ii
+    events: '[200, 221, 254]'
+- model: racedbapp.bow
+  pk: 3
+  fields:
+    year: 2015
+    name: BOW III
+    slug: bow-iii
+    events: '[258, 271, 280]'
+- model: racedbapp.bow
+  pk: 4
+  fields:
+    year: 2016
+    name: BOW IV
+    slug: bow-iv
+    events: '[310, 321, 328, 329]'

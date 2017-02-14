@@ -1,0 +1,91 @@
+{% extends "racedbapp/base.html" %}
+
+{% load racedbapp_extras %}
+{% block content %}
+<h4>
+  <a href="/race/{{ race.slug }}/{{ distance.slug }}" target="_blank">{{ distance.name }} Records - {{ race.name }}</a>
+</h4>
+<table class="table table-condensed">
+  <tr class="info">
+    <th>Individual</th>
+    <th>Time</th>
+    <th>Name</th>
+    <th>Year</th>
+    <th>Category</th>
+    <th>Pace</th>
+    <th>City</th>
+  </tr>
+  {% for record in records %}
+  <tr>
+{% ifchanged record.place %}
+<td>{{ record.place }}</td>
+{% else %}
+<td></td>
+{% endifchanged %}
+    <td>{{ record.guntime|get_time }}</td>
+    <td>{{ record.athlete }}</td>
+    {% if distance.slug == 'combined' %}
+        <td><a target="_blank" href="/endurrace/{{ record.year }}/">{{ record.year }}</a></td>
+    {% else %}
+        <td><a target="_blank" href="/event/{{ record.year }}/{{ record.race_slug }}/{{ distance.slug }}">{{ record.year }}</a></td>
+    {% endif %}
+    <td>{{ record.category }}</td>
+    <td>{{ record.guntime|get_pace:distance.km }}</td>
+    <td>{{ record.city }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% if hill_records|length > 0 %}
+<table class="table table-striped table-condensed">
+  <tr class="info">
+    <th>Hill Sprint</th>
+    <th>Time</th>
+    <th>Name</th>
+    <th>Year</th>
+    <th>Category</th>
+    <th>City</th>
+  </tr>
+{% for record in hill_records %}
+<tr>
+{% ifchanged record.place %}
+<td>{{ record.place }}</td>
+{% else %}
+<td></td>
+{% endifchanged %}
+<td>{{ record.guntime }}</td>
+<td>{{ record.athlete }}</td>
+<td><a target="_blank" href="/event/{{ record.year }}/{{ record.race_slug }}/{{ distance.slug }}/?hill=true">{{ record.year }}</td>
+<td>{{ record.category }}</td>
+<td>{{ record.city }}</td>
+</td>
+</tr>
+{% endfor %}
+</table>
+{% endif %}
+
+{% if team_records|length > 0 %}
+<table class="table table-condensed">
+  <tr class="info">
+    <th>Team Category</th>
+    <th>Total Time</th>
+    <th>Winning Team</th>
+    <th>Year</th>
+    <th>Avg Time</th>
+  </tr>
+  {% for record in team_records %}
+  <tr>
+{% ifchanged record.team_category_name %}
+    <td>{{ record.team_category_name }}</td>
+{% else %}
+<td></td>
+{% endifchanged %}
+    <td>{{ record.total_time }}</td>
+    <td>{{ record.winning_team }}</td>
+    <td><a target="_blank" href="/event/{{ record.year }}/{{ record.race_slug }}/{{ distance.slug }}/team/{{ record.team_category_slug }}">{{ record.year }}</a></td>
+    <td>{{ record.avg_time }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock content %}

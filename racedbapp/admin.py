@@ -1,0 +1,37 @@
+from django.contrib import admin
+
+from .models import *
+
+class ConfigAdmin(admin.ModelAdmin):
+    list_display = ('name', 'value')
+    search_fields = ('name', 'value')
+    ordering = ('name',)
+admin.site.register(Config, ConfigAdmin)
+
+class DistanceAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'km', 'showrecord')
+admin.site.register(Distance, DistanceAdmin)
+
+admin.site.register(Race)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('date', 'race', 'distance')
+    list_filter = ('date', 'race', 'distance')
+    search_fields = ('date', 'race__name', 'distance__name')
+    ordering = ('-date',)
+admin.site.register(Event, EventAdmin)
+
+class ResultAdmin(admin.ModelAdmin):
+    list_display = ('event', 'place', 'bib', 'athlete', 'gender', 'category', 'city', 'chiptime', 'guntime')
+admin.site.register(Result, ResultAdmin)
+
+class RwmemberAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'gender', 'city', 'joindate', 'active')
+    search_fields = ('name',)
+    ordering = ('name',)
+admin.site.register(Rwmember, RwmemberAdmin)
+
+class RwmembercorrectionAdmin(admin.ModelAdmin):
+    list_display = ('rwmember', 'correction_type', 'event', 'place')
+    search_fields = ('rwmember',)
+    ordering = ('rwmember__id',)
+admin.site.register(Rwmembercorrection, RwmembercorrectionAdmin)

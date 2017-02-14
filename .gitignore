@@ -1,0 +1,4 @@
+secrets.py
+secrets.yml
+__pycache__
+*.pyc

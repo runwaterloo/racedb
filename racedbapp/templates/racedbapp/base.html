@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% block title %}{% endblock title %}RunWaterloo Results</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/spacelab/bootstrap.min.css">
+        <link rel="stylesheet" href="/static/custom.css">
+        <link rel="shortcut icon" href="/static/rw-fav.png" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        {% block ogmeta %}{% endblock ogmeta %}
+    </head>
+
+    <body>
+
+ {% if not nomenu %}
+    <nav class="navbar navbar-default navbar-fixed-top navbar-left">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/"><img src="/static/results_logo_v1.png" height="45px" alt="RunWaterloo Results"></a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/events">Events</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Series
+              <span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="/endurrun/ultimate/">ENDURrun</a></li>
+                <li><a href="/bow/bow-iv">Battle of Waterloo</a></li>
+                <li><a href="/endurrace/latest/">ENDURrace Combined</a></li>
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Records
+              <span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="/distance/5-km/">Distance</a></li>
+                <li class="divider"></li>
+                <li><a href="/race/baden-road-races/7-mi">Baden Road Races</a></li>
+                <li><a href="/race/dirty-dash/6-km">Dirty Dash</a></li>
+                <li><a href="/race/endurrace/combined">ENDURrace</a></li>
+                <li><a href="/endurrun/">ENDURrun</a></li>
+                <li><a href="/race/fall-classic/5-km/">Fall 5 KM Classic</a></li>
+                <li><a href="/race/harvest/half-marathon">Harvest Half</a></li>
+                <li><a href="/race/laurier-loop/10-km">Laurier Loop</a></li>
+                <li><a href="/race/pancake/mile">Pancake Mile</a></li>
+                <li><a href="/race/re-fridgee-eighter/8-km">Re-Fridgee-Eighter</a></li>
+                <li><a href="/race/rememberrun/11-km">RememberRun</a></li>
+                <li><a href="/race/santa-pur-suit/5-km">Santa Pur-suit</a></li>
+                <li><a href="/race/runway/2-mi">The Runway</a></li>
+                <li><a href="/race/waterloo-classic/10-km">Waterloo Classic Road Races</a></li>
+              </ul>
+            </li>
+            <li><a href="/members/">Members</a></li>
+            <!--<li><a href="/endurrun/">ENDURrun</a></li>-->
+          <form class="navbar-form navbar-left" role="search" action="/name/" method="get">
+           <div class="form-group has-feedback">
+            <input type="text" class="form-control" placeholder="Find name" name="q" size="8">
+            <span class="glyphicon glyphicon-search form-control-feedback"></span>
+           </div>
+          </form>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+          <a href="http://www.runwaterloo.com"><img src="/static/rw-logo-large.png" height="40px" alt="RunWaterloo Results"></a>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+     </nav>
+    <div class="container starter-template">
+
+    {% else %}
+    <div class="container">
+
+
+    {% endif %}
+
+
+    {% block content %}{% endblock content %}
+ {% if not nomenu %}
+ <div>
+ <p>
+ Results &copy; 1978-2017. Not for unauthorized commercial reproduction. For more information, to report an error, or to update your member profile, contact <a href="mailto:results@runwaterloo.com?Subject=RunWaterloo Results" target="_top">results@runwaterloo.com</a>.</p>
+  <a href="https://twitter.com/RW_Results" target="_blank"><img src="/static/twitter-logo.png" height="50"></a>
+ </div>
+ {% endif %}
+    </div>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    </body>
+<script>
+  if (document.location.hostname.search("results.runwaterloo.com") !== -1) {
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-73758437-1', 'auto');
+  ga('send', 'pageview');
+  }
+
+</script>
+
+</html>
