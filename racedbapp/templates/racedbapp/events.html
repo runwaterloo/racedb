@@ -1,5 +1,7 @@
 {% extends "racedbapp/base.html" %}
 
+{% load racedbapp_extras %}
+
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="RunWaterloo Results" />
@@ -42,10 +44,18 @@
   {% for event in events %}
     <tr>
       <td><a href="/event/{{ event.year }}/{{ event.race_slug }}/{{event.distance_slug}}">{{ event.year }} {{ event.race_name }} {{ event.distance_name }}</a></td>
-      <td>{{ event.femalewinner }}</td>
-      <td>{{ event.femaletime }}</td>
-      <td>{{ event.malewinner }}</td>
-      <td>{{ event.maletime }}</td>
+      {% if event.femalemember %}
+        <td><a href="/member/{{ event.femalemember.slug }}/">{{ event.femalewinner }}</a></td>
+      {% else %}
+        <td>{{ event.femalewinner }}</td>
+      {% endif %}
+      <td>{{ event.femaletime|get_time }}</td>
+      {% if event.malemember  %}
+        <td><a href="/member/{{ event.malemember.slug }}/">{{ event.malewinner }}</a></td>
+      {% else %}
+        <td>{{ event.malewinner }}</td>
+      {% endif %}
+      <td>{{ event.maletime|get_time }}</td>
     </tr>
    {% endfor %}
   </table>

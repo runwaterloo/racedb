@@ -54,14 +54,41 @@ def index(request):
     distancefilters = getfilter('distance', yearfilter, racefilter,
                                 distancefilter_events, distance_name)
     malewinnersdict, femalewinnersdict = view_shared.getwinnersdict()
-    namedevent = namedtuple('ne', ['year', 'race_name', 'race_slug', 'distance_name', 'distance_slug', 'femalewinner', 'femaletime', 'malewinner', 'maletime'])
+    namedevent = namedtuple('ne', ['year',
+                                   'race_name',
+                                   'race_slug',
+                                   'distance_name',
+                                   'distance_slug',
+                                   'femalewinner',
+                                   'femaletime',
+                                   'femalemember',
+                                   'malewinner',
+                                   'maletime',
+                                   'malemember'])
+    member_dict = view_shared.get_member_dict()
     namedevents = []
     for e in events:
-        femaletime = femalewinnersdict[e.id].guntime
-        femaletime = femaletime - timedelta(microseconds=femaletime.microseconds)
-        maletime = malewinnersdict[e.id].guntime
-        maletime = maletime - timedelta(microseconds=maletime.microseconds)
-        namedevents.append(namedevent(e.date.year, e.race.shortname, e.race.slug, e.distance.name, e.distance.slug, femalewinnersdict[e.id].athlete, femaletime, malewinnersdict[e.id].athlete, maletime))
+        femalewinner = femalewinnersdict[e.id]
+        femaletime = femalewinner.guntime
+        femalemember = False
+        if femalewinner.athlete.lower() in member_dict:
+            femalemember = member_dict[femalewinner.athlete.lower()]
+        malewinner = malewinnersdict[e.id]
+        maletime = malewinner.guntime
+        malemember = False
+        if malewinner.athlete.lower() in member_dict:
+            malemember = member_dict[malewinner.athlete.lower()]
+        namedevents.append(namedevent(e.date.year,
+                                      e.race.shortname,
+                                      e.race.slug,
+                                      e.distance.name,
+                                      e.distance.slug,
+                                      femalewinnersdict[e.id].athlete,
+                                      femaletime,
+                                      femalemember,
+                                      malewinnersdict[e.id].athlete,
+                                      maletime,
+                                      malemember))
     events = namedevents
     context = {'events': events,
                'yearfilters': yearfilters,
@@ -69,7 +96,6 @@ def index(request):
                'distancefilters': distancefilters,
                'malewinnersdict': malewinnersdict,
                'femalewinnersdict': femalewinnersdict}
-    #print(len(db.connection.queries))   # number of sql queries that happened
     return render(request, 'racedbapp/events.html', context)
 
 def getfilter(filtername, filter1, filter2, filter_events, current):
