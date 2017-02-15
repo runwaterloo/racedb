@@ -4,12 +4,14 @@ from django.db.models import Min, Count, Sum, Avg
 from django import db
 from collections import namedtuple
 from datetime import timedelta
+import simplejson
 import datetime
 import urllib
 
 from .models import *
 
 def index(request, year, race_slug, distance_slug):
+    qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
     namedevent = namedtuple('ne', ['event', 'individual_results', 'team_results'])
     namediresult = namedtuple('ni', ['place', 'female_athlete', 'female_time', 'male_athlete', 'male_time'])
     namedtresult = namedtuple('nt', ['team_category', 'top', 'winning_team', 'total_time', 'avg_time'])
@@ -65,4 +67,21 @@ def index(request, year, race_slug, distance_slug):
                'team_results': list(team_results),
                'hill_results': hill_results,
                'nomenu': True}
-    return render(request, 'racedbapp/recap.html', context)
+
+    # Determine the format to return based on what is seen in the URL
+    if 'format' in qstring:
+        if qstring['format'][0] == 'json':
+            data = simplejson.dumps(context,
+                                    default=str,
+                                    indent=4,
+                                    sort_keys=True)
+            if 'callback' in qstring:
+                callback = qstring['callback'][0]
+                data = '{}({});'.format(callback, data)
+                return HttpResponse(data, "text/javascript")
+            else:
+                return HttpResponse(data, "application/json")
+        else:
+            return HttpResponse('Unknown format in URL', "text/html")
+    else:
+        return render(request, 'racedbapp/recap.html', context)
