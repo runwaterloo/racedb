@@ -14,8 +14,11 @@ def index(request):
     gender = False
     if 'gender' in qstring:
         gender = qstring['gender'][0]
-    #races = qstring['race']
-    namedwinner = namedtuple('nw', ['rank', 'wins', 'gender', 'athlete', 'member'])
+    namedwinner = namedtuple('nw', ['rank',
+                                    'wins',
+                                    'gender',
+                                    'athlete',
+                                    'member'])
     malewinnersdict, femalewinnersdict = view_shared.getwinnersdict()
     femalewinnerscount = {}
     femalewinners = []
@@ -25,9 +28,7 @@ def index(request):
         else:
             femalewinnerscount[v.athlete.lower()] = 1
     for k, v in femalewinnerscount.items():
-        if v > 1:
-            femalewinners.append(namedwinner(0, v, 'F', k.title(), False))
-    femalewinners = sorted(femalewinners, reverse=True)
+        femalewinners.append(namedwinner(0, v, 'F', k.title(), False))
     malewinnerscount = {}
     for k, v in malewinnersdict.items():
         if v.athlete.lower() in malewinnerscount:
@@ -36,27 +37,43 @@ def index(request):
             malewinnerscount[v.athlete.lower()] = 1
     malewinners = []
     for k, v in malewinnerscount.items():
-        if v > 1:
-            malewinners.append(namedwinner(0, v, 'M', k.title(), False))
+        malewinners.append(namedwinner(0, v, 'M', k.title(), False))
     combinedwinners = malewinners + femalewinners
-    rawwinners = sorted(combinedwinners, key=attrgetter('athlete'))
-    finalwinners = sorted(rawwinners, key=attrgetter('wins'), reverse=True)
     winners = []
-    lastwins = 0
-    count = 1
     member_dict = view_shared.get_member_dict()
-    for i in finalwinners:
+    seen_members = {}
+    for i in combinedwinners:
        if gender:
            if i.gender.lower() != gender:
                continue
-       if i.wins != lastwins:
-          rank = count
        member = False
        if i.athlete.lower() in member_dict:
            member = member_dict[i.athlete.lower()]
-       winners.append(namedwinner(rank, i.wins, i.gender, i.athlete, member))
-       lastwins = i.wins
-       count += 1
+           if member in seen_members:
+               seen_members[member] += i.wins
+               thiswins = seen_members[member]
+               winners = [ x for x in winners if x.member != member ]
+           else:
+               seen_members[member] = i.wins
+               thiswins = i.wins
+       else:
+           thiswins = i.wins
+       winners.append(namedwinner(0, thiswins, i.gender, i.athlete, member))
+    winners = sorted(winners, key=attrgetter('athlete'))
+    winners = sorted(winners, key=attrgetter('wins'), reverse=True)
+    winners = [ x for x in winners if  x.wins  > 1 ]
+    finalwinners = []
+    wins = 999999
+    for c, w in enumerate(winners):
+        if w.wins < wins:
+            wins = w.wins
+            rank = c + 1
+        finalwinners.append(namedwinner(rank, w.wins, w.gender, w.athlete, w.member))
+    genderfilter = get_genderfilter(gender)
+    context = {'winners': finalwinners, 'genderfilter': genderfilter}
+    return render(request, 'racedbapp/multiwins.html', context)
+
+def get_genderfilter(gender):
     namedfilter = namedtuple('nf', ['current', 'choices'])                       
     namedchoice = namedtuple('nc', ['name', 'url'])            
     choices = []
@@ -73,5 +90,4 @@ def index(request):
     if gender != 'm':
         choices.append(namedchoice('Male', '/multiwins?gender=m'))
     genderfilter = namedfilter(current, choices)
-    context = {'winners': winners, 'genderfilter': genderfilter}
-    return render(request, 'racedbapp/multiwins.html', context)
+    return genderfilter

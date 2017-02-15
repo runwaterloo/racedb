@@ -195,6 +195,8 @@ def get_member_dict():
     member_dict = {}
     for m in dbmembers:
         member_dict[m.name.lower()] = m
+    for a in dbmembers:
+        member_dict[a.altname.lower()] = a
     return member_dict
 
 def get_member(result, membership):

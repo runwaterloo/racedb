@@ -14,14 +14,14 @@
   <div class="row">
     <div class="col-xs-12 col-sm-10 col-md-8 col-lg-6">
       <h3>Multi-Race Winners</h3>
-   <p>
-   Gender: <select onchange="location = this.options[this.selectedIndex].value;">
-   <option>{{ genderfilter.current }}</option>
-     {% for choice in genderfilter.choices %}
-       <option value="{{ choice.url }}">{{ choice.name }}</option>
-     {% endfor %}
-    </select>
-   </p>
+      <p> Gender: 
+        <select onchange="location = this.options[this.selectedIndex].value;">
+          <option>{{ genderfilter.current }}</option>
+          {% for choice in genderfilter.choices %}
+            <option value="{{ choice.url }}">{{ choice.name }}</option>
+          {% endfor %}
+        </select>
+      </p>
 
       <!-- search input -->
       <div class="row">
@@ -32,33 +32,34 @@
         </div>
       </div>
       <!-- end search input -->
-  <table class="table table-bordered table-condensed table-striped table-hover">
-   <thead>
-   <tr class="info">
-   <th class="text-center">Rank</th>
-   <th>Name</th>
-   <th class="text-center">Gender</th>
-   <th class="text-center">Wins</th>
-   </tr>
-   </thead>
-   <tbody>
-   {% for winner in winners %}
-   <tr>
-   <td class="text-center">{{ winner.rank }}</td>
-   {% if winner.member %}
-      <td class="text-left"><a href="/member/{{ winner.member.slug }}/">{{ winner.athlete }}</a></td>
-   {% else %}
-      <td class="text-left">{{ winner.athlete }}</td>
-   {% endif %}
-   <td class="text-center">{{ winner.gender }}</td>
-   <td class="text-center">{{ winner.wins }}</td>
-   </tr>
-   {% endfor %}
-   </tbody>
-  </table>
+
+      <table class="table table-bordered table-condensed table-striped table-hover">
+        <thead>
+          <tr class="info">
+            <th class="text-center">Rank</th>
+            <th>Name</th>
+            <th class="text-center">Gender</th>
+            <th class="text-center">Wins</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for winner in winners %}
+            <tr>
+              <td class="text-center">{{ winner.rank }}</td>
+              {% if winner.member %}
+                <td class="text-left"><a href="/member/{{ winner.member.slug }}/">{{ winner.member.name }}</a></td>
+              {% else %}
+                <td class="text-left">{{ winner.athlete }}</td>
+              {% endif %}
+              <td class="text-center">{{ winner.gender }}</td>
+              <td class="text-center">{{ winner.wins }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
       <script>
         $('table').filterTable({inputSelector: '#input-filter', minRows: 0}); // apply filterTable to all tables on this page
       </script>
-</div>
-</div>
+    </div>
+  </div>
 {% endblock content %}
