@@ -34,7 +34,10 @@ def index(request, race_slug, distance_slug):
     # Determine the format to return based on what is seen in the URL
     if 'format' in qstring:
         if qstring['format'][0] == 'json':
-            data = simplejson.dumps(context)
+            data = simplejson.dumps(context,
+                                    default=str,
+                                    indent=4,
+                                    sort_keys=True)
             if 'callback' in qstring:
                 callback = qstring['callback'][0]
                 data = '{}({});'.format(callback, data)
