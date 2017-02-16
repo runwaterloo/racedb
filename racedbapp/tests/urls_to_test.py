@@ -94,11 +94,15 @@ test_urls = (
   '/recap/2015/runway/2-mi/',               # without teams
   '/recap/2014/baden-road-races/7-mi/',     # with hills
   '/recap/2013/endurrace/combined/',         # endurrace combined
+  '/recap/2015/baden-road-races/7-mi/?format=json',     # json
+  '/recap/2014/waterloo-classic/10-km/?format=json&callback=blah',     # jsonp
  # records
   '/records/harvest/half-marathon/',     # with teams
   '/records/runway/2-mi/',               # without teams
   '/records/baden-road-races/7-mi/',     # with hills
   '/records/endurrace/combined/',         # endurrace combined
+  '/records/re-fridgee-eighter/8-km/?format=json',  # json
+  '/records/laurier-loop/5-km/?format=json&callback=blah',  # jsonp
  # stats
   '/stats/',     # with teams
             )
