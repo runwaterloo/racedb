@@ -15,6 +15,15 @@ define([
         });
         newView.render();
       });
+
+
+      $('button').click(function(){
+        var newView = new RecapView({
+          el: $('.recap'),
+          model: $('input').val()
+        });
+        newView.render();
+      })
     }
 
   return {
