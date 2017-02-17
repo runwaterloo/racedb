@@ -7,6 +7,7 @@ require.config({
     text: '../libs/require/text',
     templates: '../templates',
     bootstrap: '../libs/bootstrap/bootstrap.min',
+    jinja : '../libs/jinja-js/lib/jinja'
   }
 });
 

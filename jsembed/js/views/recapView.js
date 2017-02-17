@@ -1,10 +1,10 @@
-define(['jquery', 'underscore', 'backbone', 'text!templates/recapView.html'],
-  function($, _, Backbone, template) {
+define(['jquery', 'underscore', 'backbone', 'jinja', 'text!templates/recapView.html'],
+  function($, _, Backbone, jinja, template) {
 
   var RecapView = Backbone.View.extend({
     initialize: function() {
-      this.template = _.template(template);
-
+    //  this.template = _.template(template);
+      this.template = jinja.compile(template).render;
 
     },
     render: function() {

@@ -1,6 +1,3 @@
-<%= distance_slug %>
-
-{% extends "racedbapp/base.html" %}
 {% block content %}
 <h4>
 {% if distance_slug == 'combined' %}
@@ -47,7 +44,7 @@
   {% endfor %}
 </table>
 {% endif %}
-{% if team_results|length > 0 %}
+{% if team_results.length > 0 %}
 <table class="table table-condensed">
   <tr class="info">
     <th>Team Category</th>
