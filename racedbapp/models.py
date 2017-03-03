@@ -272,3 +272,7 @@ class Rwmembercorrection(models.Model):
     correction_type = models.CharField(max_length=7, choices=CORRECTION_TYPE_CHOICES)
     event = models.ForeignKey(Event)
     place= models.IntegerField()
+
+class Phototag(models.Model):
+    event = models.ForeignKey(Event)
+    tag = models.CharField(max_length=64)
