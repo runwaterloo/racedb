@@ -8,8 +8,6 @@ from . import secrets
 import logging                                                                   
 logger = logging.getLogger(__name__)   
 
-FLICKR_START = '2016-01-01'
-
 def index(request):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
     notifykey = Config.objects.filter(name='notifykey')[0].value
@@ -40,8 +38,7 @@ def index(request):
 def get_events(qsdate):
     today = date.today()
     if qsdate == 'all':
-        events = Event.objects.filter(date__lte=today,
-                                      date__gte=FLICKR_START)
+        events = Event.objects.filter(date__lte=today).exclude(flickrsetid=None)
     elif qsdate ==  'auto':
         events = []
     else:
