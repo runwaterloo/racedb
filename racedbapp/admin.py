@@ -14,8 +14,7 @@ admin.site.register(Distance, DistanceAdmin)
 
 admin.site.register(Race)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('date', 'race', 'distance')
-    list_filter = ('date', 'race', 'distance')
+    list_display = ('date', 'race', 'distance', 'city', 'flickrsetid')
     search_fields = ('date', 'race__name', 'distance__name')
     ordering = ('-date',)
 admin.site.register(Event, EventAdmin)
