@@ -69,12 +69,16 @@ class Command(BaseCommand):
                     if distance.slug == '7-mi':
                         dohill = True
                         hill_results = []
+                flickrsetid = None
+                if len(Event.objects.filter(id=event['id'])) == 1:
+                    flickrsetid = Event.objects.get(id=event['id']).flickrsetid
                 e = Event(id = event['id'],
                           race = race,
                           distance = distance,
                           date = event['date'],
                           city = event['city'],
-                          resultsurl = event['resultsurl'])
+                          resultsurl = event['resultsurl'],
+                          flickrsetid = flickrsetid)
                 e.save()
                 page_size = 500
                 results = []
