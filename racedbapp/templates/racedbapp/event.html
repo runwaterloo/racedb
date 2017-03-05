@@ -48,7 +48,7 @@
       </h3>
       <p>
         {{ event.date }} - {{ event.city }}
-        {% if phototags %}
+        {% if event.flickrsetid %}
           &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
         {% endif %}
       </p>
