@@ -42,7 +42,7 @@ def get_events(qsdate):
     elif qsdate ==  'auto':
         events = []
     else:
-        events = Event.objects.filter(date=qsdate)
+        events = Event.objects.filter(date=qsdate).exclude(flickrsetid=None)
     return events
 
 def update_event_tags(events):
