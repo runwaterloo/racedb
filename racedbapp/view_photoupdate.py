@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 import urllib
-from datetime import date
+from datetime import date, datetime, timedelta
 import json
 import flickrapi    # https://stuvel.eu/flickrapi
 from .models import *
@@ -37,10 +37,22 @@ def index(request):
 
 def get_events(qsdate):
     today = date.today()
+    hour = datetime.now().hour
     if qsdate == 'all':
-        events = Event.objects.filter(date__lte=today).exclude(flickrsetid=None)
-    elif qsdate ==  'auto':
-        events = []
+        events = Event.objects.all().exclude(flickrsetid=None)
+    elif qsdate == 'auto':
+        if hour == 3:
+            logger.info('Performing monthly auto (all events month anniversaries)')
+            day = datetime.now().day
+            events = Event.objects.filter(date__day=day).exclude(flickrsetid=None)
+        elif hour == 6:
+            logger.info('Performing daily auto (all events past year)')
+            year_ago = today - timedelta(days=365)
+            events = Event.objects.filter(date__gte=year_ago).exclude(flickrsetid=None)
+        else:
+            logger.info('Performing hourly auto (all events past month)')
+            month_ago = today - timedelta(days=31)
+            events = Event.objects.filter(date__gte=month_ago).exclude(flickrsetid=None)
     else:
         events = Event.objects.filter(date=qsdate).exclude(flickrsetid=None)
     return events
