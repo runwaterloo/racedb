@@ -48,6 +48,9 @@
       </h3>
       <p>
         {{ event.date }} - {{ event.city }}
+        {% if phototags %}
+          &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
+        {% endif %}
       </p>
       <ul class="pagination pagination-sm">
         {% for p in pages %}
@@ -136,6 +139,11 @@
             <th class="text-center" scope="col">#</th>
             <th class="text-center" scope="col">Bib</th>
             <th class="text-left" scope="col">Name</th>
+            {% if phototags %}
+              <th class="text-center" scope="col">
+                <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+              </th>
+            {% endif %}
             <th class="text-center" scope="col">Time</th>
             {% if hill_dict %}
               <th class="text-center" scope="col">Hill Sprint</th>
@@ -176,6 +184,17 @@
                 {% if r.relay_team %}
                   <img src="/static/team.png" height="20px" data-toggle="tooltip" title="{{ r.relay_team }}">
                 {% endif %}
+              {% if phototags %}
+                {% if r.photos %}
+                  <td class="text-center">
+                    <a href="{{ r.photos|get_flickrslug }}" target="_blank">
+                      <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+                    </a>
+                  </td>
+                {% else %}
+                  <td></td>
+                {% endif %}
+              {% endif %}
               </td>
               <td class="text-center">{{ r.guntime }}</td>
               {% if hill_dict %}

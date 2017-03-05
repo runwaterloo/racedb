@@ -121,6 +121,7 @@ class Event(models.Model):
     date = models.DateField()
     city = models.CharField(max_length=50)
     resultsurl = models.URLField(max_length=500, null=True, blank=True)
+    flickrsetid = models.BigIntegerField(default=None, null=True, blank=True)
     class Meta:
         unique_together = ('race', 'distance', 'date')
     #    ordering = ('-date', '-distance__km')

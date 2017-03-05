@@ -64,7 +64,8 @@ def index(request):
                                    'femalemember',
                                    'malewinner',
                                    'maletime',
-                                   'malemember'])
+                                   'malemember',
+                                   'flickrsetid'])
     member_dict = view_shared.get_member_dict()
     namedevents = []
     for e in events:
@@ -88,7 +89,8 @@ def index(request):
                                       femalemember,
                                       malewinnersdict[e.id].athlete,
                                       maletime,
-                                      malemember))
+                                      malemember,
+                                      e.flickrsetid))
     events = namedevents
     context = {'events': events,
                'yearfilters': yearfilters,

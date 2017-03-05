@@ -1,11 +1,14 @@
 from django.http import JsonResponse
 import urllib
+from datetime import date
 import json
 import flickrapi    # https://stuvel.eu/flickrapi
 from .models import *
 from . import secrets
 import logging                                                                   
 logger = logging.getLogger(__name__)   
+
+FLICKR_START = '2016-01-01'
 
 def index(request):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
@@ -23,28 +26,44 @@ def index(request):
         response = {'result': 'fail',
                     'message': 'missing date'}
     else:
-        date = qstring['date'][0]
-        events = Event.objects.filter(date=date)
+        qsdate = qstring['date'][0]
+        events = get_events(qsdate)
         if len(events) == 0:
-            logger.warning('no events found for {}'.format(date))
+            logger.warning('no events found for {}'.format(qsdate))
             response = {'result': 'fail',
-                        'message': 'no events found for {}'.format(date)}
+                        'message': 'no events found for {}'.format(qsdate)}
         else:
-            update_event_tags(events)
-            response = {'result': 'success',
-                        'message': 'thank you, come again!'}
-    return JsonResponse(response)
+            response = update_event_tags(events)
+    json_dumps_params = {'indent': 4,}
+    return JsonResponse(response, json_dumps_params=json_dumps_params)
+
+def get_events(qsdate):
+    today = date.today()
+    if qsdate == 'all':
+        events = Event.objects.filter(date__lte=today,
+                                      date__gte=FLICKR_START)
+    elif qsdate ==  'auto':
+        events = []
+    else:
+        events = Event.objects.filter(date=qsdate)
+    return events
 
 def update_event_tags(events):
+    response = {}
+    response['numevents'] = len(events)
+    response['events'] = []
     logger.info('Starting photo tag update for {} events'.format(len(events)))
     for event in events:
         runwaterloo_flickr_id = '136573113@N04'
         photos_per_page = 500
-        flickr = flickrapi.FlickrAPI(secrets.flickr_api_key, secrets.flickr_secret_key, format='parsed-json')
+        flickr = flickrapi.FlickrAPI(secrets.flickr_api_key,
+                                     secrets.flickr_secret_key,
+                                     format='parsed-json')
         photos_page1 = flickr.photos.search(user_id=runwaterloo_flickr_id,
                                         tag_mode='all',
-                                        tags='{},{}'.format(event.date.year,
-                                                            event.race.slug),
+                                        tags='{}{}{}'.format(event.date.year,
+                                                             event.race.slug,
+                                                             event.distance.slug),
                                         per_page=photos_per_page,
                                         extras='tags')
         numpages = int(photos_page1['photos']['pages'])
@@ -54,8 +73,9 @@ def update_event_tags(events):
             page += 1
             photos_pageX = flickr.photos.search(user_id=runwaterloo_flickr_id,
                                                 tag_mode='all',
-                                                tags='{},{}'.format(event.date.year,
-                                                                    event.race.slug),
+                                                tags='{}{}{}'.format(event.date.year,
+                                                                     event.race.slug,
+                                                                     event.distance.slug),
                                                 per_page=photos_per_page,
                                                 page=page,              
                                                 extras='tags')
@@ -64,9 +84,20 @@ def update_event_tags(events):
         for p in photos_all:
             tags += p['tags'].split()
         tags = sorted(set(tags))
-        Phototag.objects.filter(event=event).delete()
-        dbtags = []
-        for t in tags:
-            dbtags.append(Phototag(event=event, tag=t))
-        Phototag.objects.bulk_create(dbtags)
-        logger.info('Found {} tags for {}'.format(len(tags), event))
+        if len(tags) > 0:
+            tags = [ x for x in tags if x.lstrip('m').isdigit() ]
+            dbtags = []
+            for t in tags:
+                dbtags.append(Phototag(event=event, tag=t))
+            Phototag.objects.filter(event=event).delete()
+            Phototag.objects.bulk_create(dbtags)
+        logger.info('Processed {} tags for {}'.format(len(tags), event))
+        thisresponse = {'event': str(event),
+                        'numtags': len(tags),
+                        'photos_scanned': len(photos_all),
+                        'tags': str(tags),
+                       }
+        response['events'].append(thisresponse)
+    response['result'] = 'success'
+    response['message'] = 'thank you, come again!'
+    return response

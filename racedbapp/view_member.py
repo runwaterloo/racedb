@@ -54,6 +54,7 @@ def index(request, member_slug):
         racing_since = results[-1].result.event.date.year
     badges = get_badges(member, results)
     badges = [] # disable badges
+    hasphotos = Phototag.objects.filter(tag='m{}'.format(member.id))
     context = {
                'member': member,
                'results': results,
@@ -64,6 +65,7 @@ def index(request, member_slug):
                'best_gender_place': best_gender_place,
                'best_category_place': best_category_place,
                'badges': badges,
+               'hasphotos': hasphotos,
               }
     return render(request, 'racedbapp/member.html', context)
 
@@ -280,7 +282,6 @@ def get_endurrun_finishes_badges(member, results):
             if set(event_ids).issubset(result_ids):
                 ultimate_finishes += 1
                 ultimate_date_earned = Event.objects.get(id=event_ids[-1]).date
-                print(ultimate_date_earned)
     if sport_finishes > 0:
         plural = ''
         if sport_finishes > 1:

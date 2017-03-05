@@ -21,7 +21,14 @@
 
 <div class="row">
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-    <h3><strong>{{ member.name }}</strong></h3>
+    <h3>
+      <strong>{{ member.name }}</strong>
+      {% if hasphotos %}
+        <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ member.id }}" target="_blank">
+          <span class="glyphicon glyphicon-camera" aria-hidden="true"></span> 
+        </a>
+      {% endif %}
+    </h3>
     <h5>Run Waterloo Member since {{ member.joindate.year }}</h5>
     <h5>Member #{{ member.id }} | {{ member.city }}</h5>
     <table class="table table-bordered table-striped table-hover">

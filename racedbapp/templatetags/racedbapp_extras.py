@@ -42,3 +42,10 @@ def get_time(orig_time):
         if clean_time.total_seconds() >= 356400:
             clean_time = ''
     return clean_time
+
+
+@register.filter(name='get_flickrslug')
+def get_flickrslug(orig_slug):
+    """ Remove hyphens for Flickr """
+    flickrslug = orig_slug.replace('-','')
+    return flickrslug
