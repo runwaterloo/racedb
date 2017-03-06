@@ -86,7 +86,6 @@ def update_event_tags(events):
         thisresponse = {'event': str(event),
                         'numtags': len(tags),
                         'photos_scanned': len(photos),
-                        'tags': str(tags),
                         'delta': len(tags) - len(oldtags),
                        }
         response['events'].append(thisresponse)
