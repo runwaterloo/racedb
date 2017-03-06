@@ -2,7 +2,7 @@ from django.http import JsonResponse
 import urllib
 from datetime import date, datetime, timedelta
 import json
-import flickrapi    # https://stuvel.eu/flickrapi
+import flickrapi    # https://github.com/sybrenstuvel/flickrapi
 from .models import *
 from . import secrets
 import logging                                                                   
