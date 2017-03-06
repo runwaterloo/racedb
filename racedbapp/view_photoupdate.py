@@ -68,29 +68,9 @@ def update_event_tags(events):
     response['events'] = []
     logger.info('Starting photo tag update for {} events'.format(len(events)))
     for event in events:
-        photos_page1 = flickr.photos.search(user_id=runwaterloo_flickr_id,
-                                        tag_mode='all',
-                                        tags='{}{}{}'.format(event.date.year,
-                                                             event.race.slug,
-                                                             event.distance.slug),
-                                        per_page=photos_per_page,
-                                        extras='tags')
-        numpages = int(photos_page1['photos']['pages'])
-        photos_all = photos_page1['photos']['photo']
-        page = 1
-        while page < numpages:
-            page += 1
-            photos_pageX = flickr.photos.search(user_id=runwaterloo_flickr_id,
-                                                tag_mode='all',
-                                                tags='{}{}{}'.format(event.date.year,
-                                                                     event.race.slug,
-                                                                     event.distance.slug),
-                                                per_page=photos_per_page,
-                                                page=page,              
-                                                extras='tags')
-            photos_all += photos_pageX['photos']['photo']
+        photos = get_event_photos(event)
         tags = []
-        for p in photos_all:
+        for p in photos:
             tags += p['tags'].split()
         tags = sorted(set(tags))
         tags = [ x for x in tags if x.lstrip('m').isdigit() ]
@@ -106,7 +86,7 @@ def update_event_tags(events):
             logger.info('{} tags processed for {} ({})'.format(len(tags), event, event.id))
         thisresponse = {'event': str(event),
                         'numtags': len(tags),
-                        'photos_scanned': len(photos_all),
+                        'photos_scanned': len(photos),
                         'tags': str(tags),
                         'delta': len(tags) - len(oldtags),
                        }
@@ -114,3 +94,29 @@ def update_event_tags(events):
     response['result'] = 'success'
     response['message'] = 'thank you, come again!'
     return response
+
+def get_event_photos(event):
+    photos = []
+    photos_page1 = flickr.photos.search(user_id=runwaterloo_flickr_id,
+                                        tag_mode='all',
+                                        tags='{}{}{}'.format(event.date.year,
+                                                             event.race.slug,
+                                                             event.distance.slug),
+                                        per_page=photos_per_page,
+                                        extras='tags')
+    numpages = int(photos_page1['photos']['pages'])
+    photos_page1 = photos_page1['photos']['photo']
+    photos += photos_page1
+    page = 1
+    while page < numpages:
+        page += 1
+        photos_pageX = flickr.photos.search(user_id=runwaterloo_flickr_id,
+                                            tag_mode='all',
+                                            tags='{}{}{}'.format(event.date.year,
+                                                                 event.race.slug,
+                                                                 event.distance.slug),
+                                            per_page=photos_per_page,
+                                            page=page,              
+                                            extras='tags')
+        photos += photos_pageX['photos']['photo']
+    return photos
