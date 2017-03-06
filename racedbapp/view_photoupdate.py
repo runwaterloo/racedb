@@ -93,18 +93,22 @@ def update_event_tags(events):
         for p in photos_all:
             tags += p['tags'].split()
         tags = sorted(set(tags))
-        if len(tags) > 0:
-            tags = [ x for x in tags if x.lstrip('m').isdigit() ]
+        tags = [ x for x in tags if x.lstrip('m').isdigit() ]
+        oldtags = Phototag.objects.filter(event=event).values_list('tag', flat=True)
+        if list(tags) == list(oldtags):
+            logger.info('{} tags unchanged for {} ({})'.format(len(tags), event, event.id))
+        else:
             dbtags = []
             for t in tags:
                 dbtags.append(Phototag(event=event, tag=t))
             Phototag.objects.filter(event=event).delete()
             Phototag.objects.bulk_create(dbtags)
-        logger.info('Processed {} tags for {}'.format(len(tags), event))
+            logger.info('{} tags processed for {} ({})'.format(len(tags), event, event.id))
         thisresponse = {'event': str(event),
                         'numtags': len(tags),
                         'photos_scanned': len(photos_all),
                         'tags': str(tags),
+                        'delta': len(tags) - len(oldtags),
                        }
         response['events'].append(thisresponse)
     response['result'] = 'success'
