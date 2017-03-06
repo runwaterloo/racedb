@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 import urllib
 from datetime import date, datetime, timedelta
 import json
@@ -40,6 +40,7 @@ def index(request):
     json_dumps_params = {'indent': 4,}
     return JsonResponse(response, json_dumps_params=json_dumps_params)
 
+
 def get_events(qsdate):
     today = date.today()
     hour = datetime.now().hour
@@ -62,6 +63,7 @@ def get_events(qsdate):
         events = Event.objects.filter(date=qsdate).exclude(flickrsetid=None)
     return events
 
+
 def update_event_tags(events):
     response = {}
     response['numevents'] = len(events)
@@ -69,11 +71,7 @@ def update_event_tags(events):
     logger.info('Starting photo tag update for {} events'.format(len(events)))
     for event in events:
         photos = get_event_photos(event)
-        tags = []
-        for p in photos:
-            tags += p['tags'].split()
-        tags = sorted(set(tags))
-        tags = [ x for x in tags if x.lstrip('m').isdigit() ]
+        tags = get_tags(photos)
         oldtags = Phototag.objects.filter(event=event).values_list('tag', flat=True)
         if list(tags) == list(oldtags):
             logger.info('{} tags unchanged for {} ({})'.format(len(tags), event, event.id))
@@ -94,6 +92,7 @@ def update_event_tags(events):
     response['result'] = 'success'
     response['message'] = 'thank you, come again!'
     return response
+
 
 def get_event_photos(event):
     photos = []
@@ -120,3 +119,12 @@ def get_event_photos(event):
                                             extras='tags')
         photos += photos_pageX['photos']['photo']
     return photos
+
+
+def get_tags(photos):
+    tags = []
+    for p in photos:
+        tags += p['tags'].split()
+    tags = sorted(set(tags))
+    tags = [ x for x in tags if x.lstrip('m').isdigit() ]
+    return tags
