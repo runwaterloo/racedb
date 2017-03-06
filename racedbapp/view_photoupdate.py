@@ -13,6 +13,7 @@ flickr = flickrapi.FlickrAPI(secrets.flickr_api_key,
                              secrets.flickr_secret_key,
                              format='parsed-json')
 
+
 def index(request):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
     notifykey = Config.objects.filter(name='notifykey')[0].value
