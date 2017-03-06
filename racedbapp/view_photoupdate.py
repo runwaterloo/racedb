@@ -7,6 +7,11 @@ from .models import *
 from . import secrets
 import logging                                                                   
 logger = logging.getLogger(__name__)   
+runwaterloo_flickr_id = '136573113@N04'
+photos_per_page = 500
+flickr = flickrapi.FlickrAPI(secrets.flickr_api_key,
+                             secrets.flickr_secret_key,
+                             format='parsed-json')
 
 def index(request):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
@@ -63,11 +68,6 @@ def update_event_tags(events):
     response['events'] = []
     logger.info('Starting photo tag update for {} events'.format(len(events)))
     for event in events:
-        runwaterloo_flickr_id = '136573113@N04'
-        photos_per_page = 500
-        flickr = flickrapi.FlickrAPI(secrets.flickr_api_key,
-                                     secrets.flickr_secret_key,
-                                     format='parsed-json')
         photos_page1 = flickr.photos.search(user_id=runwaterloo_flickr_id,
                                         tag_mode='all',
                                         tags='{}{}{}'.format(event.date.year,
