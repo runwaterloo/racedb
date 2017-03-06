@@ -47,5 +47,5 @@ def get_time(orig_time):
 @register.filter(name='get_flickrslug')
 def get_flickrslug(orig_slug):
     """ Remove hyphens for Flickr """
-    flickrslug = orig_slug.replace('-','')
+    flickrslug = orig_slug.replace('-','').replace('_','')
     return flickrslug
