@@ -1,12 +1,12 @@
 from django.http import JsonResponse, StreamingHttpResponse
 import urllib
 from datetime import date, datetime, timedelta
-import json
 import flickrapi    # https://github.com/sybrenstuvel/flickrapi
 from .models import *
 from . import secrets
 from . import view_shared
 import logging                                                                   
+import json
 logger = logging.getLogger(__name__)   
 runwaterloo_flickr_id = '136573113@N04'
 photos_per_page = 500
@@ -155,9 +155,11 @@ def get_tags(photos, event):
             #tags += tags2add   #uncomment (DON'T DELETE) for prod
             alltags2add.append([p['id'], strtags]) 
     for i in alltags2add:
-        #flickr.photos.addtags(photo_id=i[0], tags=i[1])    #uncomment for prod
-        #logger.info('zzazz;{};https://www.flickr.com/photos/runwaterloo/{}/;{}'.format(event, i[0], i[1]))
-        logger.info('Added tags {} for photo https://www.flickr.com/photos/runwaterloo/{}/ (Event {})'.format(i[1], i[0], event.id))
+        logger.info(str(i))
+        #newtags = flickr.photos.addtags(photo_id=i[0], tags=i[1])    #uncomment for prod
+        #newtags = flickr.photos.addtags(photo_id='32921973080', tags='c9 c0')
+        #for t in newtags['tags']['tag']:
+        #    logger.info('New tag: event={} photo_id={} tag_content={} tag_id={}'.format(event.id, '32921973080', t['_content'], t['full_tag_id']))
     tags = sorted(set(tags))
     return tags
 
