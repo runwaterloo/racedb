@@ -165,10 +165,14 @@ def create_samerace_list(race):
         races.append(i.current_race)
     return races
 
-def get_membership(event=False):
+def get_membership(event=False, include_inactive=False):
     named_membership = namedtuple('nm', ['names', 'includes', 'excludes'])
     names = {}
-    for m in Rwmember.objects.filter(active=True):
+    if include_inactive:
+        members = Rwmember.objects.all()
+    else:
+        members = Rwmember.objects.filter(active=True) 
+    for m in members:
         names[m.name.lower()] = m
         if m.altname != '':
             names[m.altname.lower()] = m

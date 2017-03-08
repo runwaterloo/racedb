@@ -5,6 +5,7 @@ import json
 import flickrapi    # https://github.com/sybrenstuvel/flickrapi
 from .models import *
 from . import secrets
+from . import view_shared
 import logging                                                                   
 logger = logging.getLogger(__name__)   
 runwaterloo_flickr_id = '136573113@N04'
@@ -71,8 +72,9 @@ def update_event_tags(events):
     response['events'] = []
     logger.info('Starting photo tag update for {} events'.format(len(events)))
     for event in events:
+        logger.info('Starting photo tag update for {} ({})'.format(event, event.id))
         photos = get_event_photos(event)
-        tags = get_tags(photos)
+        tags = get_tags(photos, event)
         oldtags = Phototag.objects.filter(event=event).values_list('tag', flat=True)
         if list(tags) == list(oldtags):
             logger.info('{} tags unchanged for {} ({})'.format(len(tags), event, event.id))
@@ -121,10 +123,72 @@ def get_event_photos(event):
     return photos
 
 
-def get_tags(photos):
+def get_tags(photos, event):
+    bib2member = get_bib2member(event)
+    member2bib = get_member2bib(event)
     tags = []
+    alltags2add = []
     for p in photos:
-        tags += p['tags'].split()
+        pictags = p['tags'].split()
+        ntags = [x for x in pictags if x.isdigit()]
+        mtags = [x for x in pictags if x[0] == 'm']
+        tags += ntags
+        tags += mtags
+        tags2add = []
+        for n in ntags:                                                                 
+            if n in bib2member:                                                         
+                mtag = 'm{}'.format(bib2member[n])                                      
+                if mtag not in mtags:                                                   
+                    tags2add.append(mtag)                                               
+                    mtags.append(mtag)                                                  
+            if n in member2bib:                                                         
+                bib = member2bib[n]                                                     
+                if bib not in ntags:                                                    
+                    tags2add.append(bib) 
+        for m in mtags:
+            if m in member2bib:
+                bib = member2bib[m]
+                if bib not in ntags:
+                    tags2add.append(bib)
+        if len(tags2add) > 0:
+            strtags = ' '.join(tags2add)
+            #tags += tags2add   #uncomment (DON'T DELETE) for prod
+            alltags2add.append([p['id'], strtags]) 
+    for i in alltags2add:
+        #flickr.photos.addtags(photo_id=i[0], tags=i[1])    #uncomment for prod
+        #logger.info('zzazz;{};https://www.flickr.com/photos/runwaterloo/{}/;{}'.format(event, i[0], i[1]))
+        logger.info('Added tags {} for photo https://www.flickr.com/photos/runwaterloo/{}/ (Event {})'.format(i[1], i[0], event.id))
     tags = sorted(set(tags))
-    tags = [ x for x in tags if x.lstrip('m').isdigit() ]
     return tags
+
+
+def get_bib2member(event):  
+    bib2member = {}
+    membersinrace = []
+    membership = view_shared.get_membership(event=event)
+    results = Result.objects.filter(event=event)
+    for r in results:
+        member = view_shared.get_member(r, membership)
+        if member:
+            bib2member[r.bib] = member.id
+            membersinrace.append(member.id)
+    if event.date > date(2017, 2, 12):
+        membersasof = Member.objects.filter(active=True, joindate__lte=event.date).values_list('id', flat=True)
+        for m in membersasof:
+            if m in membersinrace:
+                bib2member[m] = m
+    return bib2member
+
+                
+def get_member2bib(event):
+    member2bib = {}
+    membership = view_shared.get_membership(event=event, include_inactive=True)
+    results = Result.objects.filter(event=event)
+    for r in results:
+        member = view_shared.get_member(r, membership)
+        if member:
+            member2bib['m{}'.format(member.id)] = r.bib
+            if event.date > date(2017, 2, 12):
+                if member.joindate <= event.date:
+                    member2bib[member.id] = r.bib
+    return member2bib
