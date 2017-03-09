@@ -74,7 +74,7 @@ def update_event_tags(events):
     for event in events:
         logger.info('Starting photo tag update for {} ({})'.format(event, event.id))
         photos = get_event_photos(event)
-        tags = do_tags(photos, event)
+        tags, tags_applied = do_tags(photos, event)
         oldtags = Phototag.objects.filter(event=event).values_list('tag', flat=True)
         if list(tags) == list(oldtags):
             logger.info('{} tags unchanged for {} ({})'.format(len(tags), event, event.id))
@@ -89,6 +89,7 @@ def update_event_tags(events):
                         'numtags': len(tags),
                         'photos_scanned': len(photos),
                         'delta': len(tags) - len(oldtags),
+                        'tags_applied': tags_applied,
                        }
         response['events'].append(thisresponse)
     response['result'] = 'success'
@@ -159,7 +160,7 @@ def do_tags(photos, event):
         for t in newtags['tags']['tag']:
             logger.info('New tag: event={} photo_id={} tag_content={} tag_id={}'.format(event.id, i[0], t['_content'], t['full_tag_id']))
     tags = sorted(set(tags))
-    return tags
+    return tags, len(alltags2add)
 
 
 def get_bib2member(event):  
