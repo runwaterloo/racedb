@@ -74,7 +74,7 @@ def update_event_tags(events):
     for event in events:
         logger.info('Starting photo tag update for {} ({})'.format(event, event.id))
         photos = get_event_photos(event)
-        tags = get_tags(photos, event)
+        tags = do_tags(photos, event)
         oldtags = Phototag.objects.filter(event=event).values_list('tag', flat=True)
         if list(tags) == list(oldtags):
             logger.info('{} tags unchanged for {} ({})'.format(len(tags), event, event.id))
@@ -123,7 +123,7 @@ def get_event_photos(event):
     return photos
 
 
-def get_tags(photos, event):
+def do_tags(photos, event):
     bib2member = get_bib2member(event)
     member2bib = get_member2bib(event)
     tags = []
@@ -152,14 +152,12 @@ def get_tags(photos, event):
                     tags2add.append(bib)
         if len(tags2add) > 0:
             strtags = ' '.join(tags2add)
-            #tags += tags2add   #uncomment (DON'T DELETE) for prod
+            tags += tags2add
             alltags2add.append([p['id'], strtags]) 
     for i in alltags2add:
-        logger.info(str(i))
-        #newtags = flickr.photos.addtags(photo_id=i[0], tags=i[1])    #uncomment for prod
-        #newtags = flickr.photos.addtags(photo_id='32921973080', tags='c9 c0')
-        #for t in newtags['tags']['tag']:
-        #    logger.info('New tag: event={} photo_id={} tag_content={} tag_id={}'.format(event.id, '32921973080', t['_content'], t['full_tag_id']))
+        newtags = flickr.photos.addtags(photo_id=i[0], tags=i[1])
+        for t in newtags['tags']['tag']:
+            logger.info('New tag: event={} photo_id={} tag_content={} tag_id={}'.format(event.id, i[0], t['_content'], t['full_tag_id']))
     tags = sorted(set(tags))
     return tags
 
@@ -168,13 +166,14 @@ def get_bib2member(event):
     bib2member = {}
     membersinrace = []
     membership = view_shared.get_membership(event=event)
+    member_assumption = get_member_assumption(event)
     results = Result.objects.filter(event=event)
     for r in results:
         member = view_shared.get_member(r, membership)
         if member:
             bib2member[r.bib] = member.id
             membersinrace.append(member.id)
-    if event.date > date(2017, 2, 12):
+    if member_assumption:
         membersasof = Member.objects.filter(active=True, joindate__lte=event.date).values_list('id', flat=True)
         for m in membersasof:
             if m in membersinrace:
@@ -185,12 +184,29 @@ def get_bib2member(event):
 def get_member2bib(event):
     member2bib = {}
     membership = view_shared.get_membership(event=event, include_inactive=True)
+    member_assumption = get_member_assumption(event)
     results = Result.objects.filter(event=event)
     for r in results:
         member = view_shared.get_member(r, membership)
         if member:
             member2bib['m{}'.format(member.id)] = r.bib
-            if event.date > date(2017, 2, 12):
+            if member_assumption:
                 if member.joindate <= event.date:
                     member2bib[member.id] = r.bib
     return member2bib
+
+
+def get_member_assumption(event):
+    """
+    Determine if we should assume that number tags matching a member id
+    can only belong to that member. This should only be done AFTER
+    2017-02-12 (Re-Fridgee-Eighther) because before that regular bibs will
+    conflict with member ids, and it should not be done for ENDURrun because
+    member bibs should not be worn.
+    """
+    no_assumption_races = ('endurrun',)
+    member_assumption = False
+    if event.date > date(2017, 3, 20):
+        if event.race.slug not in no_assumption_races:
+            member_assumption = True
+    return member_assumption
