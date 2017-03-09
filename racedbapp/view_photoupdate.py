@@ -44,25 +44,63 @@ def index(request):
 
 
 def get_events(qsdate):
-    today = date.today()
-    hour = datetime.now().hour
+    """
+    Determine which events should processed based on the date value given in
+    the qstring. There are two simple cases:
+        
+    1) 'all': process ALL events, this is slow and not recommended
+    2) a valid date: process events for the given date only
+    
+    In an effort to distribute the workload things get considerably more
+    complicated when the third case, 'auto', is provided. In this case it will
+    always process events that occured in the past 31 days, and it may include
+    additional events depending on the hour of day that this job is running.
+    In hours 6-23 it only includes events from the past 31 days, but hours 0-5
+    will add:
+    
+    1) Events older than 31 days but not older than 365 days with a month
+       matching code for that hour. For example, hour 2 adds events that
+       occurred in May or June.
+    
+    2) Events older than 365 days with a day (day of month) matching the
+       current day of month, and a year where the remainder of dividing the
+       year by 6 is 0.
+
+    This job is scheduled in cron hourly and the the point of all this
+    complexity is to distribute the extra event processing throughout the 
+    night so that no single run has too much work, the following criteria are
+    met:
+
+    1) All events in the past month are processed hourly
+    
+    2) All events in the past year are processed daily
+
+    3) All events are processed monthly on the anniversary of their
+       day of month
+    """
     if qsdate == 'all':
         events = Event.objects.all().exclude(flickrsetid=None)
     elif qsdate == 'auto':
-        if hour == 3:
-            logger.info('Performing monthly auto (all events month anniversaries)')
-            day = datetime.now().day
-            events = Event.objects.filter(date__day=day).exclude(flickrsetid=None)
-        elif hour == 6:
-            logger.info('Performing daily auto (all events past year)')
-            year_ago = today - timedelta(days=365)
-            events = Event.objects.filter(date__gte=year_ago).exclude(flickrsetid=None)
+        now = datetime.now()
+        today = date.today()
+        hour = now.hour
+        hour = 2
+        day = now.day
+        month = now.month
+        month_ago = today - timedelta(days=31)
+        year_ago = today - timedelta(days=365)
+        events = list(Event.objects.filter(date__gte=month_ago).exclude(flickrsetid=None))
+        if hour in range(6):
+            months = (hour + 1, hour + 2) 
+            logger.info('Auto checking events past month, past year [months {}], anniversary day [year % 6 = {}]'.format(months, hour))
+            past_year_events = list(Event.objects.filter(date__lt=month_ago, date__gte=year_ago, date__month__in=months).exclude(flickrsetid=None))
+            all_anniversary_events = Event.objects.filter(date__lt=year_ago, date__day=day).exclude(flickrsetid=None)
+            anniversary_events = [x for x in all_anniversary_events if x.date.year % 6 == hour]
+            events = events + past_year_events + anniversary_events
         else:
-            logger.info('Performing hourly auto (all events past month)')
-            month_ago = today - timedelta(days=31)
-            events = Event.objects.filter(date__gte=month_ago).exclude(flickrsetid=None)
+            logger.info('Auto checking events past month')
     else:
-        events = Event.objects.filter(date=qsdate).exclude(flickrsetid=None)
+        events = list(Event.objects.filter(date=qsdate).exclude(flickrsetid=None))
     return events
 
 
