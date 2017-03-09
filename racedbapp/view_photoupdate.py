@@ -84,7 +84,6 @@ def get_events(qsdate):
         now = datetime.now()
         today = date.today()
         hour = now.hour
-        hour = 2
         day = now.day
         month = now.month
         month_ago = today - timedelta(days=31)
