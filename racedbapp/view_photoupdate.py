@@ -160,6 +160,8 @@ def do_tags(photos, event):
         for t in newtags['tags']['tag']:
             logger.info('New tag: event={} photo_id={} tag_content={} tag_id={}'.format(event.id, i[0], t['_content'], t['full_tag_id']))
     tags = sorted(set(tags))
+    if 'marathon' in tags:
+        tags.remove('marathon')
     return tags, len(alltags2add)
 
 
