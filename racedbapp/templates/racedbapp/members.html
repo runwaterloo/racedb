@@ -40,6 +40,9 @@
             <th class="text-center" scope="col">G</th>
             <th class="text-left" scope="col">City</th>
             <th class="text-center" scope="col">Member Since</th>
+            <th class="text-center" scope="col">
+              <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -50,6 +53,15 @@
               <td class="text-center">{{ m.gender }}</td>
               <td class="text-left">{{ m.city }}</td>
               <td class="text-center">{{ m.joindate.year }}</td>
+              {% if m.id in member_tags %}
+                 <td class="text-center">
+                    <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ m.id }}" target="_blank">
+                      <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+                    </a>
+                  </td>
+              {% else %}
+                <td></td>
+              {% endif %}
             </tr>
          {% endfor %}
        </tbody>
