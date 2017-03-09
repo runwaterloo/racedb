@@ -25,7 +25,9 @@ def index(request, year, race_slug, distance_slug):
     races = view_shared.create_samerace_list(event.race)
     team_categories = get_team_categories(event)
     hill_dict = get_hill_dict(event)
-    phototags = list(Phototag.objects.filter(event=event).values_list('tag', flat=True))
+    dbphototags = list(Phototag.objects.filter(event=event).values_list('tag', flat=True))
+    phototags = [x for x in dbphototags if x.isdigit()]
+    event_flickr_str = '{}-{}-{}'.format(event.date.year, event.race.slug, event.distance.slug).replace('-','').replace('_','')
     wheelchair_results = Wheelchairresult.objects.filter(event=event)
     pages = get_pages(event, page, hill_dict,
                       wheelchair_results, team_categories) 
@@ -62,6 +64,7 @@ def index(request, year, race_slug, distance_slug):
                'split_headings': split_headings,
                'extra_name': extra_name,
                'phototags': phototags,
+               'event_flickr_str': event_flickr_str,
               }
     return render(request, 'racedbapp/event.html', context)
 
@@ -306,7 +309,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                       'ismasters',
                       'splits',
                       'member',
-                      'photos',
+                      'hasphotos',
                      ])
     results = []
     relay_dict = get_relay_dict(event)
@@ -374,12 +377,9 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                 except:
                     splits.append(named_split(i, ''))
         member = view_shared.get_member(r, membership)
-        photos = None
-        if len(phototags) > 0:
-            tagstring = '{}{}{}'.format(event.date.year,
-                                         event.race.slug,
-                                         event.distance.slug)
-            photos = get_photos(r, member, tagstring, phototags)
+        hasphotos = False
+        if r.bib in phototags:
+            hasphotos = True
         results.append(named_result(r.place,
                                     r.bib,
                                     r.athlete,
@@ -397,7 +397,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                                     ismasters,
                                     splits,
                                     member,
-                                    photos,
+                                    hasphotos,
                                    ))
     results = filter_results(results, category, division)
     if page == 'Hill Sprint':
@@ -466,7 +466,7 @@ def get_hill_results(results, named_result):
            r.ismasters,
            r.splits,
            r.member,
-           r.photos,
+           r.hasphotos,
            ))
     return hill_results
 
@@ -488,15 +488,3 @@ def get_extra_name(event):
         elif event.distance.slug == 'marathon':
             extra_name = 'Stage 7 - '
     return extra_name
-
-def get_photos(result, member, tagstring, phototags):
-    photos = None
-    if member:
-        if 'm{}'.format(member.id) in phototags:
-            photos = 'https://www.flickr.com/photos/runwaterloo/tags/{},m{}'.format(tagstring, member.id)
-        elif str(result.bib) in phototags:
-            photos = 'https://www.flickr.com/photos/runwaterloo/tags/{},{}'.format(tagstring, result.bib)
-    else:
-        if str(result.bib) in phototags:
-            photos = 'https://www.flickr.com/photos/runwaterloo/tags/{},{}'.format(tagstring, result.bib)
-    return photos

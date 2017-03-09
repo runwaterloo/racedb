@@ -185,9 +185,9 @@
                   <img src="/static/team.png" height="20px" data-toggle="tooltip" title="{{ r.relay_team }}">
                 {% endif %}
               {% if phototags %}
-                {% if r.photos %}
+                {% if r.hasphotos %}
                   <td class="text-center">
-                    <a href="{{ r.photos|get_flickrslug }}" target="_blank">
+                    <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ event_flickr_str}},{{ r.bib }}" target="_blank">
                       <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
                     </a>
                   </td>
