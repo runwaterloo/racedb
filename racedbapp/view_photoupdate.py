@@ -118,7 +118,9 @@ def update_event_tags(events):
         photos = get_event_photos(event)
         tags, tags_applied = do_tags(photos, event)
         oldtags = Phototag.objects.filter(event=event).values_list('tag', flat=True)
-        if list(tags) == list(oldtags):
+        if len(tags) == 0:
+            logger.info('No tags found for {} ({}). No changes made.'.format(event, event.id))
+        elif list(tags) == list(oldtags):
             logger.info('{} tags unchanged for {} ({})'.format(len(tags), event, event.id))
         else:
             dbtags = []
