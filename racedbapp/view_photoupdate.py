@@ -60,7 +60,7 @@ def get_events(qsdate):
     
     1) Events older than 31 days but not older than 365 days with a month
        matching code for that hour. For example, hour 2 adds events that
-       occurred in May or June.
+       occurred in June or July.
     
     2) Events older than 365 days with a day (day of month) matching the
        current day of month, and a year where the remainder of dividing the
@@ -84,15 +84,21 @@ def get_events(qsdate):
         now = datetime.now()
         today = date.today()
         hour = now.hour
+        hour = 4
         day = now.day
         month = now.month
         month_ago = today - timedelta(days=31)
         year_ago = today - timedelta(days=365)
         events = list(Event.objects.filter(date__gte=month_ago).exclude(flickrsetid=None))
         if hour in range(6):
-            months = (hour + 1, hour + 2) 
-            logger.info('Auto checking events past month, past year [months {}], anniversary day [year % 6 = {}]'.format(months, hour))
-            past_year_events = list(Event.objects.filter(date__lt=month_ago, date__gte=year_ago, date__month__in=months).exclude(flickrsetid=None))
+            months = {0: (1, 2, 3),
+                      1: (4, 5),
+                      2: (6, 7),
+                      3: (8,),
+                      4: (9, 10),
+                      5: (11,12)}
+            logger.info('Auto checking events past month, past year {}, anniversary day (batch {})'.format(months[hour], hour))
+            past_year_events = list(Event.objects.filter(date__lt=month_ago, date__gte=year_ago, date__month__in=months[hour]).exclude(flickrsetid=None))
             all_anniversary_events = Event.objects.filter(date__lt=year_ago, date__day=day).exclude(flickrsetid=None)
             anniversary_events = [x for x in all_anniversary_events if x.date.year % 6 == hour]
             events = events + past_year_events + anniversary_events
