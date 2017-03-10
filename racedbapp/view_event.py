@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import Http404
 #from django.db.models import Count
 from urllib import parse
 from collections import namedtuple
@@ -148,6 +149,8 @@ def get_division(qstring):
     division = 'All'
     if 'division' in qstring:
         division = qstring['division'][0]
+        if division not in ('Ultimate', 'Sport', 'Relay', 'Guest'):
+            raise Http404('Division "{}" is not valid'.format(division))
     return division
 
 def get_pages(event, page, hill_dict, wheelchair_results, team_categories):
