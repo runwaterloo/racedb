@@ -24,7 +24,7 @@
     <h3>
       <strong>{{ member.name }}</strong>
       {% if hasphotos %}
-        <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ member.id }}" target="_blank">
+        <a href="https://www.flickr.com/search/?user_id=runwaterloo&tags=m{{ member.id }}&sort=date-taken-desc" target="_blank">
           <span class="glyphicon glyphicon-camera" aria-hidden="true"></span> 
         </a>
       {% endif %}
