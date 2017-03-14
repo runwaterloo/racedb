@@ -228,10 +228,12 @@ class Split(models.Model):
         unique_together = ('event', 'place', 'split_num')
 
 class Endurathlete(models.Model):
+    DIVISION_CHOICES = (('Ultimate', 'Ultimate'),('Sport', 'Sport'))
+    GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
     year = models.IntegerField()
-    division = models.CharField(max_length=32)
+    division = models.CharField(max_length=32, choices=DIVISION_CHOICES)
     name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=1)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     age = models.IntegerField(null=True)
     city = models.CharField(max_length=100)
     province = models.CharField(max_length=100)

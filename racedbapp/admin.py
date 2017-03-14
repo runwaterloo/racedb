@@ -13,8 +13,9 @@ class DistanceAdmin(admin.ModelAdmin):
 admin.site.register(Distance, DistanceAdmin)
 
 admin.site.register(Race)
+
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('date', 'race', 'distance', 'city', 'flickrsetid')
+    list_display = ('id', 'date', 'race', 'distance', 'city', 'flickrsetid')
     search_fields = ('date', 'race__name', 'distance__name')
     ordering = ('-date',)
 admin.site.register(Event, EventAdmin)
@@ -34,3 +35,11 @@ class RwmembercorrectionAdmin(admin.ModelAdmin):
     search_fields = ('rwmember',)
     ordering = ('rwmember__id',)
 admin.site.register(Rwmembercorrection, RwmembercorrectionAdmin)
+
+class EndurathleteAdmin(admin.ModelAdmin):
+    list_display = ('year', 'division', 'name', 'gender', 'age',
+                    'city', 'province', 'country')
+    list_filter = ('division', 'gender', 'country', 'year')
+    search_fields = ('name', 'country')
+    ordering = ('-year', '-division', 'id',)
+admin.site.register(Endurathlete, EndurathleteAdmin)
