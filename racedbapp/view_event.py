@@ -20,9 +20,12 @@ def index(request, year, race_slug, distance_slug):
     page = get_page(qstring)
     category = get_category(qstring)
     division = get_division(qstring)
-    event = Event.objects.select_related().get(race__slug=race_slug,
-                                               distance__slug=distance_slug,
-                                               date__icontains=year)
+    try:
+        event = Event.objects.select_related().get(race__slug=race_slug,
+                                                   distance__slug=distance_slug,
+                                                   date__icontains=year)
+    except:
+        raise Http404('Matching event not found'.format(division))
     races = view_shared.create_samerace_list(event.race)
     team_categories = get_team_categories(event)
     hill_dict = get_hill_dict(event)
