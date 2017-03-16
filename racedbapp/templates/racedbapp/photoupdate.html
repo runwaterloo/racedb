@@ -16,7 +16,11 @@
 
 {% block content %}
 <h3>Photo Update</h3>
-<h4>{{ numevents }} Events Processed</h4>
+{% if numevents == 1 %}
+  <h4>{{ numevents }} Event Processed</h4>
+{% else %}
+  <h4>{{ numevents }} Events Processed</h4>
+{% endif %}
 {% if results %}
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
