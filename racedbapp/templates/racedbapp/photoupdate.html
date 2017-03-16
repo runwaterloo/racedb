@@ -37,7 +37,7 @@
         <tbody>
           {% for r in results %}
             <tr>
-              <td class="text-left">{{ r.event }}</td>
+              <td class="text-left"><a href="/event/{{ r.event.date.year }}/{{ r.event.race.slug }}/{{ r.event.distance.slug }}/">{{ r.event }}</a></td>
               <td class="text-center">{{ r.numphotos }}</td>
               <td class="text-center">{{ r.unique_tags }}</td>
               <td class="text-center">{{ r.delta }}</td>
