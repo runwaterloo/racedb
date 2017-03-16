@@ -1,4 +1,6 @@
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import HttpResponse, Http404
+from django.shortcuts import render
+from collections import namedtuple
 import urllib
 from datetime import date, datetime, timedelta
 import flickrapi    # https://github.com/sybrenstuvel/flickrapi
@@ -16,31 +18,18 @@ flickr = flickrapi.FlickrAPI(secrets.flickr_api_key,
 
 
 def index(request):
-    qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
-    notifykey = Config.objects.filter(name='notifykey')[0].value
-    if 'notifykey' not in qstring:
-        logger.error('missing key')
-        response = {'result': 'fail',
-                    'message': 'missing key'}
-    elif qstring['notifykey'][0] != notifykey:
-        logger.error('invalid key')
-        response = {'result': 'fail',
-                    'message': 'invalid key'}
-    elif 'date' not in qstring:
-        logger.error('missing date')
-        response = {'result': 'fail',
-                    'message': 'missing date'}
+    qsdate = validate(request)
+    events = get_events(qsdate)
+    numevents = len(events)
+    if numevents == 0:
+        logger.warning('No events found for {}'.format(qsdate))
+        results = []
     else:
-        qsdate = qstring['date'][0]
-        events = get_events(qsdate)
-        if len(events) == 0:
-            logger.warning('no events found for {}'.format(qsdate))
-            response = {'result': 'fail',
-                        'message': 'no events found for {}'.format(qsdate)}
-        else:
-            response = update_event_tags(events)
-    json_dumps_params = {'indent': 4,}
-    return JsonResponse(response, json_dumps_params=json_dumps_params)
+        results = update_event_tags(events)
+    context = { 'numevents' : numevents,
+                'results' : results,
+              }
+    return render(request, 'racedbapp/photoupdate.html', context)
 
 
 def get_events(qsdate):
@@ -109,9 +98,12 @@ def get_events(qsdate):
 
 
 def update_event_tags(events):
-    response = {}
-    response['numevents'] = len(events)
-    response['events'] = []
+    named_result = namedtuple('nr', ['event',
+                                     'numphotos',
+                                     'unique_tags',
+                                     'delta',
+                                     'tags_applied'])
+    results = []
     logger.info('Starting photo tag update for {} events'.format(len(events)))
     for event in events:
         logger.info('Starting photo tag update for {} ({})'.format(event, event.id))
@@ -129,16 +121,12 @@ def update_event_tags(events):
             Phototag.objects.filter(event=event).delete()
             Phototag.objects.bulk_create(dbtags)
             logger.info('{} tags processed for {} ({})'.format(len(tags), event, event.id))
-        thisresponse = {'event': str(event),
-                        'numtags': len(tags),
-                        'photos_scanned': len(photos),
-                        'delta': len(tags) - len(oldtags),
-                        'tags_applied': tags_applied,
-                       }
-        response['events'].append(thisresponse)
-    response['result'] = 'success'
-    response['message'] = 'thank you, come again!'
-    return response
+        results.append(named_result(event,
+                                    len(photos),
+                                    len(tags),
+                                    len(tags) - len(oldtags),
+                                    tags_applied))
+    return results
 
 
 def get_event_photos(event):
@@ -267,3 +255,29 @@ def ismtag(tag):
         if tag.lstrip('m').isdigit():
             ismtag = True
     return ismtag
+
+
+def validate(request):
+    """
+    Validate that the request has everything it needs and return the date
+    """
+
+    qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
+    notifykey = Config.objects.filter(name='notifykey')[0].value
+    if 'notifykey' not in qstring:
+        logger.error('missing key')
+        raise Http404('Parameter "notifykey" not in URL')
+    elif qstring['notifykey'][0] != notifykey:
+        logger.error('invalid key')
+        raise Http404('Invalid key')
+    elif 'date' not in qstring:
+        logger.error('missing date')
+        raise Http404('Parameter "date" not in URL')
+    else:
+        qsdate = qstring['date'][0]
+    if qsdate not in ('auto', 'all'):
+        try:
+            datetime.strptime(qsdate, '%Y-%m-%d')
+        except ValueError:
+            raise Http404('Invalid date format, should be YYYY-MM-DD')
+    return qsdate
