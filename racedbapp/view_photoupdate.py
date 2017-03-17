@@ -265,13 +265,13 @@ def validate(request):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
     notifykey = Config.objects.filter(name='notifykey')[0].value
     if 'notifykey' not in qstring:
-        logger.error('missing key')
+        logger.warning('missing key')
         raise Http404('Parameter "notifykey" not in URL')
     elif qstring['notifykey'][0] != notifykey:
-        logger.error('invalid key')
+        logger.warning('invalid key')
         raise Http404('Invalid key')
     elif 'date' not in qstring:
-        logger.error('missing date')
+        logger.warning('missing date')
         raise Http404('Parameter "date" not in URL')
     else:
         qsdate = qstring['date'][0]
@@ -279,5 +279,6 @@ def validate(request):
         try:
             datetime.strptime(qsdate, '%Y-%m-%d')
         except ValueError:
+            logger.warning('invalid date format')
             raise Http404('Invalid date format, should be YYYY-MM-DD')
     return qsdate
