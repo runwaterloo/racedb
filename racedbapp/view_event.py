@@ -240,7 +240,10 @@ def get_category_filter(event, category, division):
     if category == 'All':
         current = 'All ({})'.format(total_count)
     else:
-        category_count = [ x['count'] for x in all_categories if x['category__name'] == category ][0]
+        try:
+            category_count = [ x['count'] for x in all_categories if x['category__name'] == category ][0]
+        except:
+            category_count = 0
         current = '{} ({})'.format(category, category_count)
         if division == 'All':
             choices.append(named_choice('All ({})'.format(total_count), '/event/{}/{}/{}/'.format(event.date.year, event.race.slug, event.distance.slug)))
