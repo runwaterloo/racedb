@@ -54,7 +54,6 @@ def index(request, member_slug):
         racing_since = results[-1].result.event.date.year
     badges = get_badges(member, results)
     badges = [] # disable badges
-    hasphotos = Phototag.objects.filter(tag='m{}'.format(member.id))
     context = {
                'member': member,
                'results': results,
@@ -65,7 +64,6 @@ def index(request, member_slug):
                'best_gender_place': best_gender_place,
                'best_category_place': best_category_place,
                'badges': badges,
-               'hasphotos': hasphotos,
               }
     return render(request, 'racedbapp/member.html', context)
 
