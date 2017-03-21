@@ -28,6 +28,7 @@ class RwmemberAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'gender', 'city', 'joindate', 'active')
     search_fields = ('name',)
     ordering = ('name',)
+    readonly_fields = ('hasphotos',)
 admin.site.register(Rwmember, RwmemberAdmin)
 
 class RwmembercorrectionAdmin(admin.ModelAdmin):
