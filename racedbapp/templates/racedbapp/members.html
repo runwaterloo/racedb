@@ -53,7 +53,7 @@
               <td class="text-center">{{ m.gender }}</td>
               <td class="text-left">{{ m.city }}</td>
               <td class="text-center">{{ m.joindate.year }}</td>
-              {% if m.id in member_tags %}
+              {% if m.hasphotos %}
                  <td class="text-center">
                     <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ m.id }}?sort=date-taken-desc" target="_blank">
                       <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
