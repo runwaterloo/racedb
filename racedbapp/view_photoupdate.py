@@ -100,7 +100,9 @@ def get_events(qsdate):
 def update_event_tags(events):
     named_result = namedtuple('nr', ['event',
                                      'numphotos',
+                                     'finishers',
                                      'unique_tags',
+                                     'pct',
                                      'delta',
                                      'tags_applied'])
     results = []
@@ -109,22 +111,35 @@ def update_event_tags(events):
         logger.info('Starting photo tag update for {} ({})'.format(event, event.id))
         photos = get_event_photos(event)
         tags, tags_applied = do_tags(photos, event)
+        event_bibs = Result.objects.filter(event=event).values_list('bib', flat=True)
+        all_ntags = [x for x in tags if x.isdigit()]
+        event_ntags = [x for x in all_ntags if x in event_bibs]
+        mtagnums = [x.lstrip('m') for x in tags if ismtag(x)]
         oldtags = Phototag.objects.filter(event=event).values_list('tag', flat=True)
         if len(tags) == 0:
             logger.info('No tags found for {} ({}). No changes made.'.format(event, event.id))
-        elif list(tags) == list(oldtags):
-            logger.info('{} tags unchanged for {} ({})'.format(len(tags), event, event.id))
+        elif list(event_ntags) == list(oldtags):
+            logger.info('{} tags unchanged for {} ({})'.format(len(event_ntags), event, event.id))
         else:
             dbtags = []
-            for t in tags:
+            for t in event_ntags:
                 dbtags.append(Phototag(event=event, tag=t))
             Phototag.objects.filter(event=event).delete()
             Phototag.objects.bulk_create(dbtags)
-            logger.info('{} tags processed for {} ({})'.format(len(tags), event, event.id))
+            logger.info('{} tags processed for {} ({})'.format(len(event_ntags), event, event.id))
+        nophotomembers = list(Rwmember.objects.filter(active=True, hasphotos=False).values_list('id', flat=True))
+        for m in mtagnums:
+            if int(m) in nophotomembers:
+                member =  Rwmember.objects.get(id=m)
+                member.hasphotos = True
+                member.save()
+                logger.info('Set hasphotos to true for member {} ({})'.format(member, m))
         results.append(named_result(event,
                                     len(photos),
-                                    len(tags),
-                                    len(tags) - len(oldtags),
+                                    len(event_bibs),
+                                    len(event_ntags),
+                                    '{:.1%}'.format(len(event_ntags) / len(event_bibs)),
+                                    len(event_ntags) - len(oldtags),
                                     tags_applied))
     return results
 

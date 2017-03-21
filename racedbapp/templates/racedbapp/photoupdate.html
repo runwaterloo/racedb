@@ -1,7 +1,7 @@
 {% extends "racedbapp/base.html" %}
 
 {% block title %}
-  Photoupdate
+  Photo Update
   |
 {% endblock title %}
 
@@ -28,10 +28,12 @@
         <thead>
           <tr class="info">
             <th class="text-left" scope="col">Event</th>
-            <th class="text-center" scope="col">Photos</th>
-            <th class="text-center" scope="col">Total Tags</th>
-            <th class="text-center" scope="col">Delta</th>
-            <th class="text-center" scope="col">Tags Applied</th>
+            <th class="text-center" scope="col" title="number of photos in the album">Photos</th>
+            <th class="text-center" scope="col" title="number of results">Results</th>
+            <th class="text-center" scope="col" title="unique tags">Tags</th>
+            <th class="text-center" scope="col" title="percent coverage">Pct</th>
+            <th class="text-center" scope="col" title="change in unique tags this update">Delta</th>
+            <th class="text-center" scope="col" title="number of tags applied on flickr">Applied</th>
           </tr>
         </thead>
         <tbody>
@@ -39,7 +41,9 @@
             <tr>
               <td class="text-left"><a href="/event/{{ r.event.date.year }}/{{ r.event.race.slug }}/{{ r.event.distance.slug }}/">{{ r.event }}</a></td>
               <td class="text-center">{{ r.numphotos }}</td>
+              <td class="text-center">{{ r.finishers }}</td>
               <td class="text-center">{{ r.unique_tags }}</td>
+              <td class="text-center">{{ r.pct }}</td>
               <td class="text-center">{{ r.delta }}</td>
               <td class="text-center">{{ r.tags_applied }}</td>
             </tr>
