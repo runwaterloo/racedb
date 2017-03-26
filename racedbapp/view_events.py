@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.db.models import Min, Count
 from django import db
 from collections import namedtuple
@@ -37,7 +37,10 @@ def index(request):
         racefilter = ''
     if 'distance' in qstring:
         distance_slug = qstring['distance'][0]
-        distance_id = Distance.objects.get(slug=distance_slug).id
+        try:
+            distance_id = Distance.objects.get(slug=distance_slug).id
+        except:
+            raise Http404('Invalid distance ({})'.format(distance_slug))
         events = events.filter(distance_id=distance_id)
         yearfilter_events = yearfilter_events.filter(distance_id=distance_id)
         racefilter_events = racefilter_events.filter(distance_id=distance_id)
