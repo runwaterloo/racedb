@@ -1,5 +1,6 @@
 from django import template
 from datetime import timedelta
+from ..models import Config
 
 register = template.Library()
 
@@ -42,3 +43,9 @@ def get_time(orig_time):
         if clean_time.total_seconds() >= 356400:
             clean_time = ''
     return clean_time
+
+@register.filter(name='get_prekey')
+def get_prekey(string):
+    """ Get preupdate key """
+    prekey = Config.objects.get(name='prekey').value
+    return prekey
