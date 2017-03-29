@@ -1,9 +1,10 @@
 from django.conf.urls import url
 from django.views.generic.base import RedirectView
-from . import view_index, view_bow, view_bowrecap, view_distance, view_endurrace, view_endurrun, view_endurrunhome, view_event, view_events, view_event_team, view_notify, view_multiwins, view_member, view_members, view_recap, view_race, view_name, view_photoupdate, view_records, view_race, view_stats
+from . import view_adminphotos, view_index, view_bow, view_bowrecap, view_distance, view_endurrace, view_endurrun, view_endurrunhome, view_event, view_events, view_event_team, view_notify, view_multiwins, view_member, view_members, view_recap, view_race, view_name, view_photoupdate, view_records, view_race, view_stats
 
 urlpatterns = [
     url(r'^$', RedirectView.as_view(url='/events', permanent=False), name='index'),
+    url(r'^adminphotos', view_adminphotos.index, name='adminphotos'),
     url(r'^bowrecap/(?P<bow_slug>.*)/after/(?P<phase>.*)$', view_bowrecap.index, name='bowrecap'),
     url(r'^bow/(?P<bow_slug>.*)/$', view_bow.index, name='bow'),
     url(r'^distance/(?P<distance_slug>.*)/$', view_distance.index, name='distance'),
