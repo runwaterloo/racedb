@@ -40,7 +40,7 @@
     <tbody>
     {% for e in events %}
       <tr>
-        <td><a href="/event/{{ e.event.date.year }}/{{ e.event.race.slug }}/{{e.event.distance.slug}}">{{ e.event.date.year }} {{ e.event.race.name }} {{ e.event.distance.name }}</a></td>
+        <td><a href="/event/{{ e.event.date.year }}/{{ e.event.race.slug }}/{{e.event.distance.slug}}">{{ e.event.date.year }} {{ e.event.race.shortname }} {{ e.event.distance.name }}</a></td>
         <td class="text-center">{{ e.num_results }}</td>
         <td class="text-center">{{ e.unique_tags }}</td>
         <td class="text-center">{{ e.pct }}</td>
