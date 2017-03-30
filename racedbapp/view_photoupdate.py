@@ -254,7 +254,7 @@ def get_member_assumption(event):
     """
     no_assumption_races = ('endurrun',)
     member_assumption = False
-    if event.date > date(2017, 3, 20):
+    if event.date > date(2017, 4, 1):
         if event.race.slug not in no_assumption_races:
             member_assumption = True
     return member_assumption
