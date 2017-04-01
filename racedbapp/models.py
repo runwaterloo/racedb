@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Avg, Count, Min, Sum
+from django.db.models import Avg, Count, Min, Sum, Q
 from collections import namedtuple
 from . import utils
 
@@ -24,8 +24,8 @@ class ResultQuerySet(models.QuerySet):
         else:
             return True
     def topmasters(self, event):
-        topfemale = self.filter(event=event, category__ismasters=True,gender='F')[0]
-        topmale = self.filter(event=event, category__ismasters=True,gender='M')[0]
+        topfemale = self.filter(event=event, gender='F').filter(Q(category__ismasters=True) | Q(age__gte=40))[0]
+        topmale = self.filter(event=event, gender='M').filter(Q(category__ismasters=True) | Q(age__gte=40))[0]
         femaletime = utils.truncate_time(topfemale.guntime)
         maletime = utils.truncate_time(topmale.guntime)
         return namediresult('1st Master', topfemale.athlete, femaletime, topmale.athlete, maletime)
