@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.db.models import Min, Count
+from django.db.models import Min, Count, Q
 from django import db
 from collections import namedtuple
 import urllib
@@ -73,7 +73,7 @@ def index(request, race_slug, distance_slug):
         if race_slug == 'endurrun':
             results = results.filter(age__gte=40)
         else:
-            results = results.filter(category__ismasters=True)
+            results = results.filter(Q(category__ismasters=True) | Q(age__gte=40))
     results = results[:50]
     final_results = []
     count = 1 
