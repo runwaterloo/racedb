@@ -1,17 +1,18 @@
 {% extends "racedbapp/base.html" %}
+{% load static %}
 
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="RunWaterloo Results" />
   <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
-  <meta property="og:image" content="/static/ogimage.png" />
+  <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
 
 {% block content %}
 <div>
-  <a href="http://www.endurrun.com"><img src="/static/endurrun.png" height="70" style="PADDING-TOP: 20px"></a>
+  <a href="http://www.endurrun.com"><img src="{% static "endurrun.png" %}" height="70" style="PADDING-TOP: 20px"></a>
   <br><br>
 </div>
 <div class="row">

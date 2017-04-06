@@ -1,12 +1,13 @@
 {% extends "racedbapp/base.html" %}
 
+{% load static %}
 {% load racedbapp_extras %}
 
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="RunWaterloo Results" />
   <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
-  <meta property="og:image" content="/static/ogimage.png" />
+  <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
@@ -58,7 +59,7 @@
 </div>
      <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
      {% if race.slug == 'endurrun' %}
-      <a href="http://www.endurrun.com"><img class="pull-right" src="/static/endurrun.png" height="70" style="PADDING-TOP: 20px"></a>
+      <a href="http://www.endurrun.com"><img class="pull-right" src="{% static "endurrun.png" %}" height="70" style="PADDING-TOP: 20px"></a>
      {% endif %}
      </div>
    </div>
