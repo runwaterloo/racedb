@@ -5,7 +5,7 @@ from itertools import chain
 import logging
 logger = logging.getLogger(__name__)
 
-def update_membership(member, include_event=False, exclude_event=False):
+def update_membership(member):
     """ Update rwmember field in result table """
     logger.info('Updating membership for {} ({})'.format(member, member.id))
     # Clear all existing member results
