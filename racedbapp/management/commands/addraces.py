@@ -2,6 +2,7 @@
 """ parseresults.py - Race result parsing utility. """
 from django.core.management.base import BaseCommand, CommandError
 from racedbapp.models import * 
+from racedbapp import view_shared
 import os
 import datetime
 import json
@@ -80,6 +81,7 @@ class Command(BaseCommand):
                           resultsurl = event['resultsurl'],
                           flickrsetid = flickrsetid)
                 e.save()
+                membership = view_shared.get_membership(event=e)
                 page_size = 500
                 results = []
                 resultsurl = ('http://pre.scrw.ca/api/results/?event={}&page_size={}'
@@ -115,6 +117,7 @@ class Command(BaseCommand):
                         division = ''
                         if 'division' in extra_dict:
                             division = extra_dict['division']
+                        member = get_member(event, result, membership)
                         newresult = Result(event_id = event['id'],
                                            place = result['place'],
                                            bib = result['bib'],
@@ -125,7 +128,8 @@ class Command(BaseCommand):
                                            chiptime = chiptime,
                                            guntime = guntime,
                                            age = age,
-                                           division = division)
+                                           division = division,
+                                           rwmember = member)
                         results.append(newresult)
                         splits = add_splits(event, result, extra_dict, splits)
                         if 'division' in extra_dict:
@@ -388,3 +392,15 @@ def process_endurteam(event, result, extra_dict):
     et.save()
 
     
+def get_member(event, result, membership):
+    member = None
+    lower_athlete = result['athlete'].lower()                                       
+    if lower_athlete in membership.names:                                        
+        member = membership.names[lower_athlete]                                 
+    if '{}-{}'.format(event['id'], result['place']) in membership.includes:     
+        member = membership.includes['{}-{}'.format(event['id'], result['place'])]
+    if member:                                                                   
+        if '{}-{}'.format(event['id'], result['place']) in membership.excludes: 
+            if member in membership.excludes['{}-{}'.format(event['id'], result['place'])]:
+                member = None
+    return member
