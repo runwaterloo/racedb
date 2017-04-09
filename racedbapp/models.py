@@ -128,6 +128,20 @@ class Event(models.Model):
     def __str__(self): 
         return '{} {} {}'.format(self.date.year, self.race, self.distance)
 
+class Rwmember(models.Model):
+    GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
+    name = models.CharField(max_length=64)
+    slug = models.SlugField(unique=True, help_text="https://blog.tersmitten.nl/slugify/")
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    city = models.CharField(max_length=50)
+    joindate = models.DateField()
+    photourl = models.URLField(max_length=500, null=True, blank=True)
+    altname = models.CharField(max_length=64, blank=True, help_text="Optional, e.g. maiden name")
+    active = models.BooleanField(default=True)
+    hasphotos = models.BooleanField(default=False, help_text="Automatically set by system")
+    def __str__(self): 
+        return self.name
+
 class Result(models.Model):
     event = models.ForeignKey(Event)
     category = models.ForeignKey(Category)
@@ -142,6 +156,7 @@ class Result(models.Model):
     division = models.CharField(max_length=32, blank=True)
     province = models.CharField(max_length=50, blank=True)
     country = models.CharField(max_length=50, blank=True)
+    rwmember = models.ForeignKey(Rwmember, null=True, default=None)
     objects = ResultQuerySet.as_manager()
     class Meta:
         unique_together = ('event', 'place')
@@ -255,20 +270,6 @@ class Endurteam(models.Model):
     st7 = models.CharField(max_length=100)
     class Meta:
         unique_together = ('year', 'name')
-
-class Rwmember(models.Model):
-    GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
-    name = models.CharField(max_length=64)
-    slug = models.SlugField(unique=True, help_text="https://blog.tersmitten.nl/slugify/")
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    city = models.CharField(max_length=50)
-    joindate = models.DateField()
-    photourl = models.URLField(max_length=500, null=True, blank=True)
-    altname = models.CharField(max_length=64, blank=True, help_text="Optional, e.g. maiden name")
-    active = models.BooleanField(default=True)
-    hasphotos = models.BooleanField(default=False, help_text="Automatically set by system")
-    def __str__(self): 
-        return self.name
 
 class Rwmembercorrection(models.Model):
     CORRECTION_TYPE_CHOICES = (('exclude', 'exclude'),('include', 'include'))
