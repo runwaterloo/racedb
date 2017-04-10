@@ -25,7 +25,7 @@ class ResultAdmin(admin.ModelAdmin):
 admin.site.register(Result, ResultAdmin)
 
 class RwmemberAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'gender', 'city', 'joindate', 'active')
+    list_display = ('id', 'name', 'gender', 'city', 'joindate', 'active', 'photourl')
     search_fields = ('name',)
     ordering = ('name',)
     readonly_fields = ('hasphotos',)
