@@ -23,7 +23,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="/"><img src="{% static "results_logo_v1.png" %}" height="45px" alt="RunWaterloo Results"></a>
+          <a class="navbar-brand" href="/"><img src="{% static "rw-results.png" %}" height="45px" alt="RunWaterloo Results"></a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
@@ -68,10 +68,10 @@
            </div>
           </form>
           </ul>
-          <ul class="nav navbar-nav navbar-right">
           {% if user.is_authenticated %}
+          <ul class="nav navbar-nav navbar-right">
             <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Admin
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
               <span class="caret"></span></a>
               <ul class="dropdown-menu" role="menu">
                 <li><a href="#">Hello, {{ user|title }}</a></li>
@@ -83,10 +83,8 @@
                 <li><a href="https://pre.scrw.ca/update?updatekey={{ ''|get_prekey }}&daysago=1">Pre Update (yesterday)</a></li>
               </ul>
             </li>
-          {% else %}
-            <a href="http://www.runwaterloo.com"><img src="{% static "rw-logo-large.png" %}" height="40px" alt="RunWaterloo Results"></a>
-          {% endif %}
           </ul>
+          {% endif %}
         </div><!--/.nav-collapse -->
       </div>
      </nav>
@@ -106,6 +104,7 @@
  Results &copy; 1978-2017. Not for unauthorized commercial reproduction. For more information, to report an error, or to update your member profile, contact <a href="mailto:results@runwaterloo.com?Subject=RunWaterloo Results" target="_top">results@runwaterloo.com</a>.</p>
   <a href="https://twitter.com/RW_Results" target="_blank"><img src="{% static "twitter-logo.png" %}" height="50"></a>
   <a href="https://www.flickr.com/photos/runwaterloo/albums" target="_blank"><img src="{% static "flickr-logo.png" %}" height="50"></a>
+  <a href="http://runwaterloo.com" target="_blank" class="pull-right"><img src="{% static "rw-logo-horizontal.png" %}" height="50"></a>
  </div>
  {% endif %}
     </div>
