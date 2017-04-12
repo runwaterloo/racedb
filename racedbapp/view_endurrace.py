@@ -9,6 +9,7 @@ import datetime
 import urllib
 
 from .models import *
+from . import view_shared
 
 def index(request, year):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
@@ -38,7 +39,7 @@ def index(request, year):
     namedresult = namedtuple('nr', ['place', 'bib', 'athlete', 'total_time',
                              'category', 'category_place', 'category_total',
                              'gender_place', 'fivek_time', 'eightk_time',
-                             'city'])
+                             'city', 'member'])
     #results1 = []
     #namedpart1 = namedtuple('nr', ['fivek', 'eightk', 'combined_time'])
     #for i in Result.objects.filter(event=events[0]):
@@ -49,6 +50,7 @@ def index(request, year):
     #results1 = sorted(results1, key=attrgetter('combined_time'))
     results2 = []
     results1 = Endurraceresult.objects.filter(year=year).order_by('guntime')
+    membership = view_shared.get_membership()
     place = 0
     for result in results1:
         gender_place = ''
@@ -85,15 +87,16 @@ def index(request, year):
         elif filter_choice != '':
             if result.category.name != filter_choice:
                 continue
+        member = view_shared.get_member_endurrace(result, membership)
         results2.append(namedresult(place, result.bib, result.athlete,
                             result.guntime, result.category, category_place, 0, gender_place,
-                            result.fivektime, result.eightktime, result.city))
+                            result.fivektime, result.eightktime, result.city, member))
     results3 = []
     for result in results2:
         results3.append(namedresult(result.place, result.bib, result.athlete,
                              result.total_time, result.category, result.category_place,
                              categorydict[result.category.name], result.gender_place,
-                             result.fivek_time, result.eightk_time, result.city))
+                             result.fivek_time, result.eightk_time, result.city, result.member))
     resultfilter = getresultfilter(filter_choice, categorydict, year, hasmasters)
     context = {'events': events,
                'year': year,

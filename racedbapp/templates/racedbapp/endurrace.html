@@ -54,7 +54,11 @@
     <tr>
       <td class="text-center">{{ result.place }}</td>
       <td class="text-center">{{ result.bib }}</td>
-      <td>{{ result.athlete }}</td>
+      {% if result.member %}
+        <td><a href="/member/{{ result.member.slug }}/">{{ result.athlete }}</a></td>
+      {% else %}
+        <td>{{ result.athlete }}</td>
+      {% endif %}
       <td class="text-center">{{ result.total_time }}</td>
       {% if categorydict|length != 1 %}
       <td>{{ result.category }}</td>
