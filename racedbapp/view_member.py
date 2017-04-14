@@ -1,51 +1,72 @@
 from django.shortcuts import render
 from itertools import chain
-#from django.db.models import Count
 from collections import namedtuple
 from .models import *
 from . import utils
-#from django.http import HttpResponse
-#from django.db.models import Count, Max, Q
 from datetime import date, timedelta
 from operator import attrgetter
-#import datetime
 
-named_result = namedtuple('nr', ['result', 'guntime', 'gender_place', 'category_place', 'chiptime'])
+named_result = namedtuple('nr', ['result',
+                                 'guntime',
+                                 'gender_place',
+                                 'category_place',
+                                 'chiptime',
+                                ]
+                         )
 named_pb = namedtuple('npb', ['time', 'event'])
 named_badge = namedtuple('nb', ['name', 'date', 'image', 'url'])
 
 def index(request, member_slug):
     member = Rwmember.objects.get(slug=member_slug, active=True)
-    primaryresults = Result.objects.select_related().filter(athlete=member.name)
-    altresults = Result.objects.select_related().filter(athlete=member.altname)
-    includes = get_includes(member)
-    results_list = list(chain(primaryresults, altresults)) + includes
-    excludes = get_excludes(member)
+    dbresults = (Result.objects
+                 .select_related()
+                 .filter(rwmember=member)
+                 .exclude(place__gte=990000)
+                 .order_by('event__date')
+                )
     total_distance = 0
     results = []
     best_gender_place = best_category_place = ''
-    for r in results_list:
-        if r.place >= 990000:
-          continue
-        if r in excludes:
-            continue
+    for r in dbresults:
         guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
         chiptime = ''
         if r.chiptime:
-            chiptime = r.chiptime - timedelta(microseconds=r.chiptime.microseconds)
-        gender_place = Result.objects.filter(event=r.event, gender=r.gender, place__lte=r.place).count()
+            chiptime = (r.chiptime - 
+                        timedelta(microseconds=r.chiptime.microseconds))
+        gender_place = (Result.objects
+                        .filter(event=r.event,
+                                gender=r.gender,
+                                place__lte=r.place
+                               )
+                        .count()
+                       )
         category_place = ''
         if r.category.name != '':
-            category_place = Result.objects.filter(event=r.event, category=r.category, place__lte=r.place).count()
-        results.append(named_result(r, guntime, gender_place, category_place, chiptime))
+            category_place = (Result.objects
+                              .filter(event=r.event,
+                                      category=r.category,
+                                      place__lte=r.place)
+                              .count()
+                             )
+        results.append(named_result(r,
+                                    guntime,
+                                    gender_place,
+                                    category_place,
+                                    chiptime)
+                      )
         total_distance += r.event.distance.km
-    results = sorted(results, key=attrgetter('result.event.date'), reverse=True)
     fivek_pb = get_pb(results, '5-km')
     tenk_pb = get_pb(results, '10-km')
-    results_with_gender_place = sorted([ x for x in results if x.gender_place != '' ], key=attrgetter('gender_place'))
+    results_with_gender_place = sorted([x for x in results
+                                        if x.gender_place != '' ],
+                                        key=attrgetter('gender_place')
+                                      )
     if len(results_with_gender_place) > 0:
         best_gender_place = results_with_gender_place[0]
-    results_with_category_place = sorted([ x for x in results if x.category_place != '' ], key=attrgetter('category_place'))
+    results_with_category_place = sorted([x for x in results
+                                          if x.category_place != '' ],
+                                          key=attrgetter('category_place')
+                                        )
     if len(results_with_category_place) > 0:
         best_category_place = results_with_category_place[0]
     total_distance = round(total_distance, 1)
@@ -66,27 +87,10 @@ def index(request, member_slug):
               }
     return render(request, 'racedbapp/member.html', context)
 
-def get_includes(member):
-    includes = []
-    dbincludes = Rwmembercorrection.objects.filter(rwmember=member, correction_type='include')
-    for i in dbincludes:
-        include_result = Result.objects.select_related().filter(event=i.event, place=i.place)
-        if len(include_result) == 1:
-            includes.append(include_result[0])
-    return includes
-
-def get_excludes(member):
-    dbexcludes = Rwmembercorrection.objects.filter(rwmember=member, correction_type='exclude')
-    excludes = []
-    for e in dbexcludes:
-        exclude_result = Result.objects.filter(event=e.event, place=e.place)
-        if len(exclude_result) == 1:
-            excludes.append(exclude_result[0])
-    return excludes
-
 def get_pb(results, distance_slug):
     pb = ''
-    pb_results = [ x for x in results if x.result.event.distance.slug == distance_slug ]
+    pb_results = [x for x in results
+                  if x.result.event.distance.slug == distance_slug ]
     if len(pb_results) > 0:
         pb = sorted(pb_results, key=attrgetter('result.guntime'))[0]
     return pb
@@ -110,8 +114,12 @@ def get_badges(member, results):
 def get_founders_badge(member):
     FOUNDER_DATE = date(2017, 12, 31)
     founders_badge = []
+    badge_image = 'https://foundersbrewing.com/wp-content/uploads/2015/06/centennial_ipa_badge_-920x920.png'
     if member.joindate <= FOUNDER_DATE:
-        founders_badge.append(named_badge('Founding Member', member.joindate, 'https://foundersbrewing.com/wp-content/uploads/2015/06/centennial_ipa_badge_-920x920.png', False))
+        founders_badge.append(named_badge('Founding Member',
+                              member.joindate,
+                              badge_image,
+                              False))
     founders_badge = []
     return founders_badge
 
