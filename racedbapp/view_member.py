@@ -53,7 +53,6 @@ def index(request, member_slug):
     if len(results) > 0:
         racing_since = results[-1].result.event.date.year
     badges = get_badges(member, results)
-    badges = [] # disable badges
     context = {
                'member': member,
                'results': results,
@@ -113,6 +112,7 @@ def get_founders_badge(member):
     founders_badge = []
     if member.joindate <= FOUNDER_DATE:
         founders_badge.append(named_badge('Founding Member', member.joindate, 'https://foundersbrewing.com/wp-content/uploads/2015/06/centennial_ipa_badge_-920x920.png', False))
+    founders_badge = []
     return founders_badge
 
 #def get_race_finishes_badge(results):
@@ -152,6 +152,7 @@ def get_total_kms_badge(results):
                     break
             total_kms_badge.append(named_badge('{} Total KMs'.format(i), date_earned, 'https://s-media-cache-ak0.pinimg.com/564x/80/1a/7f/801a7ff6080de5776696001ae9cb4f25.jpg', False))
             break
+    total_kms_badge = []
     return total_kms_badge
 
 def get_wc_finishes_badge(results):
@@ -163,6 +164,7 @@ def get_wc_finishes_badge(results):
             date_earned = wc_finishes[-i].result.event.date
             wc_finishes_badge.append(named_badge('{} Waterloo Classic Finishes'.format(i), date_earned, 'http://www.leanteen.com/file/pic/badge/2013/04/208a3b0d3903f47a96476d2c95e182d3.png', False))
             break
+    wc_finishes_badge = []
     return wc_finishes_badge
 
 def get_adventurer_badge(results):
@@ -181,6 +183,7 @@ def get_adventurer_badge(results):
     if len(race_finishes) >= ADVENTURER_THRESHOLD:
         date_earned = race_finishes_dates[ADVENTURER_THRESHOLD - 1]
         adventurer_badge.append(named_badge('Adventurer ({} Difference Races)'.format(ADVENTURER_THRESHOLD), date_earned, 'https://members.scouts.org.uk/images/badges/sc-cs-adch.png', False))
+    adventurer_badge = []
     return adventurer_badge
 
 def get_endurrace_combined_badge(results):
@@ -200,6 +203,7 @@ def get_endurrace_combined_badge(results):
         if endurrace_count > 1:
             plural = 'es'
         endurrace_combined_badge.append(named_badge('{} ENDURrace Combined Finish{}'.format(endurrace_count, plural), date_earned, 'http://us.123rf.com/450wm/blueringmedia/blueringmedia1607/blueringmedia160700183/59362745-relay-running-icon-on-round-badge-illustration.jpg?ver=6', False))
+    endurrace_combined_badge = []
     return endurrace_combined_badge
 
 def get_event_finishes_badge(results):
@@ -213,6 +217,7 @@ def get_event_finishes_badge(results):
             date_earned = results[-i].result.event.date
             event_finishes_badge.append(named_badge('{} Event Finish{}'.format(i, plural), date_earned, 'https://www.edx.org/sites/default/files/upload/pbaruah-edx-verified-badge.png', False))
             break
+    event_finishes_badge = []
     return event_finishes_badge
 
 def get_inaugural_finishes_badges(results):
@@ -229,6 +234,7 @@ def get_inaugural_finishes_badges(results):
           if r.result.event.date.year == race_inaugural_years[r.result.event.race]:
               if r.result.event.race not in already_have:
                   inaugural_finishes_badges.append(named_badge('Inaugural {}'.format(r.result.event.race.name), r.result.event.date, 'http://i.ebayimg.com/00/s/MzAwWDMwMA==/z/IGYAAOSwfcVUABbN/$_35.JPG?set_id=2', False))
+    inaugural_finishes_badges = []
     return inaugural_finishes_badges
 
 def get_bow_finishes_badges(member, results):
@@ -245,6 +251,7 @@ def get_bow_finishes_badges(member, results):
             last_date = Event.objects.get(id=event_ids[-1]).date
             bow = Bow.objects.get(id=b.bow_id)
             bow_finishes_badges.append(named_badge('{} Finisher'.format(bow.name), last_date, 'http://vignette1.wikia.nocookie.net/steamtradingcards/images/e/ed/Napoleon_Total_War_Badge_France.png/revision/latest?cb=20130823233645', False))
+    bow_finishes_badges = []
     return bow_finishes_badges
 
 def get_endurrun_finishes_badges(member, results):
@@ -290,6 +297,7 @@ def get_endurrun_finishes_badges(member, results):
         if ultimate_finishes > 1:
             plural = 'es'
         endurrun_finishes_badges.append(named_badge('{} ENDURrun Ultimate Finish{}'.format(ultimate_finishes, plural), ultimate_date_earned, 'https://www.trophysupermarket.com/media/catalog/product/cache/1/small_image/260x/9df78eab33525d08d6e5fb8d27136e95/B/D/BDG-VC-4_2_1.jpg', False))
+    endurrun_finishes_badges = []
     return endurrun_finishes_badges
 
 def get_pb_badges(member, results):
@@ -343,6 +351,7 @@ def get_pb_badges(member, results):
             pb_badges.append(named_badge('Sub {} 10K Club'.format(tenk_minutegroup), tenk_pb.event.date, 'http://i.ebayimg.com/images/g/ZMcAAMXQVERSytWa/s-l300.jpg', False))
         else:
             pb_badges.append(named_badge('Sub {} 10K Club'.format(tenk_minutegroup), tenk_pb.event.date, 'http://i.ebayimg.com/images/g/wdkAAOSw-jhUAcjD/s-l300.jpg', False))
+    pb_badges = []
     return pb_badges
 
 def get_minutegroup(result, thresholds):
