@@ -22,7 +22,7 @@ def index(request, member_slug):
                  .select_related()
                  .filter(rwmember=member)
                  .exclude(place__gte=990000)
-                 .order_by('event__date')
+                 .order_by('-event__date')
                 )
     total_distance = 0
     results = []
