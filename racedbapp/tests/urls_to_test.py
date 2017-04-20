@@ -76,6 +76,7 @@ test_urls = (
   '/race/endurrace/combined/',                      # endurrace combined
   '/race/harvest/half-marathon/?filter=Masters',    # masters filter
   '/race/pancake/mile/?filter=M-Masters',           # genders masters filter
+  '/race/endurrace/combined/?filter=F-Masters',     # endurrace gender masters filter
   '/race/endurrun/half-marathon/',                  # endurrun ultimate
   '/race/endurrun/marathon/?division=All',          # endurrun all
  # /member
