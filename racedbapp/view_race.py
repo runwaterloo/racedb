@@ -72,6 +72,8 @@ def index(request, race_slug, distance_slug):
     if 'Masters' in filter_choice:
         if race_slug == 'endurrun':
             results = results.filter(age__gte=40)
+        elif race_slug == 'endurrace':
+            results = results.filter(category__ismasters=True)
         else:
             results = results.filter(Q(category__ismasters=True) | Q(age__gte=40))
     results = results[:50]
