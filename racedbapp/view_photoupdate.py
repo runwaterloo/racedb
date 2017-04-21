@@ -212,7 +212,6 @@ def do_tags(photos, event):
 
 def get_bib2member(event):  
     bib2member = {}
-    membersinrace = []
     membership = view_shared.get_membership(event=event)
     member_assumption = get_member_assumption(event)
     results = Result.objects.filter(event=event)
@@ -220,12 +219,10 @@ def get_bib2member(event):
         member = view_shared.get_member(r, membership)
         if member:
             bib2member[r.bib] = member.id
-            membersinrace.append(member.id)
     if member_assumption:
         membersasof = Member.objects.filter(active=True, joindate__lte=event.date).values_list('id', flat=True)
         for m in membersasof:
-            if m in membersinrace:
-                bib2member[m] = m
+            bib2member[m] = m
     return bib2member
 
                 
