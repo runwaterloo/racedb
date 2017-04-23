@@ -52,6 +52,9 @@
         {% if event.flickrsetid %}
           &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
         {% endif %}
+        {% if event.youtube_id and event.youtube_offset_seconds %}
+          &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}" target="_blank"><span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span></a>
+        {% endif %}
       </p>
       <ul class="pagination pagination-sm">
         {% for p in pages %}
@@ -145,6 +148,11 @@
                 <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
               </th>
             {% endif %}
+            {% if event.youtube_id and event.youtube_offset_seconds %}
+              <th class="text-center" scope="col">
+                <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>
+              </th>
+            {% endif %}
             <th class="text-center" scope="col">Time</th>
             {% if hill_dict %}
               <th class="text-center" scope="col">Hill Sprint</th>
@@ -185,6 +193,7 @@
                 {% if r.relay_team %}
                   <img src="{% static "team.png" %}" height="20px" data-toggle="tooltip" title="{{ r.relay_team }}">
                 {% endif %}
+              </td>
               {% if phototags %}
                 {% if r.hasphotos %}
                   <td class="text-center">
@@ -196,7 +205,15 @@
                   <td></td>
                 {% endif %}
               {% endif %}
-              </td>
+              {% if event.youtube_id and event.youtube_offset_seconds %}
+                <td class="text-center">
+                  <a href="{{ r.youtube_url }}" target="_blank">
+                    <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>
+                  </a>
+                </td>
+              {% else %}
+                <td></td>
+              {% endif %}
               <td class="text-center">{{ r.guntime }}</td>
               {% if hill_dict %}
                 <td class="text-center">{{ r.prime }}</td>

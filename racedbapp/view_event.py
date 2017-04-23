@@ -322,6 +322,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                       'splits',
                       'member',
                       'hasphotos',
+                      'youtube_url',
                      ])
     results = []
     relay_dict = get_relay_dict(event)
@@ -336,6 +337,10 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
     if event_splits:
         max_splits = int(event_splits.aggregate(Max('split_num'))['split_num__max'])
     membership = view_shared.get_membership(event=event)
+    has_youtube = False
+    if event.youtube_id and event.youtube_offset_seconds:
+        has_youtube = True
+        LEAD_TIME_SECONDS = 20
     for r in all_results:
         relay_team = False
         if r.gender == 'F':
@@ -390,6 +395,16 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                     splits.append(named_split(i, ''))
         member = view_shared.get_member(r, membership)
         hasphotos = False
+        youtube_url = False
+        if has_youtube:
+            video_position_seconds = (guntime.total_seconds()
+                                      - event.youtube_offset_seconds 
+                                      - LEAD_TIME_SECONDS)
+            minutes = int(video_position_seconds // 60)
+            seconds = int(video_position_seconds % 60)
+            video_position = '{}m{}s'.format(minutes, seconds)
+            youtube_url = 'https://youtu.be/{}?t={}'.format(event.youtube_id,
+                                                            video_position)
         if r.bib in phototags:
             hasphotos = True
         results.append(named_result(r.place,
@@ -410,6 +425,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                                     splits,
                                     member,
                                     hasphotos,
+                                    youtube_url
                                    ))
     results = filter_results(results, category, division)
     if page == 'Hill Sprint':
@@ -479,6 +495,7 @@ def get_hill_results(results, named_result):
            r.splits,
            r.member,
            r.hasphotos,
+           r.youtube_url,
            ))
     return hill_results
 
