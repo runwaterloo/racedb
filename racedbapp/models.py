@@ -122,6 +122,8 @@ class Event(models.Model):
     city = models.CharField(max_length=50)
     resultsurl = models.URLField(max_length=500, null=True, blank=True)
     flickrsetid = models.BigIntegerField(default=None, null=True, blank=True)
+    youtube_id = models.CharField(max_length=50, blank=True, help_text='Just the video id, not the whole URL')
+    youtube_offset_seconds = models.IntegerField(default=None, null=True, blank=True, help_text='Elapsed race time (in seconds) at start of video')
     class Meta:
         unique_together = ('race', 'distance', 'date')
     #    ordering = ('-date', '-distance__km')
