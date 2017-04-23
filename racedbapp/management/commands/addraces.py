@@ -71,15 +71,21 @@ class Command(BaseCommand):
                         dohill = True
                         hill_results = []
                 flickrsetid = None
+                youtube_id = ''
+                youtube_offset_seconds = None
                 if len(Event.objects.filter(id=event['id'])) == 1:
                     flickrsetid = Event.objects.get(id=event['id']).flickrsetid
+                    youtube_id =  Event.objects.get(id=event['id']).youtube_id
+                    youtube_offset_seconds = Event.objects.get(id=event['id']).youtube_offset_seconds
                 e = Event(id = event['id'],
                           race = race,
                           distance = distance,
                           date = event['date'],
                           city = event['city'],
                           resultsurl = event['resultsurl'],
-                          flickrsetid = flickrsetid)
+                          flickrsetid = flickrsetid,
+                          youtube_id = youtube_id,
+                          youtube_offset_seconds = youtube_offset_seconds)
                 e.save()
                 membership = view_shared.get_membership(event=e)
                 page_size = 500
