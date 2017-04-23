@@ -220,7 +220,7 @@ def get_bib2member(event):
         if member:
             bib2member[r.bib] = member.id
     if member_assumption:
-        membersasof = Member.objects.filter(active=True, joindate__lte=event.date).values_list('id', flat=True)
+        membersasof = Rwmember.objects.filter(active=True, joindate__lte=event.date).values_list('id', flat=True)
         for m in membersasof:
             bib2member[m] = m
     return bib2member
