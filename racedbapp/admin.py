@@ -28,6 +28,7 @@ class RwmemberAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'gender', 'city', 'joindate', 'active', 'photourl')
     search_fields = ('name',)
     ordering = ('name',)
+    list_max_show_all = 1000
     readonly_fields = ('hasphotos',)
 admin.site.register(Rwmember, RwmemberAdmin)
 
