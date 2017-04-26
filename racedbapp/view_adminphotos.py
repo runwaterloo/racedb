@@ -17,6 +17,8 @@ def index(request):
     events = []
     for e in dbevents:
         num_results = event_results_dict[e.id]
+        if num_results == 0:
+            continue
         try:
             num_tags = event_tags_dict[e.id]
         except:
