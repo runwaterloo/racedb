@@ -95,6 +95,19 @@
 <div class="row">
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
     <h4>All Results</h4>
+
+    {% if results|length >= 8 %}
+    <!-- search input -->
+      <div class="row">
+        <div class="col-xs-3">
+          <div class="form-group">
+            <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search these results..." size="12">
+          </div>
+        </div>
+      </div>
+    <!-- end search input -->
+    {% endif %}
+
     <table class="table table-bordered table-condensed table-striped table-hover">
       <thead>
         <tr class="info">
@@ -127,6 +140,9 @@
         {% endfor %}
       </tbody>
     </table>
+    <script>
+      $('table').filterTable({inputSelector: '#input-filter'});
+    </script>
   </div>
 </div>
 
