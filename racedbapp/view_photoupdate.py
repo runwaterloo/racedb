@@ -193,6 +193,7 @@ def do_tags(photos, event):
                 bib = member2bib[n]                                                     
                 if bib not in ntags:                                                    
                     tags2add.append(bib) 
+                    ntags.append(bib)
         for m in mtags:
             if m in member2bib:
                 bib = member2bib[m]
@@ -237,7 +238,7 @@ def get_member2bib(event):
             member2bib['m{}'.format(member.id)] = r.bib
             if member_assumption:
                 if member.joindate <= event.date:
-                    member2bib[member.id] = r.bib
+                    member2bib[str(member.id)] = r.bib
     return member2bib
 
 
