@@ -340,7 +340,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
     has_youtube = False
     if event.youtube_id and event.youtube_offset_seconds:
         has_youtube = True
-        LEAD_TIME_SECONDS = 15
+        LEAD_TIME_SECONDS = 7
     for r in all_results:
         relay_team = False
         if r.gender == 'F':
