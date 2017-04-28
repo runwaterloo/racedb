@@ -145,7 +145,7 @@ def get_total_kms_badge(results):
     return total_kms_badge
 
 def get_wc_finishes_badge(results):
-    WC_THRESHOLDS = [40, 30, 20, 10]
+    WC_THRESHOLDS = [40, 20, 10, 5]
     wc_finishes_badge = []
     wc_finishes = [ x for x in results if x.result.event.race.slug == 'waterloo-classic' ]
     for i in WC_THRESHOLDS:
@@ -233,7 +233,7 @@ def get_endurrun_finishes_badges(member, results):
         plural = ''
         if ultimate_finishes > 1:
             plural = 'es'
-        endurrun_finishes_badges.append(named_badge('{} ENDURrun Ultimate Finish{}'.format(ultimate_finishes, plural), ultimate_date_earned, 'https://www.trophysupermarket.com/media/catalog/product/cache/1/small_image/260x/9df78eab33525d08d6e5fb8d27136e95/B/D/BDG-VC-4_2_1.jpg', False))
+        endurrun_finishes_badges.append(named_badge('{} ENDURrun Ultimate Finish{}'.format(ultimate_finishes, plural), ultimate_date_earned, 'http://www.symbolarts.com/wp-content/uploads/2010/12/glenco-star-badge.png', False))
     return endurrun_finishes_badges
 
 def get_pb_badges(member, results):
