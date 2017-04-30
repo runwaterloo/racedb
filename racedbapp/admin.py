@@ -18,6 +18,7 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ('id', 'date', 'race', 'distance', 'city', 'flickrsetid')
     search_fields = ('date', 'race__name', 'distance__name')
     ordering = ('-date',)
+    readonly_fields = ('race', 'distance', 'date', 'city', 'resultsurl')
 admin.site.register(Event, EventAdmin)
 
 class ResultAdmin(admin.ModelAdmin):
