@@ -162,6 +162,7 @@ def get_wc_finishes_badge(results):
 def get_inaugural_finishes_badges(results):
     inaugural_finishes_badges = []
     current_race_ids = Samerace.objects.values_list('current_race_id', flat=True)
+    old_race_ids = Samerace.objects.values_list('old_race_id', flat=True)
     races = Race.objects.exclude(id__in=current_race_ids)
     race_inaugural_years = {}
     for race in races:
@@ -172,7 +173,10 @@ def get_inaugural_finishes_badges(results):
         if r.result.event.race in race_inaugural_years:
           if r.result.event.date.year == race_inaugural_years[r.result.event.race]:
               if r.result.event.race not in already_have:
-                  image = 'inaugural-{}.png'.format(r.result.event.race.slug)
+                  race = r.result.event.race
+                  if race.id in old_race_ids:
+                      race = Samerace.objects.get(old_race_id=race.id).current_race
+                  image = 'inaugural-{}.png'.format(race.slug)
                   inaugural_finishes_badges.append(named_badge('Finished inaugural Run Waterloo event',
                                                    r.result.event.date,
                                                    image, 
