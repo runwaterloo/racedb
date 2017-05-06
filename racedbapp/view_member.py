@@ -98,7 +98,7 @@ def get_pb(results, distance_slug):
 def get_badges(member, results):
     badges = []
     badges += get_founders_badge(member)
-    #badges += get_total_kms_badge(results)
+    badges += get_total_kms_badge(results)
     #badges += get_wc_finishes_badge(results)
     badges += get_inaugural_finishes_badges(results)
     #badges += get_bow_finishes_badges(member, results)
@@ -137,9 +137,10 @@ def get_total_kms_badge(results):
                     date_earned = k[1]
                 else:
                     break
-            total_kms_badge.append(named_badge('{} Total KMs'.format(i),
+            image = 'km-{}.png'.format(i)
+            total_kms_badge.append(named_badge('Raced {} Total Kilometres'.format(i),
                                                date_earned,
-                                               'https://s-media-cache-ak0.pinimg.com/564x/80/1a/7f/801a7ff6080de5776696001ae9cb4f25.jpg',
+                                               image,
                                                False))
             break
     return total_kms_badge
