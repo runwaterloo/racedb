@@ -100,7 +100,7 @@ def get_badges(member, results):
     badges += get_founders_badge(member)
     #badges += get_total_kms_badge(results)
     #badges += get_wc_finishes_badge(results)
-    #badges += get_inaugural_finishes_badges(results)
+    badges += get_inaugural_finishes_badges(results)
     #badges += get_bow_finishes_badges(member, results)
     #badges += get_endurrun_finishes_badges(member, results)
     #badges += get_pb_badges(member, results)
@@ -171,7 +171,11 @@ def get_inaugural_finishes_badges(results):
         if r.result.event.race in race_inaugural_years:
           if r.result.event.date.year == race_inaugural_years[r.result.event.race]:
               if r.result.event.race not in already_have:
-                  inaugural_finishes_badges.append(named_badge('Inaugural {}'.format(r.result.event.race.name), r.result.event.date, 'http://i.ebayimg.com/00/s/MzAwWDMwMA==/z/IGYAAOSwfcVUABbN/$_35.JPG?set_id=2', False))
+                  image = 'inaugural-{}.png'.format(r.result.event.race.slug)
+                  inaugural_finishes_badges.append(named_badge('Finished inaugural Run Waterloo event',
+                                                   r.result.event.date,
+                                                   image, 
+                                                   False))
     return inaugural_finishes_badges
 
 def get_bow_finishes_badges(member, results):
