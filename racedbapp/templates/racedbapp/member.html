@@ -86,7 +86,7 @@
 {% if badges %}
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <h4><a href="http://runwaterloo.com" target="_blank">Achievements</a></h4>
+      <h4><a href="http://runwaterloo.com/member-achievements/" target="_blank">Achievements</a></h4>
       {% for badge in badges %}
         <img src="{% static "achievements/"|add:badge.image %}" title="{{ badge.name }}&#10;{{ badge.date }}" height="100" width="100" hspace="15" vspace="15">
       {% endfor %}
