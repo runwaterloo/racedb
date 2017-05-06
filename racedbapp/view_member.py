@@ -97,7 +97,7 @@ def get_pb(results, distance_slug):
 
 def get_badges(member, results):
     badges = []
-    #badges += get_founders_badge(member)
+    badges += get_founders_badge(member)
     #badges += get_total_kms_badge(results)
     #badges += get_wc_finishes_badge(results)
     #badges += get_inaugural_finishes_badges(results)
@@ -118,7 +118,7 @@ def get_founders_badge(member):
     if member.joindate <= FOUNDER_DATE:
         founders_badge.append(named_badge('Founding Member',
                               member.joindate,
-                              badge_image,
+                              'founding-member.png',
                               False))
     return founders_badge
 
