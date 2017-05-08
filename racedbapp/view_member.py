@@ -103,7 +103,7 @@ def get_badges(member, results):
     badges += get_inaugural_finishes_badges(results)
     #badges += get_bow_finishes_badges(member, results)
     #badges += get_endurrun_finishes_badges(member, results)
-    #badges += get_pb_badges(member, results)
+    badges += get_pb_badges(member, results)
     #badges += get_race_win_badges(results)
     #badges += get_endurrace_combined_badge(results)
     #badges += get_event_finishes_badge(results)
@@ -288,16 +288,17 @@ def get_pb_badges(member, results):
                     else:
                         tenk_pb = r.result
                         tenk_minutegroup = new_minutegroup
-    if fivek_minutegroup:
-        if member.gender == 'F':
-            pb_badges.append(named_badge('Sub {} 5K Club'.format(fivek_minutegroup), fivek_pb.event.date, 'http://wonderville_media.s3.amazonaws.com/quiz%2Fquiz_images%2FCheetah.png', False))
-        else:
-            pb_badges.append(named_badge('Sub {} 5K Club'.format(fivek_minutegroup), fivek_pb.event.date, 'https://cdn.kastatic.org/images/badges/earth/work-horse-512x512.png', False))
+    #if fivek_minutegroup:
+    #    if member.gender == 'F':
+    #        pb_badges.append(named_badge('Sub {} 5K Club'.format(fivek_minutegroup), fivek_pb.event.date, 'http://wonderville_media.s3.amazonaws.com/quiz%2Fquiz_images%2FCheetah.png', False))
+    #    else:
+    #        pb_badges.append(named_badge('Sub {} 5K Club'.format(fivek_minutegroup), fivek_pb.event.date, 'https://cdn.kastatic.org/images/badges/earth/work-horse-512x512.png', False))
     if tenk_minutegroup:
-        if member.gender == 'F':
-            pb_badges.append(named_badge('Sub {} 10K Club'.format(tenk_minutegroup), tenk_pb.event.date, 'http://i.ebayimg.com/images/g/ZMcAAMXQVERSytWa/s-l300.jpg', False))
-        else:
-            pb_badges.append(named_badge('Sub {} 10K Club'.format(tenk_minutegroup), tenk_pb.event.date, 'http://i.ebayimg.com/images/g/wdkAAOSw-jhUAcjD/s-l300.jpg', False))
+        image = '10-km-{}-{}.png'.format(tenk_minutegroup, member.gender.lower())
+        pb_badges.append(named_badge('10 KM: Sub {} Club'.format(tenk_minutegroup),
+                                                                 tenk_pb.event.date,
+                                                                 image,
+                                                                 False))
     return pb_badges
 
 def get_race_win_badges(results):
