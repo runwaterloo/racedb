@@ -99,7 +99,7 @@ def get_badges(member, results):
     badges = []
     badges += get_founders_badge(member)
     badges += get_total_kms_badge(results)
-    #badges += get_wc_finishes_badge(results)
+    badges += get_wc_finishes_badge(results)
     badges += get_inaugural_finishes_badges(results)
     #badges += get_bow_finishes_badges(member, results)
     #badges += get_endurrun_finishes_badges(member, results)
@@ -152,9 +152,10 @@ def get_wc_finishes_badge(results):
     for i in WC_THRESHOLDS:
         if len(wc_finishes) >= i:
             date_earned = wc_finishes[-i].result.event.date
+            image = 'waterloo-classic-finisher-{}.png'.format(i)
             wc_finishes_badge.append(named_badge('{} Waterloo Classic Finishes'.format(i),
                                                  date_earned,
-                                                 'http://www.leanteen.com/file/pic/badge/2013/04/208a3b0d3903f47a96476d2c95e182d3.png',
+                                                 image,
                                                  False))
             break
     return wc_finishes_badge
