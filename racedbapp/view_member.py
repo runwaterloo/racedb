@@ -178,7 +178,7 @@ def get_inaugural_finishes_badges(results):
                   if race.id in old_race_ids:
                       race = Samerace.objects.get(old_race_id=race.id).current_race
                   image = 'inaugural-{}.png'.format(race.slug)
-                  inaugural_finishes_badges.append(named_badge('Finished inaugural Run Waterloo event',
+                  inaugural_finishes_badges.append(named_badge('Finished inaugural {}'.format(race.name),
                                                    r.result.event.date,
                                                    image, 
                                                    False))
