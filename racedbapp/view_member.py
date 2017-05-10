@@ -255,7 +255,7 @@ def get_endurrun_finishes_badges(member, results):
         plural = ''
         if ultimate_finishes > 1:
             plural = 's'
-        endurrun_finishes_badges.append(named_badge('Completed ENDURrun Ultimate {} time{}'.format(ultimate_finishes, plural),
+        endurrun_finishes_badges.append(named_badge('ENDURrun Ultimate {} Time Finisher'.format(ultimate_finishes, plural),
                                                                                                    ultimate_date_earned,
                                                                                                    image,
                                                                                                    False))
