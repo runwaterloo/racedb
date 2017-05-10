@@ -102,7 +102,7 @@ def get_badges(member, results):
     badges += get_wc_finishes_badge(results)
     badges += get_inaugural_finishes_badges(results)
     badges += get_bow_finishes_badges(member, results)
-    #badges += get_endurrun_finishes_badges(member, results)
+    badges += get_endurrun_finishes_badges(member, results)
     badges += get_pb_badges(member, results)
     badges += get_race_win_badges(results)
     #badges += get_endurrace_combined_badge(results)
@@ -246,10 +246,19 @@ def get_endurrun_finishes_badges(member, results):
     #        plural = 'es'
     #    endurrun_finishes_badges.append(named_badge('{} ENDURrun Sport Finish{}'.format(sport_finishes, plural), sport_date_earned, 'https://www.trophysupermarket.com/media/catalog/product/cache/1/small_image/260x/9df78eab33525d08d6e5fb8d27136e95/B/D/BDG-VC-3_2_1.jpg', False))
     if ultimate_finishes > 0:
+        ULTIMATE_THRESHOLDS = [10, 5, 2, 1]
+        for i in ULTIMATE_THRESHOLDS:
+            if ultimate_finishes >= i:
+                level = i
+                break
+        image = 'endurrun-ultimate-finisher-{}.png'.format(i)
         plural = ''
         if ultimate_finishes > 1:
-            plural = 'es'
-        endurrun_finishes_badges.append(named_badge('{} ENDURrun Ultimate Finish{}'.format(ultimate_finishes, plural), ultimate_date_earned, 'http://www.symbolarts.com/wp-content/uploads/2010/12/glenco-star-badge.png', False))
+            plural = 's'
+        endurrun_finishes_badges.append(named_badge('Completed ENDURrun Ultimate {} time{}'.format(ultimate_finishes, plural),
+                                                                                                   ultimate_date_earned,
+                                                                                                   image,
+                                                                                                   False))
     return endurrun_finishes_badges
 
 def get_pb_badges(member, results):
