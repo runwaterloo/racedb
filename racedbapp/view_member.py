@@ -104,7 +104,7 @@ def get_badges(member, results):
     #badges += get_bow_finishes_badges(member, results)
     #badges += get_endurrun_finishes_badges(member, results)
     badges += get_pb_badges(member, results)
-    #badges += get_race_win_badges(results)
+    badges += get_race_win_badges(results)
     #badges += get_endurrace_combined_badge(results)
     #badges += get_event_finishes_badge(results)
     #badges += get_adventurer_badge(results)
@@ -304,7 +304,6 @@ def get_pb_badges(member, results):
 def get_race_win_badges(results):
     race_win_badges = []
     races_won = []
-    image = 'http://www.lightsgoout.co.uk/wp-content/lgouploadedmedia/badges1-300x300.jpg'
     wins = [x for x in reversed(results) if x.gender_place == 1]
     for w in wins:
         thisrace = w.result.event.race
@@ -312,10 +311,8 @@ def get_race_win_badges(results):
             new_race_id = Samerace.objects.get(old_race_id=thisrace.id).current_race_id
             thisrace = Race.objects.get(id=new_race_id)
         if thisrace not in races_won:
-            stage = ''
-            if thisrace.slug == 'endurrun':
-                stage= 'Stage '
-            race_win_badges.append(named_badge('{} {}Winner'.format(thisrace.name, stage),
+            image = 'event-winner-{}.png'.format(thisrace.slug)
+            race_win_badges.append(named_badge('Won an overall event at {}'.format(thisrace.name),
                                    w.result.event.date,
                                    image,
                                    False))
