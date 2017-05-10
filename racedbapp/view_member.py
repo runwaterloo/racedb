@@ -101,7 +101,7 @@ def get_badges(member, results):
     badges += get_total_kms_badge(results)
     badges += get_wc_finishes_badge(results)
     badges += get_inaugural_finishes_badges(results)
-    #badges += get_bow_finishes_badges(member, results)
+    badges += get_bow_finishes_badges(member, results)
     #badges += get_endurrun_finishes_badges(member, results)
     badges += get_pb_badges(member, results)
     badges += get_race_win_badges(results)
@@ -197,7 +197,13 @@ def get_bow_finishes_badges(member, results):
         if set(event_ids).issubset(result_ids):
             last_date = Event.objects.get(id=event_ids[-1]).date
             bow = Bow.objects.get(id=b.bow_id)
-            bow_finishes_badges.append(named_badge('{} Finisher'.format(bow.name), last_date, 'http://vignette1.wikia.nocookie.net/steamtradingcards/images/e/ed/Napoleon_Total_War_Badge_France.png/revision/latest?cb=20130823233645', False))
+            bow_longname = bow.name.replace('BOW', 'Battle of Waterloo')
+            bow_num = bow.slug.split('-')[1]
+            image = 'bow-finisher-{}.png'.format(bow_num)
+            bow_finishes_badges.append(named_badge('{} Finisher'.format(bow_longname),
+                                                   last_date,
+                                                   image,
+                                                   False))
     return bow_finishes_badges
 
 def get_endurrun_finishes_badges(member, results):
