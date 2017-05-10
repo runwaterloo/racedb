@@ -153,7 +153,7 @@ def get_wc_finishes_badge(results):
         if len(wc_finishes) >= i:
             date_earned = wc_finishes[-i].result.event.date
             image = 'waterloo-classic-finisher-{}.png'.format(i)
-            wc_finishes_badge.append(named_badge('{} Waterloo Classic Finishes'.format(i),
+            wc_finishes_badge.append(named_badge('Waterloo Classic {} Time Finisher'.format(i),
                                                  date_earned,
                                                  image,
                                                  False))
