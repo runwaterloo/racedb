@@ -108,7 +108,7 @@ def get_badges(member, results):
     #badges += get_endurrace_combined_badge(results)
     #badges += get_event_finishes_badge(results)
     #badges += get_adventurer_badge(results)
-    badges = sorted(badges, key=attrgetter('date'), reverse=True)
+    badges = sorted(badges, key=attrgetter('date', 'name'), reverse=True)
     return badges
 
 def get_founders_badge(member):
