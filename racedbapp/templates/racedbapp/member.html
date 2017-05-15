@@ -72,11 +72,13 @@
   </div>
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
     <div style="padding-top: 20px; padding-bottom: 20px">
-      <center>
-        <a href="{{ member.photourl }}">
-          <img class="img-rounded" src="{{ member.photourl }}" height="400">
-        </a>
-      </center>
+      <div class="profile-outer">
+        <div class="profile-inner">
+          <a href="{{ member.photourl }}">
+            <img src="{{ member.photourl }}">
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </div>

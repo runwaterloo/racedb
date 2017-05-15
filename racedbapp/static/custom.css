@@ -62,3 +62,27 @@ html {
     vertical-align: middle;
     float: none;
 }
+
+/* member profile pic
+https://jsfiddle.net/1rhjgncg/3/
+*/
+
+div.profile-outer {
+    width: 300px; 
+    height: 400px;
+    margin: 0 auto; 
+    overflow: hidden;
+    border-radius: 15px;
+    /* border: 2px solid blue; for demo */
+}
+div.profile-inner {
+    position:relative;
+    float: right;
+    right: 50%;
+}
+div.profile-inner img {
+    height: 400px;
+    position: relative; 
+    right:-50%;
+    border-radius: 15px;
+}
