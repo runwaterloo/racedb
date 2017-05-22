@@ -74,9 +74,11 @@
     <div style="padding-top: 20px; padding-bottom: 20px">
       <div class="profile-outer">
         <div class="profile-inner">
-          <a href="{{ member.photourl }}">
-            <img src="{{ member.photourl }}">
-          </a>
+          {% if member.photourl %}
+            <a href="{{ member.photourl }}">
+              <img src="{{ member.photourl }}">
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>
