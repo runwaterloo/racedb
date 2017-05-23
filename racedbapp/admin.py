@@ -46,3 +46,14 @@ class EndurathleteAdmin(admin.ModelAdmin):
     search_fields = ('name', 'country')
     ordering = ('-year', '-division', 'id',)
 admin.site.register(Endurathlete, EndurathleteAdmin)
+
+class BowAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'year', 'events')
+    ordering = ('id',)
+admin.site.register(Bow, BowAdmin) 
+
+class BowathleteAdmin(admin.ModelAdmin):
+    list_display = ('bow', 'category', 'name', 'gender')
+    list_filter = ('bow',)
+    ordering = ('bow__id', 'id')
+admin.site.register(Bowathlete, BowathleteAdmin) 
