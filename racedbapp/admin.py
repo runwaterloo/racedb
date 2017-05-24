@@ -57,3 +57,8 @@ class BowathleteAdmin(admin.ModelAdmin):
     list_filter = ('bow',)
     ordering = ('bow__id', 'id')
 admin.site.register(Bowathlete, BowathleteAdmin) 
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'ismasters')
+    ordering = ('name',)
+admin.site.register(Category, CategoryAdmin) 
