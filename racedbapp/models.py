@@ -225,9 +225,9 @@ class Bow(models.Model):
 class Bowathlete(models.Model):
     GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
     bow = models.ForeignKey(Bow)
-    category = models.ForeignKey(Category)
     name = models.CharField(max_length=100)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    category = models.ForeignKey(Category)
     class Meta:
         unique_together = ('bow', 'name')
 
