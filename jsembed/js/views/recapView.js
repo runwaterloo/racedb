@@ -6,6 +6,7 @@ define(['jquery', 'underscore', 'backbone', 'jinja', 'text!templates/recapView.h
 
       this.template = jinja.compile(template).render;
 
+      console.log(this.template);
     },
     render: function() {
       var self = this;

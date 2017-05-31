@@ -1,9 +1,8 @@
 define([
-  'jquery',
   'underscore',
   'backbone',
   'views/recapView'
-], function($, _, Backbone, RecapView){
+], function( _, Backbone, RecapView){
   var initialize = function(){
 
       var elements = $('.recap');
