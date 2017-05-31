@@ -1,10 +1,11 @@
 {% extends "racedbapp/base.html" %}
+{% load static %}
 
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="RunWaterloo Results" />
   <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
-  <meta property="og:image" content="/static/ogimage.png" />
+  <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
@@ -81,7 +82,7 @@
     {% endif %}
 </div>
 <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
-  <a href="http://www.endurrun.com"><img class="pull-right" src="/static/endurrun.png" height="70" style="PADDING-TOP: 20px"></a>
+  <a href="http://www.endurrun.com"><img class="pull-right" src="{% static "endurrun.png" %}" height="70" style="PADDING-TOP: 20px"></a>
 </div>
 </div>
 <p>
@@ -145,7 +146,7 @@
       Currently using default (shiny) 24px. 
       -->
       {% if result.flag_slug %}
-      <img title="{{ result.athlete.country }}" src="/static/flags/{{ result.flag_slug }}_shiny_24px.png">
+      <img title="{{ result.athlete.country }}" src="{% static "flags/"|add:result.flag_slug|add:"_shiny_24px.png" %}">
       {% endif %} 
       {{ result.athlete.name }}
       </td>

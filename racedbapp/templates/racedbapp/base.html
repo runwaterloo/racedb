@@ -1,10 +1,12 @@
+{% load static %}
+{% load racedbapp_extras %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title>{% block title %}{% endblock title %}RunWaterloo Results</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/spacelab/bootstrap.min.css">
-        <link rel="stylesheet" href="/static/custom.css">
-        <link rel="shortcut icon" href="/static/rw-fav.png" />
+        <link rel="stylesheet" href="{% static "custom.css" %}">
+        <link rel="shortcut icon" href="{% static "rw-fav.png" %}"/>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
         {% block ogmeta %}{% endblock ogmeta %}
     </head>
@@ -21,7 +23,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="/"><img src="/static/results_logo_v1.png" height="45px" alt="RunWaterloo Results"></a>
+          <a class="navbar-brand" href="/"><img src="{% static "rw-results.png" %}" height="45px" alt="RunWaterloo Results"></a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
@@ -48,7 +50,8 @@
                 <li><a href="/endurrun/">ENDURrun</a></li>
                 <li><a href="/race/fall-classic/5-km/">Fall 5 KM Classic</a></li>
                 <li><a href="/race/harvest/half-marathon">Harvest Half</a></li>
-                <li><a href="/race/laurier-loop/10-km">Laurier Loop</a></li>
+                <li><a href="/race/kitchener-kids-with-cancer-run/5-km/">Kitchener Kids With Cancer Run</a></li>
+                <li><a href="/race/laurier-loop/5-km">Laurier Loop</a></li>
                 <li><a href="/race/pancake/mile">Pancake Mile</a></li>
                 <li><a href="/race/re-fridgee-eighter/8-km">Re-Fridgee-Eighter</a></li>
                 <li><a href="/race/rememberrun/11-km">RememberRun</a></li>
@@ -66,9 +69,23 @@
            </div>
           </form>
           </ul>
+          {% if user.is_authenticated %}
           <ul class="nav navbar-nav navbar-right">
-          <a href="http://www.runwaterloo.com"><img src="/static/rw-logo-large.png" height="40px" alt="RunWaterloo Results"></a>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+              <span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="#">Hello, {{ user|title }}</a></li>
+                <li class="divider"></li>
+                <li><a href="/admin/">Django</a></li>
+                <li><a href="/adminphotos/">Photos</a></li>
+                <li><a href="https://pre.scrw.ca/admin/">Pre Admin</a></li>
+                <li><a href="https://pre.scrw.ca/update?updatekey={{ ''|get_prekey }}">Pre Update (today)</a></li>
+                <li><a href="https://pre.scrw.ca/update?updatekey={{ ''|get_prekey }}&daysago=1">Pre Update (yesterday)</a></li>
+              </ul>
+            </li>
           </ul>
+          {% endif %}
         </div><!--/.nav-collapse -->
       </div>
      </nav>
@@ -86,7 +103,9 @@
  <div>
  <p>
  Results &copy; 1978-2017. Not for unauthorized commercial reproduction. For more information, to report an error, or to update your member profile, contact <a href="mailto:results@runwaterloo.com?Subject=RunWaterloo Results" target="_top">results@runwaterloo.com</a>.</p>
-  <a href="https://twitter.com/RW_Results" target="_blank"><img src="/static/twitter-logo.png" height="50"></a>
+  <a href="https://twitter.com/RW_Results" target="_blank"><img src="{% static "twitter-logo.png" %}" height="50"></a>
+  <a href="https://www.flickr.com/photos/runwaterloo/albums" target="_blank"><img src="{% static "flickr-logo.png" %}" height="50"></a>
+  <a href="http://runwaterloo.com" target="_blank" class="pull-right"><img src="{% static "rw-logo-horizontal.png" %}" height="50"></a>
  </div>
  {% endif %}
     </div>

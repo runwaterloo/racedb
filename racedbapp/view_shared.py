@@ -1,5 +1,5 @@
 from collections import namedtuple
-from django.db.models import Min, Count                                          
+from django.db.models import Min, Count, Q
 from .models import *      
 
 namedresult = namedtuple('nr', ['place', 'guntime', 'athlete',               
@@ -54,17 +54,17 @@ def getracerecords(race, distance, division_choice=False):
         fr = rawresults.filter(gender="F", guntime=frtime).order_by('event__date')
         if race.slug != 'endurrun':
             try:                                                                         
-                mmrtime = rawresults.filter(gender="M", category__ismasters=True).order_by('guntime')[:1][0].guntime
+                mmrtime = rawresults.filter(gender="M").filter(Q(category__ismasters=True) | Q(age__gte=40)).order_by('guntime')[:1][0].guntime
             except:                                                                      
                 mmr = False                                                              
             else:
-                mmr = rawresults.filter(gender="M", category__ismasters=True, guntime=mmrtime).order_by('event__date')
+                mmr = rawresults.filter(gender="M", guntime=mmrtime).filter(Q(category__ismasters=True) | Q(age__gte=40)).order_by('event__date')
             try:                                                                         
-                fmrtime = rawresults.filter(gender="F", category__ismasters=True).order_by('guntime')[:1][0].guntime
+                fmrtime = rawresults.filter(gender="F").filter(Q(category__ismasters=True) | Q(age__gte=40)).order_by('guntime')[:1][0].guntime
             except:                                                                      
                 fmr = False                                                              
             else:
-                fmr = rawresults.filter(gender="F", category__ismasters=True, guntime=fmrtime).order_by('event__date')
+                fmr = rawresults.filter(gender="F", guntime=fmrtime).filter(Q(category__ismasters=True) | Q(age__gte=40)).order_by('event__date')
         elif race.slug == 'endurrun':
             try:                                                                         
                 mmrtime = rawresults.filter(gender="M", age__gte=40).order_by('guntime')[:1][0].guntime
@@ -165,10 +165,14 @@ def create_samerace_list(race):
         races.append(i.current_race)
     return races
 
-def get_membership(event=False):
+def get_membership(event=False, include_inactive=False):
     named_membership = namedtuple('nm', ['names', 'includes', 'excludes'])
     names = {}
-    for m in Rwmember.objects.filter(active=True):
+    if include_inactive:
+        members = Rwmember.objects.all()
+    else:
+        members = Rwmember.objects.filter(active=True) 
+    for m in members:
         names[m.name.lower()] = m
         if m.altname != '':
             names[m.altname.lower()] = m

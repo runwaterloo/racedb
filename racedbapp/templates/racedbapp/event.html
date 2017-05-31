@@ -1,5 +1,6 @@
 {% extends "racedbapp/base.html" %}
 
+{% load static %}
 {% load racedbapp_extras %}
 
 {% block title %}
@@ -13,11 +14,11 @@
   <meta property="og:type" content="website" />
   <meta property="og:title" content="RunWaterloo Results" />
   <meta property="og:description" content="Race results for the {{ event.date.year }} {{ event.race.name }}." />
-  <meta property="og:image" content="/static/race_logos/{{ event.race.slug }}.png" />
+  <meta property="og:image" content="{% static "race_logos/"|add:event.race.slug|add:".png" %}" />
   <meta property="og:image:width" content="200" />
   <meta property="og:image:height" content="200" />
  <!-- https://sunnywalker.github.io/jQuery.FilterTable/ -->
-  <script src="/static/jquery.filtertable.min.js"></script>
+  <script src="{% static "jquery.filtertable.min.js" %}"></script>
   <!-- highlight found cell 
   <style>
   .filter-table .quick { margin-left: 0.5em; font-size: 0.8em; text-decoration: none; }
@@ -48,6 +49,12 @@
       </h3>
       <p>
         {{ event.date }} - {{ event.city }}
+        {% if event.flickrsetid %}
+          &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
+        {% endif %}
+        {% if event.youtube_id and event.youtube_offset_seconds %}
+          &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}" target="_blank"><span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span></a>
+        {% endif %}
       </p>
       <ul class="pagination pagination-sm">
         {% for p in pages %}
@@ -56,61 +63,64 @@
       </ul>
 
   <!-- Filter table -->
+    {% if page != 'Wheelchair' %}
       <table class="table table-bordered table-condensed">
-<thead>
-        <tr class="info">
-          <th class="text-center">Year</th>
-          <th class="text-center">Distance</th>
-          <th class="text-center">Age/Gender Filter</th>
-          {% if division_filter %}
-            <th class="text-center">Division</th>
-          {% endif %}
-        </tr>
-</thead>
-<tbody>
-        <tr>
-          <td class="text-center">
-            <select onchange="location = this.options[this.selectedIndex].value;">
-            <option>{{ year_filter.current }}</option>
-            {% for yc in year_filter.choices %}
-              <option value="{{ yc.url }}">{{ yc.name }}</option>
-            {% endfor %}
-            </select>
-          </td>
-          <td class="text-center">
-            <select onchange="location = this.options[this.selectedIndex].value;">
-            <option>{{ distance_filter.current }}</option>
-            {% for dc in distance_filter.choices %}
-              <option value="{{ dc.url }}">{{ dc.name }}</option>
-            {% endfor %}
-            </select>
-          </td>
-          <td class="text-center">
-            <select onchange="location = this.options[this.selectedIndex].value;">
-            <option>{{ category_filter.current }}</option>
-            {% for cc in category_filter.choices %}
-              <option value="{{ cc.url }}">{{ cc.name }}</option>
-            {% endfor %}
-            </select>
-          </td>
-          {% if division_filter %}
+        <thead>
+          <tr class="info">
+            <th class="text-center">Year</th>
+            <th class="text-center">Distance</th>
+            <th class="text-center">Age/Gender Filter</th>
+            {% if division_filter %}
+              <th class="text-center">Division</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
             <td class="text-center">
               <select onchange="location = this.options[this.selectedIndex].value;">
-              <option>{{ division_filter.current }}</option>
-              {% for dc in division_filter.choices %}
+              <option>{{ year_filter.current }}</option>
+              {% for yc in year_filter.choices %}
+                <option value="{{ yc.url }}">{{ yc.name }}</option>
+              {% endfor %}
+              </select>
+            </td>
+            <td class="text-center">
+              <select onchange="location = this.options[this.selectedIndex].value;">
+              <option>{{ distance_filter.current }}</option>
+              {% for dc in distance_filter.choices %}
                 <option value="{{ dc.url }}">{{ dc.name }}</option>
               {% endfor %}
               </select>
             </td>
-          {% endif %}
-        </tr>
-</tbody>
+            <td class="text-center">
+              <select onchange="location = this.options[this.selectedIndex].value;">
+              <option>{{ category_filter.current }}</option>
+              {% for cc in category_filter.choices %}
+                <option value="{{ cc.url }}">{{ cc.name }}</option>
+              {% endfor %}
+              </select>
+            </td>
+            {% if division_filter %}
+              <td class="text-center">
+                <select onchange="location = this.options[this.selectedIndex].value;">
+                <option>{{ division_filter.current }}</option>
+                {% for dc in division_filter.choices %}
+                  <option value="{{ dc.url }}">{{ dc.name }}</option>
+                {% endfor %}
+                </select>
+              </td>
+            {% endif %}
+          </tr>
+        </tbody>
       </table>
-    </div>
+    {% endif %}
     <!-- End Filter Table -->
+
+    </div>
     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
       <div style="padding-top: 20px; padding-bottom: 20px">
-        <img class="img-rounded pull-right" src="/static/race_logos/{{ event.race.slug }}.png" height="170">
+        <img class="img-rounded pull-right" src="{% static "race_logos/"|add:event.race.slug|add:".png" %}" height="170">
       </div>
     </div>
   </div>
@@ -136,6 +146,16 @@
             <th class="text-center" scope="col">#</th>
             <th class="text-center" scope="col">Bib</th>
             <th class="text-left" scope="col">Name</th>
+            {% if phototags %}
+              <th class="text-center" scope="col">
+                <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+              </th>
+            {% endif %}
+            {% if event.youtube_id and event.youtube_offset_seconds %}
+              <th class="text-center" scope="col">
+                <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>
+              </th>
+            {% endif %}
             <th class="text-center" scope="col">Time</th>
             {% if hill_dict %}
               <th class="text-center" scope="col">Hill Sprint</th>
@@ -174,9 +194,27 @@
                   {{ r.name }}
                 {% endif %}
                 {% if r.relay_team %}
-                  <img src="/static/team.png" height="20px" data-toggle="tooltip" title="{{ r.relay_team }}">
+                  <img src="{% static "team.png" %}" height="20px" data-toggle="tooltip" title="{{ r.relay_team }}">
                 {% endif %}
               </td>
+              {% if phototags %}
+                {% if r.hasphotos %}
+                  <td class="text-center">
+                    <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ event_flickr_str}},{{ r.bib }}" target="_blank">
+                      <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+                    </a>
+                  </td>
+                {% else %}
+                  <td></td>
+                {% endif %}
+              {% endif %}
+              {% if event.youtube_id and event.youtube_offset_seconds %}
+                <td class="text-center">
+                  <a href="{{ r.youtube_url }}" target="_blank">
+                    <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>
+                  </a>
+                </td>
+              {% endif %}
               <td class="text-center">{{ r.guntime }}</td>
               {% if hill_dict %}
                 <td class="text-center">{{ r.prime }}</td>
@@ -216,7 +254,7 @@
         <div>
           <center>
             Timing provided by:<br>
-            <a href="http://www.chiptimeresults.com" target="_blank"><img class="img-rounded" src="/static/ctr.png"></a>
+            <a href="http://www.chiptimeresults.com" target="_blank"><img class="img-rounded" src="{% static "ctr.png" %}"></a>
             <br><br>
           </center>
         </div>

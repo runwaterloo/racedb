@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import Http404
 #from django.db.models import Count
 from urllib import parse
 from collections import namedtuple
@@ -19,12 +20,18 @@ def index(request, year, race_slug, distance_slug):
     page = get_page(qstring)
     category = get_category(qstring)
     division = get_division(qstring)
-    event = Event.objects.select_related().get(race__slug=race_slug,
-                                               distance__slug=distance_slug,
-                                               date__icontains=year)
+    try:
+        event = Event.objects.select_related().get(race__slug=race_slug,
+                                                   distance__slug=distance_slug,
+                                                   date__icontains=year)
+    except:
+        raise Http404('Matching event not found'.format(division))
     races = view_shared.create_samerace_list(event.race)
     team_categories = get_team_categories(event)
     hill_dict = get_hill_dict(event)
+    dbphototags = list(Phototag.objects.filter(event=event).values_list('tag', flat=True))
+    phototags = [x for x in dbphototags if x.isdigit()]
+    event_flickr_str = '{}-{}-{}'.format(event.date.year, event.race.slug, event.distance.slug).replace('-','').replace('_','')
     wheelchair_results = Wheelchairresult.objects.filter(event=event)
     pages = get_pages(event, page, hill_dict,
                       wheelchair_results, team_categories) 
@@ -38,7 +45,7 @@ def index(request, year, race_slug, distance_slug):
     else:
         all_results = Result.objects.select_related().filter(event=event)
         hasage = all_results.hasage(event)
-    results, max_splits = get_results(event, all_results, page, category, division, hill_dict)
+    results, max_splits = get_results(event, all_results, page, category, division, hill_dict, phototags)
     split_headings = []
     for i in range(1, max_splits+1):
         split_headings.append('Split {}'.format(i))
@@ -60,6 +67,8 @@ def index(request, year, race_slug, distance_slug):
                'hill_dict': hill_dict,
                'split_headings': split_headings,
                'extra_name': extra_name,
+               'phototags': phototags,
+               'event_flickr_str': event_flickr_str,
               }
     return render(request, 'racedbapp/event.html', context)
 
@@ -143,6 +152,8 @@ def get_division(qstring):
     division = 'All'
     if 'division' in qstring:
         division = qstring['division'][0]
+        if division not in ('Ultimate', 'Sport', 'Relay', 'Guest'):
+            raise Http404('Division "{}" is not valid'.format(division))
     return division
 
 def get_pages(event, page, hill_dict, wheelchair_results, team_categories):
@@ -229,7 +240,10 @@ def get_category_filter(event, category, division):
     if category == 'All':
         current = 'All ({})'.format(total_count)
     else:
-        category_count = [ x['count'] for x in all_categories if x['category__name'] == category ][0]
+        try:
+            category_count = [ x['count'] for x in all_categories if x['category__name'] == category ][0]
+        except:
+            category_count = 0
         current = '{} ({})'.format(category, category_count)
         if division == 'All':
             choices.append(named_choice('All ({})'.format(total_count), '/event/{}/{}/{}/'.format(event.date.year, event.race.slug, event.distance.slug)))
@@ -268,7 +282,10 @@ def get_division_filter(event, division, category):
         if division == 'All':
             current = 'All ({})'.format(total_count)
         else:
-            division_count = [ x['count'] for x in divisions if x['division'] == division ][0]
+            try:
+                division_count = [ x['count'] for x in divisions if x['division'] == division ][0]
+            except:
+                division_count = 0
             current = '{} ({})'.format(division, division_count)
             if category == 'All':
                 choices.append(named_choice('All ({})'.format(total_count), '/event/{}/{}/{}/'.format(event.date.year, event.race.slug, event.distance.slug)))
@@ -284,7 +301,7 @@ def get_division_filter(event, division, category):
         division_filter = named_filter(current, choices)
     return division_filter
 
-def get_results(event, all_results, page, category, division, hill_dict):
+def get_results(event, all_results, page, category, division, hill_dict, phototags):
     named_result = namedtuple('nr', 
                      [
                       'place',
@@ -304,6 +321,8 @@ def get_results(event, all_results, page, category, division, hill_dict):
                       'ismasters',
                       'splits',
                       'member',
+                      'hasphotos',
+                      'youtube_url',
                      ])
     results = []
     relay_dict = get_relay_dict(event)
@@ -318,6 +337,10 @@ def get_results(event, all_results, page, category, division, hill_dict):
     if event_splits:
         max_splits = int(event_splits.aggregate(Max('split_num'))['split_num__max'])
     membership = view_shared.get_membership(event=event)
+    has_youtube = False
+    if event.youtube_id and event.youtube_offset_seconds:
+        has_youtube = True
+        LEAD_TIME_SECONDS = 7
     for r in all_results:
         relay_team = False
         if r.gender == 'F':
@@ -371,7 +394,19 @@ def get_results(event, all_results, page, category, division, hill_dict):
                 except:
                     splits.append(named_split(i, ''))
         member = view_shared.get_member(r, membership)
-        #member = False # remove this line to enable member linking
+        hasphotos = False
+        youtube_url = False
+        if has_youtube:
+            video_position_seconds = (guntime.total_seconds()
+                                      - event.youtube_offset_seconds 
+                                      - LEAD_TIME_SECONDS)
+            minutes = int(video_position_seconds // 60)
+            seconds = int(video_position_seconds % 60)
+            video_position = '{}m{}s'.format(minutes, seconds)
+            youtube_url = 'https://youtu.be/{}?t={}'.format(event.youtube_id,
+                                                            video_position)
+        if r.bib in phototags:
+            hasphotos = True
         results.append(named_result(r.place,
                                     r.bib,
                                     r.athlete,
@@ -389,6 +424,8 @@ def get_results(event, all_results, page, category, division, hill_dict):
                                     ismasters,
                                     splits,
                                     member,
+                                    hasphotos,
+                                    youtube_url
                                    ))
     results = filter_results(results, category, division)
     if page == 'Hill Sprint':
@@ -457,6 +494,8 @@ def get_hill_results(results, named_result):
            r.ismasters,
            r.splits,
            r.member,
+           r.hasphotos,
+           r.youtube_url,
            ))
     return hill_results
 

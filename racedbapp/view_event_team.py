@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.db.models import Min, Count, Sum, Avg
 from django import db
 from collections import namedtuple
@@ -24,7 +24,10 @@ def index(request, year, race_slug, distance_slug, team_category_slug):
     wheelchair_results = Wheelchairresult.objects.filter(event=event)
     if wheelchair_results.count() > 0:
         dowheelchair = True
-    team_category = Teamcategory.objects.get(slug=team_category_slug)
+    try:
+        team_category = Teamcategory.objects.get(slug=team_category_slug)
+    except:
+        raise Http404('Team category not found')
     present_team_categories = Teamresult.objects.filter(event_id=event.id).values_list('team_category__name', flat=True)
     present_team_categories = set(sorted(present_team_categories))
     team_categories = Teamcategory.objects.filter(name__in=present_team_categories)

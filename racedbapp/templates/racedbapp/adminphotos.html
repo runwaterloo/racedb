@@ -1,0 +1,58 @@
+{% extends "racedbapp/base.html" %}
+
+{% load static %}
+{% load racedbapp_extras %}
+
+{% block ogmeta %}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="RunWaterloo Results" />
+  <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
+  <meta property="og:image" content="{% static "ogimage.png" %}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <script src="{% static "jquery.filtertable.min.js" %}"></script>
+{% endblock ogmeta %}
+
+{% block content %}
+ <h3>Admin Photos</h3>
+
+      <!-- search input -->
+      <div class="row">
+        <div class="col-xs-3">
+          <div class="form-group">
+            <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search these results..." size="12">
+          </div>
+        </div>
+      </div>
+      <!-- end search input -->
+
+<div class="row">
+  <div class="col-xs-12 col-sm-12 col-md-10 col-lg-8">
+    <table class="table table-bordered table-condensed table-striped table-hover">
+      <thead>
+        <tr class="info">
+          <th>Event</th>
+          <th class="text-center">Results</th>
+          <th class="text-center">Tags</th>
+          <th class="text-center">Pct</th>
+          <th class="text-center"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></th>
+        </tr>
+      </thead>
+    <tbody>
+    {% for e in events %}
+      <tr>
+        <td><a href="/event/{{ e.event.date.year }}/{{ e.event.race.slug }}/{{e.event.distance.slug}}">{{ e.event.date.year }} {{ e.event.race.shortname }} {{ e.event.distance.name }}</a></td>
+        <td class="text-center">{{ e.num_results }}</td>
+        <td class="text-center">{{ e.unique_tags }}</td>
+        <td class="text-center">{{ e.pct }}</td>
+        <td class="text-center"><a href="/photoupdate/?notifykey={{ notifykey }}&date={{ e.event.date|date:"c" }}" target="_blank"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <script>
+    $('table').filterTable({inputSelector: '#input-filter'}); // apply filterTable to all tables on this page
+  </script>
+  </div>
+</div>
+{% endblock content %}

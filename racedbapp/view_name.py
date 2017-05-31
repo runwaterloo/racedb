@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.db.models import Min, Count, Q
 from django import db
 from collections import namedtuple
@@ -14,8 +14,9 @@ from . import utils, view_shared
 def index(request):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
     message = ''
+    if 'q' not in qstring:
+        raise Http404('No search string provided')
     q = qstring['q'][0]
-    #dbresults = Result.objects.filter(athlete__icontains=q)
     name_query = get_query(q, ['athlete',])
     dbresults = Result.objects.filter(name_query)
     if len(dbresults) > 200:

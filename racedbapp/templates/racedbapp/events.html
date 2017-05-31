@@ -1,12 +1,13 @@
 {% extends "racedbapp/base.html" %}
 
+{% load static %}
 {% load racedbapp_extras %}
 
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="RunWaterloo Results" />
   <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
-  <meta property="og:image" content="/static/ogimage.png" />
+  <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
@@ -40,6 +41,9 @@
    <th>Race</th>
    <th colspan=2 class="text-center">Female Winner</th>
    <th colspan=2 class="text-center">Male Winner</th>
+   <th class="text-center" scope="col">
+     <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+   </th>
    </tr>
   {% for event in events %}
     <tr>
@@ -56,6 +60,11 @@
         <td>{{ event.malewinner }}</td>
       {% endif %}
       <td>{{ event.maletime|get_time }}</td>
+      {% if event.flickrsetid %}
+        <td class="text-center"><a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a></td>
+      {% else %}
+        <td></td>
+      {% endif %}
     </tr>
    {% endfor %}
   </table>

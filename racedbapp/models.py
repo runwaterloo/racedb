@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Avg, Count, Min, Sum
+from django.db.models import Avg, Count, Min, Sum, Q
 from collections import namedtuple
 from . import utils
 
@@ -24,8 +24,8 @@ class ResultQuerySet(models.QuerySet):
         else:
             return True
     def topmasters(self, event):
-        topfemale = self.filter(event=event, category__ismasters=True,gender='F')[0]
-        topmale = self.filter(event=event, category__ismasters=True,gender='M')[0]
+        topfemale = self.filter(event=event, gender='F').filter(Q(category__ismasters=True) | Q(age__gte=40))[0]
+        topmale = self.filter(event=event, gender='M').filter(Q(category__ismasters=True) | Q(age__gte=40))[0]
         femaletime = utils.truncate_time(topfemale.guntime)
         maletime = utils.truncate_time(topmale.guntime)
         return namediresult('1st Master', topfemale.athlete, femaletime, topmale.athlete, maletime)
@@ -121,11 +121,28 @@ class Event(models.Model):
     date = models.DateField()
     city = models.CharField(max_length=50)
     resultsurl = models.URLField(max_length=500, null=True, blank=True)
+    flickrsetid = models.BigIntegerField(default=None, null=True, blank=True)
+    youtube_id = models.CharField(max_length=50, blank=True, help_text='Just the video id, not the whole URL')
+    youtube_offset_seconds = models.IntegerField(default=None, null=True, blank=True, help_text='Elapsed race time (in seconds) at start of video')
     class Meta:
         unique_together = ('race', 'distance', 'date')
     #    ordering = ('-date', '-distance__km')
     def __str__(self): 
         return '{} {} {}'.format(self.date.year, self.race, self.distance)
+
+class Rwmember(models.Model):
+    GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
+    name = models.CharField(max_length=64)
+    slug = models.SlugField(unique=True, help_text="https://blog.tersmitten.nl/slugify/")
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    city = models.CharField(max_length=50)
+    joindate = models.DateField()
+    photourl = models.URLField(max_length=500, null=True, blank=True)
+    altname = models.CharField(max_length=64, blank=True, help_text="Optional, e.g. maiden name")
+    active = models.BooleanField(default=True)
+    hasphotos = models.BooleanField(default=False, help_text="Automatically set by system")
+    def __str__(self): 
+        return self.name
 
 class Result(models.Model):
     event = models.ForeignKey(Event)
@@ -141,6 +158,7 @@ class Result(models.Model):
     division = models.CharField(max_length=32, blank=True)
     province = models.CharField(max_length=50, blank=True)
     country = models.CharField(max_length=50, blank=True)
+    rwmember = models.ForeignKey(Rwmember, null=True, default=None)
     objects = ResultQuerySet.as_manager()
     class Meta:
         unique_together = ('event', 'place')
@@ -205,10 +223,11 @@ class Bow(models.Model):
         return self.name
 
 class Bowathlete(models.Model):
+    GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
     bow = models.ForeignKey(Bow)
-    category = models.ForeignKey(Category)
     name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=1)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    category = models.ForeignKey(Category)
     class Meta:
         unique_together = ('bow', 'name')
 
@@ -227,10 +246,12 @@ class Split(models.Model):
         unique_together = ('event', 'place', 'split_num')
 
 class Endurathlete(models.Model):
+    DIVISION_CHOICES = (('Ultimate', 'Ultimate'),('Sport', 'Sport'))
+    GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
     year = models.IntegerField()
-    division = models.CharField(max_length=32)
+    division = models.CharField(max_length=32, choices=DIVISION_CHOICES)
     name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=1)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     age = models.IntegerField(null=True)
     city = models.CharField(max_length=100)
     province = models.CharField(max_length=100)
@@ -253,22 +274,13 @@ class Endurteam(models.Model):
     class Meta:
         unique_together = ('year', 'name')
 
-class Rwmember(models.Model):
-    GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
-    name = models.CharField(max_length=64)
-    slug = models.SlugField(unique=True, help_text="https://blog.tersmitten.nl/slugify/")
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    city = models.CharField(max_length=50)
-    joindate = models.DateField()
-    photourl = models.URLField(max_length=500, null=True, blank=True)
-    altname = models.CharField(max_length=64, blank=True, help_text="Optional, e.g. maiden name")
-    active = models.BooleanField(default=True)
-    def __str__(self): 
-        return self.name
-
 class Rwmembercorrection(models.Model):
     CORRECTION_TYPE_CHOICES = (('exclude', 'exclude'),('include', 'include'))
     rwmember = models.ForeignKey(Rwmember)
     correction_type = models.CharField(max_length=7, choices=CORRECTION_TYPE_CHOICES)
     event = models.ForeignKey(Event)
     place= models.IntegerField()
+
+class Phototag(models.Model):
+    event = models.ForeignKey(Event)
+    tag = models.CharField(max_length=64)

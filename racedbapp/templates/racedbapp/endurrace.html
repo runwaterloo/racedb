@@ -1,10 +1,11 @@
 {% extends "racedbapp/base.html" %}
+{% load static %}
 
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="RunWaterloo Results" />
   <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
-  <meta property="og:image" content="/static/ogimage.png" />
+  <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
@@ -53,7 +54,11 @@
     <tr>
       <td class="text-center">{{ result.place }}</td>
       <td class="text-center">{{ result.bib }}</td>
-      <td>{{ result.athlete }}</td>
+      {% if result.member %}
+        <td><a href="/member/{{ result.member.slug }}/">{{ result.athlete }}</a></td>
+      {% else %}
+        <td>{{ result.athlete }}</td>
+      {% endif %}
       <td class="text-center">{{ result.total_time }}</td>
       {% if categorydict|length != 1 %}
       <td>{{ result.category }}</td>
