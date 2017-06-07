@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^event/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/team/(?P<team_category_slug>.*)/$', view_event_team.index, name='event_team'),
     url(r'^event/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/$', view_event.index, name='event'),
     url(r'^events', view_events.index, name='events'),
+    url(r'^index/', view_index.index, name='index'),
     url(r'^race/(?P<race_slug>.*)/(?P<distance_slug>.*)/$', view_race.index, name='race'),
     url(r'^members', view_members.index, name='members'),
     url(r'^member/(?P<member_slug>.*)/$', view_member.index, name='member'),
