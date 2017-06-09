@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import Http404
 from itertools import chain
 from collections import namedtuple
 from .models import *
@@ -17,7 +18,10 @@ named_pb = namedtuple('npb', ['time', 'event'])
 named_badge = namedtuple('nb', ['name', 'date', 'image', 'url'])
 
 def index(request, member_slug):
-    member = Rwmember.objects.get(slug=member_slug, active=True)
+    try:
+        member = Rwmember.objects.get(slug=member_slug, active=True)
+    except:
+        raise Http404('Member not found')
     dbresults = (Result.objects
                  .select_related()
                  .filter(rwmember=member)
