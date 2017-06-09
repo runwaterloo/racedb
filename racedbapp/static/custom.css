@@ -86,3 +86,30 @@ div.profile-inner img {
     right:-50%;
     border-radius: 15px;
 }
+div.upcoming-race {
+     border: 2px solid blue; for demo */
+     margin-bottom: 5px;
+     margin-top: 5px;
+     border-radius: 10px;
+}
+div.upcoming-race-outer {
+     border: 2px solid blue; for demo */
+     margin-bottom: 5px;
+     margin-top: 5px;
+     border-radius: 10px;
+     overflow: hidden; /* add this to contain floated children */
+}
+div.upcoming-race-inner {
+     border: 2px solid red; for demo */
+     margin-top: 5px;
+     margin-bottom: 5px;
+     margin-left: 5px;
+     display: inline-block;
+     vertical-align: middle;
+     border-radius: 10px;
+}
+img.upcoming-race {
+    float: left; 
+    margin-top: 5px;
+    border-radius: 10px;
+}
