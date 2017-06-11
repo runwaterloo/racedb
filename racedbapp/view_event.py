@@ -396,7 +396,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
         member = view_shared.get_member(r, membership)
         hasphotos = False
         youtube_url = False
-        if has_youtube:
+        if has_youtube and r.place < 990000:
             video_position_seconds = (guntime.total_seconds()
                                       - event.youtube_offset_seconds 
                                       - LEAD_TIME_SECONDS)
