@@ -13,17 +13,49 @@
 {% endblock ogmeta %}
 
 {% block content %}
+<!-- START FIRST ROW -->
 <div class="row">
+  <!-- START FIRST COLUMN -->
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
     <center><h3>Last Race</h3></center>
-    <center><h5>stuff goes here</h5></center>
+    {% for lrd in lastraceday %}
+      <img class="img-rounded" src="{% static "race_logos/"|add:lrd.event.race.slug|add:".png" %}" height="100"></img><br>
+      <a href="/event/{{ lrd.event.date.year }}/{{ lrd.event.race.slug }}/{{ lrd.event.distance.slug }}/">{{ lrd.event.race.shortname }} {{ lrd.event.distance }}</a><br>
+      {{ lrd.event.date }}<br>
+      {{ lrd.event.city }}<br>
+      {{ lrd.finishers }} finishers<br>
+      <table class="table">
+        <tr class="info">
+          <th>Place</th>
+          <th colspan=2>Female</th>
+          <th colspan=2>Male</th>
+        </tr>
+      {% for r in lrd.recap %}
+        <tr>
+          <td>{{ r.place }}</td>
+          <td>{{ r.female_athlete }}</td>
+          <td>{{ r.female_time }}</td>
+          <td>{{ r.male_athlete }}</td>
+          <td>{{ r.male_time }}</td>
+        </tr>
+      {% endfor %}
+      </table>
+      <br><br>
+    {% endfor %}
   </div>
+  <!-- END FIRST COLUMN -->
+  <!-- START SECOND COLUMN -->
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
     <center><h3>Member Spotlight</h3></center>
     <center><h5>stuff goes here</h5></center>
   </div>
+  <!-- END SECOND COLUMN -->
 </div>
+<!-- END FIRST ROW -->
+
+<!-- START SECOND ROW -->
 <div class="row">
+  <!-- START FIRST (ONLY) COLUMN -->
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
     <center><h3>Upcoming Timed Events</h3></center>
     {% for fe in future_events %}
@@ -43,5 +75,7 @@
     </div> 
     {% endfor %}
   </div>
+  <!-- END FIRST (ONLY) COLUMN -->
 </div>
+<!-- END SECOND ROW -->
 {% endblock content %}
