@@ -22,43 +22,7 @@ def index(request, member_slug):
         member = Rwmember.objects.get(slug=member_slug, active=True)
     except:
         raise Http404('Member not found')
-    dbresults = (Result.objects
-                 .select_related()
-                 .filter(rwmember=member)
-                 .exclude(place__gte=990000)
-                 .order_by('-event__date')
-                )
-    total_distance = 0
-    results = []
-    best_gender_place = best_category_place = ''
-    for r in dbresults:
-        guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
-        chiptime = ''
-        if r.chiptime:
-            chiptime = (r.chiptime - 
-                        timedelta(microseconds=r.chiptime.microseconds))
-        gender_place = (Result.objects
-                        .filter(event=r.event,
-                                gender=r.gender,
-                                place__lte=r.place
-                               )
-                        .count()
-                       )
-        category_place = ''
-        if r.category.name != '':
-            category_place = (Result.objects
-                              .filter(event=r.event,
-                                      category=r.category,
-                                      place__lte=r.place)
-                              .count()
-                             )
-        results.append(named_result(r,
-                                    guntime,
-                                    gender_place,
-                                    category_place,
-                                    chiptime)
-                      )
-        total_distance += r.event.distance.km
+    results, total_distance = get_memberresults(member)
     fivek_pb = get_pb(results, '5-km')
     tenk_pb = get_pb(results, '10-km')
     results_with_gender_place = sorted([x for x in results
@@ -398,3 +362,45 @@ def get_minutegroup(result, thresholds):
             thisminutegroup = t
             break
     return thisminutegroup
+
+def get_memberresults(member):
+    results = []
+    total_distance = 0
+    dbresults = (Result.objects
+                 .select_related()
+                 .filter(rwmember=member)
+                 .exclude(place__gte=990000)
+                 .order_by('-event__date')
+                )
+    total_distance = 0
+    best_gender_place = best_category_place = ''
+    for r in dbresults:
+        guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
+        chiptime = ''
+        if r.chiptime:
+            chiptime = (r.chiptime -
+                        timedelta(microseconds=r.chiptime.microseconds))
+        gender_place = (Result.objects
+                        .filter(event=r.event,
+                                gender=r.gender,
+                                place__lte=r.place
+                               )
+                        .count()
+                       )
+        category_place = ''
+        if r.category.name != '':
+            category_place = (Result.objects
+                              .filter(event=r.event,
+                                      category=r.category,
+                                      place__lte=r.place)
+                              .count()
+                             )
+        results.append(named_result(r,
+                                    guntime,
+                                    gender_place,
+                                    category_place,
+                                    chiptime)
+                      )
+        total_distance += r.event.distance.km
+    return results, total_distance
+
