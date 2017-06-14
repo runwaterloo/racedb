@@ -8,7 +8,8 @@ from . import utils
 #########################################
 namedtresult = namedtuple('nt', ['event', 'team_category', 'top', 'winning_team',
                                  'total_time', 'avg_time'])
-namediresult = namedtuple('ni', ['place', 'female_athlete', 'female_time', 'male_athlete', 'male_time'])
+namediresult = namedtuple('ni', ['place', 'female_athlete', 'female_time', 'female_member_slug',
+                                 'male_athlete', 'male_time', 'male_member_slug'])
 class ResultQuerySet(models.QuerySet):
     def hasmasters(self, event):
         if self.filter(event=event, category__ismasters=True).first() is None:
@@ -27,8 +28,17 @@ class ResultQuerySet(models.QuerySet):
         topfemale = self.filter(event=event, gender='F').filter(Q(category__ismasters=True) | Q(age__gte=40))[0]
         topmale = self.filter(event=event, gender='M').filter(Q(category__ismasters=True) | Q(age__gte=40))[0]
         femaletime = utils.truncate_time(topfemale.guntime)
+        female_member_slug = None
+        female_member = topfemale.rwmember
+        if female_member:
+            female_member_slug = female_member.slug
         maletime = utils.truncate_time(topmale.guntime)
-        return namediresult('1st Master', topfemale.athlete, femaletime, topmale.athlete, maletime)
+        male_member_slug = None
+        male_member = topmale.rwmember
+        if male_member:
+            male_member_slug = male_member.slug
+        return namediresult('1st Master', topfemale.athlete, femaletime, female_member_slug,
+                            topmale.athlete, maletime, male_member_slug)
 
 class EndurraceresultQuerySet(models.QuerySet):
     def hasmasters(self, year):
@@ -41,7 +51,7 @@ class EndurraceresultQuerySet(models.QuerySet):
         topmale = self.filter(year=year, category__ismasters=True,gender='M').order_by('guntime')[0]
         femaletime = utils.truncate_time(topfemale.guntime)
         maletime = utils.truncate_time(topmale.guntime)
-        return namediresult('1st Master', topfemale.athlete, femaletime, topmale.athlete, maletime)
+        return namediresult('1st Master', topfemale.athlete, femaletime, None, topmale.athlete, maletime, None)
         
 
 class TeamcategoryQuerySet(models.QuerySet):

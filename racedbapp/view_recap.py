@@ -13,7 +13,8 @@ from .models import *
 def index(request, year, race_slug, distance_slug):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
     namedevent = namedtuple('ne', ['event', 'individual_results', 'team_results'])
-    namediresult = namedtuple('ni', ['place', 'female_athlete', 'female_time', 'male_athlete', 'male_time'])
+    namediresult = namedtuple('ni', ['place', 'female_athlete', 'female_time', 'female_member_slug',
+                                     'male_athlete', 'male_time', 'male_member_slug'])
     namedtresult = namedtuple('nt', ['team_category', 'top', 'winning_team', 'total_time', 'avg_time'])
     if distance_slug == 'combined':
         event = False
@@ -38,9 +39,17 @@ def index(request, year, race_slug, distance_slug):
             hill_results = False
         else:
             male_result = results.get(place=male_prime.place)
+            male_member_slug = None
+            male_member = male_result.rwmember
+            if male_member:
+                male_member_slug = male_member.slug
             female_prime = Prime.objects.filter(event=event, gender='F').order_by('time', 'place')[:1][0]
             female_result = results.get(place=female_prime.place)
-            hill_results.append(namediresult(rank, female_result.athlete, female_prime.time, male_result.athlete, male_prime.time))
+            female_member_slug = None
+            female_member = female_result.rwmember
+            if female_member:
+                female_member_slug = female_member.slug
+            hill_results.append(namediresult(rank, female_result.athlete, female_prime.time, female_member_slug, male_result.athlete, male_prime.time, male_member_slug))
     context = {'event': event,
                'distance_slug': distance_slug,
                'year': year,
@@ -69,8 +78,8 @@ def index(request, year, race_slug, distance_slug):
 
 def get_individual_results(event, results, hasmasters, distance_slug, year=False):
     individual_results = []
-    female_results = list(results.filter(gender="F").values_list('athlete', 'guntime')[0:3])
-    male_results = list(results.filter(gender="M").values_list('athlete', 'guntime')[0:3])
+    female_results = list(results.filter(gender="F")[0:3])
+    male_results = list(results.filter(gender="M")[0:3])
     for i in range(1,4):
         if i == 1:
             rank = '1st OA'
@@ -78,11 +87,21 @@ def get_individual_results(event, results, hasmasters, distance_slug, year=False
             rank = '2nd OA'
         elif i == 3:
             rank = '3rd OA'
-        female_guntime = female_results[i-1][1]
+        female_guntime = female_results[i-1].guntime
         female_time = female_guntime - timedelta(microseconds=female_guntime.microseconds)
-        male_guntime = male_results[i-1][1]
+        female_member_slug = None
+        if distance_slug != 'combined':
+            female_member = female_results[i-1].rwmember
+            if female_member:
+                female_member_slug = female_member.slug
+        male_guntime = male_results[i-1].guntime
         male_time = male_guntime - timedelta(microseconds=male_guntime.microseconds)
-        individual_results.append(namediresult(rank, female_results[i-1][0], female_time, male_results[i-1][0], male_time))
+        male_member_slug = None
+        if distance_slug != 'combined':
+            male_member = male_results[i-1].rwmember
+            if male_member:
+                male_member_slug = male_member.slug
+        individual_results.append(namediresult(rank, female_results[i-1].athlete, female_time, female_member_slug, male_results[i-1].athlete, male_time, male_member_slug))
     if hasmasters:
         if distance_slug == 'combined':
             individual_results.append(Endurraceresult.objects.topmasters(year))
