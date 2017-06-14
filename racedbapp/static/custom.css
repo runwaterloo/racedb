@@ -86,6 +86,25 @@ div.profile-inner img {
     right:-50%;
     border-radius: 15px;
 }
+div.profile-outer-mini {
+    width: 225px; 
+    height: 300px;
+    margin: 0 auto; 
+    overflow: hidden;
+    border-radius: 15px;
+    /* border: 2px solid blue; for demo */
+}
+div.profile-inner-mini {
+    position:relative;
+    float: right;
+    right: 50%;
+}
+div.profile-inner-mini img {
+    height: 300px;
+    position: relative; 
+    right:-50%;
+    border-radius: 15px;
+}
 div.upcoming-race {
      border: 2px solid blue; for demo */
      margin-bottom: 5px;

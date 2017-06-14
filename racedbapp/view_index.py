@@ -3,15 +3,17 @@ from django.shortcuts import render
 #from django import db
 from collections import namedtuple
 #import urllib
-from . import view_recap
+from . import view_recap, view_member
 from datetime import datetime
 from .models import *
 
 def index(request):
     today = datetime.today()
     lastraceday = get_lastraceday()
+    memberinfo = get_memberinfo()
     future_events = Event.objects.filter(date__gte=today).order_by('date', '-distance__km')
     context = {'lastraceday': lastraceday,
+               'memberinfo': memberinfo,
                'future_events': future_events,
               }
     return render(request, 'racedbapp/index.html', context)
@@ -31,3 +33,16 @@ def get_lastraceday():
         individual_recap = view_recap.get_individual_results(lde, event_results, hasmasters, distance_slug)
         lastraceday.append(named_lastraceday(lde, individual_recap, finishers))
     return lastraceday
+
+def get_memberinfo():
+    num_recent_badges = 4
+    named_memberinfo = namedtuple('nm', ['member', 'racing_since', 'km', 'badges'])
+    member = Rwmember.objects.filter(active=True).exclude(photourl=None).exclude(photourl='').order_by('?')[:1][0]
+    member_results, km = view_member.get_memberresults(member)
+    km = round(km, 1)
+    racing_since = ''
+    if len(member_results) > 0:
+        racing_since = member_results[-1].result.event.date.year
+    recent_badges = view_member.get_badges(member, member_results)[0:num_recent_badges]
+    memberinfo = named_memberinfo(member, racing_since, km, recent_badges)
+    return memberinfo
