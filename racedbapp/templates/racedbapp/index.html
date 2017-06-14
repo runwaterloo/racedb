@@ -33,9 +33,17 @@
       {% for r in lrd.recap %}
         <tr>
           <td>{{ r.place }}</td>
-          <td>{{ r.female_athlete }}</td>
+          {% if r.female_member_slug %}
+            <td><a href="/member/{{ r.female_member_slug }}/">{{ r.female_athlete }}</a></td>
+          {% else %}
+            <td>{{ r.female_athlete }}</td>
+          {% endif %}
           <td>{{ r.female_time }}</td>
-          <td>{{ r.male_athlete }}</td>
+          {% if r.male_member_slug %}
+            <td><a href="/member/{{ r.male_member_slug }}/">{{ r.male_athlete }}</a></td>
+          {% else %}
+            <td>{{ r.male_athlete }}</td>
+          {% endif %}
           <td>{{ r.male_time }}</td>
         </tr>
       {% endfor %}
