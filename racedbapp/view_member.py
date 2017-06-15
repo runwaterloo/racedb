@@ -29,6 +29,7 @@ def index(request, member_slug):
                                         if x.gender_place != '' ],
                                         key=attrgetter('gender_place')
                                       )
+    best_gender_place = best_category_place = ''
     if len(results_with_gender_place) > 0:
         best_gender_place = results_with_gender_place[0]
     results_with_category_place = sorted([x for x in results
@@ -373,7 +374,6 @@ def get_memberresults(member):
                  .order_by('-event__date')
                 )
     total_distance = 0
-    best_gender_place = best_category_place = ''
     for r in dbresults:
         guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
         chiptime = ''
