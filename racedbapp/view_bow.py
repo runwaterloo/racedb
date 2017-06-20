@@ -50,7 +50,10 @@ def index(request, bow_slug):
     for event in events:
         event_results = Result.objects.filter(event=event)
         events_results_count.append(event_results.count())
-        event_dict = dict(event_results.values_list('athlete', 'guntime'))
+        event_list = event_results.values_list('athlete', 'guntime')
+        event_dict = {}
+        for i in event_list:
+            event_dict[i[0].lower()] = i[1]
         all_event_results.append(event_dict)
     for athlete in athletes:
         stages = 0
@@ -59,7 +62,7 @@ def index(request, bow_slug):
         count = 1
         for er in all_event_results:
             try:
-                stage_time = er[athlete.name]
+                stage_time = er[athlete.name.lower()]
             except: 
                 stage_time = ''
             else: 
