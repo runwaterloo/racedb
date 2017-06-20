@@ -52,7 +52,7 @@
         {% if event.flickrsetid %}
           &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
         {% endif %}
-        {% if event.youtube_id and event.youtube_offset_seconds %}
+        {% if event.youtube_id %}
           &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}" target="_blank"><span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span></a>
         {% endif %}
       </p>
@@ -151,7 +151,7 @@
                 <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
               </th>
             {% endif %}
-            {% if event.youtube_id and event.youtube_offset_seconds %}
+            {% if event.youtube_id and event.youtube_offset_seconds is not None %}
               <th class="text-center" scope="col">
                 <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>
               </th>

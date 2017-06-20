@@ -338,7 +338,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
         max_splits = int(event_splits.aggregate(Max('split_num'))['split_num__max'])
     membership = view_shared.get_membership(event=event)
     has_youtube = False
-    if event.youtube_id and event.youtube_offset_seconds:
+    if event.youtube_id and event.youtube_offset_seconds is not None:
         has_youtube = True
         LEAD_TIME_SECONDS = 7
     for r in all_results:
