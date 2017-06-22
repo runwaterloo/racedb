@@ -1,13 +1,16 @@
 from django.shortcuts import render
+from django.http import HttpResponse
 #from django.db.models import Min, Q
 #from django import db
 from collections import namedtuple
-#import urllib
+import urllib
+import simplejson
 from . import view_recap, view_member
 from datetime import datetime
 from .models import *
 
 def index(request):
+    qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
     today = datetime.today()
     lastraceday = get_lastraceday()
     memberinfo = get_memberinfo()
@@ -16,7 +19,23 @@ def index(request):
                'memberinfo': memberinfo,
                'future_events': future_events,
               }
-    return render(request, 'racedbapp/index.html', context)
+    # Determine the format to return based on what is seen in the URL            
+    if 'format' in qstring:                                                      
+        if qstring['format'][0] == 'json':                                       
+            data = simplejson.dumps(context,                                     
+                                    default=str,                                 
+                                    indent=4,                                    
+                                    sort_keys=True)                              
+            if 'callback' in qstring:                                            
+                callback = qstring['callback'][0]                                
+                data = '{}({});'.format(callback, data)                          
+                return HttpResponse(data, "text/javascript")                     
+            else:                                                                
+                return HttpResponse(data, "application/json")                    
+        else:                                                                    
+            return HttpResponse('Unknown format in URL', "text/html")            
+    else:                                                                        
+        return render(request, 'racedbapp/index.html', context)
 
 def get_lastraceday():
     lastraceday = []
