@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Jinja-JS Demo</title>
+<link rel="stylesheet" href="vendor/codemirror/lib/codemirror.css"/>
+<link rel="stylesheet" href="style.css"/>
+<!--[if lt IE 9]><script src="vendor/es5-shim.min.js"></script><![endif]-->
+<script src="vendor/jquery-1.9.1.min.js"></script>
+<script src="vendor/beautify.js"></script>
+<script src="vendor/codemirror/lib/codemirror.js"></script>
+<script src="vendor/codemirror/mode/jinja2/jinja2.js"></script>
+<script src="vendor/codemirror/mode/javascript/javascript.js"></script>
+<script src="../lib/jinja.js"></script>
+<script src="demo.js"></script>
+<script id="example-src" type="text/x-tmpl-jinja">
+<html>
+<head>
+  <title>{{ title }}</title>
+</head>
+<body>
+<ul>
+  {% for item in links %}
+  <li><a href="{{ item.href }}">{{ item.caption }}</a></li>
+  {% endfor %}
+</ul>
+<p>{{ intro }}</p>
+</body>
+</html>
+</script>
+</head>
+<body>
+<h1>Jinja-JS Demo</h1>
+<p>Template markup (HTML/Jinja) on the left will be compiled to JavaScript and shown on the right. <a href="https://github.com/sstur/jinja-js">View project</a> on GitHub.</p>
+<div class="input"><textarea id="jinja"></textarea></div>
+<div class="output"><textarea id="output"></textarea><p><input type="checkbox" id="include-runtime"/> Include Runtime</p></div>
+</body>
+</html>
