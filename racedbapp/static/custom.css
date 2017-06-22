@@ -15,16 +15,14 @@
 form {
         display: inline;
 }
-html { 
-      overflow-y: scroll; 
+html {
+      overflow-y: scroll;
 }
 
 .navbar-fixed-top {
         height: 70px; /* Whatever you want. */
         padding: 10px 0px;
 }
-
-
 
 /* navbar */
 
@@ -68,9 +66,9 @@ https://jsfiddle.net/1rhjgncg/3/
 */
 
 div.profile-outer {
-    width: 300px; 
+    width: 300px;
     height: 400px;
-    margin: 0 auto; 
+    margin: 0 auto;
     overflow: hidden;
     border-radius: 15px;
     /* border: 2px solid blue; for demo */
@@ -82,14 +80,14 @@ div.profile-inner {
 }
 div.profile-inner img {
     height: 400px;
-    position: relative; 
+    position: relative;
     right:-50%;
     border-radius: 15px;
 }
 div.profile-outer-mini {
-    width: 225px; 
+    width: 225px;
     height: 300px;
-    margin: 0 auto; 
+    margin: 0 auto;
     overflow: hidden;
     border-radius: 15px;
     /* border: 2px solid blue; for demo */
@@ -101,7 +99,7 @@ div.profile-inner-mini {
 }
 div.profile-inner-mini img {
     height: 300px;
-    position: relative; 
+    position: relative;
     right:-50%;
     border-radius: 15px;
 }
@@ -128,7 +126,7 @@ div.upcoming-race-inner {
      border-radius: 10px;
 }
 img.upcoming-race {
-    float: left; 
+    float: left;
     margin-top: 5px;
     border-radius: 10px;
 }

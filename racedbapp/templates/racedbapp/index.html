@@ -14,41 +14,61 @@
 
 {% block content %}
 <!-- START FIRST ROW -->
+
 <div class="row">
   <!-- START FIRST COLUMN -->
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-    <center><h3>Last Race</h3></center>
+    <h2>Last Race</h2>
+
+    <img class="img-rounded" src="{% static "race_logos/"|add:lastraceday.0.event.race.slug|add:".png" %}"/>
+
+    <h3>
+      <a href="/event/{{ lastraceday.0.event.date.year }}/{{ lastraceday.0.event.race.slug }}">
+        {{ lastraceday.0.event.race.shortname }}
+      </a>
+    </h3>
+
+
+
+    <div class="date">{{ lrd.event.date }}</div>
+    <div class="city">{{ lrd.event.city }}</div>
+
     {% for lrd in lastraceday %}
-      <img class="img-rounded" src="{% static "race_logos/"|add:lrd.event.race.slug|add:".png" %}" height="100"></img><br>
-      <a href="/event/{{ lrd.event.date.year }}/{{ lrd.event.race.slug }}/{{ lrd.event.distance.slug }}/">{{ lrd.event.race.shortname }} {{ lrd.event.distance }}</a><br>
-      {{ lrd.event.date }}<br>
-      {{ lrd.event.city }}<br>
-      {{ lrd.finishers }} finishers<br>
-      <table class="table">
-        <tr class="info">
-          <th>Place</th>
-          <th colspan=2>Female</th>
-          <th colspan=2>Male</th>
-        </tr>
-      {% for r in lrd.recap %}
-        <tr>
-          <td>{{ r.place }}</td>
-          {% if r.female_member_slug %}
-            <td><a href="/member/{{ r.female_member_slug }}/">{{ r.female_athlete }}</a></td>
-          {% else %}
-            <td>{{ r.female_athlete }}</td>
-          {% endif %}
-          <td>{{ r.female_time }}</td>
-          {% if r.male_member_slug %}
-            <td><a href="/member/{{ r.male_member_slug }}/">{{ r.male_athlete }}</a></td>
-          {% else %}
-            <td>{{ r.male_athlete }}</td>
-          {% endif %}
-          <td>{{ r.male_time }}</td>
-        </tr>
-      {% endfor %}
-      </table>
-      <br><br>
+      <div class="last-race">
+        <h4>
+            <a href="/event/{{ lrd.event.date.year }}/{{ lrd.event.race.slug }}/{{ lrd.event.distance.slug }}/">
+              {{ lrd.event.distance }}
+            </a>
+        </h4>
+
+        <div class="num-finishers">{{ lrd.finishers }} finishers</div>
+
+
+        <table class="table">
+          <tr class="info">
+            <th>Place</th>
+            <th colspan=2>Female</th>
+            <th colspan=2>Male</th>
+          </tr>
+        {% for r in lrd.recap %}
+          <tr>
+            <td>{{ r.place }}</td>
+            {% if r.female_member_slug %}
+              <td><a href="/member/{{ r.female_member_slug }}/">{{ r.female_athlete }}</a></td>
+            {% else %}
+              <td>{{ r.female_athlete }}</td>
+            {% endif %}
+            <td>{{ r.female_time }}</td>
+            {% if r.male_member_slug %}
+              <td><a href="/member/{{ r.male_member_slug }}/">{{ r.male_athlete }}</a></td>
+            {% else %}
+              <td>{{ r.male_athlete }}</td>
+            {% endif %}
+            <td>{{ r.male_time }}</td>
+          </tr>
+        {% endfor %}
+        </table>
+      </div>
     {% endfor %}
   </div>
   <!-- END FIRST COLUMN -->
@@ -108,7 +128,7 @@
       <div class="upcoming-race-inner">
       records here
       </div>
-    </div> 
+    </div>
     {% endfor %}
   </div>
   <!-- END FIRST (ONLY) COLUMN -->
