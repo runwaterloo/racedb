@@ -82,15 +82,13 @@
   <!-- END FIRST COLUMN -->
   <!-- START SECOND COLUMN -->
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-    <h3>Member Spotlight</h3>
-    <h4>#{{ memberinfo.member.id }} <a href="/member/{{ memberinfo.member.slug }}/">{{ memberinfo.member.name }}</a></h4><
+    <h2>Member Spotlight</h2>
     <div class="row">
-        <img class="img-rounded col-sm-8" src="{{ memberinfo.member.photourl }}">
-        <div class="col-sm-4">
+        <img class="img-rounded col-sm-7" src="{{ memberinfo.member.photourl }}">
+        <div class="col-sm-5">
+          <h3>#{{ memberinfo.member.id }} <a href="/member/{{ memberinfo.member.slug }}/">{{ memberinfo.member.name }}</a></h3>
+
           <table class="table table-bordered">
-            <tr class="info">
-              <th colspan="2">Stats Summary</th>
-            </tr>
             <tr>
               <td>Member Since</td>
               <td>{{ memberinfo.member.joindate.year }}</td>
@@ -103,13 +101,15 @@
               <td>KM Raced</td>
               <td>{{ memberinfo.km }}</td>
             </tr>
-        </table>
+          </table>
+
+          {% for rb in memberinfo.badges %}
+             <img src="{% static "achievements/"|add:rb.image %}" title="{{ rb.name }}&#10;{{ rb.date }}" height="75" width="75" hspace="5" vspace="5">
+          {% endfor %}
         </div>
     </div>
 
-    {% for rb in memberinfo.badges %}
-       <img src="{% static "achievements/"|add:rb.image %}" title="{{ rb.name }}&#10;{{ rb.date }}" height="75" width="75" hspace="5" vspace="5">
-    {% endfor %}
+
     </div>
   </div>
   <!-- END SECOND COLUMN -->

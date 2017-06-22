@@ -35,6 +35,12 @@ html {
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
  }
 
+ .table>thead>tr>td.info, .table>tbody>tr>td.info, .table>tfoot>tr>td.info, .table>thead>tr>th.info, .table>tbody>tr>th.info, .table>tfoot>tr>th.info, .table>thead>tr.info>td, .table>tbody>tr.info>td, .table>tfoot>tr.info>td, .table>thead>tr.info>th, .table>tbody>tr.info>th, .table>tfoot>tr.info>th {
+   background-color: #01293F;
+   color: white;
+ }
+
+
 .navbar .nav > li > a {
     color: lightgrey;
 }
