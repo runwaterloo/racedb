@@ -20,18 +20,26 @@
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
     <h2>Last Race</h2>
 
-    <img class="img-rounded" src="{% static "race_logos/"|add:lastraceday.0.event.race.slug|add:".png" %}"/>
+    <div class="row">
+      <img class="img-rounded col-sm-4" src="{% static "race_logos/"|add:lastraceday.0.event.race.slug|add:".png" %}"/>
+      <div class="col-sm-8">
+        <h3>
+          <a href="/event/{{ lastraceday.0.event.date.year }}/{{ lastraceday.0.event.race.slug }}">
+            {{ lastraceday.0.event.race.shortname }}
+          </a>
+        </h3>
 
-    <h3>
-      <a href="/event/{{ lastraceday.0.event.date.year }}/{{ lastraceday.0.event.race.slug }}">
-        {{ lastraceday.0.event.race.shortname }}
-      </a>
-    </h3>
+        <div class="date">{{ lastraceday.0.event.date }}</div>
+        <div class="city">{{ lastraceday.0.event.city }}</div>
+
+
+      </div>
+    </div>
 
 
 
-    <div class="date">{{ lrd.event.date }}</div>
-    <div class="city">{{ lrd.event.city }}</div>
+
+
 
     {% for lrd in lastraceday %}
       <div class="last-race">

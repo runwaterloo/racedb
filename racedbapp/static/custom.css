@@ -130,3 +130,7 @@ img.upcoming-race {
     margin-top: 5px;
     border-radius: 10px;
 }
+
+.img-rounded{
+  padding: 0;
+}
