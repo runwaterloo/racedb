@@ -400,11 +400,12 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
             video_position_seconds = (guntime.total_seconds()
                                       - event.youtube_offset_seconds 
                                       - LEAD_TIME_SECONDS)
-            minutes = int(video_position_seconds // 60)
-            seconds = int(video_position_seconds % 60)
-            video_position = '{}m{}s'.format(minutes, seconds)
-            youtube_url = 'https://youtu.be/{}?t={}'.format(event.youtube_id,
-                                                            video_position)
+            if video_position_seconds >= 0:
+                minutes = int(video_position_seconds // 60)
+                seconds = int(video_position_seconds % 60)
+                video_position = '{}m{}s'.format(minutes, seconds)
+                youtube_url = 'https://youtu.be/{}?t={}'.format(event.youtube_id,
+                                                                video_position)
         if r.bib in phototags:
             hasphotos = True
         results.append(named_result(r.place,
