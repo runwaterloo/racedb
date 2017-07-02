@@ -214,6 +214,8 @@
                     <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>
                   </a>
                 </td>
+              {% elif event.youtube_id %}
+                <td></td>
               {% endif %}
               <td class="text-center">{{ r.guntime }}</td>
               {% if hill_dict %}
