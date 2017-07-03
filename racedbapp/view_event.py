@@ -398,9 +398,12 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
         youtube_url = False
         if has_youtube and r.place < 990000:
             video_position_seconds = (guntime.total_seconds()
-                                      - event.youtube_offset_seconds 
-                                      - LEAD_TIME_SECONDS)
+                                      - event.youtube_offset_seconds) 
             if video_position_seconds >= 0:
+                if video_position_seconds > LEAD_TIME_SECONDS:
+                    video_position_seconds -= LEAD_TIME_SECONDS
+                else:
+                    video_position_seconds = 1
                 minutes = int(video_position_seconds // 60)
                 seconds = int(video_position_seconds % 60)
                 video_position = '{}m{}s'.format(minutes, seconds)
