@@ -204,9 +204,14 @@ def do_tags(photos, event):
             tags += tags2add
             alltags2add.append([p['id'], strtags]) 
     for i in alltags2add:
-        newtags = flickr.photos.addtags(photo_id=i[0], tags=i[1])
-        for t in newtags['tags']['tag']:
-            logger.info('New tag: event={} photo_id={} tag_content={} tag_id={}'.format(event.id, i[0], t['_content'], t['full_tag_id']))
+        try:
+            newtags = flickr.photos.addtags(photo_id=i[0], tags=i[1])
+        except Exception as e:
+            logger.error('Unable to add tags to https://www.flickr.com/photos/runwaterloo/{}/'.format(i[0]))
+            logger.error('flickrapi.exceptions.FlickrError: {}'.format(e))
+        else:
+            for t in newtags['tags']['tag']:
+                logger.info('New tag: event={} photo_id={} tag_content={} tag_id={}'.format(event.id, i[0], t['_content'], t['full_tag_id']))
     tags = sorted(set(tags))
     return tags, len(alltags2add)
 
