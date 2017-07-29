@@ -30,7 +30,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         premodified = Config.objects.get(name='premodified')
         races = Race.objects.values_list('prename', flat=True)
-        page_size = 5
+        page_size = 10
         events = []
         done = False
         if options['event']:
@@ -39,7 +39,7 @@ class Command(BaseCommand):
             result = r.json()
             events.insert(0, result)
         else:
-            resultsurl = 'http://pre.scrw.ca/api/events/?page_size={}'.format(page_size)
+            resultsurl = 'http://pre.scrw.ca/api/events/?limit={}'.format(page_size)
             while True:
                 r = requests.get(resultsurl, verify=False)
                 pageresults = r.json()['results']
@@ -90,7 +90,7 @@ class Command(BaseCommand):
                 membership = view_shared.get_membership(event=e)
                 page_size = 500
                 results = []
-                resultsurl = ('http://pre.scrw.ca/api/results/?event={}&page_size={}'
+                resultsurl = ('http://pre.scrw.ca/api/results/?event={}&limit={}'
                               .format(event['id'], page_size))
                 while True:
                     r = requests.get(resultsurl, verify=False)
