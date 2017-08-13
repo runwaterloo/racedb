@@ -8,6 +8,7 @@ from datetime import timedelta
 from operator import attrgetter
 import datetime
 import urllib
+import os
 
 from .models import *
 namedfilter = namedtuple('nf', ['current', 'choices'])
@@ -71,6 +72,8 @@ def index(request, division):
     hasmasters = True
     year_events_results_dict = {}
     events_results_count = []
+    flags = os.listdir('/srv/racedb/racedbapp/static/flags')
+    valid_flag_slugs = set([x.split('_')[0] for x in flags])
     for loopyear in years:
         if year:
             if loopyear != year:
@@ -152,7 +155,7 @@ def index(request, division):
         flag_slug = False
         if division in ('ultimate', 'sport'):
             flag_slug = slugify(athlete.country)
-            if flag_slug == '':
+            if flag_slug not in valid_flag_slugs:
                 flag_slug = False
         gap = False
         results.append(namedresult(athlete, stages, total_time, total_seconds,
