@@ -83,8 +83,8 @@ class TeamresultQuerySet(models.QuerySet):
 #########################################
 
 class Config(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    value = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
+    value = models.CharField(max_length=200)
     def __str__(self):
         return 'name={}, value={}'.format(self.name, self.value)
 
