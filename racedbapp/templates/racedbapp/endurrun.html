@@ -8,6 +8,7 @@
   <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <script src="{% static "jquery.filtertable.min.js" %}"></script>
 {% endblock ogmeta %}
 
 {% block content %}
@@ -86,7 +87,19 @@
 </div>
 </div>
 <p>
+
+<!-- search input -->
+  <div class="row">
+    <div class="col-xs-3">
+      <div class="form-group">
+        <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search these results..." size="12">
+      </div>
+    </div>
+  </div>
+<!-- end search input -->
+
   <table class="table table-striped table-hover table-condensed">
+  <thead>
   <tr>
   <th class="text-center">Place</th>
   <th>Name</th>
@@ -109,6 +122,8 @@
   <th class="text-center">Stage 6</th>
   <th class="text-center">Stage 7</th>
   </tr>
+  </thead>
+  <tbody>
   {% for result in results %}
     <tr>
       {% if result.final_status == 0 %}
@@ -185,6 +200,10 @@
       {% endfor %}
     </tr>
   {% endfor %}
+  </tbody>
 </table>
+<script>
+  $('table').filterTable({inputSelector: '#input-filter', minRows: 0});
+</script>
 {% endblock content %}
 
