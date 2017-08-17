@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.db.models import Min, Count
 from django.utils.text import slugify
 from django import db
@@ -23,7 +23,11 @@ def index(request, division):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
     year = False
     if 'year' in qstring:
-        year = int(qstring['year'][0])
+        rawyear = qstring['year'][0]
+        if rawyear.isdigit():
+            year = int(rawyear)
+        else:
+            raise Http404('Year "{}" not found'.format(rawyear))
     years = Endurathlete.objects.all().order_by('-year').values_list('year', flat=True).distinct()
     events = Event.objects.filter(race__slug='endurrun').order_by('date')
     if division == 'sport':
