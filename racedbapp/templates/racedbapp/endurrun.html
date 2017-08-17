@@ -131,7 +131,7 @@
           {% if result.stages == maxstages %}
             <td class="text-center">{{ forloop.counter }}</td>
           {% else %}
-            <td class="text-center">DNF</td>
+            <td class="text-center"></td>   <!-- Not started or in progress -->
           {% endif %}
         {% else %}
           {% if result.stages == maxstages %}
