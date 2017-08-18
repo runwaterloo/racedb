@@ -194,7 +194,7 @@ def get_endurrun_finishes_badges(member, results):
                                                              'marathon']).values_list('id', flat=True)
         if e.division.lower() == 'sport':
             event_ids = list(last_three_ids)
-            if set(event_ids).issubset(result_ids):
+            if len(event_ids) > 0 and set(event_ids).issubset(result_ids):
                 sport_finishes += 1
                 sport_date_earned = Event.objects.get(id=event_ids[-1]).date
         elif e.division.lower() == 'ultimate':
@@ -205,7 +205,7 @@ def get_endurrun_finishes_badges(member, results):
                                                      '30-km',
                                                      '10-mi']).values_list('id', flat=True)
             event_ids = list(first_four_ids) + list(last_three_ids)
-            if set(event_ids).issubset(result_ids):
+            if len(event_ids) > 0 and set(event_ids).issubset(result_ids):
                 ultimate_finishes += 1
                 ultimate_date_earned = Event.objects.get(id=event_ids[-1]).date
     # uncomment this part to enable ENDURrun Sport finishes
