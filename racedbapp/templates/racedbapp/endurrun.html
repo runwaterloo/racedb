@@ -182,8 +182,6 @@
       <td class="text-center">{{ result.place_gap }}</td>
       {% if not result.stage_times %}
       <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-      {% elif not result.stage_times.0.name %}
-      <td></td><td></td><td></td>
       {% else %}
         {% for t in result.stage_times %}
           {% if division != 'sport' %}
