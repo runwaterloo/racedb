@@ -138,7 +138,7 @@
           {% if result.stages == maxstages %}
             <td class="text-center">{{ forloop.counter }}</td>
           {% else %}
-            <td class="text-center">DNF</td>
+            <td class="text-center"></td>   <!-- Not started or in progress -->
           {% endif %}
         {% endifchanged %}
       {% else %}
@@ -180,27 +180,33 @@
       <td class="text-center">{{ result.total_time }}</td>
       <td class="text-center">{{ result.lead_gap }}</td>
       <td class="text-center">{{ result.place_gap }}</td>
-      {% for t in result.stage_times %}
-        {% if division != 'sport' %}
-          {% if forloop.counter == 1 %}
-            <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/half-marathon/?division={{ division|title }}">{{ t.time }}</a></td>
-          {% elif forloop.counter == 2 %}
-            <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/15-km/?division={{ division|title }}">{{ t.time }}</a></td>
-          {% elif forloop.counter == 3 %}
-            <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/30-km/?division={{ division|title }}">{{ t.time }}</a></td>
-          {% elif forloop.counter == 4 %}
-            <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/10-mi/?division={{ division|title }}">{{ t.time }}</a></td>
+      {% if not result.stage_times %}
+      <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+      {% elif not result.stage_times.0.name %}
+      <td></td><td></td><td></td>
+      {% else %}
+        {% for t in result.stage_times %}
+          {% if division != 'sport' %}
+            {% if forloop.counter == 1 %}
+              <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/half-marathon/?division={{ division|title }}">{{ t.time }}</a></td>
+            {% elif forloop.counter == 2 %}
+              <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/15-km/?division={{ division|title }}">{{ t.time }}</a></td>
+            {% elif forloop.counter == 3 %}
+              <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/30-km/?division={{ division|title }}">{{ t.time }}</a></td>
+            {% elif forloop.counter == 4 %}
+              <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/10-mi/?division={{ division|title }}">{{ t.time }}</a></td>
+            {% endif %}
           {% endif %}
-        {% endif %}
-        {% if forloop.counter == 5 %}
-          <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/25_6-km/?division={{ division|title }}">{{ t.time }}</a></td>
-        {% elif forloop.counter == 6 %}
-          <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/10-km/?division={{ division|title }}">{{ t.time }}</a></td>
-        {% elif forloop.counter == 7 %}
-          <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/marathon/?division={{ division|title }}">{{ t.time }}</a></td>
-        {% endif %}
-      {% endfor %}
+          {% if forloop.counter == 5 %}
+            <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/25_6-km/?division={{ division|title }}">{{ t.time }}</a></td>
+          {% elif forloop.counter == 6 %}
+            <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/10-km/?division={{ division|title }}">{{ t.time }}</a></td>
+          {% elif forloop.counter == 7 %}
+            <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/marathon/?division={{ division|title }}">{{ t.time }}</a></td>
+          {% endif %}
+        {% endfor %}
     </tr>
+    {% endif %}
   {% endfor %}
   </tbody>
 </table>
