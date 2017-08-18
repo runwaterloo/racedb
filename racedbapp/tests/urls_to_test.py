@@ -80,6 +80,7 @@ test_urls = (
   '/race/endurrun/half-marathon/',                  # endurrun ultimate
   '/race/endurrun/marathon/?division=All',          # endurrun all
  # /member
+  '/member/dave-rutherford/',
   '/member/sam-lalonde/',
  # /members
   '/members',
