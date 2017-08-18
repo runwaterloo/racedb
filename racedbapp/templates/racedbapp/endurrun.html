@@ -111,7 +111,8 @@
     <th class="text-center">Age</th>
   {% endif %}
   <th class="text-center">Total</th>
-  <th class="text-center">Gap</th>
+  <th class="text-center" title="Time gap to 1st place">Gap 1</th>
+  <th class="text-center" title="Time gap to the next place up">Gap 2</th>
   {% if division != 'sport' %}
   <th class="text-center">Stage 1</th>
   <th class="text-center">Stage 2</th>
@@ -177,7 +178,8 @@
         {% endif %}
       {% endif %}
       <td class="text-center">{{ result.total_time }}</td>
-      <td class="text-center">{{ result.gap }}</td>
+      <td class="text-center">{{ result.lead_gap }}</td>
+      <td class="text-center">{{ result.place_gap }}</td>
       {% for t in result.stage_times %}
         {% if division != 'sport' %}
           {% if forloop.counter == 1 %}

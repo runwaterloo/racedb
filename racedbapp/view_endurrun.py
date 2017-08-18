@@ -17,7 +17,7 @@ namedstagetime = namedtuple('ns', ['name', 'time'])
 namedresult = namedtuple('na', ['athlete', 'stages', 'total_time',
                                 'total_seconds', 'stage_times',
                                 'flag_slug', 'final_status', 'mouseover',
-                                'gap'])
+                                'lead_gap', 'place_gap'])
 
 def index(request, division):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
@@ -161,10 +161,10 @@ def index(request, division):
             flag_slug = slugify(athlete.country)
             if flag_slug not in valid_flag_slugs:
                 flag_slug = False
-        gap = False
+        lead_gap = place_gap = False
         results.append(namedresult(athlete, stages, total_time, total_seconds,
                                    stage_times, flag_slug, final_status,
-                                   mouseover, gap))
+                                   mouseover, lead_gap, place_gap))
     results = sorted(results, key=attrgetter('total_seconds'))
     results = sorted(results, key=attrgetter('stages'), reverse=True)
     results = addgap(results)
@@ -292,14 +292,19 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, division, 
 def addgap(results):
     """ Calculate time gap between places and add them """
     newresults = []
+    previous_seconds = False
     if len(results) > 0:
         stages = results[0].stages
         lead_seconds = results[0].total_seconds
     for r in results:
-        gap = ''
+        lead_gap = place_gap = ''
         if r.stages == stages and r.total_time != '' and r.total_seconds != lead_seconds:
-            gapseconds = r.total_seconds - lead_seconds
-            gap = timedelta(seconds=gapseconds)
+            lead_gapseconds = r.total_seconds - lead_seconds
+            lead_gap = timedelta(seconds=lead_gapseconds)
+            if previous_seconds:
+                place_gapseconds = r.total_seconds - previous_seconds
+                place_gap = timedelta(seconds=place_gapseconds)
+        previous_seconds = r.total_seconds
         newresults.append(namedresult(r.athlete,
                                       r.stages,
                                       r.total_time,
@@ -308,5 +313,6 @@ def addgap(results):
                                       r.flag_slug,
                                       r.final_status,
                                       r.mouseover,
-                                      gap))
+                                      lead_gap,
+                                      place_gap))
     return newresults
