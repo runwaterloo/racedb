@@ -11,13 +11,14 @@ import urllib
 import os
 
 from .models import *
+from . import view_shared
 namedfilter = namedtuple('nf', ['current', 'choices'])
 namedchoice = namedtuple('nc', ['name', 'url'])
 namedstagetime = namedtuple('ns', ['name', 'time'])
 namedresult = namedtuple('na', ['athlete', 'stages', 'total_time',
                                 'total_seconds', 'stage_times',
                                 'flag_slug', 'final_status', 'mouseover',
-                                'lead_gap', 'place_gap'])
+                                'lead_gap', 'place_gap', 'member_slug'])
 
 def index(request, division):
     qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
@@ -101,6 +102,7 @@ def index(request, division):
             events_results_count = (1, 1, 1, 1, 1, 1, 1)
         if division == 'sport':
             events_results_count = (1, 1, 1)
+    membership = view_shared.get_membership()
     for athlete in athletes:
         final_status = 0    # 0: place, 1: dq, 2: dnf, 3: dns
         mouseover = False
@@ -111,6 +113,9 @@ def index(request, division):
         stage_times = []
         total_time = timedelta(seconds=0)
         count = 1
+        member_slug = False
+        if athlete.name.lower() in membership.names:
+            member_slug = membership.names[athlete.name.lower()].slug
         for er in year_events_results_dict[athyear]:
             try:
                 if division in ('ultimate', 'sport'):
@@ -164,7 +169,7 @@ def index(request, division):
         lead_gap = place_gap = False
         results.append(namedresult(athlete, stages, total_time, total_seconds,
                                    stage_times, flag_slug, final_status,
-                                   mouseover, lead_gap, place_gap))
+                                   mouseover, lead_gap, place_gap, member_slug))
     results = sorted(results, key=attrgetter('total_seconds'))
     results = sorted(results, key=attrgetter('stages'), reverse=True)
     results = addgap(results)
@@ -314,5 +319,6 @@ def addgap(results):
                                       r.final_status,
                                       r.mouseover,
                                       lead_gap,
-                                      place_gap))
+                                      place_gap,
+                                      r.member_slug))
     return newresults

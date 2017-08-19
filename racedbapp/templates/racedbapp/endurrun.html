@@ -164,7 +164,11 @@
       {% if result.flag_slug %}
       <img title="{{ result.athlete.country }}" src="{% static "flags/"|add:result.flag_slug|add:"_shiny_24px.png" %}">
       {% endif %} 
-      {{ result.athlete.name }}
+      {% if result.member_slug %}
+        <a href="/member/{{ result.member_slug }}/">{{ result.athlete.name }}</a>
+      {% else %}
+        {{ result.athlete.name }}
+      {% endif %}
       </td>
       {% if not year %}
       <td class="text-center">{{ result.athlete.year }}</td>
