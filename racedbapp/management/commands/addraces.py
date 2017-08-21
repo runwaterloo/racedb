@@ -92,10 +92,10 @@ class Command(BaseCommand):
                 results = []
                 resultsurl = ('http://pre.scrw.ca/api/results/?event={}&limit={}'
                               .format(event['id'], page_size))
+                gun_equal_chip = True
                 while True:
                     r = requests.get(resultsurl, verify=False)
                     pageresults = r.json()['results']
-                    gun_equal_chip = True
                     for result in pageresults:
                         extra_dict = {}
                         if result['extra'] != '':
