@@ -70,7 +70,7 @@
             <th class="text-center">Year</th>
             <th class="text-center">Distance</th>
             <th class="text-center">Age/Gender Filter</th>
-            {% if division_filter %}
+            {% if filters.division_filter %}
               <th class="text-center">Division</th>
             {% endif %}
           </tr>
@@ -79,33 +79,33 @@
           <tr>
             <td class="text-center">
               <select onchange="location = this.options[this.selectedIndex].value;">
-              <option>{{ year_filter.current }}</option>
-              {% for yc in year_filter.choices %}
+              <option>{{ filters.year_filter.current }}</option>
+              {% for yc in filters.year_filter.choices %}
                 <option value="{{ yc.url }}">{{ yc.name }}</option>
               {% endfor %}
               </select>
             </td>
             <td class="text-center">
               <select onchange="location = this.options[this.selectedIndex].value;">
-              <option>{{ distance_filter.current }}</option>
-              {% for dc in distance_filter.choices %}
+              <option>{{ filters.distance_filter.current }}</option>
+              {% for dc in filters.distance_filter.choices %}
                 <option value="{{ dc.url }}">{{ dc.name }}</option>
               {% endfor %}
               </select>
             </td>
             <td class="text-center">
               <select onchange="location = this.options[this.selectedIndex].value;">
-              <option>{{ category_filter.current }}</option>
-              {% for cc in category_filter.choices %}
+              <option>{{ filters.category_filter.current }}</option>
+              {% for cc in filters.category_filter.choices %}
                 <option value="{{ cc.url }}">{{ cc.name }}</option>
               {% endfor %}
               </select>
             </td>
-            {% if division_filter %}
+            {% if filters.division_filter %}
               <td class="text-center">
                 <select onchange="location = this.options[this.selectedIndex].value;">
-                <option>{{ division_filter.current }}</option>
-                {% for dc in division_filter.choices %}
+                <option>{{ filters.division_filter.current }}</option>
+                {% for dc in filters.division_filter.choices %}
                   <option value="{{ dc.url }}">{{ dc.name }}</option>
                 {% endfor %}
                 </select>
@@ -200,7 +200,7 @@
               {% if phototags %}
                 {% if r.hasphotos %}
                   <td class="text-center">
-                    <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ event_flickr_str}},{{ r.bib }}" target="_blank">
+                    <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ event.flickrsearchstr}},{{ r.bib }}" target="_blank">
                       <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
                     </a>
                   </td>

@@ -1,15 +1,14 @@
 from django.shortcuts import render
 from django.http import Http404
-#from django.db.models import Count
 from urllib import parse
 from collections import namedtuple
 from .models import *
 from . import view_shared, utils
-#from django.http import HttpResponse
+from django.http import HttpResponse
 from django.db.models import Count, Max, Q
 from datetime import timedelta
 from operator import attrgetter
-#import datetime
+import simplejson
 
 named_filter = namedtuple('nf', ['current', 'choices'])                       
 named_choice = namedtuple('nc', ['name', 'url'])                              
@@ -53,14 +52,16 @@ def index(request, year, race_slug, distance_slug):
     if event.race.slug == 'endurrun':
         hasdivision = True
     extra_name = get_extra_name(event)
+    filters = {'category_filter': category_filter,
+               'distance_filter': distance_filter,
+               'division_filter': division_filter,
+               'year_filter': year_filter}
+    event_json = get_event_json(event)
     context = {
-               'event': event,
+               'event': event_json,
+               'filters': filters,
                'page': page,
                'pages': pages,
-               'year_filter': year_filter,
-               'distance_filter': distance_filter,
-               'category_filter': category_filter,
-               'division_filter': division_filter,
                'results': results,
                'hasage': hasage,
                'hasdivision': hasdivision,
@@ -68,9 +69,61 @@ def index(request, year, race_slug, distance_slug):
                'split_headings': split_headings,
                'extra_name': extra_name,
                'phototags': phototags,
-               'event_flickr_str': event_flickr_str,
               }
-    return render(request, 'racedbapp/event.html', context)
+    # Determine the format to return based on the query string
+    if 'format' in qstring:
+        if qstring['format'][0] == 'json':
+            data = simplejson.dumps(context,
+                                    default=str,
+                                    indent=2,
+                                    sort_keys=True)
+            if 'callback' in qstring:
+                callback = qstring['callback'][0]
+                data = '{}({});'.format(callback, data)
+                return HttpResponse(data, "text/javascript")
+            else:
+                return HttpResponse(data, "application/json")
+        else:
+            return HttpResponse('Unknown format in URL', "text/html")
+    else:
+        return render(request, 'racedbapp/event.html', context)
+
+def get_event_json(event):
+    named_event = namedtuple('ne', ['id',
+                                    'city',
+                                    'date',
+                                    'flickrsearchstr',
+                                    'flickrsetid',
+                                    'resultsurl',
+                                    'youtube_id',
+                                    'youtube_offset_seconds',
+                                    'race',
+                                    'distance'])
+    named_race = namedtuple('nr', ['name',
+                                   'shortname',
+                                   'slug'])
+    named_distance = namedtuple('nd', ['name',
+                                       'km'])
+    flickrsearchstr = '{}-{}-{}'.format(event.date.year,
+                                        event.race.slug,
+                                        event.distance.slug).replace(
+                                            '-','').replace('_','')
+    this_race = named_race(event.race.name,
+                           event.race.shortname,
+                           event.race.slug)
+    this_distance = named_distance(event.distance.name,
+                                   event.distance.km)
+    event_json = named_event(event.id,
+                             event.city,
+                             event.date,
+                             flickrsearchstr,
+                             event.flickrsetid,
+                             event.resultsurl,
+                             event.youtube_id,
+                             event.youtube_offset_seconds,
+                             this_race,
+                             this_distance)
+    return event_json
 
 def get_masters(event, division):
     masters = []
