@@ -162,7 +162,7 @@
             {% endif %}
             <th class="text-center" scope="col">G</th>
             <th class="text-center" scope="col">GP</th>
-            {% if category_filter.choices|length > 5 %}
+            {% if filters.category_filter.choices|length > 5 %}
               <th class="text-center" scope="col">Cat</th>
               <th class="text-center" scope="col">CP</th>
             {% endif %}
@@ -223,7 +223,7 @@
               {% endif %}
               <td class="text-center">{{ r.gender }}</td>
               <td class="text-center">{{ r.gender_place }}</td>
-              {% if category_filter.choices|length > 5 %}
+              {% if filters.category_filter.choices|length > 5 %}
                 <td class="text-center">{{ r.category }}</td>
                 <td class="text-center">{{ r.category_place }}</td>
               {% endif %}
