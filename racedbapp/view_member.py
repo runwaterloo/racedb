@@ -236,28 +236,27 @@ def get_pb_badges(member, results):
         FIVEK_THRESHOLDS = [17, 18, 20, 22, 25]
         TENK_THRESHOLDS = [35, 37, 41, 45, 50]
     else:
-        FIVEK_THRESHOLDS = [15, 16, 18, 20, 25]
+        FIVEK_THRESHOLDS = [15, 16, 18, 20, 22]
         TENK_THRESHOLDS = [31, 33, 37, 41, 50]
     fivek_minutegroup = False
     fivek_pb = False
     tenk_minutegroup = False
     tenk_pb = False
     for r in reversed(results):
-        # uncomment this to enable 5K time badge
-        #if r.result.event.distance.slug == '5-km':
-        #    if not fivek_pb:
-        #        fivek_minutegroup = get_minutegroup(r.result, FIVEK_THRESHOLDS)
-        #        fivek_pb = r.result
-        #    else:
-        #        if r.result.guntime < fivek_pb.guntime:
-        #            new_minutegroup = get_minutegroup(r.result, FIVEK_THRESHOLDS)
-        #            if fivek_minutegroup:
-        #                if new_minutegroup < fivek_minutegroup:
-        #                    fivek_minutegroup = new_minutegroup
-        #                    fivek_pb = r.result
-        #            else:
-        #                fivek_pb = r.result
-        #                fivek_minutegroup = new_minutegroup
+        if r.result.event.distance.slug == '5-km':
+            if not fivek_pb:
+                fivek_minutegroup = get_minutegroup(r.result, FIVEK_THRESHOLDS)
+                fivek_pb = r.result
+            else:
+                if r.result.guntime < fivek_pb.guntime:
+                    new_minutegroup = get_minutegroup(r.result, FIVEK_THRESHOLDS)
+                    if fivek_minutegroup:
+                        if new_minutegroup < fivek_minutegroup:
+                            fivek_minutegroup = new_minutegroup
+                            fivek_pb = r.result
+                    else:
+                        fivek_pb = r.result
+                        fivek_minutegroup = new_minutegroup
         if r.result.event.distance.slug == '10-km':
             if not tenk_pb:
                 tenk_minutegroup = get_minutegroup(r.result, TENK_THRESHOLDS)
@@ -272,11 +271,12 @@ def get_pb_badges(member, results):
                     else:
                         tenk_pb = r.result
                         tenk_minutegroup = new_minutegroup
-    #if fivek_minutegroup:
-    #    if member.gender == 'F':
-    #        pb_badges.append(named_badge('Sub {} 5K Club'.format(fivek_minutegroup), fivek_pb.event.date, 'http://wonderville_media.s3.amazonaws.com/quiz%2Fquiz_images%2FCheetah.png', False))
-    #    else:
-    #        pb_badges.append(named_badge('Sub {} 5K Club'.format(fivek_minutegroup), fivek_pb.event.date, 'https://cdn.kastatic.org/images/badges/earth/work-horse-512x512.png', False))
+    if fivek_minutegroup:
+        image = '5-km-{}-{}.png'.format(fivek_minutegroup, member.gender.lower())
+        pb_badges.append(named_badge('5 KM: Sub {} Club'.format(fivek_minutegroup),
+                                                                fivek_pb.event.date,
+                                                                image,
+                                                                False))
     if tenk_minutegroup:
         image = '10-km-{}-{}.png'.format(tenk_minutegroup, member.gender.lower())
         pb_badges.append(named_badge('10 KM: Sub {} Club'.format(tenk_minutegroup),
