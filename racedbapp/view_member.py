@@ -236,7 +236,7 @@ def get_pb_badges(member, results):
         FIVEK_THRESHOLDS = [17, 18, 20, 22, 25]
         TENK_THRESHOLDS = [35, 37, 41, 45, 50]
     else:
-        FIVEK_THRESHOLDS = [15, 16, 18, 20, 22]
+        FIVEK_THRESHOLDS = [15, 16, 18, 20, 25]
         TENK_THRESHOLDS = [31, 33, 37, 41, 50]
     fivek_minutegroup = False
     fivek_pb = False
