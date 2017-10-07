@@ -59,7 +59,8 @@ def index(request, member_slug):
 def get_pb(results, distance_slug):
     pb = ''
     pb_results = [x for x in results
-                  if x.result.event.distance.slug == distance_slug ]
+                  if x.result.event.distance.slug == distance_slug 
+                  and x.result.event.race.id != 17 ]
     if len(pb_results) > 0:
         pb = sorted(pb_results, key=attrgetter('result.guntime'))[0]
     return pb
@@ -244,6 +245,8 @@ def get_pb_badges(member, results):
     tenk_pb = False
     for r in reversed(results):
         if r.result.event.distance.slug == '5-km':
+            if r.result.event.race.id == 17:
+                continue
             if not fivek_pb:
                 fivek_minutegroup = get_minutegroup(r.result, FIVEK_THRESHOLDS)
                 fivek_pb = r.result
