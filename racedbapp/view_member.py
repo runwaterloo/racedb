@@ -143,15 +143,16 @@ def get_inaugural_finishes_badges(results):
     for r in reversed(results):
         if r.result.event.race in race_inaugural_years:
           if r.result.event.date.year == race_inaugural_years[r.result.event.race]:
+              race = r.result.event.race
+              if race.id in old_race_ids:
+                  race = Samerace.objects.get(old_race_id=race.id).current_race
               if r.result.event.race not in already_have:
-                  race = r.result.event.race
-                  if race.id in old_race_ids:
-                      race = Samerace.objects.get(old_race_id=race.id).current_race
                   image = 'inaugural-{}.png'.format(race.slug)
                   inaugural_finishes_badges.append(named_badge('Finished inaugural {}'.format(race.name),
                                                    r.result.event.date,
                                                    image, 
                                                    False))
+                  already_have.append(race)
     return inaugural_finishes_badges
 
 def get_bow_finishes_badges(member, results):
