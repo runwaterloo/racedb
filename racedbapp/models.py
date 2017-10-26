@@ -297,8 +297,8 @@ class Phototag(models.Model):
 
 class Phototagbackup(models.Model):
     rrw_photo_id = models.CharField(max_length=64, unique=True)
-    flickr_photo_id = models.IntegerField(db_index=True)
-    flickr_set_id = models.IntegerField(db_index=True)
+    flickr_photo_id = models.CharField(max_length=32, db_index=True)
+    flickr_set_id = models.CharField(max_length=32, db_index=True)
     title = models.CharField(max_length=256)
     date_time_original = models.CharField(max_length=32)
     tags = models.TextField()
