@@ -294,3 +294,11 @@ class Rwmembercorrection(models.Model):
 class Phototag(models.Model):
     event = models.ForeignKey(Event)
     tag = models.CharField(max_length=64)
+
+class Phototagbackup(models.Model):
+    rrw_photo_id = models.CharField(max_length=64, unique=True)
+    flickr_photo_id = models.IntegerField(db_index=True)
+    flickr_set_id = models.IntegerField(db_index=True)
+    title = models.CharField(max_length=256)
+    date_time_original = models.CharField(max_length=32)
+    tags = models.TextField()
