@@ -62,3 +62,13 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'ismasters')
     ordering = ('name',)
 admin.site.register(Category, CategoryAdmin) 
+
+class PhototagbackupAdmin(admin.ModelAdmin):
+    list_display = ('rrw_photo_id',
+                    'flickr_photo_id',
+                    'flickr_set_id',
+                    'title',
+                    'date_time_original',
+                    'tags')
+    ordering = ('-flickr_set_id',)
+admin.site.register(Phototagbackup, PhototagbackupAdmin) 
