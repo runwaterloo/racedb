@@ -87,7 +87,7 @@ class Command(BaseCommand):
                           youtube_id = youtube_id,
                           youtube_offset_seconds = youtube_offset_seconds)
                 e.save()
-                membership = view_shared.get_membership(event=e)
+                membership = view_shared.get_membership(event=e, include_inactive=True)
                 page_size = 500
                 results = []
                 resultsurl = ('http://pre.scrw.ca/api/results/?event={}&limit={}'
