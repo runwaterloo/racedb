@@ -140,6 +140,11 @@ class Event(models.Model):
     def __str__(self): 
         return '{} {} {}'.format(self.date.year, self.race, self.distance)
 
+class Rwmembertag(models.Model):
+    name = models.CharField(max_length=32)
+    def __str__(self): 
+        return self.name
+
 class Rwmember(models.Model):
     GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
     name = models.CharField(max_length=64)
@@ -151,6 +156,7 @@ class Rwmember(models.Model):
     photourl = models.URLField(max_length=500, null=True, blank=True)
     altname = models.CharField(max_length=64, blank=True, help_text="Optional, e.g. maiden name")
     active = models.BooleanField(default=True)
+    tags = models.ManyToManyField(Rwmembertag, null=True, blank=True)
     hasphotos = models.BooleanField(default=False, help_text="Automatically set by system")
     def __str__(self): 
         return self.name

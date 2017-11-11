@@ -25,6 +25,8 @@ class ResultAdmin(admin.ModelAdmin):
     list_display = ('event', 'place', 'bib', 'athlete', 'gender', 'category', 'city', 'chiptime', 'guntime')
 admin.site.register(Result, ResultAdmin)
 
+admin.site.register(Rwmembertag)
+
 class RwmemberAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'gender', 'city', 'joindate', 'active', 'photourl')
     search_fields = ('name',)
