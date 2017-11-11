@@ -145,6 +145,7 @@ class Rwmember(models.Model):
     name = models.CharField(max_length=64)
     slug = models.SlugField(unique=True, help_text="https://blog.tersmitten.nl/slugify/")
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    year_of_birth = models.IntegerField(null=True, blank=True)
     city = models.CharField(max_length=50)
     joindate = models.DateField()
     photourl = models.URLField(max_length=500, null=True, blank=True)
