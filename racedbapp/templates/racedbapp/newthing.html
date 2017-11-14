@@ -1,0 +1,29 @@
+{% extends "racedbapp/base.html" %}
+{% load static %}
+
+{% block title %}
+ New Thing
+  |
+{% endblock title %}
+
+{% block ogmeta %}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="RunWaterloo Results" />
+  <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
+  <meta property="og:image" content="{% static "ogimage.png" %}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <script src="{% static "jquery.filtertable.min.js" %}"></script>
+{% endblock ogmeta %}
+
+{% block content %}
+
+<h3>New Thing</h3>
+
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      Stuff goes here
+    </div>
+  </div>
+
+{% endblock content %}
