@@ -33,11 +33,11 @@ def index(request):
     standings1 = []
     gender_place_dict = {}
     category_place_dict = {}
-    bow_tag = Rwmembertag.objects.get(name='bow2018')
+    bow_tag = Rwmembertag.objects.get(name='bow-2017')
     bow_members = Rwmember.objects.filter(tags=bow_tag).order_by('id')
     for member in bow_members:
-        if not member.year_of_birth:
-            continue
+        #if not member.year_of_birth:
+        #    continue
         #age = 2017 - member.year_of_birth
         age = randint(5,85)
         if age < 40:
