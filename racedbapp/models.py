@@ -176,6 +176,8 @@ class Result(models.Model):
     province = models.CharField(max_length=50, blank=True)
     country = models.CharField(max_length=50, blank=True)
     rwmember = models.ForeignKey(Rwmember, null=True, default=None)
+    gender_place = models.IntegerField(null=True, blank=True)
+    catergory_place = models.IntegerField(null=True, blank=True)
     objects = ResultQuerySet.as_manager()
     class Meta:
         unique_together = ('event', 'place')
