@@ -35,6 +35,12 @@ def index(request):
     category_place_dict = {}
     bow_tag = Rwmembertag.objects.get(name='bow-2017')
     bow_members = Rwmember.objects.filter(tags=bow_tag).order_by('id')
+    mdict = {}
+    fdict = {}
+    events = Event.objects.filter(date__contains='2017')
+    for e in events:
+        mdict[e.id] = Result.objects.filter(event=e, gender='M').count()
+        fdict[e.id] = Result.objects.filter(event=e, gender='F').count()
     for member in bow_members:
         #if not member.year_of_birth:
         #    continue
@@ -60,10 +66,33 @@ def index(request):
                 photourl = 'http://www.supercoloring.com/sites/default/files/silhouettes/2015/05/jogger-grey-silhouette.svg'
             else:
                 photourl = 'http://www.supercoloring.com/sites/default/files/silhouettes/2015/05/jogging-grey-silhouette.svg'
-        participation_points = randint(100, 1500)
-        performance_points = randint(10, 800)
-        volunteer_points = [0, 0, 500][randint(0, 2)]
-        total_points = participation_points + performance_points + volunteer_points
+        results = Result.objects.filter(event__date__contains='2017', rwmember=member)
+        #participation_points = 100 * len(results)
+        pointslist = []
+        for r in results:
+            perf = 0
+            if r.gender != member.gender:
+                continue
+            participation = 100
+            if member.gender == 'F':
+                merit = (1 - (r.gender_place / fdict[r.event.id]))*50 
+            else:
+                merit = (1 - (r.gender_place / mdict[r.event.id]))*50 
+            perf += merit
+            if 'classic' in r.event.race.slug:
+                perf = perf * 2
+                participation = participation * 2
+            pointslist.append([participation + perf, participation, perf])
+        pointslist = sorted(pointslist, reverse=True)[0:10]
+        participation_points = 0
+        performance_points = 0
+        for i in pointslist:
+            participation_points += i[1]
+            performance_points += i[2]
+        volunteer_points = 0
+        total_points = round(participation_points + performance_points + volunteer_points)
+        if total_points == 0:
+            continue
         #category = '{}{}-{}'.format(member.gender, age - age % 40, (age - age % 10) + 9)
         standings1.append(BowResult(member.name,
                                    slug,
@@ -73,7 +102,7 @@ def index(request):
                                    0, 
                                    photourl,
                                    participation_points,
-                                   performance_points,
+                                   round(performance_points),
                                    volunteer_points,
                                    total_points))
 

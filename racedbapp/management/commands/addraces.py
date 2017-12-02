@@ -62,6 +62,8 @@ class Command(BaseCommand):
         for event in events:
             year = event['date'][0:4]
             if event['race'] in races and 'roadraceresults' not in event['resultsurl']:
+                gender_place_dict = {'F': 0, 'M': 0}
+                category_place_dict = {}
                 race = Race.objects.get(prename=event['race'])
                 distance = Distance.objects.get(prename=event['distance'])
                 dohill = False
@@ -124,6 +126,21 @@ class Command(BaseCommand):
                         if 'division' in extra_dict:
                             division = extra_dict['division']
                         member = get_member(event, result, membership)
+                        gender_place = category_place = None
+                        if result['place'] < 990000:
+                            if result['gender'] == 'F':
+                                gender_place_dict['F'] += 1
+                                gender_place = gender_place_dict['F']
+                            elif result['gender'] == 'M':
+                                gender_place_dict['M'] += 1
+                                gender_place = gender_place_dict['M']
+                            if category.name != '':
+                                if category.name in category_place_dict:
+                                    category_place_dict[category.name] += 1
+                                    category_place = category_place_dict[category.name]
+                                else:
+                                    category_place_dict[category.name] = 1
+                                    category_place = 1
                         newresult = Result(event_id = event['id'],
                                            place = result['place'],
                                            bib = result['bib'],
@@ -135,7 +152,9 @@ class Command(BaseCommand):
                                            guntime = guntime,
                                            age = age,
                                            division = division,
-                                           rwmember = member)
+                                           rwmember = member,
+                                           gender_place = gender_place,
+                                           category_place = category_place)
                         results.append(newresult)
                         splits = add_splits(event, result, extra_dict, splits)
                         if 'division' in extra_dict:
