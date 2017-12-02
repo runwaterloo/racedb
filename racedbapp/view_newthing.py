@@ -18,7 +18,8 @@ BowResult = namedtuple('bowresult', ['athlete',
                                      'participation_points',
                                      'performance_points',
                                      'volunteer_points',
-                                     'total_points'])
+                                     'total_points',
+                                     'city'])
 
 named_filter = namedtuple('nf', ['current', 'choices'])
 named_choice = namedtuple('nc', ['name', 'url'])
@@ -36,12 +37,7 @@ def index(request):
     #bow_tag = Rwmembertag.objects.get(name='bow-2017')
     #bow_members = Rwmember.objects.filter(tags=bow_tag).order_by('id')
     bow_members = Rwmember.objects.filter(active=True)
-    mdict = {}
-    fdict = {}
-    events = Event.objects.filter(date__contains='2017')
-    for e in events:
-        mdict[e.id] = Result.objects.filter(event=e, gender='M').count()
-        fdict[e.id] = Result.objects.filter(event=e, gender='F').count()
+    gender_finishers = get_gender_finishers()
     for member in bow_members:
         if not member.year_of_birth:
             continue
@@ -67,17 +63,13 @@ def index(request):
             else:
                 photourl = 'http://www.supercoloring.com/sites/default/files/silhouettes/2015/05/jogging-grey-silhouette.svg'
         results = Result.objects.filter(event__date__contains='2017', rwmember=member)
-        #participation_points = 100 * len(results)
         pointslist = []
         for r in results:
             if not r.gender_place:
                 continue
             perf = 0
             participation = 100
-            if member.gender == 'F':
-                merit = (1 - (r.gender_place / fdict[r.event.id]))*50 
-            else:
-                merit = (1 - (r.gender_place / mdict[r.event.id]))*50 
+            merit = (1 - (r.gender_place / gender_finishers[r.gender][r.event.id]))*50 
             perf += merit
             if 'classic' in r.event.race.slug:
                 perf = perf * 2
@@ -104,7 +96,8 @@ def index(request):
                                    participation_points,
                                    round(performance_points),
                                    volunteer_points,
-                                   total_points))
+                                   total_points,
+                                   member.city))
 
     standings2 = []
     for member in sorted(standings1, key=attrgetter('total_points'), reverse=True):
@@ -126,7 +119,8 @@ def index(request):
                                     member.participation_points,
                                     member.performance_points,
                                     member.volunteer_points,
-                                    member.total_points))
+                                    member.total_points,
+                                    member.city))
     for member in standings2:
         if member.category == 'F40-':
             female_under_40.append(BowResult(member.athlete,
@@ -139,7 +133,8 @@ def index(request):
                                              member.participation_points,
                                              member.performance_points,
                                              member.volunteer_points,
-                                             member.total_points))
+                                             member.total_points,
+                                             member.city))
         elif member.category == 'F40+':
             female_over_40.append(BowResult(member.athlete,
                                             member.slug,
@@ -151,7 +146,8 @@ def index(request):
                                             member.participation_points,
                                             member.performance_points,
                                             member.volunteer_points,
-                                            member.total_points))
+                                            member.total_points,
+                                            member.city))
         elif member.category == 'M40-':
             male_under_40.append(BowResult(member.athlete,
                                            member.slug,
@@ -163,7 +159,8 @@ def index(request):
                                            member.participation_points,
                                            member.performance_points,
                                            member.volunteer_points,
-                                           member.total_points))
+                                           member.total_points,
+                                           member.city))
         elif member.category == 'M40+':
             male_over_40.append(BowResult(member.athlete,
                                           member.slug,
@@ -175,7 +172,8 @@ def index(request):
                                           member.participation_points,
                                           member.performance_points,
                                           member.volunteer_points,
-                                          member.total_points))
+                                          member.total_points,
+                                          member.city))
 
 
     standings3 = [x for x in standings2 if qs_filter in x.category]
@@ -221,3 +219,17 @@ def get_standings_filter(qs_filter):
         current_choice = qs_filter
     standings_filter = named_filter(current_choice, choices)
     return standings_filter
+
+def get_gender_finishers():
+    gender_finishers = {}
+    for i in ('F', 'M'):
+        db = (Event.objects.values('id')
+              .filter(date__contains='2017',
+                      result__gender=i,
+                      result__place__lt=990000)
+              .annotate(num_finishers=Count('result')))
+        thisdict = {}
+        for j in db:
+            thisdict[j['id']] = j['num_finishers']
+        gender_finishers[i] = thisdict
+    return gender_finishers

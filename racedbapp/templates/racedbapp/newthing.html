@@ -117,7 +117,7 @@
   <div class="row">
 
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <table class="table table-bordered table-condensed table-striped table-hover">
+      <table class="table table-bordered table-condensed table-striped">
         <tr class="info">
           <th class="text-center">#</th>
           <th>Athlete</th>
@@ -129,6 +129,7 @@
           <th class="text-center">Perf</th>
           <th class="text-center">Vol</th>
           <th class="text-center">Total</th>
+          <th>City</th>
         </tr>
         {% for s in standings %}
           <tr>
@@ -142,6 +143,7 @@
             <td class="text-center">{{ s.performance_points }}</td>
             <td class="text-center">{{ s.volunteer_points }}</td>
             <td class="text-center">{{ s.total_points }}</td>
+            <td>{{ s.city }}</td>
           </tr>
         {% endfor %}
       </table>
