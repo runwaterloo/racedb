@@ -33,8 +33,9 @@ def index(request):
     standings1 = []
     gender_place_dict = {}
     category_place_dict = {}
-    bow_tag = Rwmembertag.objects.get(name='bow-2017')
-    bow_members = Rwmember.objects.filter(tags=bow_tag).order_by('id')
+    #bow_tag = Rwmembertag.objects.get(name='bow-2017')
+    #bow_members = Rwmember.objects.filter(tags=bow_tag).order_by('id')
+    bow_members = Rwmember.objects.filter(active=True)
     mdict = {}
     fdict = {}
     events = Event.objects.filter(date__contains='2017')
@@ -42,10 +43,9 @@ def index(request):
         mdict[e.id] = Result.objects.filter(event=e, gender='M').count()
         fdict[e.id] = Result.objects.filter(event=e, gender='F').count()
     for member in bow_members:
-        #if not member.year_of_birth:
-        #    continue
-        #age = 2017 - member.year_of_birth
-        age = randint(5,85)
+        if not member.year_of_birth:
+            continue
+        age = 2017 - member.year_of_birth
         if age < 40:
             if member.gender == 'F':
                 category = 'F40-'
@@ -70,9 +70,9 @@ def index(request):
         #participation_points = 100 * len(results)
         pointslist = []
         for r in results:
-            perf = 0
-            if r.gender != member.gender:
+            if not r.gender_place:
                 continue
+            perf = 0
             participation = 100
             if member.gender == 'F':
                 merit = (1 - (r.gender_place / fdict[r.event.id]))*50 
