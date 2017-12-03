@@ -1,192 +1,96 @@
 from django.shortcuts import render
-from django.http import HttpResponse, Http404
+from django.db.models import Count
+from django.http import Http404
 from collections import namedtuple
-from operator import attrgetter
 from datetime import datetime
-from random import randint
+from operator import attrgetter
 from urllib import parse
 
-from .models import *
+from .models import (
+    Event,
+    Result,
+    Rwmember
+)
 
-BowResult = namedtuple('bowresult', ['athlete',
-                                     'slug',
-                                     'gender',
-                                     'gender_place',
-                                     'category',
-                                     'category_place',
-                                     'photourl',
-                                     'participation_points',
-                                     'performance_points',
-                                     'volunteer_points',
-                                     'total_points',
-                                     'city'])
+max_events = 10
+leaderboard_size = 5
+classic_multiplier = 2
+participation_default = 100
+merit_default = 50
 
-named_filter = namedtuple('nf', ['current', 'choices'])
-named_choice = namedtuple('nc', ['name', 'url'])
 
 def index(request, year):
+    year = int(year)
+    first_day = datetime(year, 1, 1).date()
+    last_day = datetime(year, 12, 31).date()
     qstring = parse.parse_qs(request.META['QUERY_STRING'])
     qs_filter = get_qs_filter(qstring)
-    female_under_40 = []
-    female_over_40 = []
-    male_under_40 = []
-    male_over_40 = []
-    standings1 = []
-    gender_place_dict = {}
+    gender_finishers = get_gender_finishers(first_day, last_day)
+    included_members = Rwmember.objects.filter(active=True)
+    battlers = {}
+    for i in included_members:
+        battlers[i.id] = Battler(i, year)
+    dbresults = Result.objects.select_related().filter(
+                  event__date__range=(first_day, last_day),
+                  gender_place__isnull=False,
+                  rwmember__in=included_members)
+    for i in dbresults:
+        battlers[i.rwmember_id].results.append(BResult(i, gender_finishers))
+    for k, v in battlers.items():
+        v.x_best_results = sorted(
+            v.results,
+            key=attrgetter('ep'),
+            reverse=True)[0:max_events]
+        v.participation_points = sum([x.pp for x in v.x_best_results])
+        v.merit_points = sum([x.mp for x in v.x_best_results])
+        v.total_points = (v.participation_points
+                          + v.merit_points
+                          + v.volunteer_points)
+    gender_place_dict = {'F': 0, 'M': 0}
     category_place_dict = {}
-    #bow_tag = Rwmembertag.objects.get(name='bow-2017')
-    #bow_members = Rwmember.objects.filter(tags=bow_tag).order_by('id')
-    bow_members = Rwmember.objects.filter(active=True)
-    gender_finishers = get_gender_finishers()
-    for member in bow_members:
-        if not member.year_of_birth:
+    leaderboard = {'F40-': [],
+                   'M40-': [],
+                   'F40+': [],
+                   'M40+': []}
+    standings = []
+    for i in sorted(battlers.values(),
+                    key=attrgetter('total_points'),
+                    reverse=True):
+        if i.total_points == 0:
             continue
-        age = 2017 - member.year_of_birth
-        if age < 40:
-            if member.gender == 'F':
-                category = 'F40-'
+        gender_place_dict[i.gender] += 1
+        i.gender_place = gender_place_dict[i.gender]
+        if i.category in category_place_dict:
+            category_place_dict[i.category] += 1
+            i.category_place = category_place_dict[i.category]
+        else:
+            i.category_place = category_place_dict[i.category] = 1
+        if len(leaderboard[i.category]) < leaderboard_size:
+            leaderboard[i.category].append(i)
+        if qs_filter != '':
+            if qs_filter in ('F', 'M'):
+                if i.gender != qs_filter:
+                    continue
             else:
-                category = 'M40-'
-        else:
-            if member.gender == 'F':
-                category = 'F40+'
-            else:
-                category = 'M40+'
-        slug = None
-        if member.active:
-            slug = member.slug
-        if member.photourl:
-            photourl = member.photourl
-        else:
-            if member.gender == 'F':
-                photourl = 'http://www.supercoloring.com/sites/default/files/silhouettes/2015/05/jogger-grey-silhouette.svg'
-            else:
-                photourl = 'http://www.supercoloring.com/sites/default/files/silhouettes/2015/05/jogging-grey-silhouette.svg'
-        results = Result.objects.filter(event__date__contains='2017', rwmember=member)
-        pointslist = []
-        for r in results:
-            if not r.gender_place:
-                continue
-            perf = 0
-            participation = 100
-            merit = (1 - (r.gender_place / gender_finishers[r.gender][r.event.id]))*50 
-            perf += merit
-            if 'classic' in r.event.race.slug:
-                perf = perf * 2
-                participation = participation * 2
-            pointslist.append([participation + perf, participation, perf])
-        pointslist = sorted(pointslist, reverse=True)[0:10]
-        participation_points = 0
-        performance_points = 0
-        for i in pointslist:
-            participation_points += i[1]
-            performance_points += i[2]
-        volunteer_points = 0
-        total_points = round(participation_points + performance_points + volunteer_points)
-        if total_points == 0:
-            continue
-        #category = '{}{}-{}'.format(member.gender, age - age % 40, (age - age % 10) + 9)
-        standings1.append(BowResult(member.name,
-                                   slug,
-                                   member.gender,
-                                   0,
-                                   category,  
-                                   0, 
-                                   photourl,
-                                   participation_points,
-                                   round(performance_points),
-                                   volunteer_points,
-                                   total_points,
-                                   member.city))
-
-    standings2 = []
-    for member in sorted(standings1, key=attrgetter('total_points'), reverse=True):
-        if member.gender in gender_place_dict:
-            gender_place_dict[member.gender] += 1
-        else:
-            gender_place_dict[member.gender] = 1
-        if member.category in category_place_dict:
-            category_place_dict[member.category] += 1
-        else:
-            category_place_dict[member.category] = 1
-        standings2.append(BowResult(member.athlete,
-                                    member.slug,
-                                    member.gender,
-                                    gender_place_dict[member.gender],
-                                    member.category,  
-                                    category_place_dict[member.category],
-                                    member.photourl,
-                                    member.participation_points,
-                                    member.performance_points,
-                                    member.volunteer_points,
-                                    member.total_points,
-                                    member.city))
-    for member in standings2:
-        if member.category == 'F40-':
-            female_under_40.append(BowResult(member.athlete,
-                                             member.slug,
-                                             member.gender,
-                                             member.gender_place,
-                                             member.category,
-                                             member.category_place,
-                                             member.photourl,
-                                             member.participation_points,
-                                             member.performance_points,
-                                             member.volunteer_points,
-                                             member.total_points,
-                                             member.city))
-        elif member.category == 'F40+':
-            female_over_40.append(BowResult(member.athlete,
-                                            member.slug,
-                                            member.gender,
-                                            member.gender_place,
-                                            member.category,
-                                            member.category_place,
-                                            member.photourl,
-                                            member.participation_points,
-                                            member.performance_points,
-                                            member.volunteer_points,
-                                            member.total_points,
-                                            member.city))
-        elif member.category == 'M40-':
-            male_under_40.append(BowResult(member.athlete,
-                                           member.slug,
-                                           member.gender,
-                                           member.gender_place,
-                                           member.category,
-                                           member.category_place,
-                                           member.photourl,
-                                           member.participation_points,
-                                           member.performance_points,
-                                           member.volunteer_points,
-                                           member.total_points,
-                                           member.city))
-        elif member.category == 'M40+':
-            male_over_40.append(BowResult(member.athlete,
-                                          member.slug,
-                                          member.gender,
-                                          member.gender_place,
-                                          member.category,
-                                          member.category_place,
-                                          member.photourl,
-                                          member.participation_points,
-                                          member.performance_points,
-                                          member.volunteer_points,
-                                          member.total_points,
-                                          member.city))
-
-
-    standings3 = [x for x in standings2 if qs_filter in x.category]
-    standings_filter = get_standings_filter(qs_filter)
+                if i.category != qs_filter:
+                    continue
+        standings.append(i)
+    female_under_40 = leaderboard['F40-']
+    male_under_40 = leaderboard['M40-']
+    female_over_40 = leaderboard['F40+']
+    male_over_40 = leaderboard['M40+']
+    standings_filter = get_standings_filter(qs_filter, year)
     context = {
-               'female_under_40': female_under_40[0:5],
-               'female_over_40': female_over_40[0:5],
-               'male_under_40': male_under_40[0:5],
-               'male_over_40': male_over_40[0:5],
-               'standings': standings3,
+               'female_under_40': female_under_40,
+               'female_over_40': female_over_40,
+               'male_under_40': male_under_40,
+               'male_over_40': male_over_40,
+               'standings': standings,
                'standings_filter': standings_filter,
+               'year': year
               }
     return render(request, 'racedbapp/newthing.html', context)
+
 
 def get_qs_filter(qstring):
     valid_filters = ('F', 'M', 'F40-', 'F40+', 'M40-', 'M40+')
@@ -199,17 +103,26 @@ def get_qs_filter(qstring):
             raise Http404('Filter not found')
     return qs_filter
 
-def get_standings_filter(qs_filter):
+
+def get_standings_filter(qs_filter, year):
+    named_filter = namedtuple('nf', ['current', 'choices'])
+    named_choice = namedtuple('nc', ['name', 'url'])
     choices = []
-    choices.append(named_choice('', '/newthing'))
-    choices.append(named_choice('Female', '/newthing/?filter=F'))
-    choices.append(named_choice('Male', '/newthing/?filter=M'))
-    choices.append(named_choice('F40-', '/newthing/?filter=F40-'))
-    choices.append(named_choice('M40-', '/newthing/?filter=M40-'))
-    choices.append(named_choice('F40+', '/newthing/?filter=F40%2B'))
-    choices.append(named_choice('M40+', '/newthing/?filter=M40%2B'))
+    choices.append(named_choice('', '/newthing/{}'.format(year)))
+    choices.append(
+        named_choice('Female', '/newthing/{}/?filter=F'.format(year)))
+    choices.append(
+        named_choice('Male', '/newthing/{}/?filter=M'.format(year)))
+    choices.append(
+        named_choice('F40-', '/newthing/{}/?filter=F40-'.format(year)))
+    choices.append(
+        named_choice('M40-', '/newthing/{}/?filter=M40-'.format(year)))
+    choices.append(
+        named_choice('F40+', '/newthing/{}/?filter=F40%2B'.format(year)))
+    choices.append(
+        named_choice('M40+', '/newthing/{}/?filter=M40%2B'.format(year)))
     choices = [x for x in choices if x[0] != qs_filter]
-    if  qs_filter == 'F':
+    if qs_filter == 'F':
         current_choice = 'Female'
     elif qs_filter == 'M':
         current_choice = 'Male'
@@ -220,11 +133,12 @@ def get_standings_filter(qs_filter):
     standings_filter = named_filter(current_choice, choices)
     return standings_filter
 
-def get_gender_finishers():
+
+def get_gender_finishers(first_day, last_day):
     gender_finishers = {}
     for i in ('F', 'M'):
         db = (Event.objects.values('id')
-              .filter(date__contains='2017',
+              .filter(date__range=(first_day, last_day),
                       result__gender=i,
                       result__place__lt=990000)
               .annotate(num_finishers=Count('result')))
@@ -233,3 +147,50 @@ def get_gender_finishers():
             thisdict[j['id']] = j['num_finishers']
         gender_finishers[i] = thisdict
     return gender_finishers
+
+
+class Battler:
+    def __init__(self, member, year):
+        self.athlete = member.name
+        self.member_id = member.id
+        self.slug = member.slug
+        self.gender = member.gender
+        self.age = year - member.year_of_birth
+        if member.photourl:
+            self.photourl = member.photourl
+        else:
+            if self.gender == 'F':
+                self.photourl = 'http://www.supercoloring.com/sites/default/files/silhouettes/2015/05/jogger-grey-silhouette.svg'
+            else:
+                self.photourl = 'http://www.supercoloring.com/sites/default/files/silhouettes/2015/05/jogging-grey-silhouette.svg'
+        self.ismaster = False
+        self.category_suffix = '40-'
+        if self.age >= 40:
+            self.ismaster = True
+            self.category_suffix = '40+'
+        self.category = self.gender + self.category_suffix
+        self.city = member.city
+        self.results = []
+        self.x_best_results = []
+        self.participation_points = 0
+        self.merit_points = 0
+        self.volunteer_points = 0
+        self.total_points = 0
+        self.gender_place = 0
+        self.category_place = 0
+
+
+class BResult:
+    def __init__(self, result, gender_finishers):
+        self.event_id = result.event.id
+        self.event_race_name = result.event.race.name
+        self.event_distance_name = result.event.distance.name
+        self.gender_place = result.gender_place
+        self.pp = participation_default
+        self.mp = ((1 - (self.gender_place
+                   / gender_finishers[result.gender][result.event.id]))
+                   * merit_default)
+        if 'classic' in result.event.race.slug:
+            self.pp = self.pp * classic_multiplier
+            self.mp = self.mp * classic_multiplier
+        self.ep = self.pp + self.mp

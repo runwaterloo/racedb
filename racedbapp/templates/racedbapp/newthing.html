@@ -18,7 +18,7 @@
 
 {% block content %}
 
-<h3>Battle of Waterloo 2018 <a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3>
+<h3>New Thing {{ year }} <a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3>
 
   <div class="row">
 
@@ -36,7 +36,7 @@
           <tr>
             <td class="text-center">{{ forloop.counter }}</td>
             <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
-            <td>{{ i.total_points }}</td>
+            <td>{{ i.total_points|floatformat:"0" }}</td>
           </tr>
         {% endfor %}
       </table>
@@ -56,7 +56,7 @@
           <tr>
             <td class="text-center">{{ forloop.counter }}</td>
             <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
-            <td>{{ i.total_points }}</td>
+            <td>{{ i.total_points|floatformat:"0" }}</td>
           </tr>
         {% endfor %}
       </table>
@@ -76,7 +76,7 @@
           <tr>
             <td class="text-center">{{ forloop.counter }}</td>
             <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
-            <td>{{ i.total_points }}</td>
+            <td>{{ i.total_points|floatformat:"0" }}</td>
           </tr>
         {% endfor %}
       </table>
@@ -96,7 +96,7 @@
           <tr>
             <td class="text-center">{{ forloop.counter }}</td>
             <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
-            <td>{{ i.total_points }}</td>
+            <td>{{ i.total_points|floatformat:"0" }}</td>
           </tr>
         {% endfor %}
       </table>
@@ -125,9 +125,9 @@
           <th class="text-center">GP</th>
           <th class="text-center">Cat</th>
           <th class="text-center">CP</th>
-          <th class="text-center">Part</th>
-          <th class="text-center">Perf</th>
-          <th class="text-center">Vol</th>
+          <th class="text-center">P</th>
+          <th class="text-center">M</th>
+          <th class="text-center">V</th>
           <th class="text-center">Total</th>
           <th>City</th>
         </tr>
@@ -140,9 +140,9 @@
             <td class="text-center">{{ s.category }}</td>
             <td class="text-center">{{ s.category_place }}</td>
             <td class="text-center">{{ s.participation_points }}</td>
-            <td class="text-center">{{ s.performance_points }}</td>
+            <td class="text-center">{{ s.merit_points|floatformat:"0" }}</td>
             <td class="text-center">{{ s.volunteer_points }}</td>
-            <td class="text-center">{{ s.total_points }}</td>
+            <td class="text-center">{{ s.total_points|floatformat:"0" }}</td>
             <td>{{ s.city }}</td>
           </tr>
         {% endfor %}
