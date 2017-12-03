@@ -121,6 +121,7 @@
         <tr class="info">
           <th class="text-center">#</th>
           <th>Athlete</th>
+          <th class="text-center">Total</th>
           <th class="text-center">G</th>
           <th class="text-center">GP</th>
           <th class="text-center">Cat</th>
@@ -128,13 +129,13 @@
           <th class="text-center">P</th>
           <th class="text-center">M</th>
           <th class="text-center">V</th>
-          <th class="text-center">Total</th>
           <th>City</th>
         </tr>
         {% for s in standings %}
           <tr>
             <td class="text-center">{{ forloop.counter }}</td>
             <td><a href="/member/{{ s.slug }}/">{{ s.athlete}}</a></td>
+            <td class="text-center"><strong>{{ s.total_points|floatformat:"0" }}</strong></td>
             <td class="text-center">{{ s.gender }}</td>
             <td class="text-center">{{ s.gender_place }}</td>
             <td class="text-center">{{ s.category }}</td>
@@ -142,7 +143,6 @@
             <td class="text-center">{{ s.participation_points }}</td>
             <td class="text-center">{{ s.merit_points|floatformat:"0" }}</td>
             <td class="text-center">{{ s.volunteer_points }}</td>
-            <td class="text-center">{{ s.total_points|floatformat:"0" }}</td>
             <td>{{ s.city }}</td>
           </tr>
         {% endfor %}
