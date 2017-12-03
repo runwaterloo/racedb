@@ -21,10 +21,10 @@ merit_default = 50
 
 def index(request, year):
     year = int(year)
-    first_day = datetime(year, 1, 1).date()
-    last_day = datetime(year, 12, 31).date()
     qstring = parse.parse_qs(request.META['QUERY_STRING'])
     qs_filter = get_qs_filter(qstring)
+    first_day = datetime(year, 1, 1).date()
+    last_day = datetime(year, 12, 31).date()
     gender_finishers = get_gender_finishers(first_day, last_day)
     included_members = Rwmember.objects.filter(active=True)
     battlers = {}
@@ -36,16 +36,8 @@ def index(request, year):
                   rwmember__in=included_members)
     for i in dbresults:
         battlers[i.rwmember_id].results.append(BResult(i, gender_finishers))
-    for k, v in battlers.items():
-        v.x_best_results = sorted(
-            v.results,
-            key=attrgetter('ep'),
-            reverse=True)[0:max_events]
-        v.participation_points = sum([x.pp for x in v.x_best_results])
-        v.merit_points = sum([x.mp for x in v.x_best_results])
-        v.total_points = (v.participation_points
-                          + v.merit_points
-                          + v.volunteer_points)
+    for v in battlers.values():
+        v.calculate()
     gender_place_dict = {'F': 0, 'M': 0}
     category_place_dict = {}
     leaderboard = {'F40-': [],
@@ -151,8 +143,8 @@ def get_gender_finishers(first_day, last_day):
 
 class Battler:
     def __init__(self, member, year):
-        self.athlete = member.name
         self.member_id = member.id
+        self.athlete = member.name
         self.slug = member.slug
         self.gender = member.gender
         self.age = year - member.year_of_birth
@@ -179,6 +171,19 @@ class Battler:
         self.gender_place = 0
         self.category_place = 0
 
+    def calculate(self):
+        self.x_best_results = sorted(
+            self.results,
+            key=attrgetter('ep'),
+            reverse=True)[0:max_events]
+        for i in self.x_best_results:
+            self.participation_points += i.pp
+            self.merit_points += i.mp
+            i.counts = True
+        self.total_points = (self.participation_points
+                             + self.merit_points
+                             + self.volunteer_points)
+
 
 class BResult:
     def __init__(self, result, gender_finishers):
@@ -194,3 +199,4 @@ class BResult:
             self.pp = self.pp * classic_multiplier
             self.mp = self.mp * classic_multiplier
         self.ep = self.pp + self.mp
+        self.counts = False
