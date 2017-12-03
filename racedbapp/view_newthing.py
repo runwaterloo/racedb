@@ -24,7 +24,7 @@ BowResult = namedtuple('bowresult', ['athlete',
 named_filter = namedtuple('nf', ['current', 'choices'])
 named_choice = namedtuple('nc', ['name', 'url'])
 
-def index(request):
+def index(request, year):
     qstring = parse.parse_qs(request.META['QUERY_STRING'])
     qs_filter = get_qs_filter(qstring)
     female_under_40 = []
