@@ -140,9 +140,9 @@
             <td class="text-center">{{ s.gender_place }}</td>
             <td class="text-center">{{ s.category }}</td>
             <td class="text-center">{{ s.category_place }}</td>
-            <td class="text-center">{{ s.participation_points }}</td>
+            <td class="text-center">{{ s.participation_points|floatformat:"0" }}</td>
             <td class="text-center">{{ s.merit_points|floatformat:"0" }}</td>
-            <td class="text-center">{{ s.volunteer_points }}</td>
+            <td class="text-center">{{ s.volunteer_points|floatformat:"0" }}</td>
             <td>{{ s.city }}</td>
           </tr>
         {% endfor %}

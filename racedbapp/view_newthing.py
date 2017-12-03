@@ -7,16 +7,19 @@ from operator import attrgetter
 from urllib import parse
 
 from .models import (
+    Config,
     Event,
     Result,
     Rwmember
 )
 
-max_events = 10
-leaderboard_size = 5
-classic_multiplier = 2
-participation_default = 100
-merit_default = 50
+config_dict = dict(Config.objects.values_list('name', 'value'))
+
+max_events = int(config_dict['newthing_max_events'])
+leaderboard_size = int(config_dict['newthing_leaderboard_size'])
+classic_multiplier = float(config_dict['newthing_classic_multiplier'])
+participation_default = int(config_dict['newthing_participation_default'])
+merit_max = int(config_dict['newthing_merit_max'])
 
 
 def index(request, year):
@@ -194,7 +197,7 @@ class BResult:
         self.pp = participation_default
         self.mp = ((1 - (self.gender_place
                    / gender_finishers[result.gender][result.event.id]))
-                   * merit_default)
+                   * merit_max)
         if 'classic' in result.event.race.slug:
             self.pp = self.pp * classic_multiplier
             self.mp = self.mp * classic_multiplier
