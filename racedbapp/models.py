@@ -178,6 +178,7 @@ class Result(models.Model):
     rwmember = models.ForeignKey(Rwmember, null=True, default=None)
     gender_place = models.IntegerField(null=True, blank=True)
     category_place = models.IntegerField(null=True, blank=True)
+    isrwpb = models.BooleanField(default=False, blank=True)
     objects = ResultQuerySet.as_manager()
     class Meta:
         unique_together = ('event', 'place')
@@ -196,9 +197,6 @@ class Wheelchairresult(models.Model):
     chiptime = models.DurationField(null=True)
     guntime = models.DurationField(null=True)
     objects = ResultQuerySet.as_manager()
-    class Meta:
-        unique_together = ('event', 'place')
-        ordering = ('place', )
     def __str__(self): 
         return str((self.event, self.bib))
 
