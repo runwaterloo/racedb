@@ -21,88 +21,29 @@
 <h3>New Thing {{ year }} <small><a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
 
   <div class="row">
-
-    <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
-      <center><h4>Female Under 40</h4></center>
-    <div style="padding-top: 1px; padding-bottom: 5px">
-      <div class="profile-outer-mini">
-        <div class="profile-inner-mini">
-              <img src="{{ female_under_40.0.photourl }}">
+    {% for k, v in leaderboard.items %}
+      <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
+        <center><h4>{{ k }}</h4></center>
+        <div style="padding-top: 1px; padding-bottom: 5px">
+          <div class="profile-outer-mini">
+            <div class="profile-inner-mini">
+              <img src="{{ v.0.photourl }}">
+            </div>
+          </div>
         </div>
+        <table class=table>
+          {% for i in v %}
+            <tr>
+              <td class="text-center">{{ forloop.counter }}</td>
+              <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
+              <td>{{ i.total_points|floatformat:"0" }}</td>
+            </tr>
+          {% endfor %}
+        </table>
       </div>
-    </div>
-      <table class=table>
-        {% for i in female_under_40 %}
-          <tr>
-            <td class="text-center">{{ forloop.counter }}</td>
-            <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
-            <td>{{ i.total_points|floatformat:"0" }}</td>
-          </tr>
-        {% endfor %}
-      </table>
-    </div>
-
-    <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
-      <center><h4>Male Under 40</h4></center>
-    <div style="padding-top: 1px; padding-bottom: 5px">
-      <div class="profile-outer-mini">
-        <div class="profile-inner-mini">
-              <img src="{{ male_under_40.0.photourl }}">
-        </div>
-      </div>
-    </div>
-      <table class=table>
-        {% for i in male_under_40 %}
-          <tr>
-            <td class="text-center">{{ forloop.counter }}</td>
-            <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
-            <td>{{ i.total_points|floatformat:"0" }}</td>
-          </tr>
-        {% endfor %}
-      </table>
-    </div>
-
-    <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
-      <center><h4>Female Over 40</h4></center>
-    <div style="padding-top: 1px; padding-bottom: 5px">
-      <div class="profile-outer-mini">
-        <div class="profile-inner-mini">
-              <img src="{{ female_over_40.0.photourl }}">
-        </div>
-      </div>
-    </div>
-      <table class=table>
-        {% for i in female_over_40 %}
-          <tr>
-            <td class="text-center">{{ forloop.counter }}</td>
-            <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
-            <td>{{ i.total_points|floatformat:"0" }}</td>
-          </tr>
-        {% endfor %}
-      </table>
-    </div>
-
-    <div class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
-      <center><h4>Male Over 40</h4></center>
-    <div style="padding-top: 1px; padding-bottom: 5px">
-      <div class="profile-outer-mini">
-        <div class="profile-inner-mini">
-              <img src="{{ male_over_40.0.photourl }}">
-        </div>
-      </div>
-    </div>
-      <table class=table>
-        {% for i in male_over_40 %}
-          <tr>
-            <td class="text-center">{{ forloop.counter }}</td>
-            <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
-            <td>{{ i.total_points|floatformat:"0" }}</td>
-          </tr>
-        {% endfor %}
-      </table>
-    </div>
-
+    {% endfor %}
   </div>
+
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
               Filter: <select onchange="location = this.options[this.selectedIndex].value;">

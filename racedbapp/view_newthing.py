@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.db.models import Count
 from django.http import Http404
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from datetime import datetime
 from operator import attrgetter
 from urllib import parse
@@ -43,10 +43,10 @@ def index(request, year):
         v.calculate()
     gender_place_dict = {'F': 0, 'M': 0}
     category_place_dict = {}
-    leaderboard = {'F40-': [],
-                   'M40-': [],
-                   'F40+': [],
-                   'M40+': []}
+    leaders = {'F40-': [],
+               'M40-': [],
+               'F40+': [],
+               'M40+': []}
     standings = []
     for i in sorted(battlers.values(),
                     key=attrgetter('total_points'),
@@ -60,8 +60,8 @@ def index(request, year):
             i.category_place = category_place_dict[i.category]
         else:
             i.category_place = category_place_dict[i.category] = 1
-        if len(leaderboard[i.category]) < leaderboard_size:
-            leaderboard[i.category].append(i)
+        if len(leaders[i.category]) < leaderboard_size:
+            leaders[i.category].append(i)
         if qs_filter != '':
             if qs_filter in ('F', 'M'):
                 if i.gender != qs_filter:
@@ -70,16 +70,14 @@ def index(request, year):
                 if i.category != qs_filter:
                     continue
         standings.append(i)
-    female_under_40 = leaderboard['F40-']
-    male_under_40 = leaderboard['M40-']
-    female_over_40 = leaderboard['F40+']
-    male_over_40 = leaderboard['M40+']
+    leaderboard = OrderedDict()
+    leaderboard['Female Under 40'] = leaders['F40-']
+    leaderboard['Male Under 40'] = leaders['M40-']
+    leaderboard['Female Over 40'] = leaders['F40+']
+    leaderboard['Male Over 40'] = leaders['M40+']
     standings_filter = get_standings_filter(qs_filter, year)
     context = {
-               'female_under_40': female_under_40,
-               'female_over_40': female_over_40,
-               'male_under_40': male_under_40,
-               'male_over_40': male_over_40,
+               'leaderboard': leaderboard,
                'standings': standings,
                'standings_filter': standings_filter,
                'year': year
