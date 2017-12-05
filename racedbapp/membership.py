@@ -2,23 +2,34 @@
 #from django.db.models import Min, Count, Q
 from .models import *      
 from itertools import chain
+from operator import attrgetter
 import logging
 logger = logging.getLogger(__name__)
 
 def update_membership(member):
-    """ Update rwmember field in result table """
+    """ Update rwmember field and isrwb in result table """
     logger.info('Updating membership for {} ({})'.format(member, member.id))
     # Clear all existing member results
-    Result.objects.filter(rwmember=member).update(rwmember=None)
+    Result.objects.filter(rwmember=member).update(rwmember=None, isrwpb=False)
     primaryresults = Result.objects.filter(athlete=member.name) 
     altresults = Result.objects.filter(athlete=member.altname)  
     includes = get_includes(member)                                              
     results_list = list(chain(primaryresults, altresults)) + includes            
+    results_list = sorted(results_list, key=attrgetter('event.date'))
     excludes = get_excludes(member)            
+    rwpbs = {}
     for r in results_list:
         if r in excludes:
             continue
         r.rwmember=member
+        dist = r.event.distance
+        if dist in rwpbs:
+            if r.guntime < rwpbs[dist]:
+                rwpbs[dist] = r.guntime
+                r.isrwpb = True
+        else:
+            rwpbs[dist] = r.guntime
+            r.isrwpb = True
         r.save()
         logger.info('Updating {} with {}'.format(r, member))
 

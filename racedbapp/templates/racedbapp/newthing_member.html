@@ -1,0 +1,82 @@
+{% extends "racedbapp/base.html" %}
+{% load static %}
+
+{% block title %}
+ New Thing
+  |
+{% endblock title %}
+
+{% block ogmeta %}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="RunWaterloo Results" />
+  <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
+  <meta property="og:image" content="{% static "ogimage.png" %}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <script src="{% static "jquery.filtertable.min.js" %}"></script>
+{% endblock ogmeta %}
+
+{% block content %}
+
+<h3>New Thing {{ year }} <small><a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
+<h4>Score Report for: {{ member_results.athlete }}</h4>
+<h4>Total Points: {{ member_results.total_points|floatformat:"2" }}</h4>
+<h5><strong>Event Points</strong></h5>
+  <div class="row">
+
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <table class="table table-bordered table-condensed table-striped">
+        <tr class="info">
+          <th class="text-center">Event</th>
+          <th>Finish</th>
+          <th class="text-center">Merit</th>
+          <th class="text-center">Ace</th>
+          <th class="text-center">PB</th>
+          <th class="text-center">Classic</th>
+          <th class="text-center">Boost</th>
+          <th class="text-center">Total Points</th>
+          <th class="text-center">Counts</th>
+        </tr>
+        {% for i in member_results.results %}
+          <tr>
+            <td>{{ i.event_race_name }}</td>
+            <td class="text-center">{{ i.pp|floatformat:"0" }}</td>
+            <td class="text-center">{{ i.mp|floatformat:"2" }}</td>
+            <td class="text-center">False</td>
+            <td class="text-center">False</td>
+            <td class="text-center">{{ i.classic}}</td>
+            <td class="text-center">{{ i.boost|floatformat:"1" }}</td>
+            <td class="text-center">{{ i.ep|floatformat:"2" }}</td>
+            <td class="text-center">{{ i.counts }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+<h5><strong>Community Engagement Points</strong></h5>
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <table class="table table-bordered table-condensed table-striped">
+        <tr class="info">
+          <th>Thing</th>
+          <th>Points</th>
+        </tr>
+        <tr>
+          <td>Volunteer</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Another Thing</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Another Thing</td>
+          <td>0</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  </div>
+  
+
+{% endblock content %}
