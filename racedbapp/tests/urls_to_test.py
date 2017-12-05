@@ -1,6 +1,6 @@
 test_urls = (
  # /newthing
-  '/newthing',
+  '/newthing/2017/',
  # /bow
   '/bow/bow-i/',
   '/bow/bow-ii/?phase=after-event-1',
