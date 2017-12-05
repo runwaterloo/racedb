@@ -237,6 +237,11 @@ class Command(BaseCommand):
                         .format(len(teamresults), year, race.name,
                         distance.name, event['id']))
                 logger.info(info)
+
+                # Process PBs
+                info = 'Process PBs'
+                logger.info(info)
+                process_rwpbs(e)
             else:
                 info = ('{} {} {} (Event {}) not part of this series, skipping'
                         .format(year, event['race'], event['distance'], event['id']))
@@ -415,7 +420,6 @@ def process_endurteam(event, result, extra_dict):
     elif distance == 'Marathon':
         et.st7 = athlete
     et.save()
-
     
 def get_member(event, result, membership):
     member = None
@@ -429,3 +433,20 @@ def get_member(event, result, membership):
             if member in membership.excludes['{}-{}'.format(event['id'], result['place'])]:
                 member = None
     return member
+
+def process_rwpbs(event):
+    members = Result.objects.values('rwmember_id').filter(event=event, rwmember__isnull=False).values_list('rwmember_id', flat=True)
+    rwpbs = dict(Rwmember.objects.filter(result__event__distance=event.distance,
+                                         result__event__date__lt=event.date,
+                                         result__rwmember_id__in=members).annotate(rwpb=Min('result__guntime')).values_list('id', 'result__guntime'))
+    future_results = Result.objects.filter(event__date__gte=event.date, event__distance=event.distance, rwmember_id__in=members).order_by('event__date')
+    for i in future_results:
+        i.isrwpb = False
+        if i.rwmember_id in rwpbs:
+            if i.guntime < rwpbs[i.rwmember_id]:
+                rwpbs[i.rwmember_id] = i.guntime
+                i.isrwpb = True
+        else:
+            rwpbs[i.rwmember_id] = i.guntime
+            i.isrwpb = True
+        i.save()
