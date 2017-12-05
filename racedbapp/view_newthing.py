@@ -194,10 +194,11 @@ class Battler:
         self.category_place = 0
 
     def calculate(self, max_events):
-        self.x_best_results = sorted(
+        self.results = sorted(
             self.results,
             key=attrgetter('ep'),
-            reverse=True)[0:max_events]
+            reverse=True)
+        self.x_best_results = self.results[0:max_events]
         for i in self.x_best_results:
             self.participation_points += i.pp
             self.merit_points += i.mp
