@@ -435,10 +435,15 @@ def get_member(event, result, membership):
     return member
 
 def process_rwpbs(event):
+    rwpbs = {}
     members = Result.objects.values('rwmember_id').filter(event=event, rwmember__isnull=False).values_list('rwmember_id', flat=True)
-    rwpbs = dict(Rwmember.objects.filter(result__event__distance=event.distance,
-                                         result__event__date__lt=event.date,
-                                         result__rwmember_id__in=members).annotate(rwpb=Min('result__guntime')).values_list('id', 'result__guntime'))
+    previous_results = Result.objects.filter(event__date__lt=event.date, event__distance=event.distance, rwmember_id__in=members).order_by('event__date')
+    for i in previous_results:
+        if i.rwmember_id in rwpbs:
+            if i.guntime < rwpbs[i.rwmember_id]:
+                rwpbs[i.rwmember_id] = i.guntime
+        else:
+            rwpbs[i.rwmember_id] = i.guntime
     future_results = Result.objects.filter(event__date__gte=event.date, event__distance=event.distance, rwmember_id__in=members).order_by('event__date')
     for i in future_results:
         i.isrwpb = False
