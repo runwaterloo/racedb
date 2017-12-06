@@ -18,9 +18,6 @@ def index(request, year):
     config_dict = dict(Config.objects.values_list('name', 'value'))
     max_events = int(config_dict['newthing_max_events'])
     leaderboard_size = int(config_dict['newthing_leaderboard_size'])
-    classic_multiplier = float(config_dict['newthing_classic_multiplier'])
-    participation_default = int(config_dict['newthing_participation_default'])
-    merit_max = int(config_dict['newthing_merit_max'])
     year = int(year)
     qstring = parse.parse_qs(request.META['QUERY_STRING'])
     qs_filter = get_qs_filter(qstring)
@@ -37,7 +34,7 @@ def index(request, year):
                   gender_place__isnull=False,
                   rwmember__in=included_members).order_by('event__date')
     for i in dbresults:
-        battlers[i.rwmember_id].results.append(BResult(i, gender_finishers, classic_multiplier, participation_default, merit_max))
+        battlers[i.rwmember_id].results.append(BResult(i, gender_finishers, config_dict))
     for v in battlers.values():
         v.calculate(max_events)
     gender_place_dict = {'F': 0, 'M': 0}
@@ -209,21 +206,27 @@ class Battler:
 
 
 class BResult:
-    def __init__(self, result, gender_finishers, classic_multiplier, participation_default, merit_max):
+    def __init__(self, result, gender_finishers, config_dict):
         self.event_id = result.event.id
         self.event_race_name = result.event.race.name
+        self.event_race_slug = result.event.race.slug
         self.event_distance_name = result.event.distance.name
+        self.event_distance_slug = result.event.distance.slug
         self.gender_place = result.gender_place
-        self.pp = participation_default
+        self.gender_finishers = gender_finishers[result.gender][result.event.id]
+        self.pp = int(config_dict['newthing_participation_default'])
         self.mp = ((1 - (self.gender_place
-                   / gender_finishers[result.gender][result.event.id]))
-                   * merit_max)
-        self.classic = False
-        self.boost = 1.0
-        if 'classic' in result.event.race.slug:
-            self.classic = True
-            self.boost = classic_multiplier
-            self.pp = self.pp * classic_multiplier
-            self.mp = self.mp * classic_multiplier
-        self.ep = self.pp + self.mp
+                   / self.gender_finishers))
+                   * int(config_dict['newthing_merit_max']))
+        self.subtotal = self.pp + self.mp
+        total_boost = 0
+        self.ace_boost = self.pb_boost = self.classic_boost = 0
+        if True:
+            self.ace_boost = float(0)
+        if result.isrwpb:
+            self.pb_boost = float(config_dict['newthing_pb_multiplier'])
+        if 'classic' in self.event_race_slug:
+            self.classic_boost = float(config_dict['newthing_classic_multiplier'])
+        self.total_boost = self.ace_boost + self.pb_boost + self.classic_boost
+        self.ep = self.subtotal * (1 + self.total_boost)
         self.counts = False

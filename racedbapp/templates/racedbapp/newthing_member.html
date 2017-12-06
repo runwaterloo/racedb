@@ -18,65 +18,108 @@
 
 {% block content %}
 
-<h3>New Thing {{ year }} <small><a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
-<h4>Score Report for: {{ member_results.athlete }}</h4>
-<h4>Total Points: {{ member_results.total_points|floatformat:"2" }}</h4>
-<h5><strong>Event Points</strong></h5>
-  <div class="row">
-
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <table class="table table-bordered table-condensed table-striped">
-        <tr class="info">
-          <th class="text-center">Event</th>
-          <th>Finish</th>
-          <th class="text-center">Merit</th>
-          <th class="text-center">Ace</th>
-          <th class="text-center">PB</th>
-          <th class="text-center">Classic</th>
-          <th class="text-center">Boost</th>
-          <th class="text-center">Total Points</th>
-          <th class="text-center">Counts</th>
-        </tr>
-        {% for i in member_results.results %}
-          <tr>
-            <td>{{ i.event_race_name }}</td>
-            <td class="text-center">{{ i.pp|floatformat:"0" }}</td>
-            <td class="text-center">{{ i.mp|floatformat:"2" }}</td>
-            <td class="text-center">False</td>
-            <td class="text-center">False</td>
-            <td class="text-center">{{ i.classic}}</td>
-            <td class="text-center">{{ i.boost|floatformat:"1" }}</td>
-            <td class="text-center">{{ i.ep|floatformat:"2" }}</td>
-            <td class="text-center">{{ i.counts }}</td>
-          </tr>
-        {% endfor %}
-      </table>
+<div class="row">
+  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+    <div style="padding-top: 20px; padding-bottom: 20px">
+      <div class="profile-outer">
+        <div class="profile-inner">
+          <img src="{{ member_results.photourl }}">
+        </div>
+      </div>
     </div>
   </div>
-<h5><strong>Community Engagement Points</strong></h5>
-  <div class="row">
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <table class="table table-bordered table-condensed table-striped">
-        <tr class="info">
-          <th>Thing</th>
-          <th>Points</th>
-        </tr>
-        <tr>
-          <td>Volunteer</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <td>Another Thing</td>
-          <td>0</td>
-        </tr>
-        <tr>
-          <td>Another Thing</td>
-          <td>0</td>
-        </tr>
-      </table>
-    </div>
+  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+    <h3 class="text-center">New Thing {{ year }} <small><a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
+    <h4 class="text-center">Score Report for: <a href="/member/{{ member_results.slug }}/">{{ member_results.athlete }}</a></h4>
+    <table class="table table-bordered table-condensed">
+      <tr>
+        <td class="text-center"><h4>Total Points</h4></td>
+        <td class="text-center"><h4><strong>{{ member_results.total_points|floatformat:"2" }}</strong></h4></td>
+      </tr>
+      <tr>
+        <td class="text-center"><h4>Event Finishes</h4></td>
+        <td class="text-center"><h4>{{ member_results.results|length }}</h4></td>
+      </tr>
+      <tr>
+        <td class="text-center"><h4>Overall Place</h4></td>
+        <td class="text-center"><h4>X / Y</h4></td>
+      </tr>
+      <tr>
+        <td class="text-center"><h4>Gender Place</h4></td>
+        <td class="text-center"><h4>X / Y</h4></td>
+      </tr>
+      <tr>
+        <td class="text-center"><h4>Category Place</h4></td>
+        <td class="text-center"><h4>X / Y</h4></td>
+      </tr>
+      <tr>
+        <td class="text-center"><h4>Subcategory Place</h4></td>
+        <td class="text-center"><h4>X / Y</h4></td>
+      </tr>
+    </table>
   </div>
-  </div>
-  
+</div>
 
+
+<div class="row">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+    <table class="table table-bordered table-condensed table-striped">
+      <tr>
+        <th colspan="5"></th>
+        <th class="info text-center"colspan="3">Boosters</th>
+        <th colspan="3"></th>
+      </tr>
+      <tr class="info">
+        <th class="text-center">Event</th>
+        <th class="text-center">GP</th>
+        <th class="text-center">Finish</th>
+        <th class="text-center">Merit</th>
+        <th class="text-center">Subtotal</th>
+        <th class="text-center">Ace</th>
+        <th class="text-center">PB</th>
+        <th class="text-center">Classic</th>
+        <th class="text-center">Boost</th>
+        <th class="text-center">Points</th>
+        <th class="text-center">Counts</th>
+      </tr>
+      {% for i in member_results.results %}
+        <tr>
+          <td><a href="/event/{{ year }}/{{ i.event_race_slug }}/{{ i.event_distance_slug }}/">{{ i.event_race_name }}</a></td>
+          <td class="text-center">{{ i.gender_place }}/{{ i.gender_finishers }}</td>
+          <td class="text-center">{{ i.pp|floatformat:"0" }}</td>
+          <td class="text-center">{{ i.mp|floatformat:"2" }}</td>
+          <td class="text-center">{{ i.subtotal|floatformat:"2" }}</td>
+          <td class="text-center">
+            {% if i.ace_boost > 0 %}
+              {% widthratio i.ace_boost 1 100 %}%
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if i.pb_boost > 0 %}
+              {% widthratio i.pb_boost 1 100 %}%
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if i.classic_boost > 0 %}
+              {% widthratio i.classic_boost 1 100 %}%
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if i.total_boost > 0 %}
+              {% widthratio i.total_boost 1 100 %}%
+            {% endif %}
+          </td>
+          <td class="text-center">{{ i.ep|floatformat:"2" }}</td>
+          <td class="text-center">
+            {% if i.counts %}
+              <span class="glyphicon glyphicon-ok success" style="color:green" aria-hidden="true"></span>
+            {% else %}
+              <span class="glyphicon glyphicon-remove" style="color:red" aria-hidden="true"></span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
 {% endblock content %}
