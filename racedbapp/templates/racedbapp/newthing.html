@@ -67,23 +67,21 @@
           <th class="text-center">GP</th>
           <th class="text-center">Cat</th>
           <th class="text-center">CP</th>
-          <th class="text-center">P</th>
-          <th class="text-center">M</th>
-          <th class="text-center">V</th>
+          <th class="text-center">SubCat</th>
+          <th class="text-center">SCP</th>
           <th>City</th>
         </tr>
         {% for s in standings %}
           <tr>
             <td class="text-center">{{ forloop.counter }}</td>
             <td><a href="/member/{{ s.slug }}/">{{ s.athlete}}</a></td>
-            <td class="text-center"><strong>{{ s.total_points|floatformat:"0" }}</strong></td>
+            <td class="text-center"><a href="?member={{ s.slug }}" title="{{ s.total_points|floatformat:"2" }}">{{ s.total_points|floatformat:"0" }}<a></td>
             <td class="text-center">{{ s.gender }}</td>
             <td class="text-center">{{ s.gender_place }}</td>
             <td class="text-center">{{ s.category }}</td>
             <td class="text-center">{{ s.category_place }}</td>
-            <td class="text-center">{{ s.participation_points|floatformat:"0" }}</td>
-            <td class="text-center">{{ s.merit_points|floatformat:"0" }}</td>
-            <td class="text-center">{{ s.volunteer_points|floatformat:"0" }}</td>
+            <td class="text-center">{{ s.subcategory }}</td>
+            <td class="text-center">{{ s.subcategory_place }}</td>
             <td>{{ s.city }}</td>
           </tr>
         {% endfor %}
