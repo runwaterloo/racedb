@@ -28,6 +28,7 @@ admin.site.register(Result, ResultAdmin)
 admin.site.register(Rwmembertag)
 
 class RwmemberAdmin(admin.ModelAdmin):
+    filter_horizontal = ('tags',)
     list_display = ('id', 'name', 'gender', 'city', 'joindate', 'active', 'photourl')
     search_fields = ('name',)
     ordering = ('name',)
