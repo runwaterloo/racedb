@@ -20,15 +20,6 @@
 
 <div class="row">
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-    <div style="padding-top: 20px; padding-bottom: 20px">
-      <div class="profile-outer">
-        <div class="profile-inner">
-          <img src="{{ member_results.photourl }}">
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
     <h3 class="text-center">New Thing {{ year }} <small><a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
     <h4 class="text-center">Score Report for: <a href="/member/{{ member_results.slug }}/">{{ member_results.athlete }}</a></h4>
     <table class="table table-bordered table-condensed">
@@ -41,19 +32,11 @@
         <td class="text-center"><h4>{{ member_results.results|length }}</h4></td>
       </tr>
       <tr>
-        <td class="text-center"><h4>Overall Place</h4></td>
-        <td class="text-center"><h4>X / Y</h4></td>
-      </tr>
-      <tr>
         <td class="text-center"><h4>Gender Place</h4></td>
         <td class="text-center"><h4>X / Y</h4></td>
       </tr>
       <tr>
         <td class="text-center"><h4>Category Place</h4></td>
-        <td class="text-center"><h4>X / Y</h4></td>
-      </tr>
-      <tr>
-        <td class="text-center"><h4>Subcategory Place</h4></td>
         <td class="text-center"><h4>X / Y</h4></td>
       </tr>
     </table>
