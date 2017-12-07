@@ -76,7 +76,7 @@
         <th class="text-center">Merit</th>
         <th class="text-center">Subtotal</th>
         <th class="text-center">Ace</th>
-        <th class="text-center">PB</th>
+        <th class="text-center">RWPB</th>
         <th class="text-center">Classic</th>
         <th class="text-center">Boost</th>
         <th class="text-center">Points</th>
@@ -84,7 +84,7 @@
       </tr>
       {% for i in member_results.results %}
         <tr>
-          <td><a href="/event/{{ year }}/{{ i.event_race_slug }}/{{ i.event_distance_slug }}/">{{ i.event_race_name }}</a></td>
+          <td><a href="/event/{{ year }}/{{ i.event_race_slug }}/{{ i.event_distance_slug }}/">{{ i.event_race_name }} {{ i.event_distance_name }}</a></td>
           <td class="text-center">{{ i.gender_place }}/{{ i.gender_finishers }}</td>
           <td class="text-center">{{ i.pp|floatformat:"0" }}</td>
           <td class="text-center">{{ i.mp|floatformat:"2" }}</td>

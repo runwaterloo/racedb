@@ -183,9 +183,6 @@ class Battler:
         self.city = member.city
         self.results = []
         self.x_best_results = []
-        self.participation_points = 0
-        self.merit_points = 0
-        self.volunteer_points = 0
         self.total_points = 0
         self.gender_place = 0
         self.category_place = 0
@@ -197,12 +194,8 @@ class Battler:
             reverse=True)
         self.x_best_results = self.results[0:max_events]
         for i in self.x_best_results:
-            self.participation_points += i.pp
-            self.merit_points += i.mp
+            self.total_points += i.ep
             i.counts = True
-        self.total_points = (self.participation_points
-                             + self.merit_points
-                             + self.volunteer_points)
 
 
 class BResult:
