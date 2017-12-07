@@ -64,21 +64,12 @@
 <div class="row">
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
     <table class="table table-bordered table-condensed table-striped">
-      <tr>
-        <th colspan="5"></th>
-        <th class="info text-center"colspan="3">Boosters</th>
-        <th colspan="3"></th>
-      </tr>
       <tr class="info">
         <th class="text-center">Event</th>
         <th class="text-center">GP</th>
         <th class="text-center">Finish</th>
         <th class="text-center">Merit</th>
-        <th class="text-center">Subtotal</th>
-        <th class="text-center">Ace</th>
-        <th class="text-center">RWPB</th>
-        <th class="text-center">Classic</th>
-        <th class="text-center">Boost</th>
+        <th class="text-center">Boosters</th>
         <th class="text-center">Points</th>
         <th class="text-center">Counts</th>
       </tr>
@@ -88,25 +79,15 @@
           <td class="text-center">{{ i.gender_place }}/{{ i.gender_finishers }}</td>
           <td class="text-center">{{ i.pp|floatformat:"0" }}</td>
           <td class="text-center">{{ i.mp|floatformat:"2" }}</td>
-          <td class="text-center">{{ i.subtotal|floatformat:"2" }}</td>
           <td class="text-center">
             {% if i.ace_boost > 0 %}
-              {% widthratio i.ace_boost 1 100 %}%
+              A
             {% endif %}
-          </td>
-          <td class="text-center">
             {% if i.pb_boost > 0 %}
-              {% widthratio i.pb_boost 1 100 %}%
+              P
             {% endif %}
-          </td>
-          <td class="text-center">
             {% if i.classic_boost > 0 %}
-              {% widthratio i.classic_boost 1 100 %}%
-            {% endif %}
-          </td>
-          <td class="text-center">
-            {% if i.total_boost > 0 %}
-              {% widthratio i.total_boost 1 100 %}%
+              C
             {% endif %}
           </td>
           <td class="text-center">{{ i.ep|floatformat:"2" }}</td>
@@ -122,4 +103,10 @@
     </table>
   </div>
 </div>
+<p>
+<strong>Boosters</strong><br>
+A = Ace ({% widthratio boosters.ace_boost 1 100 %}%) - Repeating a race from last year (any distance)<br>
+P = RWPB ({% widthratio boosters.pb_boost 1 100 %}%) - RunWaterloo PB for the distance<br>
+C = Classic ({% widthratio boosters.pb_boost 1 100 %}%) - One of RunWaterloo's Classic races
+</p>
 {% endblock content %}

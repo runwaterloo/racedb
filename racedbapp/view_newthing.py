@@ -17,6 +17,7 @@ from .models import (
 def index(request, year):
     config_dict = dict(Config.objects.values_list('name', 'value'))
     max_events = int(config_dict['newthing_max_events'])
+    max_endurrun = int(config_dict['newthing_max_endurrun'])
     leaderboard_size = int(config_dict['newthing_leaderboard_size'])
     year = int(year)
     qstring = parse.parse_qs(request.META['QUERY_STRING'])
@@ -26,6 +27,7 @@ def index(request, year):
     gender_finishers = get_gender_finishers(first_day, last_day)
     included_members = Rwmember.objects.filter(active=True)
     qs_member = get_qs_member(qstring, included_members)
+    previous_races = get_previous_races(year, included_members)
     battlers = {}
     for i in included_members:
         battlers[i.id] = Battler(i, year)
@@ -34,9 +36,9 @@ def index(request, year):
                   gender_place__isnull=False,
                   rwmember__in=included_members).order_by('event__date')
     for i in dbresults:
-        battlers[i.rwmember_id].results.append(BResult(i, gender_finishers, config_dict))
+        battlers[i.rwmember_id].results.append(BResult(i, gender_finishers, config_dict, previous_races))
     for v in battlers.values():
-        v.calculate(max_events)
+        v.calculate(max_events, max_endurrun)
     gender_place_dict = {'F': 0, 'M': 0}
     category_place_dict = {}
     leaders = {'F40-': [],
@@ -75,8 +77,12 @@ def index(request, year):
     leaderboard['Female Over 40'] = leaders['F40+']
     leaderboard['Male Over 40'] = leaders['M40+']
     standings_filter = get_standings_filter(qs_filter, year)
+    boosters = {'ace_boost': config_dict['newthing_ace_multiplier'],
+                'pb_boost': config_dict['newthing_pb_multiplier'],
+                'classic_boost': config_dict['newthing_classic_multiplier']}
     if qs_member:
         context = {
+                   'boosters' : boosters,
                    'qs_member': qs_member,
                    'member_results': member_results,
                    'year': year
@@ -134,6 +140,21 @@ def get_standings_filter(qs_filter, year):
     return standings_filter
 
 
+def get_previous_races(year, included_members):
+    previous_year = year - 1
+    first_day = datetime(previous_year, 1, 1).date()
+    last_day = datetime(previous_year, 12, 31).date()
+    previous_races = {}
+    results = Result.objects.filter(event__date__range=(first_day, last_day),
+                                    rwmember__isnull=False)
+    for i in results:
+        if i.rwmember_id in previous_races:
+            previous_races[i.rwmember_id].append(i.event.race)
+        else:
+            previous_races[i.rwmember_id] = [i.event.race,]
+    return previous_races
+
+
 def get_gender_finishers(first_day, last_day):
     gender_finishers = {}
     for i in ('F', 'M'):
@@ -148,6 +169,7 @@ def get_gender_finishers(first_day, last_day):
         gender_finishers[i] = thisdict
     return gender_finishers
 
+
 def get_qs_member(qstring, included_members):
     member = False
     if 'member' in qstring:
@@ -157,7 +179,6 @@ def get_qs_member(qstring, included_members):
         else:
             raise Http404('Member not found')
     return member
-
 
 
 class Battler:
@@ -187,19 +208,33 @@ class Battler:
         self.gender_place = 0
         self.category_place = 0
 
-    def calculate(self, max_events):
+    def calculate(self, max_events, max_endurrun):
         self.results = sorted(
             self.results,
             key=attrgetter('ep'),
             reverse=True)
-        self.x_best_results = self.results[0:max_events]
+        self.x_best_results = []
+        endurrun_count = 0
+        for i in self.results:
+            if len(self.x_best_results) == max_events:
+                break
+            if 'endurrun' in i.event_race_slug:
+                if endurrun_count < max_endurrun:
+                    self.x_best_results.append(i)
+                    endurrun_count += 1
+            else:
+                self.x_best_results.append(i)
         for i in self.x_best_results:
             self.total_points += i.ep
             i.counts = True
+        self.results = sorted(
+            self.results,
+            key=attrgetter('counts', 'ep'),
+            reverse=True)
 
 
 class BResult:
-    def __init__(self, result, gender_finishers, config_dict):
+    def __init__(self, result, gender_finishers, config_dict, previous_races):
         self.event_id = result.event.id
         self.event_race_name = result.event.race.name
         self.event_race_slug = result.event.race.slug
@@ -211,15 +246,15 @@ class BResult:
         self.mp = ((1 - (self.gender_place
                    / self.gender_finishers))
                    * int(config_dict['newthing_merit_max']))
-        self.subtotal = self.pp + self.mp
         total_boost = 0
         self.ace_boost = self.pb_boost = self.classic_boost = 0
-        if True:
-            self.ace_boost = float(0)
+        if result.rwmember_id in previous_races:
+            if result.event.race in previous_races[result.rwmember_id]:
+                self.ace_boost = float(config_dict['newthing_ace_multiplier'])
         if result.isrwpb:
             self.pb_boost = float(config_dict['newthing_pb_multiplier'])
         if 'classic' in self.event_race_slug:
             self.classic_boost = float(config_dict['newthing_classic_multiplier'])
         self.total_boost = self.ace_boost + self.pb_boost + self.classic_boost
-        self.ep = self.subtotal * (1 + self.total_boost)
+        self.ep = (self.pp + self.mp) * (1 + self.total_boost)
         self.counts = False

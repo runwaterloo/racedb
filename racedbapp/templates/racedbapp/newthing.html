@@ -36,7 +36,7 @@
             <tr>
               <td class="text-center">{{ forloop.counter }}</td>
               <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
-              <td>{{ i.total_points|floatformat:"0" }}</td>
+              <td><a href="?member={{ i.slug }}" title="{{ i.total_points|floatformat:"2" }}">{{ i.total_points|floatformat:"0" }}<a></td>
             </tr>
           {% endfor %}
         </table>
