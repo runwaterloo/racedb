@@ -128,7 +128,7 @@ class Teamcategory(models.Model):
 class Event(models.Model):
     race = models.ForeignKey(Race)
     distance = models.ForeignKey(Distance)
-    date = models.DateField()
+    date = models.DateField(db_index=True)
     city = models.CharField(max_length=50)
     resultsurl = models.URLField(max_length=500, null=True, blank=True)
     flickrsetid = models.BigIntegerField(default=None, null=True, blank=True)
