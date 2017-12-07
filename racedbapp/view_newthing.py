@@ -145,8 +145,9 @@ def get_previous_races(year, included_members):
     first_day = datetime(previous_year, 1, 1).date()
     last_day = datetime(previous_year, 12, 31).date()
     previous_races = {}
-    results = Result.objects.filter(event__date__range=(first_day, last_day),
-                                    rwmember__isnull=False)
+    results = Result.objects.select_related().filter(
+        event__date__range=(first_day, last_day),
+        rwmember_id__in=included_members)
     for i in results:
         if i.rwmember_id in previous_races:
             previous_races[i.rwmember_id].append(i.event.race)
