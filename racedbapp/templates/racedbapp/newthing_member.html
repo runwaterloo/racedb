@@ -1,5 +1,6 @@
 {% extends "racedbapp/base.html" %}
 {% load static %}
+{% load racedbapp_extras %}
 
 {% block title %}
  New Thing
@@ -39,6 +40,7 @@
     <table class="table table-bordered table-condensed table-striped">
       <tr class="info">
         <th class="text-center">Event</th>
+        <th class="text-center">Gun Time</th>
         <th class="text-center">GP</th>
         <th class="text-center">Finish</th>
         <th class="text-center">Merit</th>
@@ -49,6 +51,7 @@
       {% for i in member_results.results %}
         <tr>
           <td><a href="/event/{{ year }}/{{ i.event_race_slug }}/{{ i.event_distance_slug }}/">{{ i.event_race_name }} {{ i.event_distance_name }}</a></td>
+          <td class="text-center">{{ i.guntime|get_time }}</td>
           <td class="text-center">{{ i.gender_place }}/{{ i.gender_finishers }}</td>
           <td class="text-center">{{ i.pp|floatformat:"0" }}</td>
           <td class="text-center">{{ i.mp|floatformat:"2" }}</td>

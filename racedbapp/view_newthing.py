@@ -241,6 +241,7 @@ class BResult:
         self.event_race_slug = result.event.race.slug
         self.event_distance_name = result.event.distance.name
         self.event_distance_slug = result.event.distance.slug
+        self.guntime = result.guntime
         self.gender_place = result.gender_place
         self.gender_finishers = gender_finishers[result.gender][result.event.id]
         self.pp = int(config_dict['newthing_participation_default'])
