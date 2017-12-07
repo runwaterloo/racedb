@@ -204,7 +204,6 @@ class Battler:
         self.category = self.gender + self.category_suffix
         self.city = member.city
         self.results = []
-        self.x_best_results = []
         self.total_points = 0
         self.gender_place = 0
         self.category_place = 0
@@ -214,20 +213,19 @@ class Battler:
             self.results,
             key=attrgetter('ep'),
             reverse=True)
-        self.x_best_results = []
-        endurrun_count = 0
+        events_count = endurrun_count = 0
         for i in self.results:
-            if len(self.x_best_results) == max_events:
+            if events_count == max_events:
                 break
-            if 'endurrun' in i.event_race_slug:
-                if endurrun_count < max_endurrun:
-                    self.x_best_results.append(i)
-                    endurrun_count += 1
             else:
-                self.x_best_results.append(i)
-        for i in self.x_best_results:
-            self.total_points += i.ep
-            i.counts = True
+                if 'endurrun' in i.event_race_slug:
+                    if endurrun_count == max_endurrun:
+                        continue
+                    else:
+                        endurrun_count += 1
+                events_count += 1
+                i.counts = True
+                self.total_points += i.ep
         self.results = sorted(
             self.results,
             key=attrgetter('counts', 'ep'),
