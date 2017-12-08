@@ -185,6 +185,7 @@ def get_qs_member(qstring, included_members):
 class Battler:
     def __init__(self, member, year):
         self.member_id = member.id
+        self.active = member.active
         self.athlete = member.name
         self.slug = member.slug
         self.gender = member.gender
