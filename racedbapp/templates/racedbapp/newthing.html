@@ -32,60 +32,87 @@
           </div>
         </div>
         <table class=table>
-          {% for i in v %}
-            <tr>
-              <td class="text-center">{{ forloop.counter }}</td>
-              <td><a href="/member/{{ i.slug }}/">{{ i.athlete}}</a></td>
-              <td><a href="?member={{ i.slug }}" title="{{ i.total_points|floatformat:"2" }}">{{ i.total_points|floatformat:"0" }}<a></td>
-            </tr>
-          {% endfor %}
+          <thead>
+            {% for i in v %}
+              <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td>
+                {% if i.active %}
+                  <a href="/member/{{ i.slug }}/">{{ i.athlete}}</a>
+                {% else %}
+                  {{ i.athlete}}
+                {% endif %}
+                </td>
+                <td><a href="?member={{ i.slug }}" title="{{ i.total_points|floatformat:"2" }}">{{ i.total_points|floatformat:"0" }}<a></td>
+              </tr>
+            {% endfor %}
+          </thead>
         </table>
       </div>
     {% endfor %}
   </div>
 
-  <div class="row">
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-              Filter: <select onchange="location = this.options[this.selectedIndex].value;">
-              <option>{{ standings_filter.current }}</option>
-              {% for c in standings_filter.choices %}
-                <option value="{{ c.url }}">{{ c.name }}</option>
-              {% endfor %}
-              </select>
-              <p></p>
+<div class="row">
+  <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+    <div class="form-group">
+      <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search these results..." size="12">
     </div>
-    </div>
+  </div>
+  <div class="col-xs-6 col-sm-4 col-md-3 col-lg-2">
+    Filter:
+    <select onchange="location = this.options[this.selectedIndex].value;">
+      <option>{{ standings_filter.current }}</option>
+        {% for c in standings_filter.choices %}
+          <option value="{{ c.url }}">{{ c.name }}</option>
+        {% endfor %}
+    </select>
+  </div>
+</div>
+
   <div class="row">
 
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <table class="table table-bordered table-condensed table-striped">
-        <tr class="info">
-          <th class="text-center">#</th>
-          <th>Athlete</th>
-          <th class="text-center">Total</th>
-          <th class="text-center">G</th>
-          <th class="text-center">GP</th>
-          <th class="text-center">Cat</th>
-          <th class="text-center">CP</th>
-          <th class="text-center">SubCat</th>
-          <th class="text-center">SCP</th>
-          <th>City</th>
-        </tr>
-        {% for s in standings %}
-          <tr>
-            <td class="text-center">{{ forloop.counter }}</td>
-            <td><a href="/member/{{ s.slug }}/">{{ s.athlete}}</a></td>
-            <td class="text-center"><a href="?member={{ s.slug }}" title="{{ s.total_points|floatformat:"2" }}">{{ s.total_points|floatformat:"0" }}<a></td>
-            <td class="text-center">{{ s.gender }}</td>
-            <td class="text-center">{{ s.gender_place }}</td>
-            <td class="text-center">{{ s.category }}</td>
-            <td class="text-center">{{ s.category_place }}</td>
-            <td class="text-center">{{ s.subcategory }}</td>
-            <td class="text-center">{{ s.subcategory_place }}</td>
-            <td>{{ s.city }}</td>
+        <thead>
+          <tr class="info">
+            <th class="text-center">#</th>
+            <th>Athlete</th>
+            <th class="text-center">Total</th>
+            <th class="text-center">G</th>
+            <th class="text-center">GP</th>
+            <th class="text-center">Cat</th>
+            <th class="text-center">CP</th>
+            <th class="text-center">SubCat</th>
+            <th class="text-center">SCP</th>
+            <th>City</th>
           </tr>
-        {% endfor %}
+        </thead>
+        <tbody>
+          {% for s in standings %}
+            <tr>
+              <td class="text-center">{{ forloop.counter }}</td>
+              <td>
+                {% if s.active %}
+                  <a href="/member/{{ s.slug }}/">{{ s.athlete}}</a>
+                {% else %}
+                  {{ s.athlete}}
+                {% endif %}
+              </td>
+              <td class="text-center"><a href="?member={{ s.slug }}" title="{{ s.total_points|floatformat:"2" }}">{{ s.total_points|floatformat:"0" }}<a></td>
+              <td class="text-center">{{ s.gender }}</td>
+              <td class="text-center">{{ s.gender_place }}</td>
+              <td class="text-center">{{ s.category }}</td>
+              <td class="text-center">{{ s.category_place }}</td>
+              <td class="text-center">{{ s.subcategory }}</td>
+              <td class="text-center">{{ s.subcategory_place }}</td>
+              <td>{{ s.city }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
       </table>
+      <script>
+        $('table').filterTable({inputSelector: '#input-filter'});
+      </script>
     </div>
   </div>
 

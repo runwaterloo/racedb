@@ -22,15 +22,21 @@
 <div class="row">
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
     <h3>New Thing {{ year }} <small><a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
-    <h4>Score Report for: <a href="/member/{{ member_results.slug }}/">{{ member_results.athlete }}</a></h4>
+    <h4>Score Report for:
+      {% if member_results.active %}
+        <a href="/member/{{ member_results.slug }}/">{{ member_results.athlete }}</a>
+      {% else %}
+        {{ member_results.athlete }}
+      {% endif %}
+    </h4>
     <h5>Total Points:
     <strong>{{ member_results.total_points|floatformat:"2" }}</strong>
     &nbsp;|&nbsp;Event Finishes:
     {{ member_results.results|length }}</h5>
     <h5>Gender Place:
-    X / Y
+    {{ member_results.gender_place }}
     &nbsp;|&nbsp;Category Place:
-    X / Y</h5>
+    {{ member_results.category_place }}</h5>
   </div>
 </div>
 
