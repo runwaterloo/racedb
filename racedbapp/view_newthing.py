@@ -77,7 +77,7 @@ def index(request, year):
     leaderboard['Female Over 40'] = leaders['F40+']
     leaderboard['Male Over 40'] = leaders['M40+']
     standings_filter = get_standings_filter(qs_filter, year)
-    boosters = {'ace_boost': config_dict['newthing_ace_multiplier'],
+    boosters = {'ditto_boost': config_dict['newthing_ditto_multiplier'],
                 'pb_boost': config_dict['newthing_pb_multiplier'],
                 'classic_boost': config_dict['newthing_classic_multiplier']}
     if qs_member:
@@ -248,14 +248,14 @@ class BResult:
                    / self.gender_finishers))
                    * int(config_dict['newthing_merit_max']))
         total_boost = 0
-        self.ace_boost = self.pb_boost = self.classic_boost = 0
+        self.ditto_boost = self.pb_boost = self.classic_boost = 0
         if result.rwmember_id in previous_races:
             if result.event.race in previous_races[result.rwmember_id]:
-                self.ace_boost = float(config_dict['newthing_ace_multiplier'])
+                self.ditto_boost = float(config_dict['newthing_ditto_multiplier'])
         if result.isrwpb:
             self.pb_boost = float(config_dict['newthing_pb_multiplier'])
         if 'classic' in self.event_race_slug:
             self.classic_boost = float(config_dict['newthing_classic_multiplier'])
-        self.total_boost = self.ace_boost + self.pb_boost + self.classic_boost
+        self.total_boost = self.ditto_boost + self.pb_boost + self.classic_boost
         self.ep = (self.pp + self.mp) * (1 + self.total_boost)
         self.counts = False
