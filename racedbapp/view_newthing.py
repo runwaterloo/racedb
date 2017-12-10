@@ -236,7 +236,7 @@ class Battler:
 class BResult:
     def __init__(self, result, gender_finishers, config_dict, previous_races):
         self.event_id = result.event.id
-        self.event_race_name = result.event.race.name
+        self.event_race_short_name = result.event.race.shortname
         self.event_race_slug = result.event.race.slug
         self.event_distance_name = result.event.distance.name
         self.event_distance_slug = result.event.distance.slug
