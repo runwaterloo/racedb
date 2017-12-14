@@ -69,10 +69,10 @@
                 <span class="glyphicon glyphicon-time" title="RunWaterloo PB {% widthratio boosters.pb_boost 1 100 %}%" style="color:blue" aria-hidden="true"></span>
             {% endif %}
             {% if i.classic_boost > 0 %}
-                <span class="glyphicon glyphicon-asterisk" title="Classic Event" {% widthratio boosters.classic_boost 1 100 %}%" style="color:orange" aria-hidden="true"></span>
+                <span class="glyphicon glyphicon-asterisk" title="Classic Event {% widthratio boosters.classic_boost 1 100 %}%" style="color:orange" aria-hidden="true"></span>
             {% endif %}
           </td>
-          <td class="text-center">{{ i.ep|floatformat:"2" }}</td>
+          <td class="text-center"><strong>{{ i.ep|floatformat:"2" }}</strong></td>
           <td class="text-center">
             {% if i.counts %}
               <span class="glyphicon glyphicon-ok" style="color:green" aria-hidden="true"></span>
@@ -89,6 +89,6 @@
 <strong>Boosters</strong><br>
 <span class="glyphicon glyphicon-repeat" style="color:maroon" aria-hidden="true"></span> = Ditto ({% widthratio boosters.ditto_boost 1 100 %}%) - Repeating a race from last year (any distance)<br>
 <span class="glyphicon glyphicon-time" style="color:blue" aria-hidden="true"></span> = PB ({% widthratio boosters.pb_boost 1 100 %}%) - RunWaterloo PB for the distance<br>
-<span class="glyphicon glyphicon-asterisk" style="color:orange" aria-hidden="true"></span> = Classic ({% widthratio boosters.pb_boost 1 100 %}%) - Finishing one of RunWaterloo's Classic races
+<span class="glyphicon glyphicon-asterisk" style="color:orange" aria-hidden="true"></span> = Classic ({% widthratio boosters.classic_boost 1 100 %}%) - Finishing one of RunWaterloo's Classic races
 </p>
 {% endblock content %}
