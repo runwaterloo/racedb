@@ -15,10 +15,22 @@ from .models import (
 
 
 def index(request, year):
-    config_dict = dict(Config.objects.values_list('name', 'value'))
+    config_values = (
+        'newthing_classic_points',
+        'newthing_ditto_points',
+        'newthing_leaderboard_size',
+        'newthing_max_endurrun',
+        'newthing_max_events',
+        'newthing_merit_max',
+        'newthing_participation_default',
+        'newthing_pb_points',
+        'nophoto_url',
+        )
+    config_dict = dict(Config.objects.values_list('name', 'value').filter(name__in=config_values))
     max_events = int(config_dict['newthing_max_events'])
     max_endurrun = int(config_dict['newthing_max_endurrun'])
     leaderboard_size = int(config_dict['newthing_leaderboard_size'])
+    nophoto_url = config_dict['nophoto_url']
     year = int(year)
     qstring = parse.parse_qs(request.META['QUERY_STRING'])
     qs_filter = get_qs_filter(qstring)
@@ -30,7 +42,7 @@ def index(request, year):
     previous_races = get_previous_races(year, included_members)
     battlers = {}
     for i in included_members:
-        battlers[i.id] = Battler(i, year)
+        battlers[i.id] = Battler(i, year, nophoto_url)
     dbresults = Result.objects.select_related().filter(
                   event__date__range=(first_day, last_day),
                   gender_place__isnull=False,
@@ -77,12 +89,9 @@ def index(request, year):
     leaderboard['Female Over 40'] = leaders['F40+']
     leaderboard['Male Over 40'] = leaders['M40+']
     standings_filter = get_standings_filter(qs_filter, year)
-    boosters = {'ditto_boost': config_dict['newthing_ditto_multiplier'],
-                'pb_boost': config_dict['newthing_pb_multiplier'],
-                'classic_boost': config_dict['newthing_classic_multiplier']}
     if qs_member:
         context = {
-                   'boosters' : boosters,
+                   'config_dict' : config_dict,
                    'qs_member': qs_member,
                    'member_results': member_results,
                    'year': year
@@ -183,7 +192,7 @@ def get_qs_member(qstring, included_members):
 
 
 class Battler:
-    def __init__(self, member, year):
+    def __init__(self, member, year, nophoto_url):
         self.member_id = member.id
         self.active = member.active
         self.athlete = member.name
@@ -193,10 +202,7 @@ class Battler:
         if member.photourl:
             self.photourl = member.photourl
         else:
-            if self.gender == 'F':
-                self.photourl = 'http://www.supercoloring.com/sites/default/files/silhouettes/2015/05/jogger-grey-silhouette.svg'
-            else:
-                self.photourl = 'http://www.supercoloring.com/sites/default/files/silhouettes/2015/05/jogging-grey-silhouette.svg'
+            self.photourl = nophoto_url
         self.ismaster = False
         self.category_suffix = '40-'
         if self.age >= 40:
@@ -243,7 +249,6 @@ class BResult:
         self.guntime = result.guntime
         self.gender_place = result.gender_place
         self.gender_finishers = gender_finishers[result.gender][result.event.id]
-        self.pp = int(config_dict['newthing_participation_default'])
         self.mp = ((1 - (self.gender_place
                    / self.gender_finishers))
                    * int(config_dict['newthing_merit_max']))
@@ -251,11 +256,16 @@ class BResult:
         self.ditto_boost = self.pb_boost = self.classic_boost = 0
         if result.rwmember_id in previous_races:
             if result.event.race in previous_races[result.rwmember_id]:
-                self.ditto_boost = float(config_dict['newthing_ditto_multiplier'])
+                self.ditto_boost = int(config_dict['newthing_ditto_points'])
         if result.isrwpb:
-            self.pb_boost = float(config_dict['newthing_pb_multiplier'])
+            self.pb_boost = int(config_dict['newthing_pb_points'])
         if 'classic' in self.event_race_slug:
-            self.classic_boost = float(config_dict['newthing_classic_multiplier'])
-        self.total_boost = self.ditto_boost + self.pb_boost + self.classic_boost
-        self.ep = (self.pp + self.mp) * (1 + self.total_boost)
+            self.classic_boost = int(config_dict['newthing_classic_points'])
+        self.ep = sum([
+            int(config_dict['newthing_participation_default']),
+            self.mp,
+            self.ditto_boost,
+            self.pb_boost,
+            self.classic_boost,
+            ])
         self.counts = False

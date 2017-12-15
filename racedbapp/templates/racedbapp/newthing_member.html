@@ -21,7 +21,14 @@
 
 <div class="row">
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-    <h3>New Thing {{ year }} <small><a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
+    <h3>
+      <a href="/newthing/{{ year }}/">New Thing {{ year }}</a>
+      <small>
+        <a href="http://www.runwaterloo.com" target="_blank">
+          <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+        </a>
+      </small>
+    </h3>
     <h4>Score Report for:
       {% if member_results.active %}
         <a href="/member/{{ member_results.slug }}/">{{ member_results.athlete }}</a>
@@ -47,9 +54,8 @@
       <tr class="info">
         <th class="text-center">Event</th>
         <th class="text-center">Time</th>
-        <th class="text-center">GP</th>
-        <th class="text-center">Finish</th>
-        <th class="text-center">Merit</th>
+        <th class="text-center" title="Gender Place">GP</th>
+        <th class="text-center" title="Gender Percentile">GPCTL</th>
         <th class="text-center">Boosters</th>
         <th class="text-center">Points</th>
         <th class="text-center">Counts</th>
@@ -59,17 +65,16 @@
           <td><a href="/event/{{ year }}/{{ i.event_race_slug }}/{{ i.event_distance_slug }}/">{{ i.event_race_short_name }} {{ i.event_distance_name }}</a></td>
           <td class="text-center">{{ i.guntime|get_time }}</td>
           <td class="text-center">{{ i.gender_place }}/{{ i.gender_finishers }}</td>
-          <td class="text-center">{{ i.pp|floatformat:"0" }}</td>
           <td class="text-center">{{ i.mp|floatformat:"2" }}</td>
           <td class="text-center">
-            {% if i.ditto_boost > 0 %}
-                <span class="glyphicon glyphicon-repeat" title="Ditto {% widthratio boosters.ditto_boost 1 100 %}%" style="color:maroon" aria-hidden="true"></span>
+            {% if i.classic_boost > 0 %}
+                <span class="glyphicon glyphicon-asterisk" title="Classic Event ({{ config_dict.newthing_classic_points }} points)" style="color:orange" aria-hidden="true"></span>
             {% endif %}
             {% if i.pb_boost > 0 %}
-                <span class="glyphicon glyphicon-time" title="RunWaterloo PB {% widthratio boosters.pb_boost 1 100 %}%" style="color:blue" aria-hidden="true"></span>
+                <span class="glyphicon glyphicon-time" title="RunWaterloo PB ({{ config_dict.newthing_pb_points }} points)" style="color:blue" aria-hidden="true"></span>
             {% endif %}
-            {% if i.classic_boost > 0 %}
-                <span class="glyphicon glyphicon-asterisk" title="Classic Event {% widthratio boosters.classic_boost 1 100 %}%" style="color:orange" aria-hidden="true"></span>
+            {% if i.ditto_boost > 0 %}
+                <span class="glyphicon glyphicon-repeat" title="Ditto ({{ config_dict.newthing_ditto_points }} points)" style="color:maroon" aria-hidden="true"></span>
             {% endif %}
           </td>
           <td class="text-center"><strong>{{ i.ep|floatformat:"2" }}</strong></td>
@@ -86,9 +91,15 @@
   </div>
 </div>
 <p>
+<strong>Rules</strong><br>
+Points count for the top {{ config_dict.newthing_max_events }} events, including a maximum of {{ config_dict.newthing_max_endurrun }} ENDURrun events.<br>
+Event points calculated as follows:<br>
+&nbsp;&nbsp;{{ config_dict.newthing_participation_default }} for finishing a timed event<br>
+&nbsp;&nbsp;+ Gender percentile (1 - (gender place / gender finishers)) * {{ config_dict.newthing_merit_max }}<br>
+&nbsp;&nbsp;+ Boosters<br>
 <strong>Boosters</strong><br>
-<span class="glyphicon glyphicon-repeat" style="color:maroon" aria-hidden="true"></span> = Ditto ({% widthratio boosters.ditto_boost 1 100 %}%) - Repeating a race from last year (any distance)<br>
-<span class="glyphicon glyphicon-time" style="color:blue" aria-hidden="true"></span> = PB ({% widthratio boosters.pb_boost 1 100 %}%) - RunWaterloo PB for the distance<br>
-<span class="glyphicon glyphicon-asterisk" style="color:orange" aria-hidden="true"></span> = Classic ({% widthratio boosters.classic_boost 1 100 %}%) - Finishing one of RunWaterloo's Classic races
+<span class="glyphicon glyphicon-asterisk" style="color:orange" aria-hidden="true"></span> = Classic ({{ config_dict.newthing_classic_points }} points) - Finishing one of the two Classic races<br>
+<span class="glyphicon glyphicon-time" style="color:blue" aria-hidden="true"></span> = PB ({{ config_dict.newthing_pb_points }} points) - RW personal best for the distance (including first time running that distance)<br>
+<span class="glyphicon glyphicon-repeat" style="color:maroon" aria-hidden="true"></span> = Ditto ({{ config_dict.newthing_ditto_points }} points) - Repeating a race from last year (any event/distance)<br>
 </p>
 {% endblock content %}
