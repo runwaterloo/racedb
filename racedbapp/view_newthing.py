@@ -36,6 +36,17 @@ def index(request, year):
     qs_filter = get_qs_filter(qstring)
     first_day = datetime(year, 1, 1).date()
     last_day = datetime(year, 12, 31).date()
+    if 'date' in qstring:
+        try:
+            ymd = [int(x) for x in qstring['date'][0].split('-')]
+            qs_date = datetime(*ymd).date()
+        except:
+            raise Http404('Invalid date')
+        else:
+            if first_day <= qs_date <= last_day:
+                last_day = qs_date
+            else:
+                raise Http404('Invalid date')
     gender_finishers = get_gender_finishers(first_day, last_day)
     included_members = Rwmember.objects.filter(active=True)
     qs_member = get_qs_member(qstring, included_members)
