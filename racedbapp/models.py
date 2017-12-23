@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Avg, Count, Min, Sum, Q
 from collections import namedtuple
+from datetime import datetime
 from . import utils
 
 #########################################
@@ -152,7 +153,7 @@ class Rwmember(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     year_of_birth = models.IntegerField(null=True, blank=True)
     city = models.CharField(max_length=50)
-    joindate = models.DateField()
+    joindate = models.DateField(default=datetime.now)
     photourl = models.URLField(max_length=500, null=True, blank=True)
     altname = models.CharField(max_length=64, blank=True, help_text="Optional, e.g. maiden name")
     active = models.BooleanField(default=True)
