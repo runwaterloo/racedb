@@ -31,7 +31,7 @@ class RwmemberAdmin(admin.ModelAdmin):
     filter_horizontal = ('tags',)
     list_display = ('id', 'name', 'gender', 'city', 'joindate', 'active', 'photourl')
     search_fields = ('name',)
-    ordering = ('name',)
+    ordering = ('-id',)
     list_max_show_all = 1000
     readonly_fields = ('hasphotos',)
 admin.site.register(Rwmember, RwmemberAdmin)
