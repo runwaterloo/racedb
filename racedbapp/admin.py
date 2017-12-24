@@ -25,7 +25,10 @@ class ResultAdmin(admin.ModelAdmin):
     list_display = ('event', 'place', 'bib', 'athlete', 'gender', 'category', 'city', 'chiptime', 'guntime')
 admin.site.register(Result, ResultAdmin)
 
-admin.site.register(Rwmembertag)
+class RwmembertagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'auto_select')
+    ordering = ('-id',)
+admin.site.register(Rwmembertag, RwmembertagAdmin) 
 
 class RwmemberAdmin(admin.ModelAdmin):
     filter_horizontal = ('tags',)

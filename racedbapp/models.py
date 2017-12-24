@@ -143,14 +143,14 @@ class Event(models.Model):
 
 class Rwmembertag(models.Model):
     name = models.CharField(max_length=32)
+    auto_select = models.BooleanField(default=False)
     def __str__(self): 
         return self.name
 
 class Rwmember(models.Model):
     GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
     def membertag_defaults():
-        db_membertag_defaults = Config.objects.filter(name='membertag_default').values('value')
-        return Rwmembertag.objects.filter(name__in=db_membertag_defaults)
+        return Rwmembertag.objects.filter(auto_select=True)
     name = models.CharField(max_length=64)
     slug = models.SlugField(unique=True, help_text="https://blog.tersmitten.nl/slugify/")
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
