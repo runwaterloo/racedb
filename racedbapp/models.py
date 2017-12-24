@@ -148,6 +148,9 @@ class Rwmembertag(models.Model):
 
 class Rwmember(models.Model):
     GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
+    def membertag_defaults():
+        db_membertag_defaults = Config.objects.filter(name='membertag_default').values('value')
+        return Rwmembertag.objects.filter(name__in=db_membertag_defaults)
     name = models.CharField(max_length=64)
     slug = models.SlugField(unique=True, help_text="https://blog.tersmitten.nl/slugify/")
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
@@ -157,7 +160,7 @@ class Rwmember(models.Model):
     photourl = models.URLField(max_length=500, null=True, blank=True)
     altname = models.CharField(max_length=64, blank=True, help_text="Optional, e.g. maiden name")
     active = models.BooleanField(default=True)
-    tags = models.ManyToManyField(Rwmembertag, blank=True)
+    tags = models.ManyToManyField(Rwmembertag, blank=True, default=membertag_defaults)
     hasphotos = models.BooleanField(default=False, help_text="Automatically set by system")
     def __str__(self): 
         return self.name
