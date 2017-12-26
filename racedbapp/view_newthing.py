@@ -48,7 +48,10 @@ def index(request, year):
             else:
                 raise Http404('Invalid date')
     gender_finishers = get_gender_finishers(first_day, last_day)
-    included_members = Rwmember.objects.filter(active=True)
+    included_members = Rwmember.objects.filter(
+                           active=True,
+                           year_of_birth__isnull=False,
+                           )
     qs_member = get_qs_member(qstring, included_members)
     previous_races = get_previous_races(year, included_members)
     battlers = {}
