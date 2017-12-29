@@ -83,6 +83,7 @@ test_urls = (
   '/race/endurrun/marathon/?division=All',          # endurrun all
  # /member
   '/member/dave-rutherford/',
+  '/member/jack-kilislian/',
   '/member/sam-lalonde/',
  # /members
   '/members',
