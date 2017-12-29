@@ -179,43 +179,20 @@ def get_bow_finishes_badges(member, results):
 
 def get_endurrun_finishes_badges(member, results):
     endurrun_finishes_badges = []
-    member_names = [member.name, ]
-    if member.altname != '':
-        member_names.append(member.altname)
-    endurathletes = Endurathlete.objects.filter(name__in=member_names).order_by('year')
-    sport_finishes = 0
+    years = []
+    yearsdict = {}
     ultimate_finishes = 0
-    if len(endurathletes) > 0:
-        result_ids = [ x.result.event.id for x in results ]
-    for e in endurathletes:
-        division = e.division
-        last_three_ids = Event.objects.select_related().filter(race__slug='endurrun',
-                                         date__icontains=e.year,
-                                         distance__slug__in=['25_5-km',
-                                                             '10-km',
-                                                             'marathon']).values_list('id', flat=True)
-        if e.division.lower() == 'sport':
-            event_ids = list(last_three_ids)
-            if len(event_ids) > 0 and set(event_ids).issubset(result_ids):
-                sport_finishes += 1
-                sport_date_earned = Event.objects.get(id=event_ids[-1]).date
-        elif e.division.lower() == 'ultimate':
-            first_four_ids = Event.objects.select_related().filter(race__slug='endurrun',
-                                 date__icontains=e.year,
-                                 distance__slug__in=['half-marthon',
-                                                     '15-km',
-                                                     '30-km',
-                                                     '10-mi']).values_list('id', flat=True)
-            event_ids = list(first_four_ids) + list(last_three_ids)
-            if len(event_ids) > 0 and set(event_ids).issubset(result_ids):
-                ultimate_finishes += 1
-                ultimate_date_earned = Event.objects.get(id=event_ids[-1]).date
-    # uncomment this part to enable ENDURrun Sport finishes
-    #if sport_finishes > 0:
-    #    plural = ''
-    #    if sport_finishes > 1:
-    #        plural = 'es'
-    #    endurrun_finishes_badges.append(named_badge('{} ENDURrun Sport Finish{}'.format(sport_finishes, plural), sport_date_earned, 'https://www.trophysupermarket.com/media/catalog/product/cache/1/small_image/260x/9df78eab33525d08d6e5fb8d27136e95/B/D/BDG-VC-3_2_1.jpg', False))
+    endurrun_results = [x for x in reversed(results) if x.result.event.race.slug == 'endurrun']
+    for er in endurrun_results:
+        years.append(er.result.event.date.year)
+        if er.result.event.date.year in yearsdict:
+            yearsdict[er.result.event.date.year].append(er)
+        else:
+            yearsdict[er.result.event.date.year] = [er,]
+    for year in sorted(set(years)):
+        if len(yearsdict[year]) == 7:
+            ultimate_finishes += 1
+            ultimate_date_earned = yearsdict[year][6].result.event.date
     if ultimate_finishes > 0:
         ULTIMATE_THRESHOLDS = [10, 5, 2, 1]
         for i in ULTIMATE_THRESHOLDS:
