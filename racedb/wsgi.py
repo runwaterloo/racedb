@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/
 
 import os, site, sys
 
-site.addsitedir('/usr/local/venv/racedb/lib/python3.4/site-packages')
+site.addsitedir('/usr/local/venv/racedb/lib/python3.6/site-packages')
 sys.path.append('/srv/racedb')
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "racedb.settings"  # see footnote [2]
