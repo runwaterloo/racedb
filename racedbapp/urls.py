@@ -23,6 +23,8 @@ urlpatterns = [
     url(r'^name', view_name.index, name='name'),
     url(r'^rwcup/(?P<year>.*)/$', view_newthing.index, name='newthing'),
     url(r'^rwcup/$', RedirectView.as_view(url='/newthing/2017/', permanent=False), name='index'),
+    url(r'^newthing/(?P<year>.*)/$', view_newthing.index, name='newthing'),
+    url(r'^newthing/$', RedirectView.as_view(url='/newthing/2017/', permanent=False), name='index'),
     url(r'^notify', view_notify.index, name='notify'),
     url(r'^photoupdate', view_photoupdate.index, name='photoupdate'),
     url(r'^recap/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/$', view_recap.index, name='recap'),
