@@ -3,7 +3,7 @@
 {% load racedbapp_extras %}
 
 {% block title %}
- New Thing
+ {{ member_results.athlete }} | RW Cup {{ year }}
   |
 {% endblock title %}
 
@@ -22,7 +22,7 @@
 <div class="row">
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
     <h3>
-      <a href="/newthing/{{ year }}/">New Thing {{ year }}</a>
+      <a href="/rwcup/{{ year }}/">RW Cup {{ year }}</a>
       <small>
         <a href="http://www.runwaterloo.com" target="_blank">
           <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
