@@ -10,7 +10,8 @@ from .models import (
     Config,
     Event,
     Result,
-    Rwmember
+    Rwmember,
+    Rwmembertag,
 )
 
 
@@ -48,9 +49,11 @@ def index(request, year):
             else:
                 raise Http404('Invalid date')
     gender_finishers = get_gender_finishers(first_day, last_day)
+    member2018 = Rwmembertag.objects.get(name='member-2018')
     included_members = Rwmember.objects.filter(
                            active=True,
                            year_of_birth__isnull=False,
+                           tags=member2018,
                            )
     qs_member = get_qs_member(qstring, included_members)
     previous_races = get_previous_races(year, included_members)
