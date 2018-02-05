@@ -17,20 +17,20 @@ from .models import (
 
 def index(request, year):
     config_values = (
-        'newthing_classic_points',
-        'newthing_ditto_points',
-        'newthing_leaderboard_size',
-        'newthing_max_endurrun',
-        'newthing_max_events',
-        'newthing_merit_max',
-        'newthing_participation_default',
-        'newthing_pb_points',
+        'boost_classic_points',
+        'boost_ditto_points',
+        'boost_leaderboard_size',
+        'boost_max_endurrun',
+        'boost_max_events',
+        'boost_merit_max',
+        'boost_participation_points',
+        'boost_pb_points',
         'nophoto_url',
         )
     config_dict = dict(Config.objects.values_list('name', 'value').filter(name__in=config_values))
-    max_events = int(config_dict['newthing_max_events'])
-    max_endurrun = int(config_dict['newthing_max_endurrun'])
-    leaderboard_size = int(config_dict['newthing_leaderboard_size'])
+    max_events = int(config_dict['boost_max_events'])
+    max_endurrun = int(config_dict['boost_max_endurrun'])
+    leaderboard_size = int(config_dict['boost_leaderboard_size'])
     nophoto_url = config_dict['nophoto_url']
     year = int(year)
     qstring = parse.parse_qs(request.META['QUERY_STRING'])
@@ -50,13 +50,15 @@ def index(request, year):
                 raise Http404('Invalid date')
     gender_finishers = get_gender_finishers(first_day, last_day)
     included_members = []
-    if year ==  2017:
+    if year in (2017, 2018):
         member2018 = Rwmembertag.objects.get(name='member-2018')
         included_members = Rwmember.objects.filter(
                                active=True,
                                year_of_birth__isnull=False,
                                tags=member2018,
                                )
+    else:
+        raise Http404('Invalid date')
     qs_member = get_qs_member(qstring, included_members)
     previous_races = get_previous_races(year, included_members)
     battlers = {}
@@ -115,7 +117,7 @@ def index(request, year):
                    'member_results': member_results,
                    'year': year
                   }
-        return render(request, 'racedbapp/newthing_member.html', context)
+        return render(request, 'racedbapp/boost_member.html', context)
     else:
         context = {
                    'leaderboard': leaderboard,
@@ -123,7 +125,7 @@ def index(request, year):
                    'standings_filter': standings_filter,
                    'year': year
                   }
-        return render(request, 'racedbapp/newthing.html', context)
+        return render(request, 'racedbapp/boost.html', context)
 
 
 def get_qs_filter(qstring):
@@ -142,19 +144,19 @@ def get_standings_filter(qs_filter, year):
     named_filter = namedtuple('nf', ['current', 'choices'])
     named_choice = namedtuple('nc', ['name', 'url'])
     choices = []
-    choices.append(named_choice('', '/newthing/{}'.format(year)))
+    choices.append(named_choice('', '/boost/{}'.format(year)))
     choices.append(
-        named_choice('Female', '/newthing/{}/?filter=F'.format(year)))
+        named_choice('Female', '/boost/{}/?filter=F'.format(year)))
     choices.append(
-        named_choice('Male', '/newthing/{}/?filter=M'.format(year)))
+        named_choice('Male', '/boost/{}/?filter=M'.format(year)))
     choices.append(
-        named_choice('F40-', '/newthing/{}/?filter=F40-'.format(year)))
+        named_choice('F40-', '/boost/{}/?filter=F40-'.format(year)))
     choices.append(
-        named_choice('M40-', '/newthing/{}/?filter=M40-'.format(year)))
+        named_choice('M40-', '/boost/{}/?filter=M40-'.format(year)))
     choices.append(
-        named_choice('F40+', '/newthing/{}/?filter=F40%2B'.format(year)))
+        named_choice('F40+', '/boost/{}/?filter=F40%2B'.format(year)))
     choices.append(
-        named_choice('M40+', '/newthing/{}/?filter=M40%2B'.format(year)))
+        named_choice('M40+', '/boost/{}/?filter=M40%2B'.format(year)))
     choices = [x for x in choices if x[0] != qs_filter]
     if qs_filter == 'F':
         current_choice = 'Female'
@@ -270,18 +272,18 @@ class BResult:
         self.gender_finishers = gender_finishers[result.gender][result.event.id]
         self.mp = ((1 - (self.gender_place
                    / self.gender_finishers))
-                   * int(config_dict['newthing_merit_max']))
+                   * int(config_dict['boost_merit_max']))
         total_boost = 0
         self.ditto_boost = self.pb_boost = self.classic_boost = 0
         if result.rwmember_id in previous_races:
             if result.event.race in previous_races[result.rwmember_id]:
-                self.ditto_boost = int(config_dict['newthing_ditto_points'])
+                self.ditto_boost = int(config_dict['boost_ditto_points'])
         if result.isrwpb:
-            self.pb_boost = int(config_dict['newthing_pb_points'])
+            self.pb_boost = int(config_dict['boost_pb_points'])
         if 'classic' in self.event_race_slug:
-            self.classic_boost = int(config_dict['newthing_classic_points'])
+            self.classic_boost = int(config_dict['boost_classic_points'])
         self.ep = sum([
-            int(config_dict['newthing_participation_default']),
+            int(config_dict['boost_participation_points']),
             self.mp,
             self.ditto_boost,
             self.pb_boost,

@@ -3,7 +3,7 @@
 {% load racedbapp_extras %}
 
 {% block title %}
- {{ member_results.athlete }} | RW Cup {{ year }}
+ {{ member_results.athlete }} | Boost {{ year }}
   |
 {% endblock title %}
 
@@ -22,7 +22,11 @@
 <div class="row">
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
     <h3>
-      <a href="/rwcup/{{ year }}/">RW Cup {{ year }}</a>
+      <a href="/boost/{{ year }}/">Boost {{ year }}
+      {% if year == 2017 %}
+        (Preview)
+      {% endif %} 
+      </a>
       <small>
         <a href="http://www.runwaterloo.com" target="_blank">
           <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
@@ -55,7 +59,7 @@
         <th class="text-center">Event</th>
         <th class="text-center">Time</th>
         <th class="text-center" title="Gender Place">GP</th>
-        <th class="text-center" title="Gender Percentile">GPCTL</th>
+        <th class="text-center" title="Merit points">Merit</th>
         <th class="text-center">Boosters</th>
         <th class="text-center">Points</th>
         <th class="text-center">Counts</th>
@@ -68,13 +72,13 @@
           <td class="text-center">{{ i.mp|floatformat:"2" }}</td>
           <td class="text-center">
             {% if i.classic_boost > 0 %}
-                <span class="glyphicon glyphicon-asterisk" title="Classic Event ({{ config_dict.newthing_classic_points }} points)" style="color:orange" aria-hidden="true"></span>
+                <span class="glyphicon glyphicon-asterisk" title="Classic Event ({{ config_dict.boost_classic_points }} points)" style="color:orange" aria-hidden="true"></span>
             {% endif %}
             {% if i.pb_boost > 0 %}
-                <span class="glyphicon glyphicon-time" title="RunWaterloo PB ({{ config_dict.newthing_pb_points }} points)" style="color:blue" aria-hidden="true"></span>
+                <span class="glyphicon glyphicon-time" title="RunWaterloo PB ({{ config_dict.boost_pb_points }} points)" style="color:blue" aria-hidden="true"></span>
             {% endif %}
             {% if i.ditto_boost > 0 %}
-                <span class="glyphicon glyphicon-repeat" title="Ditto ({{ config_dict.newthing_ditto_points }} points)" style="color:maroon" aria-hidden="true"></span>
+                <span class="glyphicon glyphicon-repeat" title="Ditto ({{ config_dict.boost_ditto_points }} points)" style="color:maroon" aria-hidden="true"></span>
             {% endif %}
           </td>
           <td class="text-center"><strong>{{ i.ep|floatformat:"2" }}</strong></td>
@@ -92,14 +96,14 @@
 </div>
 <p>
 <strong>Rules</strong><br>
-Points count for the top {{ config_dict.newthing_max_events }} events, including a maximum of {{ config_dict.newthing_max_endurrun }} ENDURrun events.<br>
+Points count for the top {{ config_dict.boost_max_events }} events, including a maximum of {{ config_dict.boost_max_endurrun }} ENDURrun events.<br>
 Event points calculated as follows:<br>
-&nbsp;&nbsp;{{ config_dict.newthing_participation_default }} for finishing a timed event<br>
-&nbsp;&nbsp;+ Gender percentile (1 - (gender place / gender finishers)) * {{ config_dict.newthing_merit_max }}<br>
+&nbsp;&nbsp;{{ config_dict.boost_participation_points }} for finishing a timed event<br>
+&nbsp;&nbsp;+ Merit points (1 - (gender place / gender finishers)) * {{ config_dict.boost_merit_max }}<br>
 &nbsp;&nbsp;+ Boosters<br>
 <strong>Boosters</strong><br>
-<span class="glyphicon glyphicon-asterisk" style="color:orange" aria-hidden="true"></span> = Classic ({{ config_dict.newthing_classic_points }} points) - Finishing one of the two Classic races<br>
-<span class="glyphicon glyphicon-time" style="color:blue" aria-hidden="true"></span> = PB ({{ config_dict.newthing_pb_points }} points) - RW personal best for the distance (including first time running that distance)<br>
-<span class="glyphicon glyphicon-repeat" style="color:maroon" aria-hidden="true"></span> = Ditto ({{ config_dict.newthing_ditto_points }} points) - Repeating a race from last year (any event/distance)<br>
+<span class="glyphicon glyphicon-asterisk" style="color:orange" aria-hidden="true"></span> = Classic ({{ config_dict.boost_classic_points }} points) - Finishing one of the two Classic races<br>
+<span class="glyphicon glyphicon-time" style="color:blue" aria-hidden="true"></span> = PB ({{ config_dict.boost_pb_points }} points) - RW personal best for the distance (including first time running that distance)<br>
+<span class="glyphicon glyphicon-repeat" style="color:maroon" aria-hidden="true"></span> = Ditto ({{ config_dict.boost_ditto_points }} points) - Repeating a race from last year (any event/distance)<br>
 </p>
 {% endblock content %}

@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
- RW Cup {{ year }} 
+ Boost {{ year }} 
   |
 {% endblock title %}
 
@@ -18,7 +18,11 @@
 
 {% block content %}
 
-<h3>RW Cup {{ year }} <small><a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
+<h3>Boost {{ year }} 
+{% if year == 2017 %}
+  (Preview)
+{% endif %}
+<small><a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
 
   <div class="row">
     {% for k, v in leaderboard.items %}
@@ -36,6 +40,7 @@
             {% for i in v %}
               <tr>
                 <td class="text-center">{{ forloop.counter }}</td>
+                <td><a href="?member={{ i.slug }}" title="{{ i.total_points|floatformat:"2" }}">{{ i.total_points|floatformat:"0" }}<a></td>
                 <td>
                 {% if i.active %}
                   <a href="/member/{{ i.slug }}/">{{ i.athlete}}</a>
@@ -43,7 +48,6 @@
                   {{ i.athlete}}
                 {% endif %}
                 </td>
-                <td><a href="?member={{ i.slug }}" title="{{ i.total_points|floatformat:"2" }}">{{ i.total_points|floatformat:"0" }}<a></td>
               </tr>
             {% endfor %}
           </thead>
@@ -76,8 +80,8 @@
         <thead>
           <tr class="info">
             <th class="text-center">#</th>
-            <th>Athlete</th>
             <th class="text-center">Total</th>
+            <th>Athlete</th>
             <th class="text-center">G</th>
             <th class="text-center">GP</th>
             <th class="text-center">Cat</th>
@@ -89,6 +93,7 @@
           {% for s in standings %}
             <tr>
               <td class="text-center">{{ forloop.counter }}</td>
+              <td class="text-center"><a href="?member={{ s.slug }}" title="{{ s.total_points|floatformat:"2" }}">{{ s.total_points|floatformat:"0" }}<a></td>
               <td>
                 {% if s.active %}
                   <a href="/member/{{ s.slug }}/">{{ s.athlete}}</a>
@@ -96,7 +101,6 @@
                   {{ s.athlete}}
                 {% endif %}
               </td>
-              <td class="text-center"><a href="?member={{ s.slug }}" title="{{ s.total_points|floatformat:"2" }}">{{ s.total_points|floatformat:"0" }}<a></td>
               <td class="text-center">{{ s.gender }}</td>
               <td class="text-center">{{ s.gender_place }}</td>
               <td class="text-center">{{ s.category }}</td>

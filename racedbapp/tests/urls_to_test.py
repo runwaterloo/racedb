@@ -1,6 +1,9 @@
 test_urls = (
- # /newthing
-  '/newthing/2017/',
+ # /boost
+  '/boost/2017/',
+  '/boost/2018/',
+  '/boost/2017/?member=vicki-zandbergen',
+  '/boost/2017/?member=robert-brouillette',
  # /bow
   '/bow/bow-i/',
   '/bow/bow-ii/?phase=after-event-1',
