@@ -20,9 +20,20 @@
 
 <h3>
 <img src="{% static "RW-Boost-Wordmark.png" %}">
-{% if year == 2017 %}
- 2017 Demo  
-{% endif %}
+<select onchange="location = this.options[this.selectedIndex].value;">
+<option>
+  {{ year }}
+  {% if year == 2017 %}
+     Demo  
+  {% endif %}
+</option>
+  {% if year == 2017 %}
+    <option value="/boost/2018/">2018</option>
+  {% else %}
+    <option value="/boost/2017/">2017 Demo</option>
+  {% endif %}
+ </select>
+
 <small><a href="http://www.runwaterloo.com/boost" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></small>
 </h3>
 
