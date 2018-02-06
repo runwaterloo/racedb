@@ -20,9 +20,9 @@
 
 <h3>Boost {{ year }} 
 {% if year == 2017 %}
-  (Preview)
+ Demo  
 {% endif %}
-<small><a href="http://www.runwaterloo.com" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
+<small><a href="http://www.runwaterloo.com/boost" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
 
   <div class="row">
     {% for k, v in leaderboard.items %}
@@ -84,8 +84,8 @@
             <th>Athlete</th>
             <th class="text-center">G</th>
             <th class="text-center">GP</th>
-            <th class="text-center">Cat</th>
-            <th class="text-center">CP</th>
+            <th class="text-center" title="Demographic">Dem</th>
+            <th class="text-center" title="Demographic Place">DP</th>
             <th>City</th>
           </tr>
         </thead>
