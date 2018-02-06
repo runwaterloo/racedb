@@ -18,11 +18,13 @@
 
 {% block content %}
 
-<h3>Boost {{ year }} 
+<h3>
+<img src="{% static "RW-Boost-Wordmark.png" %}">
 {% if year == 2017 %}
  Demo  
 {% endif %}
-<small><a href="http://www.runwaterloo.com/boost" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></h3></small>
+<small><a href="http://www.runwaterloo.com/boost" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></small>
+</h3>
 
   <div class="row">
     {% for k, v in leaderboard.items %}

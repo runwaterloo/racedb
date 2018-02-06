@@ -19,20 +19,15 @@
 
 {% block content %}
 
+<h3>
+<img src="{% static "RW-Boost-Wordmark.png" %}">
+{% if year == 2017 %}
+ Demo
+ {% endif %}
+ <small><a href="http://www.runwaterloo.com/boost" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></small>
+ </h3>
 <div class="row">
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-    <h3>
-      <a href="/boost/{{ year }}/">Boost {{ year }}
-      {% if year == 2017 %}
-        Demo
-      {% endif %} 
-      </a>
-      <small>
-        <a href="http://www.runwaterloo.com/boost" target="_blank">
-          <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-        </a>
-      </small>
-    </h3>
     <h4>Score Report for:
       {% if member_results.active %}
         <a href="/member/{{ member_results.slug }}/">{{ member_results.athlete }}</a>
