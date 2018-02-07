@@ -20,7 +20,7 @@
 {% block content %}
 
 <h3>
-<img src="{% static "RW-Boost-Wordmark.png" %}">
+<img class="img-responsive" src="{% static "RW-Boost-Wordmark.png" %}">
  </h3>
 <div class="row">
   <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
@@ -90,7 +90,7 @@
   </div>
 </div>
 <p>
-<strong>Rules</strong><br>
+<strong><a href="http://runwaterloo.com/boost" target="_blank">RW Boost Rules</a></strong><br>
 Points count for the top {{ config_dict.boost_max_events }} events, including a maximum of {{ config_dict.boost_max_endurrun }} ENDURrun events.<br>
 Event points calculated as follows:<br>
 &nbsp;&nbsp;{{ config_dict.boost_participation_points }} for finishing a timed event<br>
