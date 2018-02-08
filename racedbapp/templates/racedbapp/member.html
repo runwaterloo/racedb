@@ -78,6 +78,10 @@
             <a href="{{ member.photourl }}">
               <img src="{{ member.photourl }}">
             </a>
+          {% else %}
+            <a href="http://runwaterloo.com/member-profile-photo" target="_blank">
+              <img src="{{ nophoto_url }}">
+            </a>
           {% endif %}
         </div>
       </div>

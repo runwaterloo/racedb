@@ -43,6 +43,7 @@ def index(request, member_slug):
     if len(results) > 0:
         racing_since = results[-1].result.event.date.year
     badges = get_badges(member, results)
+    nophoto_url = Config.objects.get(name='nophoto_url').value
     context = {
                'member': member,
                'results': results,
@@ -53,6 +54,7 @@ def index(request, member_slug):
                'best_gender_place': best_gender_place,
                'best_category_place': best_category_place,
                'badges': badges,
+               'nophoto_url': nophoto_url,
               }
     return render(request, 'racedbapp/member.html', context)
 
