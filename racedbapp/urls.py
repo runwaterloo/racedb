@@ -22,7 +22,7 @@ urlpatterns = [
     url(r'^multiwins', view_multiwins.index, name='multiwins'),
     url(r'^name', view_name.index, name='name'),
     url(r'^boost/(?P<year>.*)/$', view_boost.index, name='boost'),
-    url(r'^boost/$', RedirectView.as_view(url='/boost/2017/', permanent=False), name='index'),
+    url(r'^boost/$', RedirectView.as_view(url='/boost/2018/', permanent=False), name='index'),
     url(r'^notify', view_notify.index, name='notify'),
     url(r'^photoupdate', view_photoupdate.index, name='photoupdate'),
     url(r'^recap/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/$', view_recap.index, name='recap'),
