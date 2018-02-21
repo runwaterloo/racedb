@@ -32,7 +32,6 @@ def index(request):
                                         'category', 'catplace',
                                         'catcount', 'genderplace',
                                         'chiptime', 'city', 'member'])
-        membership = view_shared.get_membership()
         for result in dbresults.order_by('-event__date'):
             guntime = result.guntime - timedelta(microseconds=result.guntime.microseconds)
             catplace = Result.objects.filter(event=result.event, category=result.category, place__lte=result.place).count()
@@ -42,7 +41,9 @@ def index(request):
                 chiptime = result.chiptime - timedelta(microseconds=result.chiptime.microseconds)
             else:
                 chiptime = ''
-            member = view_shared.get_member(result, membership)
+            member = None
+            if result.rwmember:
+                member = result.rwmember
             results.append(namedresult(result.event,
                                        result.athlete,
                                        result.place,
