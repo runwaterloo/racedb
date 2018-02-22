@@ -447,11 +447,12 @@ def process_rwpbs(event):
     future_results = Result.objects.filter(event__date__gte=event.date, event__distance=event.distance, rwmember_id__in=members).order_by('event__date')
     for i in future_results:
         i.isrwpb = False
-        if i.rwmember_id in rwpbs:
-            if i.guntime < rwpbs[i.rwmember_id]:
+        if i.event.distance.slug != 'roughly-five':
+            if i.rwmember_id in rwpbs:
+                if i.guntime < rwpbs[i.rwmember_id]:
+                    rwpbs[i.rwmember_id] = i.guntime
+                    i.isrwpb = True
+            else:
                 rwpbs[i.rwmember_id] = i.guntime
                 i.isrwpb = True
-        else:
-            rwpbs[i.rwmember_id] = i.guntime
-            i.isrwpb = True
         i.save()
