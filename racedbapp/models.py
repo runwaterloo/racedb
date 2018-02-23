@@ -258,6 +258,14 @@ class Prime(models.Model):
     gender = models.CharField(max_length=1)
     time = models.DurationField(null=True)
 
+class Relay(models.Model):
+    event = models.ForeignKey(Event)
+    place = models.IntegerField()
+    relay_team = models.CharField(max_length=128)
+    relay_team_place = models.IntegerField()
+    relay_team_time = models.DurationField(null=True)
+    relay_leg = models.IntegerField()
+
 class Split(models.Model):
     event = models.ForeignKey(Event)
     place = models.IntegerField()
