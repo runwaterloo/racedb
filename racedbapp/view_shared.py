@@ -87,9 +87,9 @@ def getracerecords(race, distance, division_choice=False):
         records += makerecords('Masters Female', fmrtime, fmr, distance, membership)
 
     team_records = []
-    team_categories = Teamcategory.objects.all().exclude(name="Family").exclude(name="Open 8").exclude(name="Masters 4").exclude(name="Masters 5").exclude(name="Open 10").exclude(name="Open 4").exclude(name="Open 15").exclude(name="Corporate 5").exclude(name="Corporate 3 Mixed").exclude(name="Corporate 3 Men")
-    if race.slug == 'waterloo-classic':
-        team_categories = team_categories.exclude(name="2 Person Relay")
+    team_categories = Teamcategory.objects.all().exclude(name="Family").exclude(name="Open 8").exclude(name="Masters 4").exclude(name="Masters 5").exclude(name="Open 10").exclude(name="Open 4").exclude(name="Open 15").exclude(name="Corporate 5").exclude(name="Corporate 3 Mixed").exclude(name="Corporate 3 Men").exclude(name="2 Person Relay").exclude(name="4 Person Relay")
+    #if race.slug == 'waterloo-classic':
+    #    team_categories = team_categories.exclude(name="2 Person Relay")
     category_records = {}
     for event in events:
         winning_teams = Teamresult.objects.of_event(event)
