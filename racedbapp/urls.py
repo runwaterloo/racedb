@@ -1,6 +1,6 @@
 from django.conf.urls import url
 from django.views.generic.base import RedirectView
-from . import view_adminphotos, view_index, view_bow, view_bowrecap, view_distance, view_endurrace, view_endurrun, view_endurrunhome, view_event, view_events, view_event_team, view_notify, view_multiwins, view_member, view_members, view_recap, view_race, view_name, view_photoupdate, view_records, view_race, view_stats, view_boost
+from . import view_adminphotos, view_index, view_bow, view_bowrecap, view_distance, view_endurrace, view_endurrun, view_endurrunhome, view_event, view_events, view_event_team, view_notify, view_multiwins, view_member, view_members, view_recap, view_race, view_name, view_photoupdate, view_records, view_race, view_stats, view_boost, view_relay
 
 urlpatterns = [
     url(r'^$', RedirectView.as_view(url='/events', permanent=False), name='index'),
@@ -25,6 +25,7 @@ urlpatterns = [
     url(r'^boost/$', RedirectView.as_view(url='/boost/2018/', permanent=False), name='index'),
     url(r'^notify', view_notify.index, name='notify'),
     url(r'^photoupdate', view_photoupdate.index, name='photoupdate'),
+    url(r'^relay/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/$', view_relay.index, name='relay'),
     url(r'^recap/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/$', view_recap.index, name='recap'),
     url(r'^records/(?P<race_slug>.*)/(?P<distance_slug>.*)/$', view_records.index, name='records'),
     url(r'^stats', view_stats.index, name='stats'),
