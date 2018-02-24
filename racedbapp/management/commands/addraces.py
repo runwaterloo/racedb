@@ -68,6 +68,7 @@ class Command(BaseCommand):
                 distance = Distance.objects.get(prename=event['distance'])
                 dohill = False
                 splits = []
+                relays = []
                 if race.slug == 'baden-road-races':
                     if distance.slug == '7-mi':
                         dohill = True
@@ -160,7 +161,18 @@ class Command(BaseCommand):
                         if 'division' in extra_dict:
                             process_endurathlete(event, result, extra_dict)
                         if 'relay_team' in extra_dict:
-                            process_endurteam(event, result, extra_dict)
+                            if e.race.slug == 'endurrun':
+                                process_endurteam(event, result, extra_dict)
+                            elif e.race.slug == 'laurier-loop':
+                                newrelayresult = Relay(
+                                    event_id=event['id'],
+                                    place=result['place'],
+                                    relay_team = extra_dict['relay_team'],
+                                    relay_team_place = extra_dict['relay_team_place'],
+                                    relay_team_time = maketimedelta(extra_dict['relay_team_time']),
+                                    relay_leg = extra_dict['relay_leg'],
+                                    )
+                                relays.append(newrelayresult)
                         if dohill:
                             if result['extra'] != '':
                                 raw_hill_time = eval(result['extra'])['Hill Time']
@@ -193,6 +205,15 @@ class Command(BaseCommand):
                     Split.objects.bulk_create(splits)
                     info = ('{} splits processed for {} {} {} (Event {})'
                             .format(len(splits), year, race.name,
+                            distance.name, event['id']))
+                    logger.info(info)
+
+                # Process LL relays
+                Relay.objects.filter(event_id=event['id']).delete()
+                if len(relays) > 0:
+                    Relay.objects.bulk_create(relays)
+                    info = ('{} relay results processed for {} {} {} (Event {})'
+                            .format(len(relays), year, race.name,
                             distance.name, event['id']))
                     logger.info(info)
 
