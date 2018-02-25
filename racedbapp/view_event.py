@@ -26,15 +26,21 @@ def index(request, year, race_slug, distance_slug):
     except:
         raise Http404('Matching event not found'.format(division))
     races = view_shared.create_samerace_list(event.race)
-    team_categories = get_team_categories(event)
+    team_categories = view_shared.get_team_categories(event)
     hill_dict = get_hill_dict(event)
     laurier_relay_dict = get_laurier_relay_dict(event)
     dbphototags = list(Phototag.objects.filter(event=event).values_list('tag', flat=True))
     phototags = [x for x in dbphototags if x.isdigit()]
     event_flickr_str = '{}-{}-{}'.format(event.date.year, event.race.slug, event.distance.slug).replace('-','').replace('_','')
     wheelchair_results = Wheelchairresult.objects.filter(event=event)
-    pages = get_pages(event, page, hill_dict,
-                      wheelchair_results, team_categories, laurier_relay_dict) 
+    pages = view_shared.get_pages(
+        event,
+        page,
+        team_categories,
+        hill_dict=hill_dict,
+        wheelchair_results=wheelchair_results,
+        laurier_relay_dict=laurier_relay_dict,
+        ) 
     year_filter = get_year_filter(event, races)
     distance_filter = get_distance_filter(event, races)
     category_filter = get_category_filter(event, category, division)
@@ -209,62 +215,6 @@ def get_division(qstring):
         if division not in ('Ultimate', 'Sport', 'Relay', 'Guest'):
             raise Http404('Division "{}" is not valid'.format(division))
     return division
-
-def get_pages(event, page, hill_dict, wheelchair_results, team_categories, laurier_relay_dict):
-    named_page = namedtuple('np', ('active', 'href', 'label'))
-    pages = []
-    if page == 'Overall':
-        pages.append(named_page('active', '#', 'Overall'))
-    else:
-        pages.append(named_page
-                     ('inactive',
-                      '/event/{}/{}/{}/'.format(event.date.year,
-                                                event.race.slug,
-                                                event.distance.slug),
-                      'Overall'))
-    if laurier_relay_dict:
-        pages.append(named_page(
-                     'inactive',
-                     '/relay/{}/{}/{}/'.format(event.date.year,
-                                               event.race.slug,
-                                               event.distance.slug),
-                     'Relay'))
-
-    if hill_dict:
-        if page == 'Hill Sprint':
-            pages.append(named_page('active', '#', 'Hill Sprint'))
-        else:
-            pages.append(named_page
-                         ('inactive',
-                          '/event/{}/{}/{}/?hill=true'.format(event.date.year,
-                                                               event.race.slug,
-                                                               event.distance.slug),
-                          'Hill Sprint'))
-    if wheelchair_results.count() > 0:
-        if page == 'Wheelchair':
-            pages.append(named_page('active', '#', 'Wheelchair'))
-        else:
-            pages.append(named_page
-                         ('inactive',
-                          '/event/{}/{}/{}/?wheelchair=true'.format(event.date.year,
-                                                                     event.race.slug,
-                                                                     event.distance.slug),
-                          'Wheelchair'))
-    for tc in team_categories:
-        pages.append(named_page
-                         ('inactive',
-                          '/event/{}/{}/{}/team/{}'.format(event.date.year,
-                                                            event.race.slug,
-                                                            event.distance.slug,
-                                                            tc.slug),
-                          tc.name))
-    return pages
-
-def get_team_categories(event):
-    present_team_categories = Teamresult.objects.filter(event=event).values_list('team_category__name', flat=True)
-    present_team_categories = set(sorted(present_team_categories))               
-    team_categories = Teamcategory.objects.filter(name__in=present_team_categories)
-    return team_categories
 
 def get_distance_filter(event, races):
     distance_ids = Result.objects.filter(event__race__in=races, event__date__icontains=event.date.year).values_list('event__distance', flat=True)

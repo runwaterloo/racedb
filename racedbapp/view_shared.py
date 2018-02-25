@@ -222,3 +222,63 @@ def get_member_endurrace(result, membership):
     if lower_athlete in membership.names:
         member = membership.names[lower_athlete]
     return member
+
+def get_team_categories(event):
+    present_team_categories = Teamresult.objects.filter(event=event).values_list('team_category__name', flat=True)
+    present_team_categories = set(sorted(present_team_categories))
+    team_categories = Teamcategory.objects.filter(name__in=present_team_categories)
+    return team_categories
+
+def get_pages(event, page, team_categories, hill_dict=False, wheelchair_results=False, laurier_relay_dict=False):
+    named_page = namedtuple('np', ('active', 'href', 'label'))
+    pages = []
+    if page == 'Overall':
+        pages.append(named_page('active', '#', 'Overall'))
+    else:
+        pages.append(named_page
+                     ('inactive',
+                      '/event/{}/{}/{}/'.format(event.date.year,
+                                                event.race.slug,
+                                                event.distance.slug),
+                      'Overall'))
+    if laurier_relay_dict:
+        if page == 'Relay':
+            pages.append(named_page('active', '#', 'Relay'))
+        else:
+            pages.append(named_page(
+                'inactive',
+                 '/relay/{}/{}/{}/'.format(event.date.year,
+                                           event.race.slug,
+                                           event.distance.slug),
+                 'Relay'))
+
+    if hill_dict:
+        if page == 'Hill Sprint':
+            pages.append(named_page('active', '#', 'Hill Sprint'))
+        else:
+            pages.append(named_page
+                         ('inactive',
+                          '/event/{}/{}/{}/?hill=true'.format(event.date.year,
+                                                               event.race.slug,
+                                                               event.distance.slug),
+                          'Hill Sprint'))
+    if wheelchair_results:
+        if page == 'Wheelchair':
+            pages.append(named_page('active', '#', 'Wheelchair'))
+        else:
+            pages.append(named_page
+                         ('inactive',
+                          '/event/{}/{}/{}/?wheelchair=true'.format(event.date.year,
+                                                                     event.race.slug,
+                                                                     event.distance.slug),
+                          'Wheelchair'))
+    for tc in team_categories:
+        pages.append(named_page
+                         ('inactive',
+                          '/event/{}/{}/{}/team/{}'.format(event.date.year,
+                                                            event.race.slug,
+                                                            event.distance.slug,
+                                                            tc.slug),
+                          tc.name))
+    return pages
+
