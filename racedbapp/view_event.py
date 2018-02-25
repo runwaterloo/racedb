@@ -28,12 +28,13 @@ def index(request, year, race_slug, distance_slug):
     races = view_shared.create_samerace_list(event.race)
     team_categories = get_team_categories(event)
     hill_dict = get_hill_dict(event)
+    hasrelay = get_hasrelay(event)
     dbphototags = list(Phototag.objects.filter(event=event).values_list('tag', flat=True))
     phototags = [x for x in dbphototags if x.isdigit()]
     event_flickr_str = '{}-{}-{}'.format(event.date.year, event.race.slug, event.distance.slug).replace('-','').replace('_','')
     wheelchair_results = Wheelchairresult.objects.filter(event=event)
     pages = get_pages(event, page, hill_dict,
-                      wheelchair_results, team_categories) 
+                      wheelchair_results, team_categories, hasrelay) 
     year_filter = get_year_filter(event, races)
     distance_filter = get_distance_filter(event, races)
     category_filter = get_category_filter(event, category, division)
@@ -69,6 +70,7 @@ def index(request, year, race_slug, distance_slug):
                'split_headings': split_headings,
                'extra_name': extra_name,
                'phototags': phototags,
+               'hasrelay': hasrelay,
               }
     # Determine the format to return based on the query string
     if 'format' in qstring:
@@ -209,7 +211,7 @@ def get_division(qstring):
             raise Http404('Division "{}" is not valid'.format(division))
     return division
 
-def get_pages(event, page, hill_dict, wheelchair_results, team_categories):
+def get_pages(event, page, hill_dict, wheelchair_results, team_categories, hasrelay):
     named_page = namedtuple('np', ('active', 'href', 'label'))
     pages = []
     if page == 'Overall':
@@ -221,6 +223,14 @@ def get_pages(event, page, hill_dict, wheelchair_results, team_categories):
                                                 event.race.slug,
                                                 event.distance.slug),
                       'Overall'))
+    if hasrelay:
+        pages.append(named_page(
+                     'inactive',
+                     '/relay/{}/{}/{}/'.format(event.date.year,
+                                               event.race.slug,
+                                               event.distance.slug),
+                     'Relay'))
+
     if hill_dict:
         if page == 'Hill Sprint':
             pages.append(named_page('active', '#', 'Hill Sprint'))
@@ -574,3 +584,10 @@ def get_extra_name(event):
         elif event.distance.slug == 'marathon':
             extra_name = 'Stage 7 - '
     return extra_name
+
+def get_hasrelay(event):
+    hasrelay = False
+    if event.race.slug == 'laurier-loop' and event.distance.slug == '2_5-km':
+        if Relay.objects.filter(event=event).count() > 0:
+            hasrelay = True
+    return hasrelay
