@@ -388,7 +388,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                       'youtube_url',
                      ])
     results = []
-    relay_dict = get_relay_dict(event)
+    endurrun_relay_dict = get_endurrun_relay_dict(event)
     gender_place_dict = {'F': 0, 'M': 0}
     category_place_dict = {}
     haschiptime = False
@@ -420,8 +420,8 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
             else:
                 category_place_dict[r.category.name] = 1
                 category_place = 1
-        if r.athlete in relay_dict:
-            relay_team = relay_dict[r.athlete]
+        if r.athlete in endurrun_relay_dict:
+            relay_team = endurrun_relay_dict[r.athlete]
         age = ''
         if page != 'Wheelchair':
             if r.age:
@@ -499,24 +499,24 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
         results = get_hill_results(results, named_result)
     return results, max_splits
 
-def get_relay_dict(event):
-    relay_dict = {}
+def get_endurrun_relay_dict(event):
+    endurrun_relay_dict = {}
     if event.race.slug == 'endurrun':
         if event.distance.slug == 'half-marathon':
-            relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st1', 'name'))
+            endurrun_relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st1', 'name'))
         if event.distance.slug == '15-km':
-            relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st2', 'name'))
+            endurrun_relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st2', 'name'))
         if event.distance.slug == '30-km':
-            relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st3', 'name'))
+            endurrun_relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st3', 'name'))
         if event.distance.slug == '10-mi':
-            relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st4', 'name'))
+            endurrun_relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st4', 'name'))
         if event.distance.slug == '25_6-km':
-            relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st5', 'name'))
+            endurrun_relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st5', 'name'))
         if event.distance.slug == '10-km':
-            relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st6', 'name'))
+            enddurrun_relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st6', 'name'))
         if event.distance.slug == 'marathon':
-            relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st7', 'name'))
-    return relay_dict
+            endurrun_relay_dict = dict(Endurteam.objects.filter(year=event.date.year).values_list('st7', 'name'))
+    return endurrun_relay_dict
 
 def get_short_time(orig_time):
     short_time = str(orig_time).lstrip('0:')
