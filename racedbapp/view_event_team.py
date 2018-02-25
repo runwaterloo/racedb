@@ -20,6 +20,10 @@ def index(request, year, race_slug, distance_slug, team_category_slug):
     dohill = False
     if race_slug == 'baden-road-races' and distance_slug == '7-mi':
         dohill = True
+    dorelay = False
+    if race_slug == 'laurier-loop' and distance_slug == '2_5-km':
+        if Relay.objects.filter(event=event).count() > 0:
+            dorelay = True
     dowheelchair = False
     wheelchair_results = Wheelchairresult.objects.filter(event=event)
     if wheelchair_results.count() > 0:
@@ -54,6 +58,7 @@ def index(request, year, race_slug, distance_slug, team_category_slug):
                'team_categories': team_categories,
                'team_results': team_results,
                'dohill': dohill,
-               'dowheelchair': dowheelchair}
+               'dowheelchair': dowheelchair,
+               'dorelay': dorelay}
     #print(len(db.connection.queries))   # number of sql queries that happened
     return render(request, 'racedbapp/event_team.html', context)

@@ -17,6 +17,9 @@
    {% if dohill %}
    <a href="/event/{{ event_parameters }}/?hill=true" class="btn btn-primary btn-sm">Hill Sprint</a>
    {% endif %}
+   {% if dorelay %}
+   <a href="/relay/{{ event_parameters }}/" class="btn btn-primary btn-sm">Relay</a>
+   {% endif %}
    {% if dowheelchair %}
    <a href="/event/{{ event_parameters }}/?wheelchair=true" class="btn btn-primary btn-sm">Wheelchair</a>
    {% endif %}
