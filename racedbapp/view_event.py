@@ -28,13 +28,13 @@ def index(request, year, race_slug, distance_slug):
     races = view_shared.create_samerace_list(event.race)
     team_categories = get_team_categories(event)
     hill_dict = get_hill_dict(event)
-    hasrelay = get_hasrelay(event)
+    laurier_relay_dict = get_laurier_relay_dict(event)
     dbphototags = list(Phototag.objects.filter(event=event).values_list('tag', flat=True))
     phototags = [x for x in dbphototags if x.isdigit()]
     event_flickr_str = '{}-{}-{}'.format(event.date.year, event.race.slug, event.distance.slug).replace('-','').replace('_','')
     wheelchair_results = Wheelchairresult.objects.filter(event=event)
     pages = get_pages(event, page, hill_dict,
-                      wheelchair_results, team_categories, hasrelay) 
+                      wheelchair_results, team_categories, laurier_relay_dict) 
     year_filter = get_year_filter(event, races)
     distance_filter = get_distance_filter(event, races)
     category_filter = get_category_filter(event, category, division)
@@ -45,7 +45,7 @@ def index(request, year, race_slug, distance_slug):
     else:
         all_results = Result.objects.select_related().filter(event=event)
         hasage = all_results.hasage(event)
-    results, max_splits = get_results(event, all_results, page, category, division, hill_dict, phototags)
+    results, max_splits = get_results(event, all_results, page, category, division, hill_dict, phototags, laurier_relay_dict)
     split_headings = []
     for i in range(1, max_splits+1):
         split_headings.append('Split {}'.format(i))
@@ -70,7 +70,6 @@ def index(request, year, race_slug, distance_slug):
                'split_headings': split_headings,
                'extra_name': extra_name,
                'phototags': phototags,
-               'hasrelay': hasrelay,
               }
     # Determine the format to return based on the query string
     if 'format' in qstring:
@@ -211,7 +210,7 @@ def get_division(qstring):
             raise Http404('Division "{}" is not valid'.format(division))
     return division
 
-def get_pages(event, page, hill_dict, wheelchair_results, team_categories, hasrelay):
+def get_pages(event, page, hill_dict, wheelchair_results, team_categories, laurier_relay_dict):
     named_page = namedtuple('np', ('active', 'href', 'label'))
     pages = []
     if page == 'Overall':
@@ -223,7 +222,7 @@ def get_pages(event, page, hill_dict, wheelchair_results, team_categories, hasre
                                                 event.race.slug,
                                                 event.distance.slug),
                       'Overall'))
-    if hasrelay:
+    if laurier_relay_dict:
         pages.append(named_page(
                      'inactive',
                      '/relay/{}/{}/{}/'.format(event.date.year,
@@ -364,7 +363,7 @@ def get_division_filter(event, division, category):
         division_filter = named_filter(current, choices)
     return division_filter
 
-def get_results(event, all_results, page, category, division, hill_dict, phototags):
+def get_results(event, all_results, page, category, division, hill_dict, phototags, laurier_relay_dict):
     named_result = namedtuple('nr', 
                      [
                       'place',
@@ -420,7 +419,10 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
             else:
                 category_place_dict[r.category.name] = 1
                 category_place = 1
-        if r.athlete in endurrun_relay_dict:
+        if laurier_relay_dict:
+            if r.place in laurier_relay_dict:
+                relay_team = laurier_relay_dict[r.place]
+        elif r.athlete in endurrun_relay_dict:
             relay_team = endurrun_relay_dict[r.athlete]
         age = ''
         if page != 'Wheelchair':
@@ -585,9 +587,10 @@ def get_extra_name(event):
             extra_name = 'Stage 7 - '
     return extra_name
 
-def get_hasrelay(event):
-    hasrelay = False
+def get_laurier_relay_dict(event):
+    laurier_relay_dict = False
     if event.race.slug == 'laurier-loop' and event.distance.slug == '2_5-km':
-        if Relay.objects.filter(event=event).count() > 0:
-            hasrelay = True
-    return hasrelay
+        laurier_relay_results = Relay.objects.filter(event=event).values_list('place', 'relay_team')
+        if len(laurier_relay_results) > 0:
+            laurier_relay_dict = dict(laurier_relay_results)
+    return laurier_relay_dict
