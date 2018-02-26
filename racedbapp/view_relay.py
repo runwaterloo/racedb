@@ -1,5 +1,6 @@
 from django.http import HttpResponse, Http404
 from django.shortcuts import render
+from collections import namedtuple
 from urllib import parse
 from . import view_shared
 from .models import (
@@ -7,7 +8,9 @@ from .models import (
     Relay,
     )
 
-#from collections import namedtuple
+named_filter = namedtuple('nf', ['current', 'choices'])
+named_choice = namedtuple('nc', ['name', 'url'])
+
 #from . import view_shared, utils
 #from django.db.models import Count, Max, Q
 #from datetime import timedelta
@@ -23,10 +26,15 @@ def index(request, year, race_slug, distance_slug):
         event,
         'Relay',
         team_categories,
-        laurier_relay_dict=True)
+        laurier_relay_dict=True,
+        )
+    filters = {
+        'year_filter': get_year_filter(event),
+    }
     context = {
         'event': EventV(event),
         'pages': pages,
+        'filters': filters,
         }
     return render(request, 'racedbapp/relay.html', context)
 
@@ -49,6 +57,19 @@ def get_relay_results(event):
     if len(relay_results) == 0:
         raise Http404('No results found')
     return relay_results
+
+
+def get_year_filter(event):
+    rawresults = Relay.objects.select_related().filter(event__race=event.race)
+    dates = rawresults.order_by('-event__date').values_list('event__date', 'event__race__slug').distinct()
+    choices = []
+    for d in dates:
+        year = d[0].year
+        if year == event.date.year:
+            continue
+        choices.append(named_choice(year, '/relay/{}/{}/{}/'.format(year, d[1], event.distance.slug)))
+    year_filter = named_filter(event.date.year, choices)
+    return year_filter
 
 
 class EventV:

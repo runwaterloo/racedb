@@ -45,6 +45,37 @@
             <li class="{{ p.active }}"><a href="{{ p.href }}">{{ p.label }}</a></li>
         {% endfor %}
       </ul>
+      <!-- Filter table -->
+      <table class="table table-bordered table-condensed">
+        <thead>
+          <tr class="info">
+            <th class="text-center">Year</th>
+            <th class="text-center">Category Filter</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-center">
+              <select onchange="location = this.options[this.selectedIndex].value;">
+              <option>{{ filters.year_filter.current }}</option>
+              {% for yc in filters.year_filter.choices %}
+                <option value="{{ yc.url }}">{{ yc.name }}</option>
+              {% endfor %}
+              </select>
+            </td>
+            <td class="text-center">
+              <select onchange="location = this.options[this.selectedIndex].value;">
+              <option>{{ filters.category_filter.current }}</option>
+              {% for cc in filters.category_filter.choices %}
+                <option value="{{ cc.url }}">{{ cc.name }}</option>
+              {% endfor %}
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- End Filter Table -->
+
     </div>
     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
       <div style="padding-top: 20px; padding-bottom: 20px">
