@@ -147,11 +147,6 @@ def get_team_results(relay_results, individual_results_dict):
         v.legs = sorted(v.legs, key=attrgetter('leg'))
         team_results.append(v)
     team_results = sorted(team_results, key=attrgetter('place'))
-    for i in team_results:
-        print(i)
-        print(i.categories)
-        for j in i.legs:
-            print('  {}'.format(j))
     return team_results
 
 
