@@ -208,14 +208,16 @@
                   <td></td>
                 {% endif %}
               {% endif %}
-              {% if r.youtube_url %}
-                <td class="text-center">
-                  <a href="{{ r.youtube_url }}" target="_blank">
-                    <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>
-                  </a>
-                </td>
-              {% elif event.youtube_id %}
-                <td></td>
+              {% if event.youtube_id and event.youtube_offset_seconds is not None %}
+                  {% if r.youtube_url %}
+                    <td class="text-center">
+                      <a href="{{ r.youtube_url }}" target="_blank">
+                        <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>
+                      </a>
+                    </td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
               {% endif %}
               <td class="text-center">{{ r.guntime }}</td>
               {% if hill_dict %}
