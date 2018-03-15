@@ -77,7 +77,7 @@ def get_badges(member, results):
     badges += get_endurrun_finishes_badges(member, results)
     badges += get_pb_badges(member, results)
     badges += get_race_win_badges(results)
-    #badges += get_endurrace_combined_badge(results)
+    badges += get_endurrace_combined_badge(results)
     #badges += get_event_finishes_badge(results)
     #badges += get_adventurer_badge(results)
     badges = sorted(badges, key=attrgetter('date', 'name'), reverse=True)
@@ -286,8 +286,8 @@ def get_race_win_badges(results):
             races_won.append(thisrace)
     return race_win_badges
 
-# Future use
 def get_endurrace_combined_badge(results):
+    EC_THRESHOLDS = [10, 5, 2, 1]
     endurrace_combined_badge = []
     endurrace_5k_years = []
     endurrace_count = 0
@@ -299,11 +299,11 @@ def get_endurrace_combined_badge(results):
                 if r.result.event.date.year in endurrace_5k_years:
                     date_earned = r.result.event.date
                     endurrace_count += 1
-    if endurrace_count > 0:
-        plural = ''
-        if endurrace_count > 1:
-            plural = 'es'
-        endurrace_combined_badge.append(named_badge('{} ENDURrace Combined Finish{}'.format(endurrace_count, plural), date_earned, 'http://us.123rf.com/450wm/blueringmedia/blueringmedia1607/blueringmedia160700183/59362745-relay-running-icon-on-round-badge-illustration.jpg?ver=6', False))
+    for i in EC_THRESHOLDS:
+        if endurrace_count >= i:
+            image = 'endurrace-combined-finisher-{}.png'.format(i)
+            endurrace_combined_badge.append(named_badge('ENDURrace Combined {} Time Finisher'.format(endurrace_count), date_earned, image, False))
+            break
     return endurrace_combined_badge
 
 # Fture use
@@ -320,7 +320,6 @@ def get_event_finishes_badge(results):
             break
     return event_finishes_badge
 
-# Future use
 def get_adventurer_badge(results):
     ADVENTURER_THRESHOLD = 10
     adventurer_badge = []
@@ -336,7 +335,7 @@ def get_adventurer_badge(results):
             race_finishes_dates.append(r.result.event.date)
     if len(race_finishes) >= ADVENTURER_THRESHOLD:
         date_earned = race_finishes_dates[ADVENTURER_THRESHOLD - 1]
-        adventurer_badge.append(named_badge('Adventurer ({} Difference Races)'.format(ADVENTURER_THRESHOLD), date_earned, 'https://members.scouts.org.uk/images/badges/sc-cs-adch.png', False))
+        adventurer_badge.append(named_badge('Finished {} or more different timed races'.format(ADVENTURER_THRESHOLD), date_earned, 'adventurer.png', False))
     return adventurer_badge
 
 def get_minutegroup(result, thresholds):
