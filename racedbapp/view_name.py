@@ -43,7 +43,8 @@ def index(request):
                 chiptime = ''
             member = None
             if result.rwmember:
-                member = result.rwmember
+                if result.rwmember.active:
+                    member = result.rwmember
             results.append(namedresult(result.event,
                                        result.athlete,
                                        result.place,
