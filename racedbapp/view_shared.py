@@ -9,13 +9,9 @@ namedresult = namedtuple('nr', ['place', 'guntime', 'athlete',
 namedteamrecord = namedtuple('ntr', ['team_category_name', 'team_category_slug', 'total_time', 'winning_team', 'year', 'avg_time', 'race_slug'])
 def getwinnersdict():
     namedwinner = namedtuple('nw', ['athlete', 'guntime'])
-    malewinners = Event.objects.filter(result__gender='M') \
-                                       .annotate(max_score=Min('result__place')) \
-                                       .values_list('id', 'result__athlete', 'result__guntime')
+    malewinners = Result.objects.filter(gender='M', gender_place=1).values_list('event_id', 'athlete', 'guntime')
     malewinnersdict = dict([(a, namedwinner(b, c)) for a, b, c in malewinners])
-    femalewinners = Event.objects.filter(result__gender='F') \
-                                         .annotate(max_score=Min('result__place')) \
-                                         .values_list('id', 'result__athlete', 'result__guntime')
+    femalewinners = Result.objects.filter(gender='F', gender_place=1).values_list('event_id', 'athlete', 'guntime')
     femalewinnersdict = dict([(a, namedwinner(b, c)) for a, b, c in femalewinners])
     return malewinnersdict, femalewinnersdict
 
