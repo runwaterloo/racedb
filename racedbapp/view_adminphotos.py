@@ -4,7 +4,7 @@ from collections import namedtuple
 from .models import *
 
 def index(request):
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return redirect('/admin/login/?next=/adminphotos/')            
     notifykey = Config.objects.get(name='notifykey').value
     dbevents = Event.objects.select_related().order_by('-date', '-distance__km').exclude(flickrsetid=None)

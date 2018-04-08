@@ -107,8 +107,8 @@ class Race(models.Model):
         return self.name
 
 class Samerace(models.Model):                                                        
-    old_race = models.ForeignKey(Race, related_name='old_race')                  
-    current_race = models.ForeignKey(Race, related_name='current_race')          
+    old_race = models.ForeignKey(Race, related_name='old_race', on_delete=models.CASCADE)                  
+    current_race = models.ForeignKey(Race, related_name='current_race', on_delete=models.CASCADE)          
 
 class Category(models.Model):
     name = models.CharField(max_length=20, unique=True)
@@ -127,8 +127,8 @@ class Teamcategory(models.Model):
         return self.name
 
 class Event(models.Model):
-    race = models.ForeignKey(Race)
-    distance = models.ForeignKey(Distance)
+    race = models.ForeignKey(Race, on_delete=models.CASCADE)
+    distance = models.ForeignKey(Distance, on_delete=models.CASCADE)
     date = models.DateField(db_index=True)
     city = models.CharField(max_length=50)
     resultsurl = models.URLField(max_length=500, null=True, blank=True)
@@ -166,8 +166,8 @@ class Rwmember(models.Model):
         return self.name
 
 class Result(models.Model):
-    event = models.ForeignKey(Event)
-    category = models.ForeignKey(Category)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     athlete = models.CharField(max_length=100)
     gender = models.CharField(max_length=1)
     city = models.CharField(max_length=50)
@@ -179,7 +179,7 @@ class Result(models.Model):
     division = models.CharField(max_length=32, blank=True)
     province = models.CharField(max_length=50, blank=True)
     country = models.CharField(max_length=50, blank=True)
-    rwmember = models.ForeignKey(Rwmember, null=True, default=None)
+    rwmember = models.ForeignKey(Rwmember, null=True, default=None, on_delete=models.CASCADE)
     gender_place = models.IntegerField(null=True, blank=True)
     category_place = models.IntegerField(null=True, blank=True)
     isrwpb = models.BooleanField(default=False, blank=True)
@@ -191,8 +191,8 @@ class Result(models.Model):
         return str((self.event, self.bib))
 
 class Wheelchairresult(models.Model):
-    event = models.ForeignKey(Event)
-    category = models.ForeignKey(Category)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     athlete = models.CharField(max_length=100)
     gender = models.CharField(max_length=1)
     city = models.CharField(max_length=50)
@@ -205,8 +205,8 @@ class Wheelchairresult(models.Model):
         return str((self.event, self.bib))
 
 class Teamresult(models.Model):
-    event = models.ForeignKey(Event)
-    team_category = models.ForeignKey(Teamcategory)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    team_category = models.ForeignKey(Teamcategory, on_delete=models.CASCADE)
     team_place= models.IntegerField()
     team_name = models.CharField(max_length=64)
     athlete_team_place = models.IntegerField()
@@ -223,7 +223,7 @@ class Teamresult(models.Model):
 
 class Endurraceresult(models.Model):
     year = models.IntegerField()
-    category = models.ForeignKey(Category)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     athlete = models.CharField(max_length=100)
     gender = models.CharField(max_length=1)
     city = models.CharField(max_length=50)
@@ -245,21 +245,21 @@ class Bow(models.Model):
 
 class Bowathlete(models.Model):
     GENDER_CHOICES = (('F', 'Female'),('M', 'Male'))
-    bow = models.ForeignKey(Bow)
+    bow = models.ForeignKey(Bow, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
-    category = models.ForeignKey(Category)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     class Meta:
         unique_together = ('bow', 'name')
 
 class Prime(models.Model):
-    event = models.ForeignKey(Event)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     place = models.IntegerField()
     gender = models.CharField(max_length=1)
     time = models.DurationField(null=True)
 
 class Relay(models.Model):
-    event = models.ForeignKey(Event)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     place = models.IntegerField()
     relay_team = models.CharField(max_length=128)
     relay_team_place = models.IntegerField()
@@ -267,7 +267,7 @@ class Relay(models.Model):
     relay_leg = models.IntegerField()
 
 class Split(models.Model):
-    event = models.ForeignKey(Event)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     place = models.IntegerField()
     split_num = models.IntegerField()
     split_time = models.DurationField(null=True)
@@ -305,11 +305,11 @@ class Endurteam(models.Model):
 
 class Rwmembercorrection(models.Model):
     CORRECTION_TYPE_CHOICES = (('exclude', 'exclude'),('include', 'include'))
-    rwmember = models.ForeignKey(Rwmember)
+    rwmember = models.ForeignKey(Rwmember, on_delete=models.CASCADE)
     correction_type = models.CharField(max_length=7, choices=CORRECTION_TYPE_CHOICES)
-    event = models.ForeignKey(Event)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     place= models.IntegerField()
 
 class Phototag(models.Model):
-    event = models.ForeignKey(Event)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     tag = models.CharField(max_length=64)
