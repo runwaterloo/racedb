@@ -14,6 +14,8 @@ from .models import (
     Rwmembertag,
 )
 
+named_filter = namedtuple('nf', ['current', 'choices'])
+named_choice = namedtuple('nc', ['name', 'url'])
 
 def index(request, year):
     config_values = (
@@ -35,6 +37,7 @@ def index(request, year):
     year = int(year)
     qstring = parse.parse_qs(request.META['QUERY_STRING'])
     qs_filter = get_qs_filter(qstring)
+    qs_date = get_qs_date(qstring)
     first_day = datetime(year, 1, 1).date()
     last_day = datetime(year, 12, 31).date()
     if 'date' in qstring:
@@ -110,6 +113,7 @@ def index(request, year):
     leaderboard['Female Over 40'] = leaders['F40+']
     leaderboard['Male Over 40'] = leaders['M40+']
     standings_filter = get_standings_filter(qs_filter, year)
+    date_filter = get_date_filter(qs_date, first_day, last_day)
     if qs_member:
         context = {
                    'config_dict' : config_dict,
@@ -141,8 +145,6 @@ def get_qs_filter(qstring):
 
 
 def get_standings_filter(qs_filter, year):
-    named_filter = namedtuple('nf', ['current', 'choices'])
-    named_choice = namedtuple('nc', ['name', 'url'])
     choices = []
     choices.append(named_choice('', '/boost/{}'.format(year)))
     choices.append(
@@ -168,6 +170,40 @@ def get_standings_filter(qs_filter, year):
         current_choice = qs_filter
     standings_filter = named_filter(current_choice, choices)
     return standings_filter
+
+
+def get_qs_date(qstring):
+    qs_date = ''
+    if 'date' in qstring:
+        raw_date = qstring['date'][0]
+        try:
+            date_filter = datetime.strptime(raw_date, '%Y-%m-%d')
+        except Exception:
+            raise Http404('Invalid date')
+    return qs_date
+
+
+def get_date_filter(qs_date, first_day, last_day):
+    year = first_day.year
+    end_date = last_day
+    if qs_date != '':
+        if qs_date < last_day:
+            end_date = qs_date
+    events = Event.objects.select_related().filter(date__range=(first_day, end_date)).annotate(num_events=Count('result')).filter(num_events__gte=1).order_by('-date')
+    choices = []
+    dates_seen = []
+    for e in events:
+        if e.date in dates_seen:
+            continue
+        if e.race.slug in ('endurrace', 'endurrun'):
+            choices.append(named_choice('{} {}'.format(e.race.shortname, e.distance.name), '/boost/{}/?date={}'.format(year, e.date)))
+        else:
+            choices.append(named_choice(e.race.name, '/boost/{}/?date={}'.format(year, e.date)))
+        dates_seen.append(e.date)
+    #choices = [x for x in choices if x[0] != qs_filter]
+    current_choice = choices[0][0]
+    date_filter = named_filter(current_choice, choices)
+    return date_filter
 
 
 def get_previous_races(year, included_members):
