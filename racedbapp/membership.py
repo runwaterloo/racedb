@@ -23,13 +23,14 @@ def update_membership(member):
             continue
         r.rwmember=member
         dist = r.event.distance
-        if dist in rwpbs:
-            if r.guntime < rwpbs[dist]:
+        if dist.slug != 'roughly-five':
+            if dist in rwpbs:
+                if r.guntime < rwpbs[dist]:
+                    rwpbs[dist] = r.guntime
+                    r.isrwpb = True
+            else:
                 rwpbs[dist] = r.guntime
                 r.isrwpb = True
-        else:
-            rwpbs[dist] = r.guntime
-            r.isrwpb = True
         r.save()
         logger.info('Updating {} with {}'.format(r, member))
 
