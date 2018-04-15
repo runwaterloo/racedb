@@ -18,7 +18,7 @@
 
 {% block content %}
 
-<h3>
+<h4>
 <img class="img-responsive" src="{% static "RW-Boost-Wordmark.png" %}">
 <select onchange="location = this.options[this.selectedIndex].value;">
 <option>
@@ -34,8 +34,20 @@
   {% endif %}
  </select>
 
+<!-- Date Filter
+As of 
+<select onchange="location = this.options[this.selectedIndex].value;">
+<option>
+  {{ date_filter.current }}
+</option>
+{% for i in date_filter.choices %}
+  <option value="{{ i.url }}">{{ i.name }}</option>
+{% endfor %}
+</select>
+-->
+
 <small><a href="http://www.runwaterloo.com/boost" target="_blank"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span></a></small>
-</h3>
+</h4>
 
   <div class="row">
     {% for k, v in leaderboard.items %}
@@ -53,7 +65,11 @@
             {% for i in v %}
               <tr>
                 <td class="text-center">{{ forloop.counter }}</td>
-                <td><a href="?member={{ i.slug }}" title="{{ i.total_points|floatformat:"2" }}">{{ i.total_points|floatformat:"0" }}<a></td>
+                {% if qs_date == '' %}
+                  <td><a href="?member={{ i.slug }}" title="{{ i.total_points|floatformat:"2" }}">{{ i.total_points|floatformat:"0" }}<a></td>
+                {% else %}
+                  <td title="{{ i.total_points|floatformat:"2" }}">{{ i.total_points|floatformat:"0" }}</td>
+                {% endif %}
                 <td>
                 {% if i.active %}
                   <a href="/member/{{ i.slug }}/">{{ i.athlete}}</a>
@@ -106,7 +122,11 @@
           {% for s in standings %}
             <tr>
               <td class="text-center">{{ forloop.counter }}</td>
-              <td class="text-center"><a href="?member={{ s.slug }}" title="{{ s.total_points|floatformat:"2" }}">{{ s.total_points|floatformat:"0" }}<a></td>
+              {% if qs_date == '' %}
+                <td class="text-center"><a href="?member={{ s.slug }}" title="{{ s.total_points|floatformat:"2" }}">{{ s.total_points|floatformat:"0" }}<a></td>
+              {% else %}
+                <td class="text-center" title="{{ s.total_points|floatformat:"2" }}">{{ s.total_points|floatformat:"0" }}</td>
+              {% endif %}
               <td>
                 {% if s.active %}
                   <a href="/member/{{ s.slug }}/">{{ s.athlete}}</a>
