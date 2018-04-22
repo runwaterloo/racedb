@@ -6,7 +6,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        enabled = True
+        enabled = False
 
         if not enabled:
             print('Not enabled, exiting')
