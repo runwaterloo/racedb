@@ -56,16 +56,11 @@ def index(request, year):
             else:
                 raise Http404('Invalid date')
     gender_finishers = get_gender_finishers(first_day, last_day)
-    included_members = []
-    if year in (2017, 2018):
-        member2018 = Rwmembertag.objects.get(name='member-2018')
-        included_members = Rwmember.objects.filter(
-                               active=True,
-                               year_of_birth__isnull=False,
-                               tags=member2018,
-                               )
-    else:
-        raise Http404('Invalid date')
+    boost_tag = get_boost_tag(year)
+    included_members = Rwmember.objects.filter(
+                           year_of_birth__isnull=False,
+                           tags=boost_tag,
+                           )
     qs_member = get_qs_member(qstring, included_members)
     previous_races = get_previous_races(year, included_members)
     battlers = {}
@@ -138,6 +133,12 @@ def index(request, year):
                   }
         return render(request, 'racedbapp/boost.html', context)
 
+def get_boost_tag(year):
+    try:
+        boost_tag = Rwmembertag.objects.get(name='boost-{}'.format(year))
+    except Exception:
+        raise Http404('No results found')
+    return boost_tag
 
 def get_qs_filter(qstring):
     valid_filters = ('F', 'M', 'F40-', 'F40+', 'M40-', 'M40+')
