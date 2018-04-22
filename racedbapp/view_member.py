@@ -353,7 +353,7 @@ def get_memberresults(member):
                  .select_related()
                  .filter(rwmember=member)
                  .exclude(place__gte=990000)
-                 .order_by('-event__date')
+                 .order_by('-event__date', '-event__distance__km')
                 )
     total_distance = 0
     for r in dbresults:
