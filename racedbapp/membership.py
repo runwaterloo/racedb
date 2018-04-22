@@ -15,7 +15,7 @@ def update_membership(member):
     altresults = Result.objects.filter(athlete=member.altname)  
     includes = get_includes(member)                                              
     results_list = list(chain(primaryresults, altresults)) + includes            
-    results_list = sorted(results_list, key=attrgetter('event.date'))
+    results_list = sorted(set(results_list), key=attrgetter('event.date'))
     excludes = get_excludes(member)            
     rwpbs = {}
     for r in results_list:
