@@ -224,6 +224,10 @@ def get_distance_filter(event, races):
         if d == event.distance:
             continue
         choices.append(named_choice(d.name, '/event/{}/{}/{}/'.format(event.date.year, event.race.slug, d.slug)))
+    if event.race.slug == 'baden-road-races':
+        durelaycount = Durelay.objects.filter(year=event.date.year).count()
+        if durelaycount > 0:
+            choices.append(named_choice('Sprint Duathlon Relay', '/durelay/{}/'.format(event.date.year)))
     distance_filter = named_filter(event.distance.name, choices)
     return distance_filter
 

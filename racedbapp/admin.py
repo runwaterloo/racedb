@@ -78,3 +78,8 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'ismasters')
     ordering = ('name',)
 admin.site.register(Category, CategoryAdmin) 
+
+class DurelayAdmin(admin.ModelAdmin):
+    list_display = ('year', 'team_place', 'team_name', 'team_time')
+    ordering = ('-year', 'team_place')
+admin.site.register(Durelay, DurelayAdmin) 

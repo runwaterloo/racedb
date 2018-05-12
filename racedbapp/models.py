@@ -313,3 +313,15 @@ class Rwmembercorrection(models.Model):
 class Phototag(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     tag = models.CharField(max_length=64)
+
+class Durelay(models.Model):
+    year = models.IntegerField()
+    team_place = models.IntegerField()
+    team_name = models.CharField(max_length=128)
+    team_time = models.DurationField(null=True)
+    run1_athlete = models.CharField(max_length=128)
+    run1_time = models.DurationField(null=True)
+    bike_athlete = models.CharField(max_length=128)
+    bike_time = models.DurationField(null=True)
+    run2_athlete = models.CharField(max_length=128)
+    run2_time = models.DurationField(null=True)
