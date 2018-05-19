@@ -175,13 +175,14 @@ class Command(BaseCommand):
                                 relays.append(newrelayresult)
                         if dohill:
                             if result['extra'] != '':
-                                raw_hill_time = eval(result['extra'])['Hill Time']
-                                hill_time = maketimedelta(raw_hill_time)  
-                                newhillresult = Prime(event_id=event['id'],
-                                                      place=result['place'],
-                                                      gender=result['gender'],
-                                                      time=hill_time)
-                                hill_results.append(newhillresult)
+                                if 'Hill Time' in result['extra']:
+                                    raw_hill_time = eval(result['extra'])['Hill Time']
+                                    hill_time = maketimedelta(raw_hill_time)  
+                                    newhillresult = Prime(event_id=event['id'],
+                                                          place=result['place'],
+                                                          gender=result['gender'],
+                                                          time=hill_time)
+                                    hill_results.append(newhillresult)
                     if r.json()['next']:
                         resultsurl = r.json()['next']
                     else:
