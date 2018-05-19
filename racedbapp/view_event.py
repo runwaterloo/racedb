@@ -52,9 +52,7 @@ def index(request, year, race_slug, distance_slug):
         all_results = Result.objects.select_related().filter(event=event)
         hasage = all_results.hasage(event)
     results, max_splits = get_results(event, all_results, page, category, division, hill_dict, phototags, laurier_relay_dict)
-    split_headings = []
-    for i in range(1, max_splits+1):
-        split_headings.append('Split {}'.format(i))
+    split_headings = get_split_headings(event, max_splits)
     hasdivision = False
     if event.race.slug == 'endurrun':
         hasdivision = True
@@ -548,3 +546,18 @@ def get_laurier_relay_dict(event):
         if len(laurier_relay_results) > 0:
             laurier_relay_dict = dict(laurier_relay_results)
     return laurier_relay_dict
+
+def get_split_headings(event, max_splits):
+    if event.distance.slug == 'sprint-duathlon':
+        split_headings = [
+            'Run 1',
+            'T1',
+            'Cycle',
+            'T2',
+            'Run 2' 
+            ] 
+    else:
+        split_headings = []
+        for i in range(1, max_splits+1):
+            split_headings.append('Split {}'.format(i))
+    return split_headings
