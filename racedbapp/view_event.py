@@ -496,7 +496,10 @@ def filter_results(results, category, division):
 def get_hill_results(results, named_result):
     hill_results = []
     results = [ x for x in results if x.prime != '' ]
-    for i, r in enumerate(sorted(results, key=attrgetter('prime', 'place')), 1):
+    for i, r in enumerate(results, 1):
+        prime = r.prime
+        if len(prime) == 4:
+            prime = '0{}'.format(prime)
         hill_results.append(named_result(
            i,
            r.bib,
@@ -509,7 +512,7 @@ def get_hill_results(results, named_result):
            r.age,
            r.division,
            r.guntime,
-           r.prime,
+           prime,
            r.chiptime,
            r.city,
            r.ismasters,
@@ -518,6 +521,7 @@ def get_hill_results(results, named_result):
            r.hasphotos,
            r.youtube_url,
            ))
+    hill_results = sorted(hill_results, key=attrgetter('prime', 'place'))
     return hill_results
 
 def get_extra_name(event):
