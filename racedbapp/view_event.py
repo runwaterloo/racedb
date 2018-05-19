@@ -474,6 +474,8 @@ def get_endurrun_relay_dict(event):
 
 def get_short_time(orig_time):
     short_time = str(orig_time).lstrip('0:')
+    if len(short_time) == 2:
+        short_time = '0:{}'.format(short_time)
     return short_time
 
 def filter_results(results, category, division):
