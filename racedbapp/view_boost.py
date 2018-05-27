@@ -357,7 +357,7 @@ class BResult:
                 self.ditto_boost = int(config_dict['boost_ditto_points'])
         if result.isrwpb:
             self.pb_boost = int(config_dict['boost_pb_points'])
-        if 'classic' in self.event_race_slug:
+        if self.event_race_slug in ('waterloo-classic', 'fall-classic'):
             self.classic_boost = int(config_dict['boost_classic_points'])
         self.ep = sum([
             int(config_dict['boost_participation_points']),
