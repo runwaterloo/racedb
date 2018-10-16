@@ -355,6 +355,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
     if event.youtube_id and event.youtube_offset_seconds is not None:
         has_youtube = True
         LEAD_TIME_SECONDS = 7
+        youtube_duration_seconds = event.youtube_duration_seconds
     for r in all_results:
         relay_team = False
         if r.gender == 'F':
@@ -426,6 +427,10 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                 video_position = '{}m{}s'.format(minutes, seconds)
                 youtube_url = 'https://youtu.be/{}?t={}'.format(event.youtube_id,
                                                                 video_position)
+                # set youtube_url back to false if past end of video
+                if youtube_duration_seconds:
+                    if video_position_seconds >= youtube_duration_seconds:
+                         youtube_url = False
         if r.bib in phototags:
             hasphotos = True
         results.append(named_result(r.place,

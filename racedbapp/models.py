@@ -135,6 +135,7 @@ class Event(models.Model):
     flickrsetid = models.BigIntegerField(default=None, null=True, blank=True)
     youtube_id = models.CharField(max_length=50, blank=True, help_text='Just the video id, not the whole URL')
     youtube_offset_seconds = models.IntegerField(default=None, null=True, blank=True, help_text='Elapsed race time (in seconds) at start of video')
+    youtube_duration_seconds = models.IntegerField(default=None, null=True, blank=True, help_text='OPTIONAL: Total duration (in seconds) of YouTube video. This is only required if the video cuts off early.')
     class Meta:
         unique_together = ('race', 'distance', 'date')
     #    ordering = ('-date', '-distance__km')
