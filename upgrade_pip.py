@@ -10,6 +10,7 @@ import subprocess
 
 
 def main():
+    os.system('pip install --upgrade pip')
     with open('requirements.txt', 'r') as f:
         lines = f.readlines()
         packages = [x.split('==')[0] for x in lines]
