@@ -94,7 +94,7 @@ DATABASES = {
         'NAME': 'racedb',
         'USER': 'racedb',
         'PASSWORD': secrets.DB_PASSWORD,
-        'HOST': '127.0.0.1',
+        'HOST': secrets.DB_HOST,
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             },
