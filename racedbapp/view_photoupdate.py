@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 runwaterloo_flickr_id = "136573113@N04"
 photos_per_page = 500
 flickr = flickrapi.FlickrAPI(
-    secrets.flickr_api_key, secrets.flickr_secret_key, format="parsed-json"
+    secrets.flickr_api_key, secrets.flickr_secret_key, format="parsed-json", timeout=10
 )
 
 
