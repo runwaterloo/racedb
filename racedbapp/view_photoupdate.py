@@ -2,6 +2,7 @@ from django.http import Http404
 from django.shortcuts import render
 from collections import namedtuple
 import urllib
+import time
 from datetime import date, datetime, timedelta
 import flickrapi  # https://github.com/sybrenstuvel/flickrapi
 from .models import Config, Event, Phototag, Result, Rwmember
@@ -128,7 +129,13 @@ def update_event_tags(events):
     logger.info("Starting photo tag update for {} events".format(len(events)))
     for event in events:
         logger.info("Starting photo tag update for {} ({})".format(event, event.id))
-        photos = get_event_photos(event)
+        try:
+            photos = get_event_photos(event)
+        except Exception:
+            logger.info("Error getting photos, trying again in 5 minutes")
+            print("Error getting photos, trying again in 5 minutes")
+            time.sleep(300)
+            photos = get_event_photos(event)
         tags, tags_applied = do_tags(photos, event)
         event_bibs = Result.objects.filter(event=event).values_list("bib", flat=True)
         all_ntags = [x for x in tags if x.isdigit()]
