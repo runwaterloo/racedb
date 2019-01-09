@@ -23,15 +23,12 @@
 <select onchange="location = this.options[this.selectedIndex].value;">
 <option>
   {{ year }}
-  {% if year == 2017 %}
-     Demo  
-  {% endif %}
 </option>
-  {% if year == 2017 %}
-    <option value="/boost/2018/">2018</option>
-  {% else %}
-    <option value="/boost/2017/">2017 Demo</option>
-  {% endif %}
+  {% for i in boost_years %}
+    {% if i != year %}
+      <option value="/boost/{{ i }}/">{{ i }}</option>
+    {% endif %}
+  {% endfor %}
  </select>
 
 <!-- Date filter -->
