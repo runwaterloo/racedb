@@ -33,12 +33,12 @@
     </div>
     <div class="row">
       <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <div class="num-finishers">{{ lastraceday.0.finishers }} finishers</div>
       <h4>
         <a href="/event/{{ lastraceday.0.event.date.year }}/{{ lastraceday.0.event.race.slug }}/{{ lastraceday.0.event.distance.slug }}/">
           {{ lastraceday.0.event.distance }}
         </a>
       </h4>
+      <div class="num-finishers">{{ lastraceday.0.finishers }} finishers</div>
       <table class="table">
         <tr class="info">
           <th>Place</th>
@@ -70,7 +70,7 @@
     <div class="row">
       <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
         <div class="profile-outer">
-          <div class="profile-inner rightpad5">
+          <div class="profile-inner">
             <a href="{{ memberinfo.member.photourl }}">
               <img src="{{ memberinfo.member.photourl }}">
             </a>
@@ -78,9 +78,9 @@
         </div>
       </div>
       <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-          <h2>MEMBER<br>SPOTLIGHT</h2>
-          <h3>#{{ memberinfo.member.id }} <a href="/member/{{ memberinfo.member.slug }}/">{{ memberinfo.member.name }}</a></h3>
-          <table class="table table-bordered">
+          <h2 style="margin-left: 5px;">MEMBER<br>SPOTLIGHT</h2>
+          <h3 style="margin-left: 5px;">#{{ memberinfo.member.id }} <a href="/member/{{ memberinfo.member.slug }}/">{{ memberinfo.member.name }}</a></h3>
+          <table style="margin-left: 5px;" class="table table-bordered">
             <tr>
               <td>Member Since</td>
               <td>{{ memberinfo.member.joindate.year }}</td>
