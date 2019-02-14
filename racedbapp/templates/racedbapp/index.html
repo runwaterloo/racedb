@@ -35,36 +35,40 @@
     </div>
     <div class="row">
       <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <h4>
-        <a href="/event/{{ lastraceday.0.event.date.year }}/{{ lastraceday.0.event.race.slug }}/{{ lastraceday.0.event.distance.slug }}/">
-          {{ lastraceday.0.event.distance }}
-        </a>
-      </h4>
-      <div class="num-finishers">{{ lastraceday.0.finishers }} finishers</div>
-      <table class="table">
-        <tr class="info">
-          <th>Place</th>
-          <th colspan=2>Female</th>
-          <th colspan=2>Male</th>
-        </tr>
-        {% for r in lastraceday.0.recap %}
-          <tr>
-            <td>{{ r.place }}</td>
-            {% if r.female_member_slug %}
-              <td><a href="/member/{{ r.female_member_slug }}/">{{ r.female_athlete }}</a></td>
-            {% else %}
-              <td>{{ r.female_athlete }}</td>
-            {% endif %}
-            <td>{{ r.female_time }}</td>
-            {% if r.male_member_slug %}
-              <td><a href="/member/{{ r.male_member_slug }}/">{{ r.male_athlete }}</a></td>
-            {% else %}
-              <td>{{ r.male_athlete }}</td>
-            {% endif %}
-            <td>{{ r.male_time }}</td>
-          </tr>
+        <p></p>
+        <ul class="pagination">
+        {% for i in lastraceday %}
+          {% if i.event.distance == recap_event.event.distance %}
+            <li><a href="/event/{{ i.event.date.year }}/{{ i.event.race.slug }}/{{ i.event.distance.slug }}/"><b>{{ i.event.distance }}</b></a></li>
+          {% else %}
+            <li><a href="/event/{{ i.event.date.year }}/{{ i.event.race.slug }}/{{ i.event.distance.slug }}/">{{ i.event.distance }}</a></li>
+          {% endif %}
         {% endfor %}
-      </table>
+        </ul>
+        <table class="table">
+          <tr class="info">
+            <th>Place</th>
+            <th colspan=2>Female</th>
+            <th colspan=2>Male</th>
+          </tr>
+          {% for r in recap_event.recap %}
+            <tr>
+              <td>{{ r.place }}</td>
+              {% if r.female_member_slug %}
+                <td><a href="/member/{{ r.female_member_slug }}/">{{ r.female_athlete }}</a></td>
+              {% else %}
+                <td>{{ r.female_athlete }}</td>
+              {% endif %}
+              <td>{{ r.female_time }}</td>
+              {% if r.male_member_slug %}
+                <td><a href="/member/{{ r.male_member_slug }}/">{{ r.male_athlete }}</a></td>
+              {% else %}
+                <td>{{ r.male_athlete }}</td>
+              {% endif %}
+              <td>{{ r.male_time }}</td>
+            </tr>
+          {% endfor %}
+        </table>
       </div>
     </div>
   </div>
