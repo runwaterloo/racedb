@@ -75,7 +75,9 @@ class Command(BaseCommand):
         # Deactivate lapsed
         tag = Rwmembertag.objects.get(name="member-2019")
         for member in Rwmember.objects.exclude(tags=tag):
-            print(member.id, member.name)
-            # print('Deactivating {}'.format(member.name))
-            # member.active = False
-            # member.save()
+            if member.id <= 27:
+                continue
+            # print(member.id, member.name)
+            print("Deactivating {}".format(member.name))
+            member.active = False
+            member.save()
