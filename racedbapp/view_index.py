@@ -93,8 +93,9 @@ def get_future_events():
 
 
 def get_memberinfo():
-    num_recent_badges = 4
-    named_memberinfo = namedtuple("nm", ["member", "racing_since", "km", "badges"])
+    named_memberinfo = namedtuple(
+        "nm", ["member", "racing_since", "km", "fivek_pb", "tenk_pb"]
+    )
     member = (
         Rwmember.objects.filter(active=True)
         .exclude(photourl=None)
@@ -104,8 +105,23 @@ def get_memberinfo():
     member_results, km = view_member.get_memberresults(member)
     km = round(km, 1)
     racing_since = ""
+    fivek_pb = None
+    tenk_pb = None
     if len(member_results) > 0:
         racing_since = member_results[-1].result.event.date.year
-    recent_badges = view_member.get_badges(member, member_results)[0:num_recent_badges]
-    memberinfo = named_memberinfo(member, racing_since, km, recent_badges)
+        fivek_pbs = [
+            x.result
+            for x in member_results
+            if x.result.event.distance.slug == "5-km" and x.result.isrwpb
+        ]
+        if len(fivek_pbs) > 0:
+            fivek_pb = fivek_pbs[0]
+        tenk_pbs = [
+            x.result
+            for x in member_results
+            if x.result.event.distance.slug == "10-km" and x.result.isrwpb
+        ]
+        if len(tenk_pbs) > 0:
+            tenk_pb = tenk_pbs[0]
+    memberinfo = named_memberinfo(member, racing_since, km, fivek_pb, tenk_pb)
     return memberinfo
