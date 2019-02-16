@@ -9,7 +9,7 @@ import urllib
 import simplejson
 from . import view_recap, view_member, view_shared
 from datetime import datetime
-from .models import Event, Result, Rwmember
+from .models import Config, Event, Result, Rwmember
 
 named_future_event = namedtuple(
     "nfe", ["event", "race", "distance", "records", "team_records", "hill_records"]
@@ -25,11 +25,15 @@ def index(request):
     lastraceday = get_lastraceday()
     recap_event = random.choice(lastraceday)
     memberinfo = get_memberinfo()
+    featured_event = get_featured_event()
+    featured_event_records = get_featured_event_records(featured_event)
     future_events = get_future_events()
     context = {
         "lastraceday": lastraceday,
         "recap_event": recap_event,
         "memberinfo": memberinfo,
+        "featured_event": featured_event,
+        "featured_event_records": featured_event_records,
         "future_events": future_events,
     }
     # Determine the format to return based on what is seen in the URL
@@ -125,3 +129,30 @@ def get_memberinfo():
             tenk_pb = tenk_pbs[0]
     memberinfo = named_memberinfo(member, racing_since, km, fivek_pb, tenk_pb)
     return memberinfo
+
+
+def get_featured_event():
+    featured_event = None
+    try:
+        featured_event_id = int(Config.objects.get(name="featured_event_id").value)
+    except Exception:
+        pass
+    else:
+        try:
+            event = Event.objects.get(id=featured_event_id)
+        except Exception:
+            pass
+        else:
+            finishers = Result.objects.filter(event=event).count()
+            if finishers == 0:
+                featured_event = event
+    return featured_event
+
+
+def get_featured_event_records(featured_event):
+    featured_event_records = None
+    if featured_event:
+        featured_event_records, team_records, hill_records = view_shared.getracerecords(
+            featured_event.race, featured_event.distance
+        )
+    return featured_event_records
