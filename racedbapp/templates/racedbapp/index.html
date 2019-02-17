@@ -74,6 +74,7 @@
   </div>
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
     <div class="row">
+      <hr class="hidden-lg">
       <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
         <div class="profile-outer">
           <div class="profile-inner">
@@ -121,6 +122,7 @@
 <!-- START SECOND ROW -->
 {% if featured_event %}
   <div class="row">
+    <hr>
     <center><h2>NEXT FEATURED EVENT</h2></center>
     <div class="col-xs-l col-sm-3 col-md-3 col-lg-2">
       <center><img class="img-responsive upcoming-race" src="{% static "race_logos/"|add:featured_event.race.slug|add:".png" %}"></img></center>
@@ -129,7 +131,7 @@
       <br>
       <strong><a href="https://runwaterloo.com/{{ featured_event.race.slug }}/">{{ featured_event.race.name }}</strong></a><br>
       <br>
-      {{ featured_event.distance.name }}<br>
+      <strong>{{ featured_event.distance.name }}</strong><br>
       {{ featured_event.date }}<br>
       {{ featured_event.city }}<br>
     </div>
@@ -170,73 +172,58 @@
 {% endif %}
 <!-- END SECOND ROW -->
 
-
-
-
-
-
-<!-- START SECOND ROW -->
-<div class="row">
-  <!-- START FIRST (ONLY) COLUMN -->
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-    <center><h3>MORE UPCOMING EVENTS</h3></center>
+<!-- START THIRD ROW -->
+  <div class="row">
+    <hr>
+    <center><h2>MORE UPCOMING EVENTS</h2></center>
     {% for fe in future_events %}
-    <div class="upcoming-race-outer">
-      <div class="upcoming-race-logo">
-        <img class="upcoming-race" src="{% static "race_logos/"|add:fe.race.slug|add:".png" %}" height="100"></img>
-      </div>
-      <div class="upcoming-race-description">
-        <h3>{{ fe.race.name }}</h3>
-        {{ fe.distance.name }}<br>
-        {{ fe.event.date }}<br>
-        {{ fe.event.city }}<br>
-      </div>
-      <div class="upcoming-race-records">
-      {% if fe.records %}
-<table class="table table-condensed">
-  <tr class="info">
-    <th>Individual</th>
-    <th>Time</th>
-    <th>Name</th>
-    <th>Year</th>
-    <th>Category</th>
-    <th>Pace</th>
-    <th>City</th>
-  </tr>
-  {% for record in fe.records %}
-  <tr>
-{% ifchanged record.place %}
-<td>{{ record.place }}</td>
-{% else %}
-<td></td>
-{% endifchanged %}
-    <td>{{ record.guntime|get_time }}</td>
-    {% if record.member %}
-      <td><a href="/member/{{ record.member.slug }}/">{{ record.athlete }}</a></td>
-    {% else %}
-      <td>{{ record.athlete }}</td>
-    {% endif %}
-    {% if fe.distance.slug == 'combined' %}
-        <td><a target="_blank" href="/endurrace/{{ record.year }}/">{{ record.year }}</a></td>
-    {% else %}
-        <td><a target="_blank" href="/event/{{ record.year }}/{{ record.race_slug }}/{{ fe.distance.slug }}">{{ record.year }}</a></td>
-    {% endif %}
-    <td>{{ record.category }}</td>
-    <td>{{ record.guntime|get_pace:fe.distance.km }}</td>
-    <td>{{ record.city }}</td>
-  </tr>
-  {% endfor %}
-</table>
-
-{% else %}
-<h1>Inaugural</h1>
-{% endif %}
-
-      </div>
+    <div class="col-xs-l col-sm-3 col-md-3 col-lg-2">
+      <center><img class="img-responsive upcoming-race" src="{% static "race_logos/"|add:fe.race.slug|add:".png" %}"></img></center>
+    </div>
+    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-2">
+      <br>
+      <strong><a href="https://runwaterloo.com/{{ fe.race.slug }}/">{{ fe.race.name }}</strong></a><br>
+      <br>
+      <strong>{{ fe.distance.name }}</strong><br>
+      {{ fe.event.date }}<br>
+      {{ fe.event.city }}<br>
+    </div>
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-8">
+      <p></p>
+      <table class="table table-condensed">
+        <tr class="info">
+          <th>Record</th>
+          <th>Time</th>
+          <th>Name</th>
+          <th>Year</th>
+          <th>Category</th>
+          <th>Pace</th>
+          <th>City</th>
+        </tr>
+        {% for record in fe.records %}
+        <tr>
+          {% ifchanged record.place %}
+            <td>{{ record.place }}</td>
+          {% else %}
+            <td></td>
+          {% endifchanged %}
+          <td>{{ record.guntime|get_time }}</td>
+          {% if record.member %}
+            <td><a href="/member/{{ record.member.slug }}/">{{ record.athlete }}</a></td>
+          {% else %}
+            <td>{{ record.athlete }}</td>
+          {% endif %}
+          <td><a target="_blank" href="/event/{{ record.year }}/{{ record.race_slug }}/{{ fe.distance.slug }}">{{ record.year }}</a></td>
+          <td>{{ record.category }}</td>
+          <td>{{ record.guntime|get_pace:fe.distance.km }}</td>
+          <td>{{ record.city }}</td>
+        </tr>
+        {% endfor %}
+      </table>
     </div>
     {% endfor %}
   </div>
-  <!-- END FIRST (ONLY) COLUMN -->
-</div>
-<!-- END SECOND ROW -->
+  <br>
+<!-- END THIRD ROW -->
+
 {% endblock content %}

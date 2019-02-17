@@ -27,7 +27,7 @@ def index(request):
     memberinfo = get_memberinfo()
     featured_event = get_featured_event()
     featured_event_records = get_featured_event_records(featured_event)
-    future_events = get_future_events()
+    future_events = get_future_events(featured_event)
     context = {
         "lastraceday": lastraceday,
         "recap_event": recap_event,
@@ -70,13 +70,23 @@ def get_lastraceday():
     return lastraceday
 
 
-def get_future_events():
+def get_future_events(featured_event):
     today = datetime.today()
     future_events = []
     dbfuture_events = Event.objects.filter(date__gte=today).order_by(
         "date", "-distance__km"
     )
+    upcoming_races_count = int(Config.objects.get(name="upcoming_races_count").value)
+    races_seen = []
     for i in dbfuture_events:
+        if len(races_seen) == upcoming_races_count:
+            if i.race not in races_seen:
+                break
+        if i == featured_event:
+            continue
+        event_result_count = Result.objects.filter(event=i).count()
+        if event_result_count > 0:
+            continue
         event = named_event(i.date, i.city)
         race = named_race(i.race.name, i.race.shortname, i.race.slug)
         distance = named_distance(i.distance.name, i.distance.slug, i.distance.km)
@@ -93,6 +103,8 @@ def get_future_events():
                 event, race, distance, records, team_records, hill_records
             )
         )
+        if i.race not in races_seen:
+            races_seen.append(i.race)
     return future_events
 
 
