@@ -55,7 +55,7 @@ def getwinnersdict():
     return malewinnersdict, femalewinnersdict
 
 
-def getracerecords(race, distance, division_choice=False):
+def getracerecords(race, distance, division_choice=False, individual_only=False):
     membership = get_membership()
     race = Race.objects.get(id=race.id)
     races = create_samerace_list(race)
@@ -169,6 +169,8 @@ def getracerecords(race, distance, division_choice=False):
         records += makerecords("Masters Male", mmrtime, mmr, distance, membership)
     if fmr:
         records += makerecords("Masters Female", fmrtime, fmr, distance, membership)
+    if individual_only:
+        return records
 
     team_records = []
     team_categories = (
