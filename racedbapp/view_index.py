@@ -121,24 +121,10 @@ def get_memberinfo():
     member_results, km = view_member.get_memberresults(member)
     km = round(km, 1)
     racing_since = ""
-    fivek_pb = None
-    tenk_pb = None
+    fivek_pb = view_member.get_pb(member_results, "5-km")
+    tenk_pb = view_member.get_pb(member_results, "10-km")
     if len(member_results) > 0:
         racing_since = member_results[-1].result.event.date.year
-        fivek_pbs = [
-            x.result
-            for x in member_results
-            if x.result.event.distance.slug == "5-km" and x.result.isrwpb
-        ]
-        if len(fivek_pbs) > 0:
-            fivek_pb = fivek_pbs[0]
-        tenk_pbs = [
-            x.result
-            for x in member_results
-            if x.result.event.distance.slug == "10-km" and x.result.isrwpb
-        ]
-        if len(tenk_pbs) > 0:
-            tenk_pb = tenk_pbs[0]
     memberinfo = named_memberinfo(member, racing_since, km, fivek_pb, tenk_pb)
     return memberinfo
 
