@@ -11,9 +11,7 @@ from . import view_recap, view_member, view_shared
 from datetime import datetime
 from .models import Config, Event, Result, Rwmember
 
-named_future_event = namedtuple(
-    "nfe", ["event", "race", "distance", "records", "team_records", "hill_records"]
-)
+named_future_event = namedtuple("nfe", ["event", "race", "distance", "records"])
 
 named_event = namedtuple("ne", ["date", "city"])
 named_race = namedtuple("nr", ["name", "shortname", "slug"])
@@ -95,14 +93,10 @@ def get_future_events(featured_event):
         ).count()
         records = False
         if numresults > 0:
-            records, team_records, hill_records = view_shared.getracerecords(
-                i.race, i.distance
+            records = view_shared.getracerecords(
+                i.race, i.distance, individual_only=True
             )
-        future_events.append(
-            named_future_event(
-                event, race, distance, records, team_records, hill_records
-            )
-        )
+        future_events.append(named_future_event(event, race, distance, records))
         if i.race not in races_seen:
             races_seen.append(i.race)
     return future_events
@@ -150,7 +144,7 @@ def get_featured_event():
 def get_featured_event_records(featured_event):
     featured_event_records = None
     if featured_event:
-        featured_event_records, team_records, hill_records = view_shared.getracerecords(
-            featured_event.race, featured_event.distance
+        featured_event_records = view_shared.getracerecords(
+            featured_event.race, featured_event.distance, individual_only=True
         )
     return featured_event_records
