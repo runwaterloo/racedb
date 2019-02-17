@@ -74,7 +74,9 @@ def get_future_events(featured_event):
     dbfuture_events = Event.objects.filter(date__gte=today).order_by(
         "date", "-distance__km"
     )
-    upcoming_races_count = int(Config.objects.get(name="upcoming_races_count").value)
+    upcoming_races_count = int(
+        Config.objects.get(name="homepage_upcoming_races_count").value
+    )
     races_seen = []
     for i in dbfuture_events:
         if len(races_seen) == upcoming_races_count:
@@ -126,7 +128,9 @@ def get_memberinfo():
 def get_featured_event():
     featured_event = None
     try:
-        featured_event_id = int(Config.objects.get(name="featured_event_id").value)
+        featured_event_id = int(
+            Config.objects.get(name="homepage_featured_event_id").value
+        )
     except Exception:
         pass
     else:
