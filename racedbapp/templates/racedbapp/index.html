@@ -190,6 +190,7 @@
     </div>
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-8">
       <p></p>
+      {% if fe.records %}
       <table class="table table-condensed">
         <tr class="info">
           <th>Record</th>
@@ -220,6 +221,9 @@
         </tr>
         {% endfor %}
       </table>
+      {% else %}
+      <center><h1>Inaugural Event!</h1></center>
+      {% endif %}
     </div>
     </div>
     {% endfor %}
