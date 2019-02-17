@@ -123,7 +123,7 @@
 {% if featured_event %}
   <div class="row">
     <hr>
-    <center><h2>NEXT FEATURED EVENT</h2></center>
+    <center><h2>FEATURED EVENT</h2></center>
     <div class="col-xs-l col-sm-3 col-md-3 col-lg-2">
       <center><img class="img-responsive upcoming-race" src="{% static "race_logos/"|add:featured_event.race.slug|add:".png" %}"></img></center>
     </div>
@@ -173,10 +173,10 @@
 <!-- END SECOND ROW -->
 
 <!-- START THIRD ROW -->
-  <div class="row">
     <hr>
-    <center><h2>MORE UPCOMING EVENTS</h2></center>
+    <center><h2>UPCOMING EVENTS</h2></center>
     {% for fe in future_events %}
+    <div class="row">
     <div class="col-xs-l col-sm-3 col-md-3 col-lg-2">
       <center><img class="img-responsive upcoming-race" src="{% static "race_logos/"|add:fe.race.slug|add:".png" %}"></img></center>
     </div>
@@ -220,6 +220,7 @@
         </tr>
         {% endfor %}
       </table>
+    </div>
     </div>
     {% endfor %}
   </div>
