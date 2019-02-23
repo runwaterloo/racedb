@@ -23,7 +23,17 @@
         <img class="img-responsive img-rounded" src="{% static "race_logos/"|add:lastraceday.0.event.race.slug|add:".png" %}"/>
       </div>
       <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
-        <h2>LAST RACE</h2>
+        <h2>
+          LAST RACE
+          <small>
+            {% if lastraceday.0.event.flickrsetid %}
+              &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ lastraceday.0.event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
+            {% endif %}
+            {% if lastraceday.0.event.youtube_id %}
+              &nbsp;&nbsp;<a href="https://youtu.be/{{ lastraceday.0.event.youtube_id }}" target="_blank"><span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span></a>
+            {% endif %}
+          </small>
+        </h2>
         <h3>
           <a href="https://runwaterloo.com/{{ lastraceday.0.event.date.year }}-{{ lastraceday.0.event.race.slug }}">
             {{ lastraceday.0.event.race.name }}
