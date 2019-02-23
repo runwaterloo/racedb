@@ -7,7 +7,7 @@ from collections import namedtuple
 import random
 import urllib
 import simplejson
-from . import view_recap, view_member, view_shared
+from . import view_boost, view_recap, view_member, view_shared
 from datetime import datetime
 from .models import Config, Event, Result, Rwmember
 
@@ -26,6 +26,8 @@ def index(request):
     featured_event = get_featured_event()
     featured_event_records = get_featured_event_records(featured_event)
     future_events = get_future_events(featured_event)
+    boost_year = view_boost.get_boost_years()[0]
+    boost_leaderboard = view_boost.index(request, boost_year, leaderboard_only=True)
     context = {
         "lastraceday": lastraceday,
         "recap_event": recap_event,
@@ -33,6 +35,8 @@ def index(request):
         "featured_event": featured_event,
         "featured_event_records": featured_event_records,
         "future_events": future_events,
+        "boost_year": boost_year,
+        "boost_leaderboard": boost_leaderboard,
     }
     # Determine the format to return based on what is seen in the URL
     if "format" in qstring:
