@@ -183,11 +183,21 @@
 <!-- END SECOND ROW -->
 
 <!-- START THIRD ROW -->
+<div class="row">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+    <hr>
+    <center><h2>BOOST LEADERBOARD</h2></center>
+    <center>TABLE GOES HERE</center>
+  </div>
+</div>
+<!-- END THIRD ROW -->
+
+<!-- START FOURTH ROW -->
     <hr>
     <center><h2>UPCOMING EVENTS</h2></center>
     {% for fe in future_events %}
     <div class="row">
-    <div class="col-xs-l col-sm-3 col-md-3 col-lg-2">
+    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-2">
       <center><img class="img-responsive upcoming-race" src="{% static "race_logos/"|add:fe.race.slug|add:".png" %}"></img></center>
     </div>
     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-2">
@@ -237,8 +247,6 @@
     </div>
     </div>
     {% endfor %}
-  </div>
-  <br>
-<!-- END THIRD ROW -->
+<!-- END FOURTH ROW -->
 
 {% endblock content %}
