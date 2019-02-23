@@ -12,7 +12,7 @@ named_filter = namedtuple("nf", ["current", "choices"])
 named_choice = namedtuple("nc", ["name", "url"])
 
 
-def index(request, year):
+def index(request, year, leaderboard_only=False):
     config_values = (
         "boost_classic_points",
         "boost_ditto_points",
@@ -109,6 +109,8 @@ def index(request, year):
     leaderboard["Male Under 40"] = leaders["M40-"]
     leaderboard["Female Over 40"] = leaders["F40+"]
     leaderboard["Male Over 40"] = leaders["M40+"]
+    if leaderboard_only:
+        return leaderboard
     standings_filter = get_standings_filter(qs_filter, qs_date, year)
     date_filter = get_date_filter(qs_date, year)
     if qs_member:
