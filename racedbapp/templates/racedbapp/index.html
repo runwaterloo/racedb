@@ -26,7 +26,7 @@
         <h2>
           LAST RACE
           <small>
-            {% if featured_event.flickrsetid %}
+            {% if lastraceday.0.event.flickrsetid %}
               &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ featured_event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
             {% endif %}
           </small>
