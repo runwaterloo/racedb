@@ -26,11 +26,8 @@
         <h2>
           LAST RACE
           <small>
-            {% if lastraceday.0.event.flickrsetid %}
-              &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ lastraceday.0.event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
-            {% endif %}
-            {% if lastraceday.0.event.youtube_id %}
-              &nbsp;&nbsp;<a href="https://youtu.be/{{ lastraceday.0.event.youtube_id }}" target="_blank"><span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span></a>
+            {% if featured_event.flickrsetid %}
+              &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ featured_event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
             {% endif %}
           </small>
         </h2>
