@@ -24,7 +24,7 @@
       </div>
       <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
         <h2>
-          LAST RACE
+          <strong>LAST RACE</strong>
           <small>
             {% if lastraceday.0.event.flickrsetid %}
               &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ featured_event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
@@ -92,7 +92,7 @@
         </div>
       </div>
       <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-          <h2 style="margin-left: 5px;">MEMBER<br>SPOTLIGHT</h2>
+          <h2 style="margin-left: 5px;"><strong>MEMBER<br>SPOTLIGHT</strong></h2>
           <h3 style="margin-left: 5px;"><a href="/member/{{ memberinfo.member.slug }}/">{{ memberinfo.member.name }}</a></h3>
           <table style="margin-left: 5px;" class="table table-bordered">
             <tr>
@@ -130,7 +130,7 @@
 {% if featured_event %}
   <div class="row">
     <hr>
-    <center><h2>FEATURED EVENT</h2></center>
+    <center><h2><strong>FEATURED EVENT</strong></h2></center>
     <div class="col-xs-l col-sm-3 col-md-3 col-lg-2">
       <center><img class="img-responsive upcoming-race" src="{% static "race_logos/"|add:featured_event.race.slug|add:".png" %}"></img></center>
     </div>
@@ -214,7 +214,7 @@
 
 <!-- START FOURTH ROW -->
     <hr>
-    <center><h2>UPCOMING EVENTS</h2></center>
+    <center><h2><strong>UPCOMING EVENTS</strong></h2></center>
     {% for fe in future_events %}
     <div class="row">
     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-2">
@@ -267,6 +267,8 @@
     </div>
     </div>
     {% endfor %}
+    <center><strong><a href="https://runwaterloo.com/category/run-waterloo-events/">All Future Events</a></strong></center>
+    <p></p>
 <!-- END FOURTH ROW -->
 
 {% endblock content %}
