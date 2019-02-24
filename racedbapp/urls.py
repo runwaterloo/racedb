@@ -28,7 +28,7 @@ from . import (
 )
 
 urlpatterns = [
-    url(r"^$", RedirectView.as_view(url="/events", permanent=False), name="index"),
+    url(r"^$", view_index.index, name="index"),
     url(r"^adminphotos", view_adminphotos.index, name="adminphotos"),
     url(
         r"^bowrecap/(?P<bow_slug>.*)/after/(?P<phase>.*)$",
@@ -58,7 +58,6 @@ urlpatterns = [
         name="event",
     ),
     url(r"^events", view_events.index, name="events"),
-    url(r"^index/", view_index.index, name="index"),
     url(
         r"^race/(?P<race_slug>.*)/(?P<distance_slug>.*)/$", view_race.index, name="race"
     ),
