@@ -9,8 +9,8 @@
 
 {% block ogmeta %}
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="RunWaterloo Results" />
-  <meta property="og:description" content="Explore results and records for every RunWaterloo event." />
+  <meta property="og:title" content="Run Waterloo Results" />
+  <meta property="og:description" content="Explore results and records for every Run Waterloo event." />
   <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -67,7 +67,7 @@
                 <span class="glyphicon glyphicon-asterisk" title="Classic Event ({{ config_dict.boost_classic_points }} points)" style="color:orange" aria-hidden="true"></span>
             {% endif %}
             {% if i.pb_boost > 0 %}
-                <span class="glyphicon glyphicon-time" title="RunWaterloo PB ({{ config_dict.boost_pb_points }} points)" style="color:blue" aria-hidden="true"></span>
+                <span class="glyphicon glyphicon-time" title="Run Waterloo PB ({{ config_dict.boost_pb_points }} points)" style="color:blue" aria-hidden="true"></span>
             {% endif %}
             {% if i.ditto_boost > 0 %}
                 <span class="glyphicon glyphicon-repeat" title="Ditto ({{ config_dict.boost_ditto_points }} points)" style="color:maroon" aria-hidden="true"></span>
