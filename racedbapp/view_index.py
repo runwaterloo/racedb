@@ -4,7 +4,6 @@ from django.http import HttpResponse
 # from django.db.models import Min, Q
 # from django import db
 from collections import namedtuple
-import random
 import urllib
 import simplejson
 from . import view_boost, view_recap, view_member, view_shared
@@ -21,7 +20,7 @@ named_distance = namedtuple("nd", ["name", "slug", "km"])
 def index(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     lastraceday = get_lastraceday()
-    recap_event = random.choice(lastraceday)
+    recap_event = lastraceday[0]
     memberinfo = get_memberinfo()
     featured_event = get_featured_event()
     featured_event_records = get_featured_event_records(featured_event)
