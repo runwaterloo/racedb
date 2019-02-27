@@ -1,4 +1,6 @@
 test_urls = (
+    # index
+    "/",
     # /boost
     "/boost/2018/",
     "/boost/2018/?member=vicki-zandbergen",
