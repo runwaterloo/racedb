@@ -111,13 +111,16 @@ def get_memberinfo():
     named_memberinfo = namedtuple(
         "nm", ["member", "racing_since", "km", "fivek_pb", "tenk_pb"]
     )
-    member = (
+    members = (
         Rwmember.objects.filter(active=True)
         .exclude(photourl=None)
         .exclude(photourl="")
-        .order_by("?")[:1][0]
+        .order_by("?")
     )
-    member_results, km = view_member.get_memberresults(member)
+    for member in members:
+        member_results, km = view_member.get_memberresults(member)
+        if km > 0:
+            break
     km = round(km, 1)
     racing_since = ""
     fivek_pb = view_member.get_pb(member_results, "5-km")
