@@ -5,13 +5,17 @@ from ..models import Race
 from . import urls_to_test
 
 
+def setUpModule():
+    """ Import the actual database """
+    print("Copying production database...")
+    os.system("sudo mysqldump racedb | sudo mysql test_racedb")
+
+
 class SimpleTest(TestCase):
     """ Simply test if views return status 200 """
 
     def setUp(self):
         self.client = Client()
-        print("Copying production database...")
-        os.system("sudo mysqldump racedb | sudo mysql test_racedb")
 
     def test_details(self):
         for u in urls_to_test.test_urls:
