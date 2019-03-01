@@ -84,6 +84,9 @@ test_urls = (
     "/race/endurrace/combined/?filter=F-Masters",  # endurrace gender masters filter
     "/race/endurrun/half-marathon/",  # endurrun ultimate
     "/race/endurrun/marathon/?division=All",  # endurrun all
+    "/race/laurier-loop/2_5-km/",  # relay records
+    # /relay
+    "/relay/2018/laurier-loop/2_5-km/",  # regular
     # /member
     "/member/dave-rutherford/",
     "/member/jack-kilislian/",
