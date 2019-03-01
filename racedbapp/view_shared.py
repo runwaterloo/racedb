@@ -173,54 +173,57 @@ def getracerecords(race, distance, division_choice=False, individual_only=False)
         return records
 
     team_records = []
-    team_categories = (
-        Teamcategory.objects.all()
-        .exclude(name="Family")
-        .exclude(name="Open 8")
-        .exclude(name="Masters 4")
-        .exclude(name="Masters 5")
-        .exclude(name="Open 10")
-        .exclude(name="Open 4")
-        .exclude(name="Open 15")
-        .exclude(name="Corporate 5")
-        .exclude(name="Corporate 3 Mixed")
-        .exclude(name="Corporate 3 Men")
-        .exclude(name="2 Person Relay")
-        .exclude(name="4 Person Relay")
-    )
-    category_records = {}
-    for event in events:
-        winning_teams = Teamresult.objects.of_event(event)
-        for w in winning_teams:
-            for t in team_categories:
-                if w.team_category.name == t.name:
-                    if t.name in category_records:
-                        if w.total_time < category_records[t.name][0].total_time:
+    if race.slug == "laurier-loop" and distance.slug == "2_5-km":
+        team_records = get_relay_records()
+    else:
+        team_categories = (
+            Teamcategory.objects.all()
+            .exclude(name="Family")
+            .exclude(name="Open 8")
+            .exclude(name="Masters 4")
+            .exclude(name="Masters 5")
+            .exclude(name="Open 10")
+            .exclude(name="Open 4")
+            .exclude(name="Open 15")
+            .exclude(name="Corporate 5")
+            .exclude(name="Corporate 3 Mixed")
+            .exclude(name="Corporate 3 Men")
+            .exclude(name="2 Person Relay")
+            .exclude(name="4 Person Relay")
+        )
+        category_records = {}
+        for event in events:
+            winning_teams = Teamresult.objects.of_event(event)
+            for w in winning_teams:
+                for t in team_categories:
+                    if w.team_category.name == t.name:
+                        if t.name in category_records:
+                            if w.total_time < category_records[t.name][0].total_time:
+                                category_records[t.name] = [w]
+                            elif w.total_time == category_records[t.name][0].total_time:
+                                category_records[t.name] += w
+                        else:
                             category_records[t.name] = [w]
-                        elif w.total_time == category_records[t.name][0].total_time:
-                            category_records[t.name] += w
-                    else:
-                        category_records[t.name] = [w]
-    for t in team_categories:
-        if t.name in category_records:
-            for record in category_records[t.name]:
-                # Bug workaround, weird behaviour without this
-                try:
-                    record.team_category
-                except Exception:
-                    continue
-                # End bug workaround
-                team_records.append(
-                    namedteamrecord(
-                        record.team_category.name,
-                        record.team_category.slug,
-                        str(record.total_time),
-                        record.winning_team,
-                        record.event.date.year,
-                        str(record.avg_time),
-                        record.event.race.slug,
+        for t in team_categories:
+            if t.name in category_records:
+                for record in category_records[t.name]:
+                    # Bug workaround, weird behaviour without this
+                    try:
+                        record.team_category
+                    except Exception:
+                        continue
+                    # End bug workaround
+                    team_records.append(
+                        namedteamrecord(
+                            record.team_category.name,
+                            record.team_category.slug,
+                            str(record.total_time),
+                            record.winning_team,
+                            record.event.date.year,
+                            str(record.avg_time),
+                            record.event.race.slug,
+                        )
                     )
-                )
     hill_records = []
     if race.slug == "baden-road-races" and distance.slug == "7-mi":
         primeresults = Prime.objects.filter(
@@ -467,3 +470,8 @@ def get_pages(
             )
         )
     return pages
+
+
+def get_relay_records():
+    relay_records = [1]
+    return relay_records
