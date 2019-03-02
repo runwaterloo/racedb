@@ -138,8 +138,8 @@ def get_team_results(relay_results, individual_results_dict):
     teams_dict = {}
     for i in relay_results:
         if i.relay_team_place not in teams_dict:
-            yearplace = "{}-{}".format(i.event.date.year, i.place)
             teams_dict[i.relay_team_place] = RelayResult(i)
+        yearplace = "{}-{}".format(i.event.date.year, i.place)
         leg = RelayLeg(i, individual_results_dict[yearplace])
         teams_dict[i.relay_team_place].legs.append(leg)
     for _k, v in teams_dict.items():
