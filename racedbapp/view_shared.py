@@ -473,5 +473,7 @@ def get_pages(
 
 
 def get_relay_records():
+    """ Get records for 2.5K Laurier Loop relay """
+
     relay_records = [1]
     return relay_records
