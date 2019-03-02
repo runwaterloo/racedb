@@ -7,12 +7,15 @@ from .models import (
     Prime,
     Race,
     Result,
+    Relay,
     Rwmember,
     Rwmembercorrection,
     Samerace,
     Teamcategory,
     Teamresult,
 )
+from .config import ValidRelayCategories
+from .view_relay import get_individual_results_dict, get_relay_results, get_team_results
 
 namedresult = namedtuple(
     "nr",
@@ -474,6 +477,17 @@ def get_pages(
 
 def get_relay_records():
     """ Get records for 2.5K Laurier Loop relay """
-
+    events = Relay.objects.order_by().values_list("event").distinct()
+    individual_results_dict = get_individual_results_dict(events)
+    relay_results = get_relay_results(events)
+    team_results = get_team_results(relay_results, individual_results_dict)
+    print(individual_results_dict)
+    print(relay_results)
+    print(team_results)
+    categories = ValidRelayCategories().categories
+    numcategories = len(categories)
+    records = {}
+    print(numcategories)
+    print(records)
     relay_records = [1]
     return relay_records
