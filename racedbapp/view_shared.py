@@ -482,16 +482,17 @@ def get_relay_records():
     relay_results = get_relay_results(events)
     team_results = get_team_results(relay_results, individual_results_dict)
     categories = ValidRelayCategories().categories
-    relay_records_dict = {}
+    relay_records = {}
     for c in categories.values():
-        relay_records_dict[c] = []
+        relay_records[c] = []
     for i in team_results:
         for j in i.categories:
-            if relay_records_dict[j] == []:
-                relay_records_dict[j] = [i]
-            elif i.team_time < relay_records_dict[j][0].team_time:
-                relay_records_dict[j] = [i]
-            elif i.team_time == relay_records_dict[j][0].team_time:
-                relay_records_dict[j].append(i)
-    relay_records = [1]
+            if relay_records[j] == []:
+                relay_records[j] = [i]
+            elif i.team_time < relay_records[j][0].team_time:
+                relay_records[j] = [i]
+            elif i.team_time == relay_records[j][0].team_time:
+                relay_records[j].append(i)
+    for k, v in relay_records.items():
+        print(k, v)
     return relay_records
