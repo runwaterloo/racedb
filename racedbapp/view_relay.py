@@ -5,20 +5,13 @@ from collections import namedtuple
 from operator import attrgetter
 from urllib import parse
 from . import view_shared
+from .config import ValidRelayCategories
 from .models import Event, Relay, Result
 
 named_filter = namedtuple("nf", ["current", "choices"])
 named_choice = namedtuple("nc", ["name", "url"])
 
-valid_categories = {
-    "female": "Female",
-    "male": "Male",
-    "mixed": "Mixed",
-    "masters": "Masters",
-    "female-masters": "Female Masters",
-    "male-masters": "Male Masters",
-    "mixed-masters": "Mixed Masters",
-}
+valid_categories = ValidRelayCategories().categories
 
 
 def index(request, year, race_slug, distance_slug):
