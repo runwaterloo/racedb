@@ -1,10 +1,10 @@
 class ValidRelayCategories:
     def __init__(self):
         self.categories = {
-            "female": "Female",
             "male": "Male",
+            "female": "Female",
             "mixed": "Mixed",
-            "female-masters": "Female Masters",
             "male-masters": "Male Masters",
+            "female-masters": "Female Masters",
             "mixed-masters": "Mixed Masters",
         }
