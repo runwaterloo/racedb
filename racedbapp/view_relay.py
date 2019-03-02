@@ -23,6 +23,7 @@ def index(request, year, race_slug, distance_slug):
     individual_results_dict = get_individual_results_dict([event])
     relay_results = get_relay_results([event])
     team_results = get_team_results(relay_results, individual_results_dict)
+    team_results = sorted(team_results, key=attrgetter("place"))
     team_categories = view_shared.get_team_categories(event)
     pages = view_shared.get_pages(
         event, "Relay", team_categories, laurier_relay_dict=True
@@ -139,7 +140,6 @@ def get_team_results(relay_results, individual_results_dict):
         v.calc_categories()
         v.legs = sorted(v.legs, key=attrgetter("leg"))
         team_results.append(v)
-    team_results = sorted(team_results, key=attrgetter("place"))
     return team_results
 
 
