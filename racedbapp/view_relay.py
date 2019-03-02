@@ -181,7 +181,6 @@ class RelayResult:
             self.categories.append("Male")
         if all([x.ismasters for x in self.legs]):
             self.ismasters = True
-            self.categories.append("Masters")
             if "Female" in self.categories:
                 self.categories.append("Female Masters")
             elif "Male" in self.categories:
