@@ -131,11 +131,12 @@ def get_team_results(relay_results, individual_results_dict):
     team_results = []
     teams_dict = {}
     for i in relay_results:
-        if i.relay_team_place not in teams_dict:
-            teams_dict[i.relay_team_place] = RelayResult(i)
-        yearplace = "{}-{}".format(i.event.date.year, i.place)
-        leg = RelayLeg(i, individual_results_dict[yearplace])
-        teams_dict[i.relay_team_place].legs.append(leg)
+        teamyearplace = "{}-{}".format(i.relay_team_place, i.event.date.year)
+        if teamyearplace not in teams_dict:
+            teams_dict[teamyearplace] = RelayResult(i)
+        individualyearplace = "{}-{}".format(i.event.date.year, i.place)
+        leg = RelayLeg(i, individual_results_dict[individualyearplace])
+        teams_dict[teamyearplace].legs.append(leg)
     for _k, v in teams_dict.items():
         v.calc_categories()
         v.legs = sorted(v.legs, key=attrgetter("leg"))
