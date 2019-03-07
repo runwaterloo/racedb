@@ -150,7 +150,6 @@ class Distance(models.Model):
 
 
 class Race(models.Model):
-    prename = models.CharField(max_length=50)
     name = models.CharField(max_length=50, unique=True)
     shortname = models.CharField(max_length=50)
     slug = models.SlugField(unique=True)
