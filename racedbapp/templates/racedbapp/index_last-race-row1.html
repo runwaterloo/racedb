@@ -1,0 +1,23 @@
+{% load static %}
+<div class="row">
+  <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+    <img class="img-responsive img-rounded" src="{% static "race_logos/"|add:recap_event.race.slug|add:".png" %}"/>
+  </div>
+  <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
+    <h2>
+      <strong>LAST RACE</strong>
+      <small>
+        {% if recap_event.flickrsetid %}
+           &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ recap_event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
+        {% endif %}
+      </small>
+    </h2>
+    <h3>
+      <a href="https://runwaterloo.com/{{ recap_event.date.year }}-{{ recap_event.race.slug }}">
+        {{ recap_event.race.name }}
+      </a>
+    </h3>
+    <div class="date">{{ recap_event.date }}</div>
+    <div class="city">{{ recap_event.city }}</div>
+  </div>
+</div>
