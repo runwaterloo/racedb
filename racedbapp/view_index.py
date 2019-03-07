@@ -19,8 +19,10 @@ named_distance = namedtuple("nd", ["name", "slug", "km"])
 
 def index(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
-    lastraceday = get_lastraceday()
-    recap_event = lastraceday[0]
+    last_race_day_events = get_last_race_day_events()
+    distances = get_distances(last_race_day_events)
+    recap_event = get_recap_event(last_race_day_events)
+    recap_results = get_recap_results(recap_event)
     memberinfo = get_memberinfo()
     featured_event = get_featured_event()
     featured_event_records = get_featured_event_records(featured_event)
@@ -28,8 +30,9 @@ def index(request):
     boost_year = view_boost.get_boost_years()[0]
     boost_leaderboard = view_boost.index(request, boost_year, leaderboard_only=True)
     context = {
-        "lastraceday": lastraceday,
+        "distances": distances,
         "recap_event": recap_event,
+        "recap_results": recap_results,
         "memberinfo": memberinfo,
         "featured_event": featured_event,
         "featured_event_records": featured_event_records,
@@ -51,24 +54,6 @@ def index(request):
             return HttpResponse("Unknown format in URL", "text/html")
     else:
         return render(request, "racedbapp/index.html", context)
-
-
-def get_lastraceday():
-    lastraceday = []
-    named_lastraceday = namedtuple("nl", ["event", "recap"])
-    date_of_last_event = Result.objects.all().order_by("-event__date")[:1][0].event.date
-    last_day_events = Event.objects.filter(date=date_of_last_event).order_by(
-        "-distance"
-    )
-    for lde in last_day_events:
-        event_results = Result.objects.filter(event=lde)
-        hasmasters = Result.objects.hasmasters(lde)
-        distance_slug = lde.distance.slug
-        individual_recap = view_recap.get_individual_results(
-            lde, event_results, hasmasters, distance_slug
-        )
-        lastraceday.append(named_lastraceday(lde, individual_recap))
-    return lastraceday
 
 
 def get_future_events(featured_event):
@@ -158,3 +143,46 @@ def get_featured_event_records(featured_event):
             featured_event.race, featured_event.distance, individual_only=True
         )
     return featured_event_records
+
+
+def get_recap_event(last_race_day_events):
+    """ Choose which event to use for a recap """
+    if last_race_day_events[0].race.slug == "laurier-loop":
+        recap_event = last_race_day_events.filter(distance__slug="2_5-km")[0]
+    else:
+        recap_event = last_race_day_events[0]
+    return recap_event
+
+
+def get_recap_results(recap_event):
+    if (
+        recap_event.race.slug == "laurier-loop"
+        and recap_event.distance.slug == "2_5-km"
+    ):
+        recap_results = view_shared.get_relay_records(year=recap_event.date.year)
+    else:
+        recap_results = get_standard_recap_results(recap_event)
+    return recap_results
+
+
+def get_standard_recap_results(recap_event):
+    event_results = Result.objects.filter(event=recap_event)
+    hasmasters = Result.objects.hasmasters(recap_event)
+    distance_slug = recap_event.distance.slug
+    recap_results = view_recap.get_individual_results(
+        recap_event, event_results, hasmasters, distance_slug
+    )
+    return recap_results
+
+
+def get_distances(last_race_day_events):
+    distances = [x.distance for x in last_race_day_events]
+    return distances
+
+
+def get_last_race_day_events():
+    date_of_last_event = Result.objects.all().order_by("-event__date")[:1][0].event.date
+    last_race_day_events = Event.objects.filter(date=date_of_last_event).order_by(
+        "-distance"
+    )
+    return last_race_day_events

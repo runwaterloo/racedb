@@ -20,35 +20,35 @@
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
     <div class="row">
       <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        <img class="img-responsive img-rounded" src="{% static "race_logos/"|add:lastraceday.0.event.race.slug|add:".png" %}"/>
+        <img class="img-responsive img-rounded" src="{% static "race_logos/"|add:recap_event.race.slug|add:".png" %}"/>
       </div>
       <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
         <h2>
           <strong>LAST RACE</strong>
           <small>
-            {% if lastraceday.0.event.flickrsetid %}
-              &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ featured_event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
+            {% if recap_event.flickrsetid %}
+              &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ recap_event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
             {% endif %}
           </small>
         </h2>
         <h3>
-          <a href="https://runwaterloo.com/{{ lastraceday.0.event.date.year }}-{{ lastraceday.0.event.race.slug }}">
-            {{ lastraceday.0.event.race.name }}
+          <a href="https://runwaterloo.com/{{ recap_event.date.year }}-{{ recap_event.race.slug }}">
+            {{ recap_event.race.name }}
           </a>
         </h3>
-        <div class="date">{{ lastraceday.0.event.date }}</div>
-        <div class="city">{{ lastraceday.0.event.city }}</div>
+        <div class="date">{{ recap_event.date }}</div>
+        <div class="city">{{ recap_event.city }}</div>
       </div>
     </div>
     <div class="row">
       <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
         <p></p>
         <ul class="pagination">
-        {% for i in lastraceday %}
-          {% if i.event.distance == recap_event.event.distance %}
-            <li><a href="/event/{{ i.event.date.year }}/{{ i.event.race.slug }}/{{ i.event.distance.slug }}/"><b>{{ i.event.distance }}</b></a></li>
+        {% for i in distances %}
+          {% if i == recap_event.distance %}
+            <li><a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ i.slug }}/"><b>{{ i }}</b></a></li>
           {% else %}
-            <li><a href="/event/{{ i.event.date.year }}/{{ i.event.race.slug }}/{{ i.event.distance.slug }}/">{{ i.event.distance }}</a></li>
+            <li><a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ i.slug }}/">{{ i }}</a></li>
           {% endif %}
         {% endfor %}
         </ul>
@@ -58,7 +58,7 @@
             <th colspan=2>Female</th>
             <th colspan=2>Male</th>
           </tr>
-          {% for r in recap_event.recap %}
+          {% for r in recap_results %}
             <tr>
               <td>{{ r.place }}</td>
               {% if r.female_member_slug %}
@@ -128,8 +128,8 @@
 
 <!-- START SECOND ROW -->
 {% if featured_event %}
+  <hr>
   <div class="row">
-    <hr>
     <center><h2><strong>FEATURED EVENT</strong></h2></center>
     <div class="col-xs-l col-sm-3 col-md-3 col-lg-2">
       <center><img class="img-responsive upcoming-race" src="{% static "race_logos/"|add:featured_event.race.slug|add:".png" %}"></img></center>
