@@ -495,6 +495,4 @@ def get_relay_records(year=None):
                 relay_records[j] = [i]
             elif i.team_time == relay_records[j][0].team_time:
                 relay_records[j].append(i)
-    for k, v in relay_records.items():
-        print(k, v)
     return relay_records
