@@ -61,7 +61,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         premodified = Config.objects.get(name="premodified")
-        races = Race.objects.values_list("prename", flat=True)
+        races = Race.objects.values_list("slug", flat=True)
         page_size = 10
         events = []
         done = False
@@ -93,10 +93,10 @@ class Command(BaseCommand):
         endurrace_years = []
         for event in events:
             year = event["date"][0:4]
-            if event["race"] in races and "roadraceresults" not in event["resultsurl"]:
+            if event["race_slug"] in races:
                 gender_place_dict = {"F": 0, "M": 0}
                 category_place_dict = {}
-                race = Race.objects.get(prename=event["race"])
+                race = Race.objects.get(slug=event["race_slug"])
                 distance = Distance.objects.get(prename=event["distance"])
                 dohill = False
                 splits = []
