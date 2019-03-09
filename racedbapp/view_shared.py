@@ -479,7 +479,7 @@ def get_relay_records(year=None):
     """ Get records for 2.5K Laurier Loop relay """
     events = Relay.objects.order_by().values_list("event").distinct()
     if year:
-        events = events.filter(date__year=year)
+        events = events.filter(event__date__year=year)
     individual_results_dict = get_individual_results_dict(events)
     relay_results = get_relay_results(events)
     team_results = get_team_results(relay_results, individual_results_dict)
