@@ -17,7 +17,11 @@
 
 <!-- START FIRST ROW -->
 <div class="row">
-  {% include "racedbapp/index_last-race-standard.html" %}
+  {% if recap_type == "relay" %}
+    {% include "racedbapp/index_last-race-relay.html" %}
+  {% else %}
+    {% include "racedbapp/index_last-race-standard.html" %}
+  {% endif %}
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
     <div class="row">
       <hr class="hidden-lg">

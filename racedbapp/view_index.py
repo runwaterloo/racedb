@@ -6,9 +6,10 @@ from django.http import HttpResponse
 from collections import namedtuple
 import urllib
 import simplejson
-from . import view_boost, view_recap, view_member, view_shared
+from . import config, view_boost, view_recap, view_member, view_shared
 from datetime import datetime
-from .models import Config, Event, Result, Rwmember
+from operator import attrgetter
+from .models import Config, Event, Relay, Result, Rwmember
 
 named_future_event = namedtuple("nfe", ["event", "race", "distance", "records"])
 
@@ -20,9 +21,10 @@ named_distance = namedtuple("nd", ["name", "slug", "km"])
 def index(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     last_race_day_events = get_last_race_day_events()
+    recap_type = get_recap_type(last_race_day_events)
     distances = get_distances(last_race_day_events)
-    recap_event = get_recap_event(last_race_day_events)
-    recap_results = get_recap_results(recap_event)
+    recap_event = get_recap_event(last_race_day_events, recap_type, distances)
+    recap_results = get_recap_results(recap_event, recap_type)
     memberinfo = get_memberinfo()
     featured_event = get_featured_event()
     featured_event_records = get_featured_event_records(featured_event)
@@ -31,6 +33,7 @@ def index(request):
     boost_leaderboard = view_boost.index(request, boost_year, leaderboard_only=True)
     context = {
         "distances": distances,
+        "recap_type": recap_type,
         "recap_event": recap_event,
         "recap_results": recap_results,
         "memberinfo": memberinfo,
@@ -145,33 +148,45 @@ def get_featured_event_records(featured_event):
     return featured_event_records
 
 
-def get_recap_event(last_race_day_events):
+def get_recap_event(last_race_day_events, recap_type, distances):
     """ Choose which event to use for a recap """
-    if last_race_day_events[0].race.slug == "laurier-loop":
+    distance_slugs = [x.slug for x in distances]
+    if recap_type == "relay" and "2_5-km" in distance_slugs:
         recap_event = last_race_day_events.filter(distance__slug="2_5-km")[0]
     else:
         recap_event = last_race_day_events[0]
     return recap_event
 
 
-def get_recap_results(recap_event):
-    if (
-        recap_event.race.slug == "laurier-loop"
-        and recap_event.distance.slug == "2_5-km"
-    ):
-        recap_results = view_shared.get_relay_records(year=recap_event.date.year)
+def get_recap_results(recap_event, recap_type):
+    if recap_type == "relay":
+        recap_results = get_recap_results_relay(recap_event)
     else:
-        recap_results = get_standard_recap_results(recap_event)
+        recap_results = get_recap_results_standard(recap_event)
     return recap_results
 
 
-def get_standard_recap_results(recap_event):
+def get_recap_results_standard(recap_event):
     event_results = Result.objects.filter(event=recap_event)
     hasmasters = Result.objects.hasmasters(recap_event)
     distance_slug = recap_event.distance.slug
     recap_results = view_recap.get_individual_results(
         recap_event, event_results, hasmasters, distance_slug
     )
+    return recap_results
+
+
+def get_recap_results_relay(recap_event):
+    relay_records = view_shared.get_relay_records(year=recap_event.date.year)
+    categories = config.ValidRelayCategories().categories.values()
+    exclude_categories = ("Mixed", "Mixed Masters")
+    categories = [x for x in categories if x not in exclude_categories]
+    recap_results = {}
+    for i in categories:
+        if relay_records[i]:
+            fastest_times = relay_records[i]
+            winner = sorted(fastest_times, key=attrgetter("team_place"))[0]
+            recap_results[i] = winner
     return recap_results
 
 
@@ -183,6 +198,16 @@ def get_distances(last_race_day_events):
 def get_last_race_day_events():
     date_of_last_event = Result.objects.all().order_by("-event__date")[:1][0].event.date
     last_race_day_events = Event.objects.filter(date=date_of_last_event).order_by(
-        "-distance"
+        "-distance__km"
     )
     return last_race_day_events
+
+
+def get_recap_type(last_race_day_events):
+    recap_type = "standard"
+    if last_race_day_events[0].race.slug == "laurier-loop":
+        relay_event = [x for x in last_race_day_events if x.distance.slug == "2_5-km"]
+        if len(relay_event) == 1:
+            if Relay.objects.filter(event=relay_event[0]).count() > 0:
+                recap_type = "relay"
+    return recap_type
