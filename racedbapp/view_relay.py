@@ -164,6 +164,7 @@ class RelayResult:
         self.team = relay_result.relay_team
         self.team_id = relay_result.id
         self.team_time = relay_result.relay_team_time
+        self.team_place = relay_result.relay_team_place
         self.legs = []
         self.categories = []
         self.year = relay_result.event.date.year
