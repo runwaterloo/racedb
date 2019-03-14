@@ -3,3 +3,4 @@ secrets.yml
 __pycache__
 *.pyc
 .DS_Store
+.heartbeat
