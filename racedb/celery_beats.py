@@ -1,0 +1,8 @@
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'heartbeat': {
+        'task': 'racedbapp.tasks.heartbeat',
+        'schedule': crontab(minute="*/15")
+    },
+}
+

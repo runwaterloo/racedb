@@ -1,0 +1,66 @@
+version: '3'
+networks:
+  db:
+  web:
+services:
+  db:
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    environment: 
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/MYSQL_ROOT_PASSWORD_FILE
+      MYSQL_USER: racedb
+      MYSQL_DATABASE: racedb
+      MYSQL_PASSWORD_FILE: /run/secrets/MYSQL_PASSWORD_FILE
+    image: mariadb:10.3
+    networks:
+      - db
+    volumes:
+       - /srv/racedb_db:/docker-entrypoint-initdb.d
+       - /srv/racedb_secrets:/run/secrets
+  gunicorn:
+    command: /bin/bash -c "./manage.py collectstatic --noinput; gunicorn racedb.wsgi -b 0.0.0.0:8000"
+    image: racedb-gunicorn
+    networks:
+      - db
+      - web
+    volumes:
+      - /srv/racedb:/srv/racedb
+      - /srv/racedb_static:/static
+  nginx:
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    image: nginx:1.15-alpine
+    networks:
+      - web 
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /srv/racedb_nginx:/etc/nginx/conf.d
+      - /srv/racedb_certbot/conf:/etc/letsencrypt
+      - /srv/racedb_certbot/www:/var/www/certbot
+      - /srv/racedb_static:/static
+  certbot:
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    image: certbot/certbot
+    volumes:
+      - /srv/racedb_certbot/conf:/etc/letsencrypt
+      - /srv/racedb_certbot/www:/var/www/certbot
+  redis:
+    image: "redis:alpine"
+    networks:
+      - web
+  celery:
+    image: racedb-celery
+    command: "/bin/sh -c 'celery -A racedb worker -l info --pidfile=/tmp/celery.pid'"
+    volumes:
+      - /srv/racedb:/srv/racedb
+    networks:
+      - db
+      - web
+  beat:
+    image: racedb-celery
+    command: "/bin/sh -c 'celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'"
+    volumes:
+      - /srv/racedb:/srv/racedb
+    networks:
+      - db
+      - web

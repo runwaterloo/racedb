@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 import os
-from . import secrets
+from . import secrets, celery_beats
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -116,38 +116,36 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/srv/racedb_static/'
+STATIC_ROOT = '/static/'
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            'datefmt' : "%Y-%m-%d %H:%M:%S"
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[%(asctime)s] %(levelname)s "
+            "[%(name)s:%(lineno)s] %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
-        'simple': {
-            'format': '%(levelname)s %(message)s'
-        },
+        "simple": {"format": "%(levelname)s %(message)s"},
     },
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/racedb/racedb.log',
-            'formatter': 'verbose'
-        },
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "verbose"}},
+    "loggers": {
+        "django": {"handlers": ["console"], "propagate": True, "level": "WARNING"},
+        "racedbapp": {"handlers": ["console"], "propagate": False, "level": "DEBUG"},
     },
-    'loggers': {
-        'django': {
-            'handlers':['file'],
-            'propagate': True,
-            'level':'WARNING',
-        },
-        'racedbapp': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-        },
-    }
 }
+
+EMAIL_HOST = secrets.EMAIL_HOST
+EMAIL_HOST_USER = secrets.EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = secrets.EMAIL_HOST_PASSWORD
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+CELERY_BROKER_URL = "redis://racedb_redis:6379"
+CELERY_RESULT_BACKEND = "redis://racedb_redis:6379"
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_BEAT_SCHEDULE = celery_beats.CELERY_BEAT_SCHEDULE
