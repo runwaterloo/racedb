@@ -19,6 +19,7 @@ def webhook():
     print("Touching wsgi.py")
     os.system("touch racedb/wsgi.py")    
 
+
 @shared_task
 def photoupdate():
     prod_ipaddr = secrets.prod_ipaddr
@@ -30,7 +31,7 @@ def photoupdate():
     if my_ip == prod_ipaddr:
         baseurl = "https://results.runwaterloo.com/photoupdate/"
         notifykey = Config.objects.get(name="notifykey").value    
-        url = "{}/?notifykey={}&date=auto}".format(url, notifykey)
+        url = "{}/?notifykey={}&date=auto".format(baseurl, notifykey)
         r = requests.get(url)
     else:
         print("Not production host, skipping photoupdate")
