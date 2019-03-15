@@ -25,6 +25,7 @@ from . import (
     view_boost,
     view_relay,
     view_durelay,
+    view_webhook,
 )
 
 urlpatterns = [
@@ -89,4 +90,5 @@ urlpatterns = [
         name="records",
     ),
     url(r"^stats", view_stats.index, name="stats"),
+    url(r"^webhook", view_webhook.index, name="webhook"),
 ]

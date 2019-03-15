@@ -25,6 +25,7 @@ services:
     volumes:
       - /srv/racedb:/srv/racedb
       - /srv/racedb_static:/static
+      - /srv/racedb_secrets:/run/secrets
   nginx:
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     image: nginx:1.15-alpine
@@ -43,7 +44,10 @@ services:
       - web
   celery:
     image: racedb-celery
-    command: "/bin/sh -c 'celery -A racedb worker -l info --pidfile=/tmp/celery.pid'"
+    command: /bin/sh -c 'watchmedo auto-restart -p "*tasks.py;*celery_beats.py" --recursive -- celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
     volumes:
       - /srv/racedb:/srv/racedb
     networks:
@@ -51,7 +55,7 @@ services:
       - web
   beat:
     image: racedb-celery
-    command: "/bin/sh -c 'celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'"
+    command: /bin/sh -c 'watchmedo auto-restart -p "*tasks.py;*celery_beats.py" --recursive -- celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
     volumes:
       - /srv/racedb:/srv/racedb
     networks:

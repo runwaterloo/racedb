@@ -4,5 +4,8 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'racedbapp.tasks.heartbeat',
         'schedule': crontab(minute="*/15")
     },
+    'photoupdate': {
+        'task': 'racedbapp.tasks.photoupdate',
+        'schedule': crontab(minute="54")
+    },
 }
-

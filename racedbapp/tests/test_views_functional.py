@@ -8,7 +8,7 @@ from . import urls_to_test
 def setUpModule():
     """ Import the actual database """
     print("Copying production database...")
-    os.system("sudo mysqldump racedb | sudo mysql test_racedb")
+    os.system("mysqldump -h racedb_db -u racedb -p`cat /run/secrets/MYSQL_PASSWORD_FILE` racedb | mysql -h racedb_db -u racedb -p`cat /run/secrets/MYSQL_PASSWORD_FILE` test_racedb")
 
 
 class SimpleTest(TestCase):
