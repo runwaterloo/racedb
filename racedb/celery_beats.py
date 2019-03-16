@@ -6,6 +6,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     'photoupdate': {
         'task': 'racedbapp.tasks.photoupdate',
-        'schedule': crontab(minute="54")
+        'schedule': crontab(minute="54"),
+        'kwargs': {'request_date': "auto"}
     },
 }

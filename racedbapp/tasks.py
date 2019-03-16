@@ -2,7 +2,10 @@ from celery import shared_task
 import requests
 import os
 from . import secrets
-from .models import Config
+from . import process_photoupdate
+import logging                                                                           
+                                                                                         
+logger = logging.getLogger(__name__)  
 
 
 @shared_task
@@ -12,16 +15,16 @@ def heartbeat():
 
 @shared_task
 def webhook():
-    print("Starting git pull...")
+    logger.info("Starting git pull...")
     os.system("git pull https://gitlab.com/sl70176/racedb.git")    
-    print("Starting pip install...")
+    logger.info("Starting pip install...")
     os.system("pip install -r requirements.txt")
-    print("Touching wsgi.py")
+    logger.info("Touching wsgi.py")
     os.system("touch racedb/wsgi.py")    
 
 
 @shared_task
-def photoupdate():
+def photoupdate(request_date=None):
     prod_ipaddr = secrets.prod_ipaddr
     my_ip = None
     try:
@@ -29,9 +32,6 @@ def photoupdate():
     except Exception:
         pass
     if my_ip == prod_ipaddr:
-        baseurl = "https://results.runwaterloo.com/photoupdate/"
-        notifykey = Config.objects.get(name="notifykey").value    
-        url = "{}/?notifykey={}&date=auto".format(baseurl, notifykey)
-        r = requests.get(url)
+        process_photoupdate.index(request_date)
     else:
-        print("Not production host, skipping photoupdate")
+        logger.info("Not production host, skipping photoupdate")
