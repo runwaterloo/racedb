@@ -7,6 +7,7 @@ from . import secrets
 from . import view_shared
 import logging
 
+flickrapi.set_log_level(logging.WARNING)
 logger = logging.getLogger(__name__)
 runwaterloo_flickr_id = "136573113@N04"
 photos_per_page = 500
