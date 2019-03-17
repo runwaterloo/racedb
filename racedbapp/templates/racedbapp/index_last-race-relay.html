@@ -9,7 +9,11 @@
           <li><a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ i.slug }}/">{{ i }}</a></li>
         {% endfor %}
       </ul>
-      <table class="table">
+      {% if recap_results|length > 4 %}
+        <table class="table table-condensed">
+      {% else %}
+        <table class="table">
+      {% endif %}
         <tr class="info">
           <th>Category</th>
           <th>Team Name</th>

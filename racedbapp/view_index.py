@@ -179,8 +179,6 @@ def get_recap_results_standard(recap_event):
 def get_recap_results_relay(recap_event):
     relay_records = view_shared.get_relay_records(year=recap_event.date.year)
     categories = config.ValidRelayCategories().categories.values()
-    exclude_categories = ("Mixed", "Mixed Masters")
-    categories = [x for x in categories if x not in exclude_categories]
     recap_results = {}
     for i in categories:
         if relay_records[i]:
