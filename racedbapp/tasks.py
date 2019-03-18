@@ -24,14 +24,14 @@ def webhook():
 
 
 @shared_task
-def photoupdate(request_date=None):
+def photoupdate(request_date=None, force=False):
     prod_ipaddr = secrets.prod_ipaddr
     my_ip = None
     try:
         my_ip = requests.get("http://169.254.169.254/latest/meta-data/public-ipv4", timeout=5).text.strip()
     except Exception:
         pass
-    if my_ip == prod_ipaddr:
+    if my_ip == prod_ipaddr or force:
         process_photoupdate.index(request_date)
     else:
         logger.info("Not production host, skipping photoupdate")
