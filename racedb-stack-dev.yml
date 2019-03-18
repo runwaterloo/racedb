@@ -50,6 +50,7 @@ services:
       - 4.4.4.4
     volumes:
       - /srv/racedb:/srv/racedb
+      - /srv/racedb_secrets/flickr_oauth-tokens.sqlite:/root/.flickr/oauth-tokens.sqlite
     networks:
       - db
       - web
