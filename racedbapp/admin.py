@@ -83,3 +83,7 @@ class DurelayAdmin(admin.ModelAdmin):
     list_display = ('year', 'team_place', 'team_name', 'team_time')
     ordering = ('-year', 'team_place')
 admin.site.register(Durelay, DurelayAdmin) 
+
+class RelayAdmin(admin.ModelAdmin):
+    list_display = ('event', 'place', 'relay_team', 'relay_team_place', 'relay_team_time', 'relay_leg')
+admin.site.register(Relay, RelayAdmin) 
