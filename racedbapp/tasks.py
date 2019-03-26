@@ -61,3 +61,8 @@ def update_featured_member_id():
             break
     current_featured_member.value = member.id
     current_featured_member.save()
+    logger.info(
+        "Changed featured member from {} to {}".format(
+            current_featured_member_id, member.id
+        )
+    )
