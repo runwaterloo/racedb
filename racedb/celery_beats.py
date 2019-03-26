@@ -10,4 +10,8 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute="54"),
         "kwargs": {"request_date": "auto"},
     },
+    "update_featured_member_id": {
+        "task": "racedbapp.tasks.update_featured_member_id",
+        "schedule": crontab(hour="0", minute="0"),
+    },
 }
