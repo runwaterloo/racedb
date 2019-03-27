@@ -105,10 +105,21 @@ def get_memberinfo():
         .exclude(photourl="")
         .order_by("?")
     )
-    for member in members:
+    featured_member_id = "0"
+    db_featured_member_id = Config.objects.filter(name="featured_member_id")
+    if db_featured_member_id.count() > 0:
+        featured_member_id = db_featured_member_id[0].value
+    if featured_member_id.isdigit():
+        featured_member_id = int(featured_member_id)
+    valid_member_ids = [x.id for x in members]
+    if featured_member_id in valid_member_ids:
+        member = [x for x in members if x.id == featured_member_id][0]
         member_results, km = view_member.get_memberresults(member)
-        if km > 0:
-            break
+    else:
+        for member in members:
+            member_results, km = view_member.get_memberresults(member)
+            if km > 0:
+               break
     km = round(km, 1)
     racing_since = ""
     fivek_pb = view_member.get_pb(member_results, "5-km")
