@@ -1,6 +1,8 @@
+from django.core.mail import send_mail
 from celery import shared_task
 import requests
 import os
+from datetime import date
 from . import process_photoupdate, secrets, view_member
 from .models import Config, Rwmember
 import logging
@@ -66,3 +68,32 @@ def update_featured_member_id():
             current_featured_member_id, member.id
         )
     )
+
+
+@shared_task
+def email_featured_member():
+    prod_ipaddr = secrets.prod_ipaddr
+    my_ip = None
+    try:
+        my_ip = requests.get(
+            "http://169.254.169.254/latest/meta-data/public-ipv4", timeout=5
+        ).text.strip()
+    except Exception:
+        pass
+    if my_ip == prod_ipaddr:
+        sender = "no-reply@results.runwaterloo.com"
+        recipients = Config.objects.get(
+            name="featured_member_notification_emails"
+        ).value.split(",")
+        featured_member_id = int(Config.objects.get(name="featured_member_id").value)
+        featured_member = Rwmember.objects.get(id=featured_member_id)
+        subject = "{} is the featured member for {}".format(
+            featured_member.name, date.today()
+        )
+        logger.info(subject)
+        message = "https://results.runwaterloo.com/member/{}/".format(
+            featured_member.slug
+        )
+        send_mail(subject, message, sender, recipients, fail_silently=False)
+    else:
+        logger.info("Not production host, skipping email_featured_member")
