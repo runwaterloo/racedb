@@ -19,8 +19,6 @@ def heartbeat():
 def webhook():
     logger.info("Starting git pull...")
     os.system("git pull https://gitlab.com/sl70176/racedb.git")
-    logger.info("Starting pip install...")
-    os.system("pip install -r requirements.txt")
     logger.info("Touching wsgi.py")
     os.system("touch racedb/wsgi.py")
 
