@@ -245,7 +245,11 @@
               {% endif %}
               <td class="text-left">{{ r.city }}</td>
               {% for s in r.splits %}
-                <td class="text-center">{{ s.split_time }}</td>
+                {% if s.split_time != 'None' %}
+                  <td class="text-center">{{ s.split_time }}</td>
+                {% else %}
+                  <td></td>
+                {% endif %}
               {% endfor %}
             </tr>
          {% endfor %}
