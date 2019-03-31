@@ -338,10 +338,14 @@ def maketimedelta(strtime):
         hours, minutes, seconds = strtime.split(".")[0].split(":")
     else:
         milliseconds = 0
-        hours, minutes, seconds = strtime.split(":")
-        if " " in hours:
-            daypart, hourpart = hours.split(" ")
-            hours = 24 * int(daypart) + int(hourpart)
+        if len(strtime.split(":")) == 3:
+            hours, minutes, seconds = strtime.split(":")
+            if " " in hours:
+                daypart, hourpart = hours.split(" ")
+                hours = 24 * int(daypart) + int(hourpart)
+        else:
+            hours = 0
+            minutes, seconds = strtime.split(":")
     timedelta = datetime.timedelta(
         hours=int(hours),
         minutes=int(minutes),
@@ -404,7 +408,10 @@ def add_splits(event, result, extra_dict, splits):
         if "split" not in k:
             continue
         split_num = int(k.strip("split"))
-        split_time = maketimedelta(v)
+        if v == "":
+            split_time = None
+        else:
+            split_time = maketimedelta(v)
         this_split = Split(
             event_id=event["id"],
             place=result["place"],
