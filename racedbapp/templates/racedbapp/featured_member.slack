@@ -1,0 +1,7 @@
+{% extends django_slack %}
+
+{% block text %}
+{{ featured_member.name }} is the featured member today.
+
+https://results.runwaterloo.com/member/{{ featured_member.slug }}/
+{% endblock %}
