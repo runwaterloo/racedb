@@ -14,7 +14,7 @@ CELERY_BEAT_SCHEDULE = {
         "task": "racedbapp.tasks.update_featured_member_id",
         "schedule": crontab(hour="0", minute="0"),
     },
-    "email_featured_member": {
+    "slack_featured_member": {
         "task": "racedbapp.tasks.email_featured_member",
         "schedule": crontab(hour="0", minute="1"),
     },

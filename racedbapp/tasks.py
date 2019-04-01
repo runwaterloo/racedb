@@ -1,4 +1,5 @@
 from django.core.mail import send_mail
+from django_slack import slack_message
 from celery import shared_task
 import requests
 import os
@@ -69,7 +70,7 @@ def update_featured_member_id():
 
 
 @shared_task
-def email_featured_member():
+def slack_featured_member():
     prod_ipaddr = secrets.prod_ipaddr
     my_ip = None
     try:
@@ -79,19 +80,13 @@ def email_featured_member():
     except Exception:
         pass
     if my_ip == prod_ipaddr:
-        sender = "no-reply@results.runwaterloo.com"
-        recipients = Config.objects.get(
-            name="featured_member_notification_emails"
-        ).value.split(",")
         featured_member_id = int(Config.objects.get(name="featured_member_id").value)
         featured_member = Rwmember.objects.get(id=featured_member_id)
-        subject = "{} is the featured member for {}".format(
-            featured_member.name, date.today()
+        logger.info(
+            "Sending featured member ({}) to Slack".format(featured_member.name)
         )
-        logger.info(subject)
-        message = "https://results.runwaterloo.com/member/{}/".format(
-            featured_member.slug
+        slack_message(
+            "racedbapp/featured_member.slack", {"featured_member": featured_member}
         )
-        send_mail(subject, message, sender, recipients, fail_silently=False)
     else:
-        logger.info("Not production host, skipping email_featured_member")
+        logger.info("Not production host, skipping slack_featured_member")

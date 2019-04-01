@@ -52,6 +52,7 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
     'racedbapp',
     'debug_toolbar',
+    'django_slack',
 )
 
 MIDDLEWARE = [
@@ -77,6 +78,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.loaders.app_directories.Loader',
             ],
         },
     },
@@ -149,3 +151,7 @@ CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_BEAT_SCHEDULE = celery_beats.CELERY_BEAT_SCHEDULE
+
+SLACK_TOKEN = secrets.SLACK_TOKEN
+SLACK_CHANNEL = "#notifications"
+SLACK_BACKEND = "django_slack.backends.CeleryBackend"
