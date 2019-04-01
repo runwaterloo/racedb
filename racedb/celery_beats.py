@@ -15,7 +15,7 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(hour="0", minute="0"),
     },
     "slack_featured_member": {
-        "task": "racedbapp.tasks.email_featured_member",
+        "task": "racedbapp.tasks.slack_featured_member",
         "schedule": crontab(hour="0", minute="1"),
     },
 }
