@@ -1,5 +1,9 @@
 {% extends django_slack %}
 
 {% block text %}
-The robots are in charge now.
+{{ featured_member.name }} is the featured member today.
+
+https://results.runwaterloo.com/member/{{ featured_member.slug }}/
+
+{{ featured_member.photourl }}
 {% endblock %}
