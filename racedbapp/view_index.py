@@ -20,7 +20,10 @@ named_distance = namedtuple("nd", ["name", "slug", "km"])
 
 def index(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
-    last_race_day_events = get_last_race_day_events()
+    asofdate = None
+    if "asofdate" in qstring:
+        asofdate = qstring["asofdate"][0]
+    last_race_day_events = get_last_race_day_events(asofdate)
     recap_type = get_recap_type(last_race_day_events)
     distances = get_distances(last_race_day_events)
     recap_event = get_recap_event(last_race_day_events, recap_type, distances)
@@ -119,7 +122,7 @@ def get_memberinfo():
         for member in members:
             member_results, km = view_member.get_memberresults(member)
             if km > 0:
-               break
+                break
     km = round(km, 1)
     racing_since = ""
     fivek_pb = view_member.get_pb(member_results, "5-km")
@@ -204,8 +207,19 @@ def get_distances(last_race_day_events):
     return distances
 
 
-def get_last_race_day_events():
-    date_of_last_event = Result.objects.all().order_by("-event__date")[:1][0].event.date
+def get_last_race_day_events(asofdate):
+    if asofdate:
+        maxdate = datetime.strptime(asofdate, "%Y-%m-%d")
+        date_of_last_event = (
+            Result.objects.all()
+            .filter(event__date__lte=maxdate)
+            .order_by("-event__date")[:1][0]
+            .event.date
+        )
+    else:
+        date_of_last_event = (
+            Result.objects.all().order_by("-event__date")[:1][0].event.date
+        )
     last_race_day_events = Event.objects.filter(date=date_of_last_event).order_by(
         "-distance__km"
     )
