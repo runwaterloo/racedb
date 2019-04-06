@@ -4,6 +4,7 @@ from collections import namedtuple
 from datetime import timedelta
 import simplejson
 import urllib
+from .view_shared import get_membership, get_member_endurrace
 from .models import Endurraceresult, Event, Prime, Result, Teamresult
 
 namediresult = namedtuple(
@@ -99,6 +100,7 @@ def index(request, year, race_slug, distance_slug):
 
 
 def get_individual_results(event, results, hasmasters, distance_slug, year=False):
+    membership = get_membership()
     individual_results = []
     female_results = list(results.filter(gender="F")[0:3])
     male_results = list(results.filter(gender="M")[0:3])
@@ -116,15 +118,19 @@ def get_individual_results(event, results, hasmasters, distance_slug, year=False
         female_member_slug = None
         if distance_slug != "combined":
             female_member = female_results[i - 1].rwmember
-            if female_member:
-                female_member_slug = female_member.slug
+        else:
+            female_member = get_member_endurrace(female_results[i - 1], membership)
+        if female_member:
+            female_member_slug = female_member.slug
         male_guntime = male_results[i - 1].guntime
         male_time = male_guntime - timedelta(microseconds=male_guntime.microseconds)
         male_member_slug = None
         if distance_slug != "combined":
             male_member = male_results[i - 1].rwmember
-            if male_member:
-                male_member_slug = male_member.slug
+        else:
+            male_member = get_member_endurrace(male_results[i - 1], membership)
+        if male_member:
+            male_member_slug = male_member.slug
         individual_results.append(
             namediresult(
                 rank,
@@ -138,7 +144,24 @@ def get_individual_results(event, results, hasmasters, distance_slug, year=False
         )
     if hasmasters:
         if distance_slug == "combined":
-            individual_results.append(Endurraceresult.objects.topmasters(year))
+            top_masters = Endurraceresult.objects.topmasters(year)
+            female_member_slug = male_member_slug = None
+            female_member = get_member_endurrace(top_masters.female_result, membership)
+            if female_member:
+                female_member_slug = female_member.slug
+            male_member = get_member_endurrace(top_masters.male_result, membership)
+            if male_member:
+                male_member_slug = female_member.slug
+            new_top_masters = namediresult(
+                top_masters.place,
+                top_masters.female_athlete,
+                top_masters.female_time,
+                female_member_slug,
+                top_masters.male_athlete,
+                top_masters.male_time,
+                male_member_slug,
+            )
+            individual_results.append(new_top_masters)
         else:
             individual_results.append(Result.objects.topmasters(event))
     return individual_results
