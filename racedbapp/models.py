@@ -17,9 +17,11 @@ namediresult = namedtuple(
         "female_athlete",
         "female_time",
         "female_member_slug",
+        "female_result",
         "male_athlete",
         "male_time",
         "male_member_slug",
+        "male_result",
     ],
 )
 
@@ -62,9 +64,11 @@ class ResultQuerySet(models.QuerySet):
             topfemale.athlete,
             femaletime,
             female_member_slug,
+            topfemale,
             topmale.athlete,
             maletime,
             male_member_slug,
+            topmale,
         )
 
 
@@ -89,9 +93,11 @@ class EndurraceresultQuerySet(models.QuerySet):
             topfemale.athlete,
             femaletime,
             None,
+            topfemale,
             topmale.athlete,
             maletime,
             None,
+            topmale,
         )
 
 
