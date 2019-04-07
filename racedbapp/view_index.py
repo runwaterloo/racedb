@@ -9,7 +9,7 @@ import simplejson
 from . import config, view_boost, view_recap, view_member, view_shared
 from datetime import datetime
 from operator import attrgetter
-from .models import Config, Event, Relay, Result, Rwmember
+from .models import Config, Endurraceresult, Event, Relay, Result, Rwmember
 
 named_future_event = namedtuple("nfe", ["event", "race", "distance", "records"])
 
@@ -175,6 +175,8 @@ def get_recap_event(last_race_day_events, recap_type, distances):
 def get_recap_results(recap_event, recap_type):
     if recap_type == "relay":
         recap_results = get_recap_results_relay(recap_event)
+    elif recap_type == "combined":
+        recap_results = get_recap_results_combined(recap_event)
     else:
         recap_results = get_recap_results_standard(recap_event)
     return recap_results
@@ -199,6 +201,17 @@ def get_recap_results_relay(recap_event):
             fastest_times = relay_records[i]
             winner = sorted(fastest_times, key=attrgetter("team_place"))[0]
             recap_results[i] = winner
+    return recap_results
+
+
+def get_recap_results_combined(recap_event):
+    request = {}
+    year = recap_event.date.year
+    race_slug = recap_event.race.slug
+    distance_slug = "combined"
+    recap_results = view_recap.index(
+        request, year, race_slug, distance_slug, individual_only=True
+    )
     return recap_results
 
 
@@ -233,4 +246,8 @@ def get_recap_type(last_race_day_events):
         if len(relay_event) == 1:
             if Relay.objects.filter(event=relay_event[0]).count() > 0:
                 recap_type = "relay"
+    if last_race_day_events[0].race.slug == "endurrace":
+        year = last_race_day_events[0].date.year
+        if Endurraceresult.objects.filter(year=year).count() > 0:
+            recap_type = "combined"
     return recap_type
