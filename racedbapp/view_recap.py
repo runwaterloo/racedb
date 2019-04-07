@@ -21,8 +21,10 @@ namediresult = namedtuple(
 )
 
 
-def index(request, year, race_slug, distance_slug):
-    qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
+def index(request, year, race_slug, distance_slug, individual_only=False):
+    qstring = ""
+    if not individual_only:
+        qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     if distance_slug == "combined":
         event = False
         results = Endurraceresult.objects.filter(year=year).order_by("guntime")
@@ -38,6 +40,8 @@ def index(request, year, race_slug, distance_slug):
     individual_results = get_individual_results(
         event, results, hasmasters, distance_slug, year=year
     )
+    if individual_only:
+        return individual_results
     hill_results = False
     if race_slug == "baden-road-races" and distance_slug == "7-mi":
         hill_results = []
