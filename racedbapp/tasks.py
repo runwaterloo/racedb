@@ -20,8 +20,12 @@ def heartbeat():
 def webhook():
     logger.info("Starting git pull...")
     os.system("git pull https://gitlab.com/sl70176/racedb.git")
-    logger.info("Touching wsgi.py")
-    os.system("touch racedb/wsgi.py")
+    logging.info("Updating pip requirements")
+    os.system("pip install -r requirements.txt")
+    logging.info("Collecting static files")
+    os.system("./manage.py collectstatic --noinput")
+    logging.info("Touching .restart")
+    os.system("touch .restart")
 
 
 @shared_task

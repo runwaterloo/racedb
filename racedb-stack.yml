@@ -23,7 +23,7 @@ services:
        - /srv/racedb_db:/docker-entrypoint-initdb.d
        - /srv/racedb_secrets:/run/secrets
   gunicorn:
-    command: /bin/sh -c 'watchmedo auto-restart -p "*wsgi.py" --recursive -- ./racedb-start.sh'
+    command: "/bin/sh -c 'gunicorn racedb.wsgi -b 0.0.0.0:8000 --reload --reload-extra-file .restart'"
     image: racedb-gunicorn
     logging:
       driver: "awslogs"
@@ -69,7 +69,7 @@ services:
       - web
   celery:
     image: racedb-celery
-    command: /bin/sh -c 'watchmedo auto-restart -p "*wsgi.py" --recursive -- celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
+    command: /bin/sh -c 'watchmedo auto-restart -p .restart -- celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
     dns:
       - 8.8.8.8
       - 4.4.4.4
@@ -87,7 +87,7 @@ services:
       - web
   beat:
     image: racedb-celery
-    command: /bin/sh -c 'watchmedo auto-restart -p "*wsgi.py" --recursive -- celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
+    command: /bin/sh -c 'watchmedo auto-restart -p .restart -- celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
     logging:
       driver: "awslogs"
       options:
