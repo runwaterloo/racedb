@@ -11,17 +11,26 @@ services:
       MYSQL_DATABASE: racedb
       MYSQL_PASSWORD_FILE: /run/secrets/MYSQL_PASSWORD_FILE
     image: mariadb:10.3
+    logging:
+      driver: "awslogs"
+      options:
+        awslogs-region: "us-east-1"
+        awslogs-group: "racedb"
+        awslogs-stream: "racedb_db"
     networks:
       - db
     volumes:
        - /srv/racedb_db:/docker-entrypoint-initdb.d
        - /srv/racedb_secrets:/run/secrets
   gunicorn:
-    command: /bin/sh -c 'watchmedo auto-restart -p "*.py;*.html;*.slack" --recursive -- ./racedb-start.sh'
-    dns:
-      - 8.8.8.8
-      - 4.4.4.4
+    command: "/bin/sh -c 'gunicorn racedb.wsgi -b 0.0.0.0:8000 --reload --reload-extra-file .restart.py'"
     image: racedb-gunicorn
+    logging:
+      driver: "awslogs"
+      options:
+        awslogs-region: "us-east-1"
+        awslogs-group: "racedb"
+        awslogs-stream: "racedb_gunicorn"
     networks:
       - db
       - web
@@ -32,10 +41,17 @@ services:
   nginx:
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     image: nginx:1.15-alpine
+    logging:
+      driver: "awslogs"
+      options:
+        awslogs-region: "us-east-1"
+        awslogs-group: "racedb"
+        awslogs-stream: "racedb_nginx"
     networks:
       - web 
     ports:
-      - "8010:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - /srv/racedb_nginx:/etc/nginx/conf.d
       - /srv/racedb_certbot/conf:/etc/letsencrypt
@@ -43,6 +59,12 @@ services:
       - /srv/racedb_static:/static
   redis:
     image: "redis:alpine"
+    logging:
+      driver: "awslogs"
+      options:
+        awslogs-region: "us-east-1"
+        awslogs-group: "racedb"
+        awslogs-stream: "racedb_redis"
     networks:
       - web
   celery:
@@ -51,6 +73,12 @@ services:
     dns:
       - 8.8.8.8
       - 4.4.4.4
+    logging:
+      driver: "awslogs"
+      options:
+        awslogs-region: "us-east-1"
+        awslogs-group: "racedb"
+        awslogs-stream: "racedb_celery"
     volumes:
       - /srv/racedb:/srv/racedb
       - /srv/racedb_secrets/flickr_oauth-tokens.sqlite:/root/.flickr/oauth-tokens.sqlite
@@ -59,9 +87,27 @@ services:
       - web
   beat:
     image: racedb-celery
-    command: /bin/sh -c 'watchmedo auto-restart -p "*.py;**.html;**.slack" --recursive -- celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
+    command: /bin/sh -c 'watchmedo auto-restart -p "*.py;*.html;*.slack" --recursive -- celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
+    logging:
+      driver: "awslogs"
+      options:
+        awslogs-region: "us-east-1"
+        awslogs-group: "racedb"
+        awslogs-stream: "racedb_beat"
     volumes:
       - /srv/racedb:/srv/racedb
     networks:
       - db
       - web
+  certbot:
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    image: certbot/certbot
+    logging:
+      driver: "awslogs"
+      options:
+        awslogs-region: "us-east-1"
+        awslogs-group: "racedb"
+        awslogs-stream: "racedb_certbot"
+    volumes:
+      - /srv/racedb_certbot/conf:/etc/letsencrypt
+      - /srv/racedb_certbot/www:/var/www/certbot
