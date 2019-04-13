@@ -34,6 +34,7 @@ def index(request):
     future_events = get_future_events(featured_event)
     boost_year = view_boost.get_boost_years()[0]
     boost_leaderboard = view_boost.index(request, boost_year, leaderboard_only=True)
+    notification = get_notification()
     context = {
         "distances": distances,
         "recap_type": recap_type,
@@ -45,6 +46,7 @@ def index(request):
         "future_events": future_events,
         "boost_year": boost_year,
         "boost_leaderboard": boost_leaderboard,
+        "notification": notification,
     }
     # Determine the format to return based on what is seen in the URL
     if "format" in qstring:
@@ -251,3 +253,13 @@ def get_recap_type(last_race_day_events):
         if Endurraceresult.objects.filter(year=year).count() > 0:
             recap_type = "combined"
     return recap_type
+
+
+def get_notification():
+    notification = False
+    notifications = Config.objects.filter(name="homepage_notification")
+    if len(notifications) == 1:
+        dbvalue = notifications[0].value
+        if dbvalue != "":
+            notification = dbvalue
+    return notification
