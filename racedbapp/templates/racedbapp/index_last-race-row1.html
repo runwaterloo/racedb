@@ -1,7 +1,7 @@
 {% load static %}
 <div class="row">
   <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-    <img class="img-responsive img-rounded" src="{% static "race_logos/"|add:recap_event.race.slug|add:".png" %}"/>
+    <a href="https://runwaterloo.com/{{ recap_event.date.year }}-{{ recap_event.race.slug }}"><img class="img-responsive img-rounded" src="{% static "race_logos/"|add:recap_event.race.slug|add:".png" %}"/></a>
   </div>
   <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
     <h2>
