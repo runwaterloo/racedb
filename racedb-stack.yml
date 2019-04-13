@@ -23,7 +23,7 @@ services:
        - /srv/racedb_db:/docker-entrypoint-initdb.d
        - /srv/racedb_secrets:/run/secrets
   gunicorn:
-    command: "/bin/sh -c 'gunicorn racedb.wsgi -b 0.0.0.0:8000'"
+    command: /bin/bash -c "./manage.py collectstatic --noinput; gunicorn racedb.wsgi -b 0.0.0.0:8000"
     image: racedb-gunicorn
     logging:
       driver: "awslogs"
