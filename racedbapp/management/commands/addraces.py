@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """ parseresults.py - Race result parsing utility. """
 from django.core.management.base import BaseCommand
-from racedbapp import view_shared
+from racedbapp import tasks, view_shared
 import datetime
 import requests
 import logging
@@ -65,6 +65,7 @@ class Command(BaseCommand):
         page_size = 10
         events = []
         done = False
+        slack_results = []
         if options["event"]:
             resultsurl = "http://pre.scrw.ca/api/events/{}".format(options["event"])
             r = requests.get(resultsurl, verify=False)
@@ -243,6 +244,7 @@ class Command(BaseCommand):
                     len(results), year, race.name, distance.name, event["id"]
                 )
                 logger.info(info)
+                slack_results.append(info)
 
                 # Process splits
                 Split.objects.filter(event_id=event["id"]).delete()
@@ -252,6 +254,7 @@ class Command(BaseCommand):
                         len(splits), year, race.name, distance.name, event["id"]
                     )
                     logger.info(info)
+                    slack_result.append(info)
 
                 # Process LL relays
                 Relay.objects.filter(event_id=event["id"]).delete()
@@ -261,6 +264,7 @@ class Command(BaseCommand):
                         len(relays), year, race.name, distance.name, event["id"]
                     )
                     logger.info(info)
+                    slack_result.append(info)
 
                 # Process hills
                 if dohill:
@@ -271,6 +275,7 @@ class Command(BaseCommand):
                         len(hill_results), year, race.name, distance.name, event["id"]
                     )
                     logger.info(info)
+                    slack_results.append(info)
 
                 teamurl = "http://pre.scrw.ca/api/teamresults"
                 teamresults = []
@@ -309,6 +314,8 @@ class Command(BaseCommand):
                     len(teamresults), year, race.name, distance.name, event["id"]
                 )
                 logger.info(info)
+                if len(teamresults) > 0:
+                    slack_results.append(info)
 
                 # Process PBs
                 info = "Process PBs"
@@ -322,7 +329,9 @@ class Command(BaseCommand):
             premodified.value = event["modified"]
             premodified.save()
         if len(endurrace_years) > 0:
-            process_endurrace(set(endurrace_years))
+            slack_results = process_endurrace(set(endurrace_years), slack_results)
+        if len(slack_results) > 0:
+            tasks.slack_results_update(slack_results)
 
 
 def maketimedelta(strtime):
@@ -355,7 +364,7 @@ def maketimedelta(strtime):
     return timedelta
 
 
-def process_endurrace(years):
+def process_endurrace(years, slack_results):
     info = "Processing ENDURrace for years: {}".format(years)
     logger.info(info)
     race = Race.objects.get(slug="endurrace")
@@ -405,8 +414,10 @@ def process_endurrace(years):
                 results.append(this_result)
         Endurraceresult.objects.filter(year=year).delete()
         Endurraceresult.objects.bulk_create(results)
-        info = "Processed {} ENDURrace results for {}.".format(len(results), year)
+        info = "{} ENDURrace combined results processed for {}".format(len(results), year)
         logger.info(info)
+        slack_results.append(info)
+        return slack_results
 
 
 def endurrace_category_fix(curcategory):

@@ -92,3 +92,22 @@ def slack_featured_member():
         )
     else:
         logger.info("Not production host, skipping slack_featured_member")
+
+
+@shared_task
+def slack_results_update(results):
+    prod_ipaddr = secrets.prod_ipaddr
+    my_ip = None
+    try:
+        my_ip = requests.get(
+            "http://169.254.169.254/latest/meta-data/public-ipv4", timeout=5
+        ).text.strip()
+    except Exception:
+        pass
+    if my_ip == prod_ipaddr:
+        logger.info("Sending results update to Slack")
+        slack_message(
+            "racedbapp/results_update.slack", {"results": results}
+        )
+    else:
+        logger.info("Not production host, skipping slack_results_update")

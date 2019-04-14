@@ -1,0 +1,9 @@
+{% extends django_slack %}
+
+{% block text %}
+*Results have been added or updated to RRW*
+
+{% for result in results %}
+{{ result }}
+{% endfor %}
+{% endblock %}
