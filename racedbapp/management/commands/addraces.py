@@ -331,7 +331,7 @@ class Command(BaseCommand):
         if len(endurrace_years) > 0:
             slack_results = process_endurrace(set(endurrace_years), slack_results)
         if len(slack_results) > 0:
-            tasks.slack_results_update(slack_results)
+            tasks.slack_results_update.delay(slack_results)
 
 
 def maketimedelta(strtime):
