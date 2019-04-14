@@ -384,9 +384,16 @@ def process_endurrace(years):
         for k, v in fivek_dict.items():
             if k in eightk_dict:
                 guntime = v.guntime + eightk_dict[k].guntime
+                thiscategory = v.category
+
+                # start 2019 override
+                if result.event.date.year == 2019:
+                    thiscategory = endurrace_category_fix(thiscategory)
+                # end 2019 override
+
                 this_result = Endurraceresult(
                     year=year,
-                    category=v.category,
+                    category=thiscategory,
                     athlete=v.athlete,
                     gender=v.gender,
                     city=v.city,
@@ -400,6 +407,26 @@ def process_endurrace(years):
         Endurraceresult.objects.bulk_create(results)
         info = "Processed {} ENDURrace results for {}.".format(len(results), year)
         logger.info(info)
+
+
+def endurrace_category_fix(curcategory):
+    """ Fix to override ENDURrace combined categories """
+    categoryname = curcategory.name
+    categoryname = categoryname.replace("S", "B")
+    categoryname = categoryname.replace("L", "B")
+    categoryname = categoryname.replace("-12", "-19")
+    categoryname = categoryname.replace("13-15", "-19")
+    categoryname = categoryname.replace("16-19", "-19")
+    try:
+        category = Category.objects.get(name=categoryname)
+    except Exception:
+        ismasters = False
+        for i in MASTERS_SUBSTRINGS:
+            if i in categoryname:
+                ismasters = True
+        category = Category(name=categoryname, ismasters=ismasters)
+        category.save()
+    return category
 
 
 def add_splits(event, result, extra_dict, splits):
