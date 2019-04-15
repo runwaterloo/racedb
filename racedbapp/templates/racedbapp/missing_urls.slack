@@ -1,0 +1,9 @@
+{% extends django_slack %}
+
+{% block text %}
+*These events in the next {{ days }} days have no resultsurl:*
+
+{% for event in missing_urls %}
+{{ event.date.year }} {{ event.race.shortname }} {{ event.distance.name }}
+{% endfor %}
+{% endblock %}
