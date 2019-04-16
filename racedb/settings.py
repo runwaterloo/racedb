@@ -24,81 +24,79 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = secrets.SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-def show_toolbar(request):                                                       
-    if DEBUG:                                                                    
-        return True                                                              
-    else:                                                                        
-        return False                                                             
-                                                                                 
-DEBUG_TOOLBAR_CONFIG = {                                                         
-    "SHOW_TOOLBAR_CALLBACK" : show_toolbar,                                      
-}                                                                                
-                  
 
-ALLOWED_HOSTS = ['*',]
-INTERNAL_IPS = ('127.0.0.1', '192.143.74.21', '192.143.74.210') 
+def show_toolbar(request):
+    if DEBUG:
+        return True
+    else:
+        return False
+
+
+DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": show_toolbar}
+
+
+ALLOWED_HOSTS = ["*"]
+INTERNAL_IPS = ("127.0.0.1", "192.143.74.21", "192.143.74.210")
 
 # Application definition
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.humanize',
-    'racedbapp',
-    'debug_toolbar',
-    'django_slack',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.humanize",
+    "racedbapp",
+    "debug_toolbar",
+    "django_slack",
 )
 
 MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
 ]
 
-ROOT_URLCONF = 'racedb.urls'
+ROOT_URLCONF = "racedb.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ]
         },
-    },
+    }
 ]
 
-WSGI_APPLICATION = 'racedb.wsgi.application'
+WSGI_APPLICATION = "racedb.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'racedb',
-        'USER': 'racedb',
-        'PASSWORD': secrets.DB_PASSWORD,
-        'HOST': secrets.DB_HOST,
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            },
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "racedb",
+        "USER": "racedb",
+        "PASSWORD": secrets.DB_PASSWORD,
+        "HOST": secrets.DB_HOST,
+        "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 }
 
@@ -106,9 +104,9 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'America/Toronto'
+TIME_ZONE = "America/Toronto"
 
 USE_I18N = True
 
@@ -116,9 +114,9 @@ USE_L10N = True
 
 USE_TZ = True
 
-STATIC_URL = '/static/'
-STATIC_ROOT = '/static/'
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+STATIC_URL = "/static/"
+STATIC_ROOT = "/static/"
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 LOGGING = {
     "version": 1,
@@ -156,3 +154,11 @@ SLACK_CHANNEL = "#notifications"
 SLACK_BACKEND = "django_slack.backends.CeleryBackend"
 SLACK_USERNAME = "giskard"
 SLACK_ICON_EMOJI = ":robot_face:"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": "/tmp",
+        "KEY_PREFIX": "racedb",
+    }
+}

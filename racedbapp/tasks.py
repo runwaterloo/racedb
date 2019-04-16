@@ -1,4 +1,5 @@
 from django_slack import slack_message
+from django.core.cache import cache
 from celery import shared_task
 import requests
 import os
@@ -142,3 +143,10 @@ def slack_missing_urls():
             )
     else:
         logger.info("Not production host, skipping missing_urls")
+
+
+@shared_task
+def clear_cache():
+    logger.info("Clearing cache")
+    cache.clear()
+    requests.get("https://results.runwaterloo.com")

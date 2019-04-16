@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.views.decorators.cache import cache_page
 
 # from django.db.models import Min, Q
 # from django import db
@@ -18,6 +19,7 @@ named_race = namedtuple("nr", ["name", "shortname", "slug"])
 named_distance = namedtuple("nd", ["name", "slug", "km"])
 
 
+@cache_page(86400)
 def index(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     asofdate = None
