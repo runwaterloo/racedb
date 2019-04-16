@@ -151,3 +151,4 @@ def slack_missing_urls():
 def clear_cache():
     logger.info("Clearing cache")
     cache.clear()
+    requests.get("https://results.runwaterloo.com")
