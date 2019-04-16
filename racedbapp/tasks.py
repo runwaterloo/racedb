@@ -22,6 +22,8 @@ def webhook():
     os.system("git pull https://gitlab.com/sl70176/racedb.git")
     logging.info("Updating pip requirements")
     os.system("pip install -r requirements.txt")
+    logging.info("Clearing cache")
+    cache.clear()
     logging.info("Touching .restart")
     os.system("touch .restart")
 
