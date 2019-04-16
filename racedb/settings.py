@@ -158,7 +158,7 @@ SLACK_ICON_EMOJI = ":robot_face:"
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": "/tmp",
+        "LOCATION": "/srv/racedb/.cache",
         "KEY_PREFIX": "racedb",
     }
 }
