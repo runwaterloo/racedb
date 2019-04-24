@@ -62,13 +62,13 @@
             {% if memberinfo.fivek_pb %}
               <tr>
                 <td>5 KM PB</td>
-                <td><a href="/event/{{ memberinfo.fivek_pb.event.date.year }}/{{ memberinfo.fivek_pb.event.race.slug }}/{{ memberinfo.fivek_pb.event.distance.slug }}/">{{ memberinfo.fivek_pb.guntime }}</a></td>
+                <td><a href="/event/{{ memberinfo.fivek_pb.result.event.date.year }}/{{ memberinfo.fivek_pb.result.event.race.slug }}/{{ memberinfo.fivek_pb.result.event.distance.slug }}/">{{ memberinfo.fivek_pb.guntime }}</a></td>
               </tr>
             {% endif %}
             {% if memberinfo.tenk_pb %}
               <tr>
                 <td>10 KM PB</td>
-                <td><a href="/event/{{ memberinfo.tenk_pb.event.date.year }}/{{ memberinfo.tenk_pb.event.race.slug }}/{{ memberinfo.tenk_pb.event.distance.slug }}/">{{ memberinfo.tenk_pb.guntime }}</a></td>
+                <td><a href="/event/{{ memberinfo.tenk_pb.result.event.date.year }}/{{ memberinfo.tenk_pb.result.event.race.slug }}/{{ memberinfo.tenk_pb.result.event.distance.slug }}/">{{ memberinfo.tenk_pb.guntime }}</a></td>
               </tr>
             {% endif %}
           </table>
