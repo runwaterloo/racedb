@@ -160,5 +160,6 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
         "LOCATION": "/srv/racedb/.cache",
         "KEY_PREFIX": "racedb",
+        "TIMEOUT": None,
     }
 }
