@@ -19,7 +19,7 @@ named_race = namedtuple("nr", ["name", "shortname", "slug"])
 named_distance = namedtuple("nd", ["name", "slug", "km"])
 
 
-@cache_page(60*60*24)
+@cache_page(60*5)
 def index(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     asofdate = None
