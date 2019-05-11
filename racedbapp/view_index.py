@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 
 # from django.db.models import Min, Q
 # from django import db
@@ -19,8 +19,11 @@ named_race = namedtuple("nr", ["name", "shortname", "slug"])
 named_distance = namedtuple("nd", ["name", "slug", "km"])
 
 
-@cache_page(60*60*24)
 def index(request):
+    cache_key = "index.{}".format(request.META["QUERY_STRING"])
+    cached_html = cache.get(cache_key)
+    if cached_html:
+        return cached_html  # return the page immediately if it's cached
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     asofdate = None
     if "asofdate" in qstring:
@@ -63,7 +66,9 @@ def index(request):
         else:
             return HttpResponse("Unknown format in URL", "text/html")
     else:
-        return render(request, "racedbapp/index.html", context)
+        html = render(request, "racedbapp/index.html", context)
+        cache.set(cache_key, html)
+        return html
 
 
 def get_future_events(featured_event):
