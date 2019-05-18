@@ -249,7 +249,7 @@ def get_last_race_day_events(asofdate):
     )
     last_race_day_events = Event.objects.filter(
         id__in=last_race_day_event_ids
-    ).order_by("-distance_km")
+    ).order_by("-distance__km")
     return last_race_day_events
 
 
