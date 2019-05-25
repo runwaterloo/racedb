@@ -98,31 +98,35 @@
       <p></p>
       <table class="table table-condensed">
         <tr class="info">
-          <th>Record</th>
+          <th>Demographic</th>
+          <th>{{ featured_event.date.year }} Winner</th>
           <th>Time</th>
-          <th>Name</th>
+          <th>Record Holder</th>
+          <th>Time</th>
           <th>Year</th>
-          <th>Category</th>
-          <th>Pace</th>
-          <th>City</th>
         </tr>
-        {% for record in featured_event_records %}
+        {% for i in featured_event_data %}
         <tr>
-          {% ifchanged record.place %}
-            <td>{{ record.place }}</td>
-          {% else %}
-            <td></td>
+          {% ifchanged i.demographic %}
+            <td>{{ i.demographic }}</td>
+            {% if i.last_year_winning_member_slug %}
+              <td><a href="/member/{{ i.last_year_winning_member_slug }}/">{{ i.last_year_winning_athlete }}</a></td>
+            {% else %}
+              <td>{{ i.last_year_winning_athlete }}</td>
+            {% endif %}
+            <td>{{ i.last_year_winning_time|get_time }}</td>
+            {% else %}
+              <td></td>
+              <td></td>
+              <td></td>
           {% endifchanged %}
-          <td>{{ record.guntime|get_time }}</td>
-          {% if record.member %}
-            <td><a href="/member/{{ record.member.slug }}/">{{ record.athlete }}</a></td>
+          {% if i.record_member %}
+            <td><a href="/member/{{ i.record_member.slug }}/">{{ i.record_athlete }}</a></td>
           {% else %}
-            <td>{{ record.athlete }}</td>
+            <td>{{ i.record_athlete }}</td>
           {% endif %}
-          <td><a target="_blank" href="/event/{{ record.year }}/{{ record.race_slug }}/{{ fe.distance.slug }}">{{ record.year }}</a></td>
-          <td>{{ record.category }}</td>
-          <td>{{ record.guntime|get_pace:featured_event.distance.km }}</td>
-          <td>{{ record.city }}</td>
+          <td>{{ i.record_time|get_time }}</td>
+          <td><a target="_blank" href="/event/{{ i.record_year }}/{{ featured_event.race.slug }}/{{ featured_event.distance.slug }}">{{ i.record_year }}</a></td>
         </tr>
         {% endfor %}
       </table>

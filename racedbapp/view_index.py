@@ -8,7 +8,7 @@ from collections import namedtuple
 import urllib
 import simplejson
 from . import config, view_boost, view_recap, view_member, view_shared
-from datetime import datetime
+from datetime import datetime, timedelta
 from operator import attrgetter
 from .models import Config, Endurraceresult, Event, Relay, Result, Rwmember
 
@@ -35,7 +35,7 @@ def index(request):
     recap_results = get_recap_results(recap_event, recap_type)
     memberinfo = get_memberinfo()
     featured_event = get_featured_event()
-    featured_event_records = get_featured_event_records(featured_event)
+    featured_event_data = get_featured_event_data(featured_event)
     future_events = get_future_events(featured_event)
     boost_year = view_boost.get_boost_years()[0]
     boost_leaderboard = view_boost.index(request, boost_year, leaderboard_only=True)
@@ -47,7 +47,7 @@ def index(request):
         "recap_results": recap_results,
         "memberinfo": memberinfo,
         "featured_event": featured_event,
-        "featured_event_records": featured_event_records,
+        "featured_event_data": featured_event_data,
         "future_events": future_events,
         "boost_year": boost_year,
         "boost_leaderboard": boost_leaderboard,
@@ -162,13 +162,51 @@ def get_featured_event():
     return featured_event
 
 
-def get_featured_event_records(featured_event):
-    featured_event_records = None
-    if featured_event:
-        featured_event_records = view_shared.getracerecords(
-            featured_event.race, featured_event.distance, individual_only=True
-        )
-    return featured_event_records
+def get_featured_event_data(featured_event):
+    featured_event_data = get_event_data(featured_event)
+    return featured_event_data
+
+
+def get_event_data(featured_event):
+    if not featured_event:
+        return None
+    previous_event_year = featured_event.date.year - 1
+    previous_event = Event.objects.get(
+        race=featured_event.race,
+        distance=featured_event.distance,
+        date__icontains=previous_event_year,
+    )
+    previous_event_recap = get_recap_results_standard(previous_event)
+    featured_event_records = view_shared.getracerecords(
+        featured_event.race, featured_event.distance, individual_only=True
+    )
+    featured_event_data = []
+    for i in featured_event_records:
+        row = UpcomingEvent()
+        row.demographic = i.place
+        row.record_athlete = i.athlete
+        row.record_member = i.member
+        row.record_time = i.guntime
+        row.record_year = i.year
+        recap_row = 0
+        if "Master" in row.demographic:
+            recap_row = 1
+        if "Female" in row.demographic:
+            row.last_year_winning_athlete = previous_event_recap[
+                recap_row
+            ].female_athlete
+            row.last_year_winning_member = previous_event_recap[
+                recap_row
+            ].female_member_slug
+            row.last_year_winning_time = previous_event_recap[recap_row].female_time
+        else:
+            row.last_year_winning_athlete = previous_event_recap[recap_row].male_athlete
+            row.last_year_winning_member_slug = previous_event_recap[
+                recap_row
+            ].male_member_slug
+            row.last_year_winning_time = previous_event_recap[recap_row].male_time
+        featured_event_data.append(row)
+    return featured_event_data
 
 
 def get_recap_event(last_race_day_events, recap_type, distances):
@@ -275,3 +313,14 @@ def get_notification():
         if dbvalue != "":
             notification = dbvalue
     return notification
+
+
+class UpcomingEvent:
+    def __init__(self):
+        self.demographic = None
+        self.last_year_winning_athlete = None
+        self.last_year_winning_member_slug = None
+        self.last_year_winning_time = None
+        self.record_athlete = None
+        self.record_time = None
+        self.record_year = None
