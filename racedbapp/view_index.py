@@ -190,7 +190,7 @@ def get_event_data(featured_event):
         row.record_year = i.year
         recap_row = 0
         if "Master" in row.demographic:
-            recap_row = 1
+            recap_row = 3
         if "Female" in row.demographic:
             row.last_year_winning_athlete = previous_event_recap[
                 recap_row
