@@ -14,3 +14,4 @@ docker swarm init
 docker build --name racedb_gunicorn -f Dockerfile-gunicorn .
 docker stack deploy -c ./racedb-stack-dev-min.yml
 ```
+Git test
