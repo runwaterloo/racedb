@@ -254,7 +254,7 @@ class Command(BaseCommand):
                         len(splits), year, race.name, distance.name, event["id"]
                     )
                     logger.info(info)
-                    slack_result.append(info)
+                    slack_results.append(info)
 
                 # Process LL relays
                 Relay.objects.filter(event_id=event["id"]).delete()
@@ -264,7 +264,7 @@ class Command(BaseCommand):
                         len(relays), year, race.name, distance.name, event["id"]
                     )
                     logger.info(info)
-                    slack_result.append(info)
+                    slack_results.append(info)
 
                 # Process hills
                 if dohill:
