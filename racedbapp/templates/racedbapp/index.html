@@ -109,8 +109,8 @@
         <tr>
           {% ifchanged i.demographic %}
             <td>{{ i.demographic }}</td>
-            {% if i.last_year_winning_member_slug %}
-              <td><a href="/member/{{ i.last_year_winning_member_slug }}/">{{ i.last_year_winning_athlete }}</a></td>
+            {% if i.last_year_winning_member %}
+              <td><a href="/member/{{ i.last_year_winning_member }}/">{{ i.last_year_winning_athlete }}</a></td>
             {% else %}
               <td>{{ i.last_year_winning_athlete }}</td>
             {% endif %}
