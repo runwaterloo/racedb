@@ -174,52 +174,56 @@
     {% for fe in future_events %}
     <div class="row">
     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-2">
-      <center><a href="https://runwaterloo.com/{{ fe.race.slug }}/"><img class="img-responsive upcoming-race" src="{% static "race_logos/"|add:fe.race.slug|add:".png" %}"></img></a></center>
+      <center><a href="https://runwaterloo.com/{{ fe.0.race.slug }}/"><img class="img-responsive upcoming-race" src="{% static "race_logos/"|add:fe.0.race.slug|add:".png" %}"></img></a></center>
     </div>
     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-2">
       <br>
-      <strong><a href="https://runwaterloo.com/{{ fe.race.slug }}/">{{ fe.race.name }}</strong></a><br>
+      <strong><a href="https://runwaterloo.com/{{ fe.0.race.slug }}/">{{ fe.0.race.name }}</strong></a><br>
       <br>
-      <strong>{{ fe.distance.name }}</strong><br>
-      {{ fe.event.date }}<br>
-      {{ fe.event.city }}<br>
+      <strong>{{ fe.0.distance.name }}</strong><br>
+      {{ fe.0.date }}<br>
+      {{ fe.0.city }}<br>
     </div>
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-8">
       <p></p>
-      {% if fe.records %}
+      {% if fe.1 %}
       <table class="table table-condensed">
         <tr class="info">
-          <th>Record</th>
+          <th>Demographic</th>
+          <th>{{ featured_event.date.year|add:"-1" }} Winner</th>
           <th>Time</th>
-          <th>Name</th>
+          <th>Record Holder</th>
+          <th>Time</th>
           <th>Year</th>
-          <th>Category</th>
-          <th>Pace</th>
-          <th>City</th>
         </tr>
-        {% for record in fe.records %}
+        {% for i in fe.1 %}
         <tr>
-          {% ifchanged record.place %}
-            <td>{{ record.place }}</td>
-          {% else %}
-            <td></td>
+          {% ifchanged i.demographic %}
+            <td>{{ i.demographic }}</td>
+            {% if i.last_year_winning_member %}
+              <td><a href="/member/{{ i.last_year_winning_member }}/">{{ i.last_year_winning_athlete }}</a></td>
+            {% else %}
+              <td>{{ i.last_year_winning_athlete }}</td>
+            {% endif %}
+            <td>{{ i.last_year_winning_time|get_time }}</td>
+            {% else %}
+              <td></td>
+              <td></td>
+              <td></td>
           {% endifchanged %}
-          <td>{{ record.guntime|get_time }}</td>
-          {% if record.member %}
-            <td><a href="/member/{{ record.member.slug }}/">{{ record.athlete }}</a></td>
+          {% if i.record_member %}
+            <td><a href="/member/{{ i.record_member.slug }}/">{{ i.record_athlete }}</a></td>
           {% else %}
-            <td>{{ record.athlete }}</td>
+            <td>{{ i.record_athlete }}</td>
           {% endif %}
-          <td><a target="_blank" href="/event/{{ record.year }}/{{ record.race_slug }}/{{ fe.distance.slug }}">{{ record.year }}</a></td>
-          <td>{{ record.category }}</td>
-          <td>{{ record.guntime|get_pace:fe.distance.km }}</td>
-          <td>{{ record.city }}</td>
+          <td>{{ i.record_time|get_time }}</td>
+          <td><a target="_blank" href="/event/{{ i.record_year }}/{{ featured_event.race.slug }}/{{ featured_event.distance.slug }}">{{ i.record_year }}</a></td>
         </tr>
         {% endfor %}
-      </table>
       {% else %}
-      <center><h1>Inaugural Event!</h1></center>
+        <center><h1>Inaugural Event!</h1></center>
       {% endif %}
+      </table>
     </div>
     </div>
     {% endfor %}

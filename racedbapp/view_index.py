@@ -91,18 +91,15 @@ def get_future_events(featured_event):
         event_result_count = Result.objects.filter(event=i).count()
         if event_result_count > 0:
             continue
-        event = named_event(i.date, i.city)
         race = named_race(i.race.name, i.race.shortname, i.race.slug)
         distance = named_distance(i.distance.name, i.distance.slug, i.distance.km)
         numresults = Result.objects.filter(
             event__race=i.race, event__distance=i.distance
         ).count()
-        records = False
+        event_data = False
         if numresults > 0:
-            records = view_shared.getracerecords(
-                i.race, i.distance, individual_only=True
-            )
-        future_events.append(named_future_event(event, race, distance, records))
+            event_data = get_event_data(i)
+        future_events.append((i, event_data))
         if i.race not in races_seen:
             races_seen.append(i.race)
     return future_events
