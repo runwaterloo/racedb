@@ -21,13 +21,14 @@ named_distance = namedtuple("nd", ["name", "slug", "km"])
 
 def index(request):
     cache_key = "index.{}".format(request.META["QUERY_STRING"])
-    cached_html = cache.get(cache_key)
-    if cached_html:
-        return cached_html  # return the page immediately if it's cached
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     asofdate = None
     if "asofdate" in qstring:
         asofdate = qstring["asofdate"][0]
+    else:
+        cached_html = cache.get(cache_key)
+        if cached_html:
+            return cached_html  # return the page immediately if it's cached
     last_race_day_events = get_last_race_day_events(asofdate)
     recap_type = get_recap_type(last_race_day_events)
     distances = get_distances(last_race_day_events)
