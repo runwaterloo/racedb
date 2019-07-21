@@ -199,7 +199,7 @@ def get_event_data(featured_event):
             row.last_year_winning_time = previous_event_recap[recap_row].female_time
         else:
             row.last_year_winning_athlete = previous_event_recap[recap_row].male_athlete
-            row.last_year_winning_member_slug = previous_event_recap[
+            row.last_year_winning_member = previous_event_recap[
                 recap_row
             ].male_member_slug
             row.last_year_winning_time = previous_event_recap[recap_row].male_time
