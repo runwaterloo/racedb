@@ -50,6 +50,13 @@ def update_featured_member_id():
     db_member = Config.objects.filter(name="featured_member_id")
     if db_member.count() == 0:
         Config(name="featured_member_id", value=0).save()
+    featured_member_no_repeat_days = int(
+        Config.objects.get(name="featured_member_no_repeat_days").value
+    )
+    db_featured_member_history = Config.objects.get(name="featured_member_history")
+    featured_member_history = db_featured_member_history.value
+    str_featured_member_history = featured_member_history.split(",")
+    featured_member_history = [int(x) for x in str_featured_member_history]
     current_featured_member = Config.objects.filter(name="featured_member_id")[:1][0]
     current_featured_member_id = 0
     if current_featured_member.value.isdigit():
@@ -60,12 +67,21 @@ def update_featured_member_id():
         .exclude(photourl="")
         .order_by("?")
     )
+    if len(members) > featured_member_no_repeat_days:
+        members = members.exclude(id__in=featured_member_history)
     for member in members:
         member_results, km = view_member.get_memberresults(member)
-        if km > 0 and member.id != current_featured_member_id:
+        if km > 0:
             break
     current_featured_member.value = member.id
     current_featured_member.save()
+    featured_member_history.append(member.id)
+    trim_featured_member_history = featured_member_history[
+        -featured_member_no_repeat_days:
+    ]
+    str_featured_member_history = ",".join(str(v) for v in trim_featured_member_history)
+    db_featured_member_history.value = str_featured_member_history
+    db_featured_member_history.save()
     logger.info(
         "Changed featured member from {} to {}".format(
             current_featured_member_id, member.id
