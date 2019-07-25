@@ -24,6 +24,8 @@
     {% include "racedbapp/index_last-race-relay.html" %}
   {% elif recap_type == "combined" %}
     {% include "racedbapp/index_last-race-combined.html" %}
+  {% elif recap_type == "endurrun" %}
+    {% include "racedbapp/index_last-race-endurrun.html" %}
   {% else %}
     {% include "racedbapp/index_last-race-standard.html" %}
   {% endif %}

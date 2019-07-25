@@ -222,6 +222,8 @@ def get_recap_results(recap_event, recap_type):
         recap_results = get_recap_results_relay(recap_event)
     elif recap_type == "combined":
         recap_results = get_recap_results_combined(recap_event)
+    elif recap_type == "endurrun":
+        recap_results = get_recap_results_endurrun(recap_event)
     else:
         recap_results = get_recap_results_standard(recap_event)
     return recap_results
@@ -257,6 +259,11 @@ def get_recap_results_combined(recap_event):
     recap_results = view_recap.index(
         request, year, race_slug, distance_slug, individual_only=True
     )
+    return recap_results
+
+
+def get_recap_results_endurrun(recap_event):
+    recap_results = "ENDURrun special results go here"
     return recap_results
 
 
@@ -300,6 +307,8 @@ def get_recap_type(last_race_day_events):
         year = last_race_day_events[0].date.year
         if Endurraceresult.objects.filter(year=year).count() > 0:
             recap_type = "combined"
+    if last_race_day_events[0].race.slug == "endurrun":
+        recap_type = "endurrun"
     return recap_type
 
 
