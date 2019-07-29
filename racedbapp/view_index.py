@@ -7,7 +7,7 @@ from django.core.cache import cache
 from collections import namedtuple
 import urllib
 import simplejson
-from . import config, view_boost, view_recap, view_member, view_shared
+from . import config, view_boost, view_endurrun, view_recap, view_member, view_shared
 from datetime import datetime, timedelta
 from operator import attrgetter
 from .models import Config, Endurraceresult, Event, Relay, Result, Rwmember
@@ -263,7 +263,7 @@ def get_recap_results_combined(recap_event):
 
 
 def get_recap_results_endurrun(recap_event):
-    recap_results = "ENDURrun special results go here"
+    recap_results = Endurrunrecap(recap_event)
     return recap_results
 
 
@@ -331,3 +331,61 @@ class UpcomingEvent:
         self.record_athlete = None
         self.record_time = None
         self.record_year = None
+
+
+class Endurrunrecap:
+    def __init__(self, event):
+        self.year = event.date.year
+        self.distance_slug = event.distance.slug
+        self.endurrun_stages = {
+            "half-marathon": 1,
+            "15-km": 2,
+            "30-km": 3,
+            "10-mi": 4,
+            "25_6-km": 5,
+            "10-km": 6,
+            "marathon": 7,
+        }
+        self.stage_number = self.endurrun_stages.get(self.distance_slug)
+        self.ultimate_suffix = "after Stage {}".format(self.stage_number)
+        if self.stage_number == 7:
+            self.ultimate_suffix += " (Final)"
+        self.top_female = view_endurrun.index(
+            {
+                "year": (str(self.year),),
+                "filter": ("Female",),
+                "phase": ("after-stage-{}".format(str(self.stage_number)),),
+            },
+            "ultimate",
+            results_only=True,
+        )[0:3]
+        self.top_male = view_endurrun.index(
+            {
+                "year": (str(self.year),),
+                "filter": ("Male",),
+                "phase": ("after-stage-{}".format(str(self.stage_number)),),
+            },
+            "ultimate",
+            results_only=True,
+        )[0:3]
+        self.top_f_masters = view_endurrun.index(
+            {
+                "year": (str(self.year),),
+                "filter": ("F-Masters",),
+                "phase": ("after-stage-{}".format(str(self.stage_number)),),
+            },
+            "ultimate",
+            results_only=True,
+        )[0]
+        self.top_m_masters = view_endurrun.index(
+            {
+                "year": (str(self.year),),
+                "filter": ("M-Masters",),
+                "phase": ("after-stage-{}".format(str(self.stage_number)),),
+            },
+            "ultimate",
+            results_only=True,
+        )[0]
+
+    def __str__(self):
+        return "year={}, ultimate_suffix={}".format(self.year, self.ultimate_suffix)

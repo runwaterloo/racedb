@@ -20,8 +20,11 @@ namedresult = namedtuple('na', ['athlete', 'stages', 'total_time',
                                 'flag_slug', 'final_status', 'mouseover',
                                 'lead_gap', 'place_gap', 'member_slug'])
 
-def index(request, division):
-    qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
+def index(request, division, results_only=False):
+    if results_only:
+        qstring = request
+    else: 
+        qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
     year = False
     if 'year' in qstring:
         rawyear = qstring['year'][0]
@@ -176,6 +179,8 @@ def index(request, division):
     maxstages = 0
     if len(results) > 0:
         maxstages = results[0].stages
+    if results_only:
+        return results
     resultfilter = getresultfilter(filter_choice, phase_choice, division, hasmasters, year)
     phasefilter = getphasefilter(phase_choice, filter_choice, events_results_count, division, year)
     context = {'events': events,
