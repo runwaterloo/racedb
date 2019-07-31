@@ -217,6 +217,8 @@ def get_division(qstring):
 def get_distance_filter(event, races):
     distance_ids = Result.objects.filter(event__race__in=races, event__date__icontains=event.date.year).values_list('event__distance', flat=True)
     distances = Distance.objects.filter(pk__in=set(distance_ids)).order_by('-km')
+    if event.race.slug == "endurrun":
+        distances = view_shared.sort_endurrun_distances(distances)
     choices = []
     for d in distances:
         if d == event.distance:

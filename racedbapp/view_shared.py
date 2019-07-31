@@ -2,6 +2,7 @@ from django.db.models import Q
 from django.http import Http404
 from collections import namedtuple
 from .models import (
+    Distance,
     Endurraceresult,
     Event,
     Prime,
@@ -496,3 +497,24 @@ def get_relay_records(year=None):
             elif i.team_time == relay_records[j][0].team_time:
                 relay_records[j].append(i)
     return relay_records
+
+
+def sort_endurrun_distances(distances):
+    """ Sort ENDURrun distances into stage order """
+    endurrun_distances = []
+    endurrun_slugs = [
+        "half-marathon",
+        "15-km",
+        "30-km",
+        "10-mi",
+        "25_6-km",
+        "10-km",
+        "marathon",
+    ]
+    for dist in endurrun_slugs:
+        next_distance = Distance.objects.get(slug=dist)
+        if next_distance in distances:
+            endurrun_distances.append(next_distance)
+        else:
+            break
+    return endurrun_distances
