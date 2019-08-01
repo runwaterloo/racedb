@@ -12,10 +12,6 @@ CELERY_BEAT_SCHEDULE = {
     },
     "update_featured_member_id": {
         "task": "racedbapp.tasks.update_featured_member_id",
-        "schedule": crontab(hour="23", minute="59"),
-    },
-    "clear_cache": {
-        "task": "racedbapp.tasks.clear_cache",
         "schedule": crontab(hour="0", minute="0"),
     },
     "slack_featured_member": {
