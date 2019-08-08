@@ -18,42 +18,30 @@
    <small>
    <!-- Division Filter  -->
    <select onchange="location = this.options[this.selectedIndex].value;">
-   <option>{{ division|title }}</option>
-  {% if year %}
-   {% if division == 'ultimate' %}
-    <option value="/endurrun/sport/?year={{ year }}">Sport</option>
-    <option value="/endurrun/relay/?year={{ year }}">Relay</option>
-   {% elif division == 'sport' %}
-    <option value="/endurrun/ultimate/?year={{ year }}">Ultimate</option>
-    <option value="/endurrun/relay/?year={{ year }}">Relay</option>
-   {% elif division == 'relay' %}
-    <option value="/endurrun/ultimate/?year={{ year }}">Ultimate</option>
-    <option value="/endurrun/sport/?year={{ year }}">Sport</option>
-   {% endif %}
-  {% else %}
-    {% if division == 'ultimate' %}
-    <option value="/endurrun/sport/">Sport</option>
-    <option value="/endurrun/relay/">Relay</option>
-    {% elif division == 'sport' %}
-    <option value="/endurrun/ultimate/">Ultimate</option>
-    <option value="/endurrun/relay/">Relay</option>
-    {% elif division == 'relay' %}
-    <option value="/endurrun/ultimate/">Ultimate</option>
-    <option value="/endurrun/sport/">Sport</option>
-    {% endif %}
-  {% endif %}
-   </select>
+   <option>{{ divisionfilter.current }}</option>
+     {% for choice in divisionfilter.choices %}
+       <option value="{{ choice.url }}">{{ choice.name }}</option>
+     {% endfor %}
+    </select>
 
    <select onchange="location = this.options[this.selectedIndex].value;">
    {% if year %}
      <option>{{ year }}</option>
-     <option value="/endurrun/{{ division }}/">All-Time</option>
+     {% if contest_slug %}
+       <option value="/endurrun/{{ division }}/?contest={{ contest_slug }}">All-Time</option>
+     {% else %}
+       <option value="/endurrun/{{ division }}/">All-Time</option>
+     {% endif %}
    {% else %}
      <option>All-Time</option>
    {% endif %}
      {% for y in years %}
        {% if y != year %}
-         <option value="/endurrun/{{ division }}/?year={{ y }}">{{ y }}</option>
+         {% if contest_slug %}
+           <option value="/endurrun/{{ division }}/?contest={{ contest_slug }}&year={{ y }}">{{ y }}</option>
+         {% else %}
+           <option value="/endurrun/{{ division }}/?year={{ y }}">{{ y }}</option>
+         {% endif %}
        {% endif %}
      {% endfor %}
     </select>
@@ -67,13 +55,15 @@
     </select>
 
    <!-- Phase Filter  -->
-   {% if phasefilter.current %}
-   <select onchange="location = this.options[this.selectedIndex].value;" class="vcenter">
-   <option>{{ phasefilter.current }}</option>
-     {% for choice in phasefilter.choices %}
-       <option value="{{ choice.url }}">{{ choice.name }}</option>
-     {% endfor %}
-    </select>
+   {% if not contest_slug %}
+     {% if phasefilter.current %}
+       <select onchange="location = this.options[this.selectedIndex].value;" class="vcenter">
+       <option>{{ phasefilter.current }}</option>
+       {% for choice in phasefilter.choices %}
+         <option value="{{ choice.url }}">{{ choice.name }}</option>
+       {% endfor %}
+      </select>
+     {% endif %}
    {% endif %}
 
     {% if year %}
@@ -113,15 +103,25 @@
   <th class="text-center">Total</th>
   <th class="text-center" title="Time gap to 1st place">Gap 1</th>
   <th class="text-center" title="Time gap to the next place up">Gap 2</th>
-  {% if division != 'sport' %}
+  {% if contest_slug == "sprint" %}
+  <th class="text-center">Stage 2</th>
+  <th class="text-center">Stage 6</th>
+  {% elif contest_slug == "trail" %}
+  <th class="text-center">Stage 3</th>
+  <th class="text-center">Stage 5</th>
+  {% elif division == 'sport' %}
+  <th class="text-center">Stage 5</th>
+  <th class="text-center">Stage 6</th>
+  <th class="text-center">Stage 7</th>
+  {% elif division == 'ultimate' %}
   <th class="text-center">Stage 1</th>
   <th class="text-center">Stage 2</th>
   <th class="text-center">Stage 3</th>
   <th class="text-center">Stage 4</th>
-  {% endif %}
   <th class="text-center">Stage 5</th>
   <th class="text-center">Stage 6</th>
   <th class="text-center">Stage 7</th>
+  {% endif %}
   </tr>
   </thead>
   <tbody>

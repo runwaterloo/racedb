@@ -25,6 +25,9 @@ def index(request, division, results_only=False):
         qstring = request
     else: 
         qstring = urllib.parse.parse_qs(request.META['QUERY_STRING'])
+    contest_slug = False
+    if "contest" in qstring:
+        contest_slug = qstring["contest"][0]
     year = False
     if 'year' in qstring:
         rawyear = qstring['year'][0]
@@ -39,6 +42,18 @@ def index(request, division, results_only=False):
         events = events.exclude(distance__slug='15-km')
         events = events.exclude(distance__slug='30-km')
         events = events.exclude(distance__slug='10-mi')
+    if contest_slug == "sprint":
+        events = events.exclude(distance__slug='half-marathon')
+        events = events.exclude(distance__slug='30-km')
+        events = events.exclude(distance__slug='10-mi')
+        events = events.exclude(distance__slug='25_6-km')
+        events = events.exclude(distance__slug='marathon')
+    if contest_slug == "trail":
+        events = events.exclude(distance__slug='half-marathon')
+        events = events.exclude(distance__slug='15-km')
+        events = events.exclude(distance__slug='10-mi')
+        events = events.exclude(distance__slug='10-km')
+        events = events.exclude(distance__slug='marathon')
     if division in ('ultimate', 'sport'):
         athletes = Endurathlete.objects.filter(division=division.title()).order_by('id')
     else:
@@ -181,31 +196,72 @@ def index(request, division, results_only=False):
         maxstages = results[0].stages
     if results_only:
         return results
-    resultfilter = getresultfilter(filter_choice, phase_choice, division, hasmasters, year)
+    divisionfilter = getdivisionfilter(division, year, contest_slug)
+    resultfilter = getresultfilter(filter_choice, phase_choice, division, hasmasters, year, contest_slug)
     phasefilter = getphasefilter(phase_choice, filter_choice, events_results_count, division, year)
     context = {'events': events,
                'events_results_count': events_results_count,
+               'divisionfilter': divisionfilter,
                'resultfilter': resultfilter,
                'phasefilter': phasefilter,
                'year': year,
                'years': years,
                'division': division,
                'maxstages': maxstages,
-               'results': results}
+               'results': results,
+               'contest_slug': contest_slug,
+               }
     return render(request, 'racedbapp/endurrun.html', context)
 
-def getresultfilter(filter_choice, phase_choice, division, hasmasters, year):
+
+def getdivisionfilter(division, year, contest_slug):
+    if contest_slug:
+        filter_choice = "Ultimate-{}".format(contest_slug.title())
+    else:
+        filter_choice = division.title()
+    append_list = []
+    sprint_append_list = []
+    trail_append_list = []
+    if year:
+        append_list.append("year={}".format(year))
+        sprint_append_list.append("year={}".format(year))
+        trail_append_list.append("year={}".format(year))
+    sprint_append_list.append("contest=sprint")
+    trail_append_list.append("contest=trail")
+    append_string = ""
+    if append_list:
+        append_string = "?" + "&".join(sorted(append_list))
+    sprint_append_string = "?" + "&".join(sorted(sprint_append_list))
+    trail_append_string = "?" + "&".join(sorted(trail_append_list))
+    choices = [
+       namedchoice("Ultimate", "/endurrun/ultimate/{}".format(append_string)), 
+       namedchoice("Relay", "/endurrun/relay/{}".format(append_string)), 
+       namedchoice("Ultimate-Sprint", "/endurrun/ultimate/{}".format(sprint_append_string)), 
+       namedchoice("Ultimate-Trail", "/endurrun/ultimate/{}".format(trail_append_string)), 
+       namedchoice("Sport", "/endurrun/sport/{}".format(append_string)), 
+    ]
+    choices = [x for x in choices if x.name != filter_choice]
+    divisionfilter = namedfilter(filter_choice, choices)
+    return divisionfilter
+
+def getresultfilter(filter_choice, phase_choice, division, hasmasters, year, contest_slug):
+    contest_qs1 = contest_qs2 = ""
+    if contest_slug:
+        contest_qs1 = "?contest={}".format(contest_slug)
+        contest_qs2 = "&contest={}".format(contest_slug)
     if year:
         if phase_choice == 'Final Results':
-            choices = [namedchoice('', '/endurrun/{}/?year={}'.format(division, year)),
-                       namedchoice('Female', '/endurrun/{}/?year={}&filter=Female'.format(division, year)),
-                       namedchoice('Male', '/endurrun/{}/?year={}&filter=Male'.format(division, year))]
+            if contest_slug:
+                conest_qs = "&contest={}".format(contest_slug)
+            choices = [namedchoice('', '/endurrun/{}/?year={}{}'.format(division, year, contest_qs2)),
+                       namedchoice('Female', '/endurrun/{}/?year={}&filter=Female{}'.format(division, year, contest_qs2)),
+                       namedchoice('Male', '/endurrun/{}/?year={}&filter=Male{}'.format(division, year, contest_qs2))]
             if division == 'relay':
                 choices.append(namedchoice('Mixed', '/endurrun/{}/?year={}&filter=Mixed'.format(division, year)))
             if hasmasters:
-                choices.append(namedchoice('Masters', '/endurrun/{}/?year={}&filter=Masters'.format(division, year)))
-                choices.append(namedchoice('F-Masters', '/endurrun/{}/?year={}&filter=F-Masters'.format(division, year)))
-                choices.append(namedchoice('M-Masters', '/endurrun/{}/?year={}&filter=M-Masters'.format(division, year)))
+                choices.append(namedchoice('Masters', '/endurrun/{}/?year={}&filter=Masters{}'.format(division, year, contest_qs2)))
+                choices.append(namedchoice('F-Masters', '/endurrun/{}/?year={}&filter=F-Masters{}'.format(division, year, contest_qs2)))
+                choices.append(namedchoice('M-Masters', '/endurrun/{}/?year={}&filter=M-Masters{}'.format(division, year, contest_qs2)))
         else:
             choices = [namedchoice('', '/endurrun/{}/?year={}&phase={}'.format(division, year, phase_choice)),
                        namedchoice('Female', '/endurrun/{}/?year={}&filter=Female&phase={}'.format(division, year, phase_choice)),
@@ -218,15 +274,15 @@ def getresultfilter(filter_choice, phase_choice, division, hasmasters, year):
                 choices.append(namedchoice('M-Masters', '/endurrun/{}/?year={}&filter=M-Masters&phase={}'.format(division, year, phase_choice)))
     else:
         if phase_choice == 'Final Results':
-            choices = [namedchoice('', '/endurrun/{}/'.format(division)),
-                       namedchoice('Female', '/endurrun/{}/?filter=Female'.format(division)),
-                       namedchoice('Male', '/endurrun/{}/?filter=Male'.format(division))]
+            choices = [namedchoice('', '/endurrun/{}/{}'.format(division, contest_qs1)),
+                       namedchoice('Female', '/endurrun/{}/?filter=Female{}'.format(division, contest_qs2)),
+                       namedchoice('Male', '/endurrun/{}/?filter=Male{}'.format(division, contest_qs2))]
             if division == 'relay':
                 choices.append(namedchoice('Mixed', '/endurrun/{}/?filter=Mixed'.format(division)))
             if hasmasters:
-                choices.append(namedchoice('Masters', '/endurrun/{}/?filter=Masters'.format(division)))
-                choices.append(namedchoice('F-Masters', '/endurrun/{}/?filter=F-Masters'.format(division)))
-                choices.append(namedchoice('M-Masters', '/endurrun/{}/?filter=M-Masters'.format(division)))
+                choices.append(namedchoice('Masters', '/endurrun/{}/?filter=Masters{}'.format(division, contest_qs2)))
+                choices.append(namedchoice('F-Masters', '/endurrun/{}/?filter=F-Masters{}'.format(division, contest_qs2)))
+                choices.append(namedchoice('M-Masters', '/endurrun/{}/?filter=M-Masters{}'.format(division, contest_qs2)))
         else:
             choices = [namedchoice('', '/endurrun/{}/?phase={}'.format(division, phase_choice)),
                        namedchoice('Female', '/endurrun/{}/?filter=Female&phase={}'.format(division, phase_choice)),
