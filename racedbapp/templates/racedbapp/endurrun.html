@@ -93,6 +93,15 @@
   <tr>
   <th class="text-center">Place</th>
   <th>Name</th>
+
+  <!-- start temporary for 2019 until better solution -->
+  {% if year == 2019 %}
+    <th class="text-center" scope="col">
+      <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+    </th>
+  {% endif %}
+  <!-- end temporary for 2019 until better solution -->
+
   {% if not year %}
   <th class="text-center">Year</th>
   {% endif %}
@@ -170,6 +179,17 @@
         {{ result.athlete.name }}
       {% endif %}
       </td>
+
+  <!-- start temporary for 2019 until better solution -->
+  {% if year == 2019 %}
+    <td class="text-center">
+      <a href="https://www.flickr.com/photos/runwaterloo/tags/2019endurrun,{{ result.bib }}" target="_blank">
+        <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+      </a>
+    </td>
+  {% endif %}
+  <!-- end temporary for 2019 until better solution -->
+
       {% if not year %}
       <td class="text-center">{{ result.athlete.year }}</td>
       {% endif %}

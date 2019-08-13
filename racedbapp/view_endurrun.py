@@ -18,7 +18,7 @@ namedstagetime = namedtuple('ns', ['name', 'time'])
 namedresult = namedtuple('na', ['athlete', 'stages', 'total_time',
                                 'total_seconds', 'stage_times',
                                 'flag_slug', 'final_status', 'mouseover',
-                                'lead_gap', 'place_gap', 'member_slug'])
+                                'lead_gap', 'place_gap', 'member_slug', 'bib'])
 
 def index(request, division, results_only=False):
     if results_only:
@@ -101,10 +101,12 @@ def index(request, division, results_only=False):
     events_results_count = []
     flags = os.listdir('/srv/racedb/racedbapp/static/flags')
     valid_flag_slugs = set([x.split('_')[0] for x in flags])
+    year_bibs = {}
     for loopyear in years:
         if year:
             if loopyear != year:
                 continue
+        year_bibs[loopyear] = {}
         events_results_count = []
         all_event_results = []
         for event in events.filter(date__icontains=loopyear):
@@ -115,6 +117,8 @@ def index(request, division, results_only=False):
                 event_results = event_results.filter(division='Sport')
             events_results_count.append(event_results.count())
             event_dict = dict(event_results.values_list('athlete', 'guntime'))
+            if not year_bibs[loopyear]:
+                year_bibs[loopyear] = dict(event_results.values_list('athlete', 'bib'))
             all_event_results.append(event_dict)
         year_events_results_dict[loopyear] = all_event_results
     if len(events_results_count) > 7:
@@ -192,9 +196,10 @@ def index(request, division, results_only=False):
             if flag_slug not in valid_flag_slugs:
                 flag_slug = False
         lead_gap = place_gap = False
+        bib = year_bibs[athyear].get(athname)
         results.append(namedresult(athlete, stages, total_time, total_seconds,
                                    stage_times, flag_slug, final_status,
-                                   mouseover, lead_gap, place_gap, member_slug))
+                                   mouseover, lead_gap, place_gap, member_slug, bib))
     results = sorted(results, key=attrgetter('total_seconds'))
     results = sorted(results, key=attrgetter('stages'), reverse=True)
     results = addgap(results)
@@ -388,7 +393,8 @@ def addgap(results):
                                       r.mouseover,
                                       lead_gap,
                                       place_gap,
-                                      r.member_slug))
+                                      r.member_slug,
+                                      r.bib))
     return newresults
 
 
