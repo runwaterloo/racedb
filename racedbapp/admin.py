@@ -63,6 +63,17 @@ class EndurathleteAdmin(admin.ModelAdmin):
     ordering = ('-year', '-division', 'id',)
 admin.site.register(Endurathlete, EndurathleteAdmin)
 
+class EndurteamAdmin(admin.ModelAdmin):
+    list_display = ('year', 'name', 'gender', 'ismasters')
+    list_filter = ('year',)
+    search_fields = ('name',)
+    ordering = ('-year', 'name')
+    readonly_fields = (
+        'year', 'name', 'gender', 'ismasters',
+        'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7',
+    )
+admin.site.register(Endurteam, EndurteamAdmin)
+
 class BowAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'year', 'events')
     ordering = ('id',)

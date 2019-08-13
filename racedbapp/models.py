@@ -410,7 +410,12 @@ class Endurathlete(models.Model):
 
 
 class Endurteam(models.Model):
-    year = models.IntegerField()
+    year = models.IntegerField(
+        help_text=(
+            "Teams should not be added or modified in the admin, only deleted "
+            "if necessary. They get created and updated automatically from results."
+        )
+    )
     name = models.CharField(max_length=100)
     gender = models.CharField(max_length=1)
     ismasters = models.BooleanField(default=False)
