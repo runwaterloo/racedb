@@ -95,7 +95,7 @@
   <th>Name</th>
 
   <!-- start temporary for 2019 until better solution -->
-  {% if year == 2019 %}
+  {% if year == 2019 and division != 'relay' %}
     <th class="text-center" scope="col">
       <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
     </th>
@@ -181,7 +181,7 @@
       </td>
 
   <!-- start temporary for 2019 until better solution -->
-  {% if year == 2019 %}
+  {% if year == 2019 and division != 'relay' %}
     <td class="text-center">
       <a href="https://www.flickr.com/photos/runwaterloo/tags/2019endurrun,{{ result.bib }}" target="_blank">
         <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
