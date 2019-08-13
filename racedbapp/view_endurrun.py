@@ -195,6 +195,7 @@ def index(request, division, results_only=False):
         results.append(namedresult(athlete, stages, total_time, total_seconds,
                                    stage_times, flag_slug, final_status,
                                    mouseover, lead_gap, place_gap, member_slug))
+    results = sorted(results, key=attrgetter('stage_times'), reverse=True)
     results = sorted(results, key=attrgetter('total_seconds'))
     results = sorted(results, key=attrgetter('stages'), reverse=True)
     results = addgap(results)
