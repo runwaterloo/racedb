@@ -3,6 +3,7 @@ from django.http import Http404
 from collections import namedtuple
 from .models import (
     Distance,
+    Endurathlete,
     Endurraceresult,
     Event,
     Prime,
@@ -518,3 +519,26 @@ def sort_endurrun_distances(distances):
         else:
             break
     return endurrun_distances
+
+
+def get_ultimate_finished_all_events(years):
+    """
+    Get a dictionary for Ultimates in each year and return True or False
+    based on whether hey have completed (as an Ultimate) the most recent
+    event from that year that has any results.
+    """
+    ultimate_finished_all_events = {}
+    for year in years:
+        ultimate_finished_all_events[year] = {}
+        last_event = False
+        result_set = Result.objects.filter(event__race__slug="endurrun", event__date__icontains=year).order_by('-event__date')
+        if result_set:
+            last_event = result_set.first().event
+            last_event_finishers = result_set.filter(event=last_event, division="Ultimate", place__lt=990000).values_list('athlete', flat=True)
+        ultimate_athletes = Endurathlete.objects.filter(year=year)
+        for athlete in ultimate_athletes:
+            ultimate_finished_all_events[year][athlete] = True
+            if result_set:
+                if athlete.name not in last_event_finishers:
+                    ultimate_finished_all_events[year][athlete] = False
+    return ultimate_finished_all_events

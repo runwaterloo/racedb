@@ -37,9 +37,9 @@ def index(request, division, results_only=False):
     if "contest" in qstring:
         contest_slug = qstring["contest"][0]
         if year:
-            ultimate_finished_all_events = get_ultimate_finished_all_events((year,))
+            ultimate_finished_all_events = view_shared.get_ultimate_finished_all_events((year,))
         else:
-            ultimate_finished_all_events = get_ultimate_finished_all_events(years)
+            ultimate_finished_all_events = view_shared.get_ultimate_finished_all_events(years)
     events = Event.objects.filter(race__slug='endurrun').order_by('date')
     if division == 'sport':
         events = events.exclude(distance__slug='half-marathon')
@@ -396,27 +396,4 @@ def addgap(results):
                                       r.member_slug,
                                       r.bib))
     return newresults
-
-
-def get_ultimate_finished_all_events(years):
-    """
-    Get a dictionary for Ultimates in each year and return True or False
-    based on whether hey have completed (as an Ultimate) the most recent
-    event from that year that has any results.
-    """
-    ultimate_finished_all_events = {}
-    for year in years:
-        ultimate_finished_all_events[year] = {}
-        last_event = False
-        result_set = Result.objects.filter(event__race__slug="endurrun", event__date__icontains=year).order_by('-event__date')
-        if result_set:
-            last_event = result_set.first().event
-            last_event_finishers = result_set.filter(event=last_event, division="Ultimate", place__lt=990000).values_list('athlete', flat=True)
-        ultimate_athletes = Endurathlete.objects.filter(year=year)
-        for athlete in ultimate_athletes:
-            ultimate_finished_all_events[year][athlete] = True
-            if result_set:
-                if athlete.name not in last_event_finishers:
-                    ultimate_finished_all_events[year][athlete] = False  
-    return ultimate_finished_all_events
 
