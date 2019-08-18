@@ -101,6 +101,19 @@ def getracerecords(race, distance, division_choice=False, individual_only=False)
             rawresults = Result.objects.filter(
                 event__race=race, event__distance=distance, division=division_choice
             )
+            if division_choice == "Ultimate":
+                dates = rawresults.values_list("event__date", flat=True).distinct()
+                years = set([x.year for x in dates])
+                ultimate_finished_all_events = get_ultimate_finished_all_events(years)
+                results_to_include = []
+                for r in rawresults:
+                    try:
+                        ultimate_athlete = Endurathlete.objects.get(name=r.athlete, division=division_choice, year=r.event.date.year)
+                    except:
+                        continue
+                    if ultimate_finished_all_events[r.event.date.year][ultimate_athlete]:
+                        results_to_include.append(r.id)
+                rawresults = rawresults.filter(id__in=results_to_include)
         else:
             rawresults = Result.objects.filter(
                 event__race__in=races, event__distance=distance
