@@ -1,6 +1,6 @@
 from django import template
 from datetime import timedelta
-from ..models import Config
+from ..models import Config, Distance
 
 register = template.Library()
 
@@ -49,3 +49,14 @@ def get_prekey(string):
     """ Get preupdate key """
     prekey = Config.objects.get(name='prekey').value
     return prekey
+
+@register.filter(name='get_default_record_distance_slug')
+def get_default_record_distance_slug(string):
+    """ Get default record distance slug """
+    default_record_distance_slug = "5-km"
+    config_value = Config.objects.filter(name="default_record_distance_slug").first()
+    if config_value is not None:
+        db_distance = Distance.objects.filter(slug=config_value.value).first()
+        if db_distance is not None:
+            default_record_distance_slug = db_distance.slug
+    return default_record_distance_slug
