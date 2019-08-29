@@ -1,5 +1,4 @@
-from django.shortcuts import render
-from django.http import Http404
+from django.shortcuts import render, redirect
 from itertools import chain
 from collections import namedtuple
 from .models import *
@@ -21,7 +20,7 @@ def index(request, member_slug):
     try:
         member = Rwmember.objects.get(slug=member_slug, active=True)
     except:
-        raise Http404('Member not found')
+        return redirect("/members/")
     results, total_distance = get_memberresults(member)
     fivek_pb = get_pb(results, '5-km')
     tenk_pb = get_pb(results, '10-km')
