@@ -12,7 +12,7 @@ named_filter = namedtuple("nf", ["current", "choices"])
 named_choice = namedtuple("nc", ["name", "url"])
 
 
-def index(request, year, leaderboard_only=False):
+def index(request, year, leaderboard_only=False, standings_only=False):
     config_values = (
         "boost_classic_points",
         "boost_ditto_points",
@@ -104,6 +104,8 @@ def index(request, year, leaderboard_only=False):
         if qs_member:
             if i.member_id == qs_member.id:
                 member_results = i
+    if standings_only:
+        return standings
     leaderboard = OrderedDict()
     leaderboard["Female Under 40"] = leaders["F40-"]
     leaderboard["Male Under 40"] = leaders["M40-"]
