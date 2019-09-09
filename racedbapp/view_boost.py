@@ -81,9 +81,12 @@ def index(request, year, leaderboard_only=False, standings_only=False):
     category_place_dict = {}
     leaders = {"F40-": [], "M40-": [], "F40+": [], "M40+": []}
     standings = []
+    count = 1
     for i in sorted(battlers.values(), key=attrgetter("total_points"), reverse=True):
         if i.total_points == 0:
             continue
+        i.place = count
+        count += 1
         gender_place_dict[i.gender] += 1
         i.gender_place = gender_place_dict[i.gender]
         if i.category in category_place_dict:
@@ -324,6 +327,7 @@ def get_qs_member(qstring, included_members):
 class Battler:
     def __init__(self, member, year, nophoto_url):
         self.member_id = member.id
+        self.year = year
         self.active = member.active
         self.athlete = member.name
         self.slug = member.slug

@@ -89,6 +89,38 @@
   </div>
 </div>
 
+{% if boost %}
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <a href="https://runwaterloo.com/boost/" target="_blank"><img src="{% static "RW-Boost-Wordmark.png" %}" height="40px"></a><br><strong>Run Fast. Run Often. Get Points. Win Stuff.</strong>
+      <table class="table table-bordered table-condensed table-striped table-hover">
+          <thead>
+            <tr class="info">
+              <th class="text-center" scope="col">Year</th>
+              <th class="text-center" scope="col">Points</th>
+              <th class="text-center" title="Demographic" scope="col">Dem</th>
+              <th class="text-center" title="Demographic Place" scope="col">DP</th>
+              <th class="text-center" title="Gender Place" scope="col">GP</th>
+              <th class="text-center" title="Overall Place" scope="col">OA</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in boost %}
+              <tr>
+                <td class="text-center"><a href="/boost/{{ b.year }}/"">{{ b.year }}</a></td>
+                <td class="text-center"><a href="/boost/{{ b.year }}/?member={{ member.slug }}">{{ b.total_points|floatformat:"2" }}</a></td>
+                <td class="text-center">{{ b.category }}</td>
+                <td class="text-center">{{ b.category_place }}</td>
+                <td class="text-center">{{ b.gender_place }}</td>
+                <td class="text-center">{{ b.place }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+      </table>
+    </div>  
+  </div>
+{% endif %}
+
 {% if badges %}
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">

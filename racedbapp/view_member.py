@@ -2,6 +2,7 @@ from django.db.models import Min
 from django.shortcuts import render, redirect
 from collections import namedtuple
 from .models import Bow, Bowathlete, Config, Event, Race, Result, Rwmember, Samerace
+from . import view_boost
 from datetime import date, timedelta
 from operator import attrgetter
 
@@ -37,6 +38,7 @@ def index(request, member_slug):
         racing_since = results[-1].result.event.date.year
     badges = get_badges(member, results)
     nophoto_url = Config.objects.get(name="nophoto_url").value
+    boost = get_boost(member, request)
     context = {
         "member": member,
         "results": results,
@@ -48,6 +50,7 @@ def index(request, member_slug):
         "best_category_place": best_category_place,
         "badges": badges,
         "nophoto_url": nophoto_url,
+        "boost": boost,
     }
     return render(request, "racedbapp/member.html", context)
 
@@ -439,3 +442,27 @@ def get_memberresults(member):
         results.append(named_result(r, guntime, gender_place, category_place, chiptime))
         total_distance += r.event.distance.km
     return results, total_distance
+
+
+def get_boost(member, request):
+    boost = []
+    boost_years = get_boost_years(member)
+    for boost_year in boost_years:
+        boost_year_standings = view_boost.index(request, boost_year, standings_only=True)
+        member_boost_standings = [x for x in boost_year_standings if x.member_id == member.id]
+        if member_boost_standings:
+            boost.append(member_boost_standings[0])
+    return boost
+
+
+def get_boost_years(member):
+    boost_years = []
+    for tag in member.tags.all():
+        if tag.name.startswith("boost"):
+            try:
+                boost_year = int(tag.name.split("-")[1])
+            except Exception:
+                continue
+            else:
+                boost_years.append(boost_year)
+    return sorted(boost_years, reverse=True)
