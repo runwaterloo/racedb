@@ -2,17 +2,16 @@ stages:
   - build
 
 build:
-  stage: build
   only:
     - master
-  cache:
-    key: build-cache
+  stage: build
   image: docker:latest
   services:
     - docker:dind
-  script:
-    - docker build -t $CI_REGISTRY/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA .
-    - docker tag $CI_REGISTRY/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA $CI_REGISTRY/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME:latest
+  before_script:
     - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY 
-    - docker push $CI_REGISTRY/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA
-    - docker push $CI_REGISTRY/$GITLAB_USER_LOGIN/$CI_PROJECT_NAME:latest
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --tag $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
