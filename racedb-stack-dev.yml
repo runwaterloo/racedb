@@ -17,11 +17,11 @@ services:
        - /srv/racedb_db:/docker-entrypoint-initdb.d
        - /srv/racedb_secrets:/run/secrets
   gunicorn:
-    command: /bin/bash -c 'watchmedo auto-restart -p "*.py;*.html;*.slack" --recursive --  gunicorn racedb.wsgi -b 0.0.0.0:8000'
+    command: /bin/sh -c 'watchmedo auto-restart -p "*.py;*.html;*.slack" --recursive --  gunicorn racedb.wsgi -b 0.0.0.0:8000'
     dns:
       - 8.8.8.8
       - 4.4.4.4
-    image: racedb
+    image: registry.gitlab.com/sl70176/racedb:latest
     networks:
       - db
       - web
@@ -46,7 +46,7 @@ services:
     networks:
       - web
   celery:
-    image: racedb
+    image: registry.gitlab.com/sl70176/racedb:latest
     command: /bin/sh -c 'watchmedo auto-restart -p "*.py;" --recursive -- celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
     dns:
       - 8.8.8.8
@@ -58,7 +58,7 @@ services:
       - db
       - web
   beat:
-    image: racedb
+    image: registry.gitlab.com/sl70176/racedb:latest
     command: /bin/sh -c 'watchmedo auto-restart -p "*.py;" --recursive -- celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
     volumes:
       - /srv/racedb:/srv/racedb
