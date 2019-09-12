@@ -37,7 +37,7 @@ services:
     volumes:
       - /srv/racedb_static:/static
       - /srv/racedb_secrets:/run/secrets
-      - /srv/racedb_secrets/secrets.py:/srv/racedb/secrets.py
+      - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
       - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
   nginx:
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
@@ -82,7 +82,7 @@ services:
         awslogs-stream: "racedb_celery"
     volumes:
       - /srv/racedb_secrets/flickr_oauth-tokens.sqlite:/root/.flickr/oauth-tokens.sqlite
-      - /srv/racedb_secrets/secrets.py:/srv/racedb/secrets.py
+      - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
       - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
     networks:
       - db
@@ -111,5 +111,5 @@ services:
     volumes:
       - /srv/racedb_certbot/conf:/etc/letsencrypt
       - /srv/racedb_certbot/www:/var/www/certbot
-      - /srv/racedb_secrets/secrets.py:/srv/racedb/secrets.py
+      - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
       - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
