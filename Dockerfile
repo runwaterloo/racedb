@@ -9,7 +9,6 @@ RUN apk add --no-cache --virtual \
     zlib-dev
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-RUN mkdir /srv/racedb
-RUN mkdir /srv/racedb/.cache
 COPY . /srv/racedb
+RUN mkdir /srv/racedb/.cache
 WORKDIR /srv/racedb
