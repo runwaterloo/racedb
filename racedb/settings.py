@@ -156,8 +156,11 @@ SLACK_ICON_EMOJI = ":robot_face:"
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": "/srv/racedb/.cache",
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://racedb_redis:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        },
         "TIMEOUT": None,
     }
 }

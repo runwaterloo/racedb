@@ -10,5 +10,4 @@ RUN apk add --no-cache --virtual \
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . /srv/racedb
-RUN mkdir /srv/racedb/.cache
 WORKDIR /srv/racedb
