@@ -21,7 +21,7 @@ services:
     dns:
       - 8.8.8.8
       - 4.4.4.4
-    image: registry.gitlab.com/sl70176/racedb:latest
+    image: racedb:test
     networks:
       - db
       - web
@@ -46,7 +46,7 @@ services:
     networks:
       - web
   celery:
-    image: registry.gitlab.com/sl70176/racedb:latest
+    image: racedb:test
     command: /bin/sh -c 'watchmedo auto-restart -p "*.py;" --recursive -- celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
     dns:
       - 8.8.8.8
@@ -58,7 +58,7 @@ services:
       - db
       - web
   beat:
-    image: registry.gitlab.com/sl70176/racedb:latest
+    image: racedb:test
     command: /bin/sh -c 'watchmedo auto-restart -p "*.py;" --recursive -- celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
     volumes:
       - /srv/racedb:/srv/racedb
