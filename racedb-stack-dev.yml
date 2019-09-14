@@ -17,18 +17,19 @@ services:
        - /srv/racedb_db:/docker-entrypoint-initdb.d
        - /srv/racedb_secrets:/run/secrets
   gunicorn:
-    command: /bin/sh -c 'watchmedo auto-restart -p "*.py;*.html;*.slack" --recursive --  gunicorn racedb.wsgi -b 0.0.0.0:8000'
+    command: /bin/sh -c "./manage.py collectstatic --noinput; gunicorn racedb.wsgi -b 0.0.0.0:8000"
     dns:
       - 8.8.8.8
       - 4.4.4.4
-    image: racedb:test
+    image: racedb:dev
     networks:
       - db
       - web
     volumes:
-      - /srv/racedb:/srv/racedb
       - /srv/racedb_static:/static
       - /srv/racedb_secrets:/run/secrets
+      - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
+      - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
   nginx:
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     image: nginx:1.15-alpine
@@ -46,23 +47,24 @@ services:
     networks:
       - web
   celery:
-    image: racedb:test
-    command: /bin/sh -c 'watchmedo auto-restart -p "*.py;" --recursive -- celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
+    image: racedb:dev
+    command: /bin/sh -c 'celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
     dns:
       - 8.8.8.8
       - 4.4.4.4
     volumes:
-      - /srv/racedb:/srv/racedb
       - /srv/racedb_secrets/flickr_oauth-tokens.sqlite:/root/.flickr/oauth-tokens.sqlite
+      - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
+      - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
     networks:
       - db
       - web
   beat:
-    image: racedb:test
-    command: /bin/sh -c 'watchmedo auto-restart -p "*.py;" --recursive -- celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
-    volumes:
-      - /srv/racedb:/srv/racedb
+    image: racedb:dev
+    command: /bin/sh -c 'celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
     networks:
       - db
       - web
-
+    volumes:
+      - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
+      - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py

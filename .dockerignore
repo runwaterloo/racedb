@@ -2,4 +2,5 @@
 Dockerfile
 db_prod_to_dev.sh
 debug.sh
+restart_dev.sh
 upgrade_pip.py
