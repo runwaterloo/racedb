@@ -168,11 +168,11 @@ def get_featured_event_data(featured_event):
 def get_event_data(featured_event):
     if not featured_event:
         return None
-    previous_event_year = featured_event.date.year - 1
-    previous_event = Event.objects.get(
-        race=featured_event.race,
-        distance=featured_event.distance,
-        date__icontains=previous_event_year,
+    previous_event = (
+        Event.objects.filter(race=featured_event.race, distance=featured_event.distance)
+        .exclude(id=featured_event.id)
+        .order_by("-date")
+        .first()
     )
     previous_event_recap = get_recap_results_standard(previous_event)
     featured_event_records = view_shared.getracerecords(
