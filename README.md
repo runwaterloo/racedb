@@ -1,16 +1,10 @@
-# Deploying racedb
+# RaceDB
 
-_Note: This is a work in progress, we need to iron out the bugs_
-```
-mkdir /srv
-mkdir /srv/racedb_nginx
-mkdir /srv/racedb_static
-cd /srv
-git clone git@gitlab.com:sl70176/racedb.git
-cd racedb
-create racedb/secrets.py
-create /srv/racedb_nginx/app.conf
-docker swarm init
-docker build --name racedb_gunicorn -f Dockerfile-gunicorn .
-docker stack deploy -c ./racedb-stack-dev-min.yml
-```
+## Deploying racedb
+
+Coming soon
+
+## Configurable Options
+The following options can be configured in Configs in the Django admin site.
+
+**featured_member_id_next**: Member ID to be used next time `update_featured_member_id()` is executed. This will only work for active members with a profile photo. Once used this option will be unset.

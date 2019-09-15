@@ -67,23 +67,32 @@ def update_featured_member_id():
         .exclude(photourl="")
         .order_by("?")
     )
-    db_ultimates = False
-    if date.today().month == 8:
-        db_ultimates = Endurathlete.objects.filter(
-            year=date.today().year, division="Ultimate"
-        ).values_list("name", flat=True)
-    if len(members) > featured_member_no_repeat_days:
-        members = members.exclude(id__in=featured_member_history)
-    for member in members:
-        member_results, km = view_member.get_memberresults(member)
-        if km > 0:
-            if db_ultimates:
-                if member.name in db_ultimates:
-                    break
+    member = False
+    featured_member_id_next = Config.objects.filter(name="featured_member_id_next").first()
+    if featured_member_id_next is not None:
+        if featured_member_id_next.value.isdigit():
+            if int(featured_member_id_next.value) in [x.id for x in members]:
+                member = Rwmember.objects.get(id=featured_member_id_next.value)
+                featured_member_id_next.value = ""
+                featured_member_id_next.save()
+    if not member:
+        db_ultimates = False
+        if date.today().month == 8:
+            db_ultimates = Endurathlete.objects.filter(
+                year=date.today().year, division="Ultimate"
+            ).values_list("name", flat=True)
+        if len(members) > featured_member_no_repeat_days:
+            members = members.exclude(id__in=featured_member_history)
+        for member in members:
+            member_results, km = view_member.get_memberresults(member)
+            if km > 0:
+                if db_ultimates:
+                    if member.name in db_ultimates:
+                        break
+                    else:
+                        continue
                 else:
-                    continue
-            else:
-                break
+                    break
     current_featured_member.value = member.id
     current_featured_member.save()
     featured_member_history.append(member.id)
