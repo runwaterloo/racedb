@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4'
 networks:
   db:
   web:
@@ -21,6 +21,8 @@ services:
     dns:
       - 8.8.8.8
       - 4.4.4.4
+    environment:
+      BUILD: $BUILD
     image: racedb:dev
     networks:
       - db

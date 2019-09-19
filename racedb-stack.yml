@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4'
 networks:
   db:
   web:
@@ -24,6 +24,18 @@ services:
        - /srv/racedb_secrets:/run/secrets
   gunicorn:
     command: /bin/sh -c "./manage.py collectstatic --noinput; gunicorn racedb.wsgi -b 0.0.0.0:8000"
+    deploy:
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+    environment:
+      BUILD: $BUILD
+    healthcheck:
+      test: curl --fail -s http://localhost:8000/health || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
     image: registry.gitlab.com/sl70176/racedb:latest
     logging:
       driver: "awslogs"
