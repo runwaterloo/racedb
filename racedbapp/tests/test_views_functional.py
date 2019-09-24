@@ -8,7 +8,10 @@ from . import urls_to_test
 def setUpModule():
     """ Import the actual database """
     print("Copying production database...")
-    os.system("mysqldump -h racedb_db -u racedb -p`cat /run/secrets/MYSQL_PASSWORD_FILE` racedb | mysql -h racedb_db -u racedb -p`cat /run/secrets/MYSQL_PASSWORD_FILE` test_racedb")
+    with open("racedb/secrets.py", "r") as f:
+        lines = f.readlines()
+    DB_PASSWORD = [x for x in lines if "DB_PASSWORD" in x][0].split("'")[1]
+    os.system("mysqldump -h racedb_db -u racedb -p{0} racedb | mysql -h racedb_db -u racedb -p{0} test_racedb".format(DB_PASSWORD))
 
 
 class SimpleTest(TestCase):

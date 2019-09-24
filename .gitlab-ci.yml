@@ -4,36 +4,62 @@
 # GITLAB_CI_RUNNER_KEY  (ssh private key for the CI runner account)
 # GITLAB_CI_USER        (GitLab access token name)
 # GITLAB_CI_TOKEN       (GitLab access token)
+# AWS_ACCESS_KEY_ID     (AWS access key for S3)
+# AWS_SECRET_ACCESS_KEY (AWS secret access key for S3)
+# RACEDB_DB_BACKUP      (location of backup s3://...)
+
+image: docker:latest
+
+services:
+  - docker:dind
 
 stages:
   - build
+  - test
   - deploy
 
+before_script:
+  - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
+
 build:
+  except:
+    variables:
+      - $DEPLOY_ONLY == "true"
+  stage: build
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+
+test:
+  except:
+    variables:
+      - $DEPLOY_ONLY == "true"
+  stage: test
+  script:
+     - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+     - /bin/ash deploy/cicd/deploy.sh
+     - sleep 40  # give the database time to come up
+     - docker exec racedb_gunicorn ./manage.py test
+
+tag-latest:
   only:
     refs:
       - master
   except:
     variables:
       - $DEPLOY_ONLY == "true"
-  stage: build
-  image: docker:latest
-  services:
-    - docker:dind
-  before_script:
-    - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY 
+  stage: deploy
   script:
-    - docker pull $CI_REGISTRY_IMAGE:latest || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --tag $CI_REGISTRY_IMAGE:latest .
-    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-    - docker push $CI_REGISTRY_IMAGE:latest
+     - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
+     - docker push $CI_REGISTRY_IMAGE:latest
 
-deploy:
+deploy-to-prod:
   only:
     refs:
       - master
   stage: deploy
-  image: alpine:latest
   before_script:
     - apk add openssh-client
     - eval $(ssh-agent -s)
