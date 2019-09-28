@@ -22,6 +22,7 @@ from . import (
     view_photoupdate,
     view_records,
     view_race,
+    view_race_slugs,
     view_stats,
     view_boost,
     view_relay,
@@ -61,6 +62,7 @@ urlpatterns = [
     ),
     url(r"^events", view_events.index, name="events"),
     url(r"^health", view_health.index, name="health"),
+    url(r"^race_slugs", view_race_slugs.index, name="race_slugs"),
     url(
         r"^race/(?P<race_slug>.*)/(?P<distance_slug>.*)/$", view_race.index, name="race"
     ),
