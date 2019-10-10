@@ -358,11 +358,6 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
         has_youtube = True
         LEAD_TIME_SECONDS = 7
         youtube_duration_seconds = event.youtube_duration_seconds
-    guntimes_have_microseconds = set(
-        [
-            x.guntime.microseconds for x in all_results if x.guntime.microseconds != 0
-        ]
-    )
     for r in all_results:
         relay_team = False
         if r.gender == 'F':
@@ -390,13 +385,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                 age = r.age
         guntime = chiptime = ''
         if r.place < 990000:
-            if guntimes_have_microseconds:
-                if r.guntime.microseconds == 0:
-                    guntime = str(r.guntime) + ".0"
-                else:
-                    guntime = str(r.guntime).rstrip("0")
-            else:
-                guntime = r.guntime
+            guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
             if r.chiptime:
                 chiptime = r.chiptime - timedelta(microseconds=r.chiptime.microseconds)
         try:
