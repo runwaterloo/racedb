@@ -11,7 +11,7 @@ services:
       MYSQL_USER: racedb
       MYSQL_DATABASE: racedb
       MYSQL_PASSWORD: ${PASSWORD}
-    image: mariadb:10.3
+    image: mariadb:10.3.18
     networks:
       - db
     volumes:
@@ -28,6 +28,6 @@ services:
       - ../../racedbapp/secrets.py.sample:/srv/racedb/racedbapp/secrets.py
   redis:
     container_name: racedb_redis
-    image: redis:alpine
+    image: redis:5.0.6-alpine
     networks:
       - web

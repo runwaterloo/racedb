@@ -7,5 +7,5 @@ cp -f deploy/swarm-dev/docker-compose-dev.yml /srv
 sed -i s/racedb:latest/racedb:$IMAGE_ID/g /srv/docker-compose-dev.yml
 env BUILD=$IMAGE_ID docker stack deploy -c /srv/docker-compose-dev.yml racedb
 docker system prune -f
-sleep 8
+sleep 10
 docker exec -it `docker ps | grep racedb_gunicorn | awk '{print $1}'` ./manage.py clear_cache

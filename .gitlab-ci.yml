@@ -38,7 +38,7 @@ test:
   stage: test
   script:
      - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-     - /bin/ash deploy/cicd/deploy.sh
+     - /bin/ash deploy/test/deploy.sh
      - sleep 40  # give the database time to come up
      - docker exec racedb_gunicorn ./manage.py test
 
@@ -68,6 +68,6 @@ deploy-to-prod:
     - sed -i s/racedb:latest/racedb:$CI_COMMIT_SHORT_SHA/g deploy/swarm-prod/docker-compose-prod.yml
     - scp -o StrictHostKeyChecking=no deploy/swarm-prod/docker-compose-prod.yml $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET:/srv/
     - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "docker pull registry.gitlab.com/sl70176/racedb:$CI_COMMIT_SHORT_SHA"
-    - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "env BUILD=$CI_COMMIT_SHORT_SHA docker stack deploy -c /srv/deploy/swarm-prod/docker-compose-prod.yml racedb"
+    - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "env BUILD=$CI_COMMIT_SHORT_SHA docker stack deploy -c /srv/docker-compose-prod.yml racedb"
     - sleep 10
     - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "docker exec -it `docker ps | grep racedb_gunicorn | awk '{print $1}'` ./manage.py clear_cache"
