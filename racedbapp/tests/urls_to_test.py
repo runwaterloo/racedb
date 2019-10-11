@@ -65,6 +65,7 @@ test_urls = (
     "/event/2015/baden-road-races/7-mi/?hill=true",  # hills
     "/event/2015/baden-road-races/7-mi/?hill=true&filter=LF35-39",  # hills filtered
     "/event/2008/oktoberfest-run/10-km/?wheelchair=true",  # wheelchair
+    "/event/2019/fall-classic/5-km/",  # guntimes with microseconds
     # /event (team)
     "/event/2016/dirty-dash/6-km/team/parent-child/",  # actual team member times
     "/event/1984/waterloo-classic/10-km/team/open-15/",  # estimated team member times

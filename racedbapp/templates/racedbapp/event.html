@@ -219,7 +219,11 @@
                     <td></td>
                   {% endif %}
               {% endif %}
-              <td class="text-center">{{ r.guntime }}</td>
+              {% if guntimes_have_microseconds %}
+                <td class="text-center">{{ r.guntime|show_decimal }}</td>
+              {% else %}
+                <td class="text-center">{{ r.guntime }}</td>
+              {% endif %}
               {% if hill_dict %}
                 <td class="text-center">{{ r.prime }}</td>
               {% endif %}

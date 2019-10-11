@@ -44,6 +44,15 @@ def get_time(orig_time):
             clean_time = ''
     return clean_time
 
+@register.filter(name='show_decimal')
+def show_decimal(orig_time):
+    """ Show one decimal place for time """
+    if orig_time.microseconds == 0:
+        decimal_time = str(orig_time) + ".0"
+    else:
+        decimal_time = str(orig_time).rstrip("0")
+    return decimal_time
+
 @register.filter(name='get_prekey')
 def get_prekey(string):
     """ Get preupdate key """

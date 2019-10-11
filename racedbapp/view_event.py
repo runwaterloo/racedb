@@ -62,6 +62,11 @@ def index(request, year, race_slug, distance_slug):
                'division_filter': division_filter,
                'year_filter': year_filter}
     event_json = get_event_json(event)
+    guntimes_have_microseconds = set(
+        [
+            x.guntime.microseconds for x in all_results if x.guntime.microseconds != 0
+        ]
+    )
     context = {
                'event': event_json,
                'filters': filters,
@@ -74,6 +79,7 @@ def index(request, year, race_slug, distance_slug):
                'split_headings': split_headings,
                'extra_name': extra_name,
                'phototags': phototags,
+               'guntimes_have_microseconds': guntimes_have_microseconds,
               }
     # Determine the format to return based on the query string
     if 'format' in qstring:
@@ -385,7 +391,7 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                 age = r.age
         guntime = chiptime = ''
         if r.place < 990000:
-            guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
+            guntime = r.guntime
             if r.chiptime:
                 chiptime = r.chiptime - timedelta(microseconds=r.chiptime.microseconds)
         try:
