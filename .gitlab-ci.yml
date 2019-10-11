@@ -65,9 +65,9 @@ deploy-to-prod:
     - eval $(ssh-agent -s)
     - echo "$GITLAB_CI_RUNNER_KEY" | tr -d '\r' | ssh-add - 
   script:
-    - sed -i s/racedb:latest/racedb:$CI_COMMIT_SHORT_SHA/g racedb-stack.yml
-    - scp -o StrictHostKeyChecking=no racedb-stack.yml $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET:/srv/
+    - sed -i s/racedb:latest/racedb:$CI_COMMIT_SHORT_SHA/g deploy/swarm-prod/docker-compose-prod.yml
+    - scp -o StrictHostKeyChecking=no deploy/swarm-prod/docker-compose-prod.yml $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET:/srv/
     - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "docker pull registry.gitlab.com/sl70176/racedb:$CI_COMMIT_SHORT_SHA"
-    - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "env BUILD=$CI_COMMIT_SHORT_SHA docker stack deploy -c /srv/racedb-stack.yml racedb"
-    - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "docker service update racedb_redis --force"
-    - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "curl 127.0.0.1"
+    - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "env BUILD=$CI_COMMIT_SHORT_SHA docker stack deploy -c /srv/deploy/swarm-prod/docker-compose-prod.yml racedb"
+    - sleep 10
+    - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "docker exec -it `docker ps | grep racedb_gunicorn | awk '{print $1}'` ./manage.py clear_cache"
