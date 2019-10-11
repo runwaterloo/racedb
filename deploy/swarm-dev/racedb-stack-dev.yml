@@ -23,7 +23,7 @@ services:
       - 4.4.4.4
     environment:
       BUILD: $BUILD
-    image: racedb:dev
+    image: racedb:latest
     networks:
       - db
       - web
@@ -49,7 +49,7 @@ services:
     networks:
       - web
   celery:
-    image: racedb:dev
+    image: racedb:latest
     command: /bin/sh -c 'celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
     dns:
       - 8.8.8.8
@@ -62,7 +62,7 @@ services:
       - db
       - web
   beat:
-    image: racedb:dev
+    image: racedb:latest
     command: /bin/sh -c 'celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
     networks:
       - db
