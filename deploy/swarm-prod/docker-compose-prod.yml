@@ -10,7 +10,7 @@ services:
       MYSQL_USER: racedb
       MYSQL_DATABASE: racedb
       MYSQL_PASSWORD_FILE: /run/secrets/MYSQL_PASSWORD_FILE
-    image: mariadb:10.3.18
+    image: mariadb:10.4.8
     logging:
       driver: "awslogs"
       options:
