@@ -69,4 +69,4 @@ deploy-to-prod:
     - scp -o StrictHostKeyChecking=no deploy/swarm-prod/* $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET:/srv/
     - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "docker pull registry.gitlab.com/sl70176/racedb:$CI_COMMIT_SHORT_SHA"
     - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "env BUILD=$CI_COMMIT_SHORT_SHA docker stack deploy -c /srv/docker-compose-prod.yml racedb"
-    - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "/srv/clear_cache.sh"
+    - ssh -o StrictHostKeyChecking=no $GITLAB_CI_RUNNER_USER@$DEPLOY_TARGET "at now + 2 minutes -f /srv/clear_cache.sh"
