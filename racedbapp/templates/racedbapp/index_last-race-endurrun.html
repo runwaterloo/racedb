@@ -1,3 +1,4 @@
+{% load racedbapp_extras %}
 <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
   {% include "racedbapp/index_last-race-row1.html" %}
   <div class="row">
@@ -20,13 +21,13 @@
             {% else %}
               <td>{{ recap_results.top_female.0.athlete.name }}</td>
             {% endif %}
-            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_female.0.total_time }}</td>
+            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_female.0.total_time|round_up }}</td>
             {% if recap_results.top_male.0.member_slug %}
               <td><a href="/member/{{ recap_results.top_male.0.member_slug }}">{{ recap_results.top_male.0.athlete.name }}</a></td>
             {% else %}
               <td>{{ recap_results.top_male.0.athlete.name }}</td>
             {% endif %}
-            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_male.0.total_time }}</td>
+            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_male.0.total_time|round_up }}</td>
         </tr>
         <tr>
           <td>2nd OA</td>
@@ -64,13 +65,13 @@
             {% else %}
               <td>{{ recap_results.top_f_masters.athlete.name }}</td>
             {% endif %}
-            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_f_masters.total_time }}</td>
+            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_f_masters.total_time|round_up }}</td>
             {% if recap_results.top_m_masters.member_slug %}
               <td><a href="/member/{{ recap_results.top_m_masters.member_slug }}">{{ recap_results.top_m_masters.athlete.name }}</a></td>
             {% else %}
               <td>{{ recap_results.top_m_masters.athlete.name }}</td>
             {% endif %}
-            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_m_masters.total_time }}</td>
+            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_m_masters.total_time|round_up }}</td>
         </tr>
         <tr>
       </table>

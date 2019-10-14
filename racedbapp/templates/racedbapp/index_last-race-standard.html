@@ -1,3 +1,4 @@
+{% load racedbapp_extras %}
 <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
   {% include "racedbapp/index_last-race-row1.html" %}
   <div class="row">
@@ -26,13 +27,13 @@
             {% else %}
               <td>{{ r.female_athlete }}</td>
             {% endif %}
-            <td>{{ r.female_time }}</td>
+            <td>{{ r.female_time|round_up }}</td>
             {% if r.male_member_slug %}
               <td><a href="/member/{{ r.male_member_slug }}/">{{ r.male_athlete }}</a></td>
             {% else %}
               <td>{{ r.male_athlete }}</td>
             {% endif %}
-            <td>{{ r.male_time }}</td>
+            <td>{{ r.male_time|round_up }}</td>
           </tr>
         {% endfor %}
       </table>

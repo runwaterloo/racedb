@@ -53,6 +53,16 @@ def show_decimal(orig_time):
         decimal_time = str(orig_time).rstrip("0")
     return decimal_time
 
+@register.filter(name='round_up')
+def round_up(orig_time):
+    """ Round times up to the second """
+    if orig_time.microseconds == 0:
+        rounded_up_time = orig_time
+    else:
+        round_up_amount = 1000000 - orig_time.microseconds
+        rounded_up_time = orig_time + timedelta(microseconds=round_up_amount)
+    return rounded_up_time
+
 @register.filter(name='get_prekey')
 def get_prekey(string):
     """ Get preupdate key """

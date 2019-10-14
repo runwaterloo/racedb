@@ -49,12 +49,12 @@ class ResultQuerySet(models.QuerySet):
         topmale = self.filter(event=event, gender="M").filter(
             Q(category__ismasters=True) | Q(age__gte=40)
         )[0]
-        femaletime = utils.truncate_time(topfemale.guntime)
+        femaletime = topfemale.guntime
         female_member_slug = None
         female_member = topfemale.rwmember
         if female_member:
             female_member_slug = female_member.slug
-        maletime = utils.truncate_time(topmale.guntime)
+        maletime = topmale.guntime
         male_member_slug = None
         male_member = topmale.rwmember
         if male_member:

@@ -115,10 +115,7 @@ def get_individual_results(event, results, hasmasters, distance_slug, year=False
             rank = "2nd OA"
         elif i == 3:
             rank = "3rd OA"
-        female_guntime = female_results[i - 1].guntime
-        female_time = female_guntime - timedelta(
-            microseconds=female_guntime.microseconds
-        )
+        female_time = female_results[i - 1].guntime
         female_member_slug = None
         if distance_slug != "combined":
             female_member = female_results[i - 1].rwmember
@@ -126,8 +123,7 @@ def get_individual_results(event, results, hasmasters, distance_slug, year=False
             female_member = get_member_endurrace(female_results[i - 1], membership)
         if female_member:
             female_member_slug = female_member.slug
-        male_guntime = male_results[i - 1].guntime
-        male_time = male_guntime - timedelta(microseconds=male_guntime.microseconds)
+        male_time = male_results[i - 1].guntime
         male_member_slug = None
         if distance_slug != "combined":
             male_member = male_results[i - 1].rwmember
