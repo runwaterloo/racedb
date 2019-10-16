@@ -53,13 +53,13 @@
       {% else %}
         <td>{{ event.femalewinner }}</td>
       {% endif %}
-      <td>{{ event.femaletime|get_time }}</td>
+      <td>{{ event.femaletime|round_up }}</td>
       {% if event.malemember  %}
         <td><a href="/member/{{ event.malemember.slug }}/">{{ event.malewinner }}</a></td>
       {% else %}
         <td>{{ event.malewinner }}</td>
       {% endif %}
-      <td>{{ event.maletime|get_time }}</td>
+      <td>{{ event.maletime|round_up }}</td>
       {% if event.flickrsetid %}
         <td class="text-center"><a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a></td>
       {% else %}
