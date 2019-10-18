@@ -1,0 +1,66 @@
+- name: admins group
+  group: name=admins state=present
+  tags:
+  - base
+  - users
+
+- name: set root password
+  user: name=root password={{ root_password }}
+  tags:
+  - base
+  - users
+
+- name: user sam
+  user:
+    name: sam
+    uid: 3019
+    groups: "wheel,admins"
+    password: "{{ sam_password }}"
+    append: yes
+  tags:
+  - base
+  - users
+
+- name: user ci-runner
+  user:
+    name: ci-runner
+    groups: "admins"
+    append: yes
+  tags:
+  - base
+  - users
+
+- name: authorized_keys
+  authorized_key:
+    user: "{{ item.user }}"
+    key: "{{ item.key }}"
+  with_items:
+  - { user: root, key: "{{ lookup('file', 'sam_id_rsa.pub') }}" }
+  - { user: root, key: "{{ lookup('file', 'root_id_rsa.pub') }}" }
+  - { user: sam, key: "{{ lookup('file', 'sam_id_rsa.pub') }}" }
+  - { user: ci-runner, key: "{{ lookup('file', 'ci-runner_id_rsa.pub') }}" }
+  tags:
+  - base
+  - users
+  - authorized_keys
+
+- name: .forward files
+  copy:
+    content: "{{ sam_email }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.user }}"
+    group: "{{ item.user }}"
+  with_items:
+  - { dest: '/home/sam/.forward', user: 'sam' }
+  - { dest: '/root/.forward', user: 'root' }
+  tags:
+  - base
+  - users
+
+- name: unset PROMPT_COMMAND
+  lineinfile:
+    dest: /etc/bashrc
+    line: unset PROMPT_COMMAND
+  tags:
+  - base
+  - users

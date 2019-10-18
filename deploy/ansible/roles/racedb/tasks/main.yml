@@ -1,0 +1,35 @@
+---
+- name: create .flickr directory
+  file: path=/home/{{ app }}/.flickr  state=directory owner={{ app }}  group=admins mode=0755
+  tags:
+    - racedb
+    - flickr
+
+- name: copy flickr token
+  copy: src=oauth-tokens.sqlite dest=/srv/{{ app }}_secrets/flickr_oauth-tokens.sqlite owner=root group=root mode=0600
+  tags:
+    - racedb
+    - flickr
+
+- name: deploy racedb secrets
+  template: src=secrets.py.j2 dest=/srv/{{ app }}_secrets/app_secrets.py owner={{ app }} group=admins mode=0660
+  tags:
+    - racedb
+    - secrets
+
+- name: get stack status
+  shell: "docker stack ls | grep {{ app }}"
+  register: docker_stack_ls
+  failed_when: false
+  changed_when: false
+  tags:
+    - racedb
+    - stack
+
+- name: deploy stack (prod)
+  shell: curl -X POST -F "token={{ gitlab_racedb_trigger_token }}" -F "ref=master" -F "variables[DEPLOY_ONLY]=true" -F "variables[DEPLOY_TARGET]=`curl http://169.254.169.254/latest/meta-data/public-ipv4`" https://gitlab.com/api/v4/projects/2322084/trigger/pipeline
+  when: docker_stack_ls.rc != 0 and isprod == 'true'
+  tags:
+    - racedb
+    - stack
+

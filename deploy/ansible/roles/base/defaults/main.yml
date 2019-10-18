@@ -1,0 +1,42 @@
+---
+base_packages:        # Install on ALL systems
+ - python-augeas.noarch # can be removed once all certbots are moved to docker
+ - at
+ - awscli
+ - bzip2
+ - bind-utils
+ - gcc
+ - gcc-c++
+ - git
+ - firewalld
+ - mailx
+ - net-tools
+ - nfs-utils
+ - policycoreutils-python
+ - postfix
+ - ps_mem
+ - python-pip
+ - unzip
+ - vim-enhanced
+absent_packages:     # Make sure package is not present
+ - yum-cron
+swapfile_location: /swapfile
+swapfile_size_mb: 1024
+swapfile_swappiness: 10
+swapfile_vfs_cache_pressure: 50
+swapfile_use_dd: True
+postfix_gmail_packages:
+ - postfix
+ - mailx
+ - cyrus-sasl-plain
+postfix_gmail_maindotcf_lines:
+ - smtp_sasl_auth_enable = yes
+ - smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+ - smtp_sasl_security_options = noanonymous
+ - smtp_tls_security_level = secure
+ - smtp_tls_mandatory_protocols = TLSv1
+ - smtp_tls_mandatory_ciphers = high
+ - smtp_tls_secure_cert_match = nexthop
+ - smtp_tls_CAfile = /etc/pki/tls/certs/ca-bundle.crt
+ - relayhost = smtp.gmail.com:587
+uptimerobot_api_key: APIKEY

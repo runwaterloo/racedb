@@ -1,0 +1,12 @@
+#
+# This role deploys a Django application into docker
+#
+# Assumptions: admins group was created by base role
+#
+
+- import_tasks: firewalld.yml
+- import_tasks: users.yml
+- import_tasks: persistent.yml
+- import_tasks: code_deploy.yml
+- import_tasks: backup.yml
+  when: "isprod == 'true'"

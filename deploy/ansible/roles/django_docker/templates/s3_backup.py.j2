@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+import boto3
+import datetime
+import os
+import sys
+import time
+
+"""
+Save:
+ - latest
+ - 24 hourlies (or less by cron)
+ - 7 dailys
+ - 4 weeklies
+ - 4 monthlies
+"""
+
+app = "{{ app }}"
+bucket = "{{ s3_bucket }}"
+hour = datetime.datetime.now().hour
+monthday = datetime.datetime.now().day
+month = datetime.datetime.now().month
+weekday = datetime.datetime.now().weekday()
+week = datetime.datetime.now().isocalendar()[1]
+
+######## DATABASE ##########
+dump_path = '{{ mysql_backup_path }}'
+s3_prefix = 'database_backup/'
+
+os.system('cp {}/{}.sql /tmp'.format(dump_path, app))
+os.system('gzip -f /tmp/{}.sql'.format(app))
+gzip_file = '/tmp/{}.sql.gz'.format(app)
+
+s3 = boto3.resource('s3')
+
+if hour == 0:
+    if monthday == 1:
+        monthly = month % 4
+        key = '{}{}.monthly{}.sql.gz'.format(s3_prefix, app, monthly)
+        s3.meta.client.upload_file(gzip_file, bucket, key)
+    elif weekday == 0:
+        weekly = week % 4
+        key = '{}{}.weekly{}.sql.gz'.format(s3_prefix, app, weekly)
+        s3.meta.client.upload_file(gzip_file, bucket, key)
+        dohourly = False
+    else:
+        key = '{}{}.day{}.sql.gz'.format(s3_prefix, app, weekday)
+        s3.meta.client.upload_file(gzip_file, bucket, key)
+else:
+    key = '{}{}.hour{}.sql.gz'.format(s3_prefix, app, hour)
+    s3.meta.client.upload_file(gzip_file, bucket, key)
+
+# Upload as latest
+time.sleep(2)
+key = '{}{}.latest.sql.gz'.format(s3_prefix, app)
+s3.meta.client.upload_file(gzip_file, bucket, key)
+
+os.remove(gzip_file)
+
+######## END DATABASE ##########
+
+######## CERTBOT ##########
+if hour == 0:
+    os.system('cd {{ certbot_conf_path }}; tar zcf /tmp/{}.certbot.tar.gz *'.format(app))
+    src_file = '/tmp/{}.certbot.tar.gz'.format(app)
+    s3_prefix = 'certbot/'
+    key = '{}{}.certbot.tar.gz'.format(s3_prefix, app)
+    s3.meta.client.upload_file(src_file, bucket, key)
+    os.remove(src_file)
+######## END CERTBOT ##########

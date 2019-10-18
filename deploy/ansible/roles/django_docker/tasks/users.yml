@@ -1,0 +1,10 @@
+---
+- name: create app user ({{ app }})
+  user:
+    name: "{{ app }}"
+    group: admins
+    comment: "{{ app }}"
+    state: present
+  tags:
+    - django_docker
+    - django_users

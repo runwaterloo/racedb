@@ -1,0 +1,40 @@
+- name: install packages
+  package: 
+    name: "{{ item }}"
+    state: present
+  with_items: 
+    - "{{ postfix_gmail_packages }}"
+  tags:
+    - base
+    - postfix_gmail
+
+- name: sasl source
+  template:
+    src: sasl_passwd.j2
+    dest: /etc/postfix/sasl_passwd
+    owner: root
+    group: root
+    mode: 0640
+  register: sasl_source
+  notify: restart postfix
+  tags:
+    - base
+    - postfix_gmail
+
+- name: postmap hash
+  shell: postmap hash:/etc/postfix/sasl_passwd
+  when: sasl_source.changed
+  tags:
+    - base
+    - postfix_gmail
+
+- name: add lines to main.cf
+  lineinfile:
+    path: /etc/postfix/main.cf
+    state: present
+    line: "{{ item }}"
+  with_items:
+    -  "{{ postfix_gmail_maindotcf_lines }}"
+  tags:
+    - base
+    - postfix_gmail

@@ -1,0 +1,23 @@
+- name: install epel
+  yum:
+    name: epel-release
+    state: present
+  tags: 
+    - base
+    - packages
+
+- name: centos base packages
+  yum:
+    name: "{{ base_packages }}" 
+    state: present
+  tags: 
+    - base
+    - packages
+
+- name: centos absent packages
+  yum:
+    name: "{{ absent_packages }}"
+    state: absent
+  tags: 
+    - base
+    - packages

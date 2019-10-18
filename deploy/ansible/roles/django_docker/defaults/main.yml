@@ -1,0 +1,41 @@
+---
+dirs_to_create:
+  - path: /srv
+    owner: root
+    group: admins
+    mode: "0775"
+  - path: /srv/{{ app }}_static
+    owner: "{{ app }}"
+    group: admins
+    mode: "0775"
+  - path: /srv/{{ app }}_certbot
+    owner: root
+    group: admins
+    mode: "0775"
+  - path: /srv/{{ app }}_certbot/conf
+    owner: root
+    group: admins
+    mode: "0775"
+  - path: /srv/{{ app }}_certbot/www
+    owner: root
+    group: admins
+    mode: "0775"
+  - path: /srv/{{ app }}_nginx
+    owner: root
+    group: admins
+    mode: "0775"
+  - path: /srv/{{ app }}_secrets
+    owner: root
+    group: admins
+    mode: "0775"
+  - path: /srv/{{ app }}_db
+    owner: root
+    group: admins
+    mode: "0775"
+s3_bucket: "{{ app }}-private"
+mysql_backup_path: "/srv/{{ app }}_db"
+mysql_object_to_restore: "/database_backup/{{ app }}.latest.sql.gz"
+certbot_conf_path: "/srv/{{ app }}_certbot/conf"
+certbot_object_to_restore: "/certbot/{{ app }}.certbot.tar.gz"
+nginx_path: "/srv/{{ app }}_nginx"
+secrets_path: "/srv/{{ app }}_secrets"

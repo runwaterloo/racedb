@@ -1,0 +1,33 @@
+---
+- name: mysqldump cron job
+  cron:
+    name: "{{ app }} mysqldump"
+    minute: 10
+    job: /bin/docker exec `docker ps | grep {{ app }}_db | awk '{print $1}'` /usr/bin/mysqldump -u root --password={{ mysql_root_password }} --skip-dump-date {{ app }} > {{ mysql_backup_path }}/{{ app }}.sql
+  tags:
+    - django_docker
+    - django_backup
+
+- name: put s3 backup script in place
+  template:
+    src: s3_backup.py.j2
+    dest: /root/s3_backup.py
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - django_docker
+    - django_backup
+
+- name: S3 backup cron job
+  cron:
+    user: root
+    name: "S3 mysql backup"
+    hour: "{{ mysql_s3_backup_hours }}"
+    minute: 15
+    job: /root/s3_backup.py
+  when: "isprod == 'true'"
+  tags:
+    - django_docker
+    - django_backup
+

@@ -1,0 +1,36 @@
+- name: set selinux to permissive
+  selinux: policy=targeted state=permissive
+  tags:
+  - base
+  - selinux
+
+# this means keys only
+- name: root ssh without-password
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^PermitRootLogin"
+    line: "PermitRootLogin without-password"
+    state: present
+  tags:
+  - base
+  notify: restart sshd
+
+- name: change wheel sudoers to nopasswd
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: "^%wheel"
+    line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+    state: present
+  tags:
+  - base
+
+- name: disable ssh password authentication
+  lineinfile: dest=/etc/ssh/sshd_config regexp="^PasswordAuthentication" line="PasswordAuthentication no" state=present
+  notify: restart sshd
+
+- name: enable/start basic services
+  service: name={{ item }} state=started enabled=true
+  with_items:
+  - atd
+  - firewalld
+  - postfix

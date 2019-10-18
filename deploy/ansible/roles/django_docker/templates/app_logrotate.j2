@@ -1,0 +1,8 @@
+/var/log/{{ app }}/*.log {
+        missingok
+        monthly
+        maxsize 10M
+        notifempty
+        compress
+        create 0664 {{ app }} admins
+}

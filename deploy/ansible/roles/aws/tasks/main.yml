@@ -1,0 +1,19 @@
+#
+# Installs bits required for machines running on AWS
+#
+
+- name: yum install aws packages
+  package:
+    name: "{{ aws_yum_packages }}"
+    state: present
+  tags:
+    - aws 
+    - aws_yum_install
+
+- name: pip install aws packages
+  pip:
+    name: "{{ aws_pip_packages }}"
+    state: present
+  tags:
+    - aws
+    - aws_pip_install

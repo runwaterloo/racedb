@@ -1,0 +1,58 @@
+# 
+# This roles installs, enables and starts docker
+#
+# Assumptions: EPEL repo is already in place
+#
+
+- name: add docker repository
+  yum_repository:
+    name: "{{ docker_repo.name }}"
+    description: "{{ docker_repo.description }}"
+    baseurl: "{{ docker_repo.baseurl }}"
+    gpgcheck: "{{ docker_repo.gpgcheck }}"
+    gpgkey: "{{ docker_repo.gpgkey }}"
+    enabled: "{{ docker_repo.enabled }}"
+  tags:
+    - docker
+
+- name: yum install docker packages
+  package:
+    name: "{{ docker_yum_packages }}"
+    state: present
+  tags:
+    - docker
+
+- name: pip install docker packages
+  pip:
+    name: "{{ docker_pip_packages }}"
+    state: present
+  tags:
+    - docker
+
+- name: add admin_users to docker group
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: yes
+  with_items:
+    - "{{ admin_users }}"
+  tags:
+    - docker
+
+- name: enable and start docker service
+  service:
+    name: docker
+    enabled: yes
+    state: started
+  tags:
+    - docker
+
+#- name: cron job to dump docker stats
+#  cron:
+#    name: dump docker stats
+#    minute: "*/5"
+#    user: root
+#    job: /bin/docker stats --no-stream > /tmp/dockerstats 
+#  tags:
+#    - docker
+

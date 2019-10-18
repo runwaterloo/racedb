@@ -1,0 +1,19 @@
+---
+- name: deploy secrets
+  template:
+    src: secrets.py.j2
+    dest: "/srv/{{ app }}_secrets/secrets.py"
+    owner: "{{ app }}"
+    group: admins
+    mode: "0660"
+  tags:
+    - django_docker
+    - code_deploy
+
+- name: initialize docker swarm
+  docker_swarm:
+    state: present
+  tags:
+    - django_docker
+    - code_deploy
+
