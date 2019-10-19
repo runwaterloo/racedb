@@ -219,7 +219,7 @@
             <td>{{ i.record_athlete }}</td>
           {% endif %}
           <td>{{ i.record_time|get_time }}</td>
-          <td><a target="_blank" href="/event/{{ i.record_year }}/{{ featured_event.race.slug }}/{{ featured_event.distance.slug }}">{{ i.record_year }}</a></td>
+          <td><a target="_blank" href="/event/{{ i.record_year }}/{{ i.event.race.slug }}/{{ i.event.distance.slug }}">{{ i.record_year }}</a></td>
         </tr>
         {% endfor %}
       {% else %}

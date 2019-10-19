@@ -181,6 +181,7 @@ def get_event_data(featured_event):
     featured_event_data = []
     for i in featured_event_records:
         row = UpcomingEvent()
+        row.event = featured_event
         row.demographic = i.place
         row.record_athlete = i.athlete
         row.record_member = i.member
