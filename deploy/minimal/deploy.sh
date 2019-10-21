@@ -14,5 +14,5 @@ export PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1
 mkdir ./db_restore
 aws s3 cp ${RACEDB_DB_BACKUP} ./db_restore
 sed -i s/CHANGEME/$PASSWORD/g racedb/secrets.py.sample
-cd deploy/test
-docker-compose -f ./docker-compose-test.yml up -d
+cd deploy/minimal
+docker-compose -f ./docker-compose-min.yml up -d
