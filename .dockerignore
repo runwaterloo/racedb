@@ -1,5 +1,9 @@
+.dockerignore
+.flake8
 .git
+.gitignore
+.gitlab-ci.yml
+db_prod_to_dev.sh
 deploy
 Dockerfile
-db_prod_to_dev.sh
-debug.sh
+renovate.json
