@@ -38,7 +38,7 @@ test:
   stage: test
   script:
      - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-     - /bin/ash deploy/test/deploy.sh
+     - /bin/ash deploy/minimal/deploy.sh
      - sleep 40  # give the database time to come up
      - docker exec racedb_gunicorn ./manage.py test
 
