@@ -54,7 +54,7 @@
         {% else %}
           <td></td>
         {% endifchanged %}
-        <td class="text-center">{{ r.result.guntime|get_time }}</td>
+        <td class="text-center">{{ r.result.guntime|round_up }}</td>
         {% if r.member %}
           <td><a href="/member/{{ r.member.slug }}/">{{ r.result.athlete }}</a></td>
         {% else %}
@@ -109,7 +109,7 @@
     {% for r in topxresults %}
       <tr>
         <td class="text-center">{{ forloop.counter }}</td>
-        <td class="text-center">{{ r.result.guntime|get_time }}</td>
+        <td class="text-center">{{ r.result.guntime|round_up }}</td>
         {% if r.member %}
           <td><a href="/member/{{ r.member.slug }}">{{ r.result.athlete }}</a></td>
         {% else %}
