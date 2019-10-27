@@ -105,7 +105,7 @@
 {% else %}
 <td></td>
 {% endifchanged %}
-<td>{{ record.guntime|get_time }}</td>
+<td>{{ record.guntime|round_up }}</td>
 {% if record.member %}
 <td><a href="/member/{{ record.member.slug }}/">{{ record.athlete }}</a></td>
 {% else %}
@@ -203,7 +203,7 @@
 {% for result in results %}
 <tr>
 <td>{{ result.place }}</td>
-<td>{{ result.guntime }}</td>
+<td>{{ result.guntime|round_up }}</td>
 {% if result.member %}
   <td><a href="/member/{{ result.member.slug }}/">{{ result.athlete }}</td></a>
 {% else %}

@@ -81,7 +81,7 @@ def index(request, race_slug, distance_slug):
     count = 1 
     membership = view_shared.get_membership()
     for result in results:
-        guntime = utils.truncate_time(result.guntime)
+        guntime = result.guntime
         if guntime.total_seconds() >= 35600:
             continue
         if distance.slug == 'combined':
