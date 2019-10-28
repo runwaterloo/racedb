@@ -35,10 +35,21 @@ services:
   nginx:
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     image: nginx:1.17-alpine
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_default
+      - traefik.http.services.racedb-service.loadbalancer.server.port=80
+      - traefik.http.middlewares.racedb-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.racedb-insecure.entrypoints=web
+      - traefik.http.routers.racedb-insecure.rule=Host(`racedb.scrw.ca`)
+      - traefik.http.routers.racedb-insecure.middlewares=racedb-redirect
+      - traefik.http.routers.racedb.entrypoints=web-secure
+      - traefik.http.routers.racedb.rule=Host(`racedb.scrw.ca`)
+      - traefik.http.routers.racedb.tls=true
+      - traefik.http.routers.racedb.tls.certresolver=default
     networks:
+      - traefik_default
       - web 
-    ports:
-      - "8010:80"
     volumes:
       - /srv/racedb_nginx:/etc/nginx/conf.d
       - /srv/racedb_certbot/conf:/etc/letsencrypt
@@ -70,3 +81,8 @@ services:
     volumes:
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
       - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
+networks:
+  traefik_default:
+    external: true
+  web:
+  db:
