@@ -1,5 +1,6 @@
 ---
 - name: deploy secrets
+  become: true
   template:
     src: secrets.py.j2
     dest: "/srv/{{ app }}_secrets/secrets.py"
@@ -9,6 +10,7 @@
   tags:
     - django_docker
     - code_deploy
+    - project_secrets
 
 - name: initialize docker swarm
   docker_swarm:
