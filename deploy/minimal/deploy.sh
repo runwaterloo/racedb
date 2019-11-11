@@ -10,6 +10,7 @@
 
 echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 apk add awscli docker-compose
+/usr/bin/pip3 install awscli
 export PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
 mkdir ./db_restore
 aws s3 cp ${RACEDB_DB_BACKUP} ./db_restore
