@@ -17,7 +17,7 @@ services:
        - /srv/racedb_db:/docker-entrypoint-initdb.d
        - /srv/racedb_secrets:/run/secrets
   django:
-    command: /bin/sh -c "echo 'DEBUG = True' >> racedb/settings.py; ./manage.py runserver 0.0.0.0:8000"
+    command: /bin/sh -c "./manage.py runserver --settings=racedb.settings.dev 0.0.0.0:8000"
     dns:
       - 8.8.8.8
       - 4.4.4.4
@@ -45,7 +45,7 @@ services:
       - web
   celery:
     image: racedb:latest
-    command: /bin/sh -c 'celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
+    command: /bin/sh -c 'DJANGO_SETTINGS_MODULE="racedb.settings.dev" celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
     dns:
       - 8.8.8.8
       - 4.4.4.4
@@ -58,7 +58,7 @@ services:
       - web
   beat:
     image: racedb:latest
-    command: /bin/sh -c 'celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
+    command: /bin/sh -c 'DJANGO_SETTINGS_MODULE="racedb.settings.dev" celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
     networks:
       - db
       - web

@@ -12,8 +12,6 @@ import os, site, sys
 site.addsitedir('/usr/local/venv/racedb/lib/python3.6/site-packages')
 sys.path.append('/srv/racedb')
 
-os.environ["DJANGO_SETTINGS_MODULE"] = "racedb.settings"  # see footnote [2]
-
 from django.core.wsgi import get_wsgi_application
 
 def application(environ, start_response):

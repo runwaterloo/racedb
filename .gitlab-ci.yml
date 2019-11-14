@@ -40,7 +40,7 @@ test:
      - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
      - /bin/ash deploy/minimal/deploy.sh
      - sleep 40  # give the database time to come up
-     - docker exec racedb_gunicorn ./manage.py test
+     - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.dev
 
 tag-latest:
   only:

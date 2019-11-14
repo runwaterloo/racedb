@@ -1,10 +1,12 @@
 """
 Django settings for racedb project.
+
+Per environemnt separation inspired by:
+https://simpleisbetterthancomplex.com/tips/2017/07/03/django-tip-20-working-with-multiple-settings-modules.html
 """
 
 import os
-import socket
-from . import secrets, celery_beats
+from racedb import secrets, celery_beats
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = secrets.SECRET_KEY
@@ -20,6 +22,7 @@ INSTALLED_APPS = (
     "django.contrib.humanize",
     "racedbapp",
     "django_slack",
+    "django_s3_storage",
 )
 
 MIDDLEWARE = [
@@ -67,10 +70,6 @@ TIME_ZONE = "America/Toronto"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-
-STATIC_URL = "/static/"
-STATIC_ROOT = "/static/"
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 LOGGING = {
     "version": 1,

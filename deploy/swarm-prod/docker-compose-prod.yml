@@ -23,7 +23,7 @@ services:
        - /srv/racedb_db:/docker-entrypoint-initdb.d
        - /srv/racedb_secrets:/run/secrets
   gunicorn:
-    command: /bin/sh -c "./manage.py collectstatic --noinput; gunicorn racedb.wsgi -b 0.0.0.0:8000"
+    command: /bin/sh -c './manage.py collectstatic --noinput --settings=racedb.settings.prod; gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.prod racedb.wsgi -b 0.0.0.0:8000'
     deploy:
       replicas: 1
       update_config:
@@ -82,7 +82,7 @@ services:
       - web
   celery:
     image: registry.gitlab.com/sl70176/racedb:latest
-    command: /bin/sh -c 'celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
+    command: /bin/sh -c 'DJANGO_SETTINGS_MODULE="racedb.settings.prod" celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
     dns:
       - 8.8.8.8
       - 4.4.4.4
@@ -101,7 +101,7 @@ services:
       - web
   beat:
     image: registry.gitlab.com/sl70176/racedb:latest
-    command: /bin/sh -c 'celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
+    command: /bin/sh -c 'DJANGO_SETTINGS_MODULE="racedb.settings.prod" celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
     logging:
       driver: "awslogs"
       options:

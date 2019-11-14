@@ -17,7 +17,7 @@ services:
     volumes:
        - ../../db_restore:/docker-entrypoint-initdb.d
   gunicorn:
-    command: /bin/sh -c "./manage.py collectstatic --noinput; gunicorn racedb.wsgi -b 0.0.0.0:8000"
+    command: /bin/sh -c './manage.py collectstatic --noinput --settings=racedb.settings.dev; gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.dev racedb.wsgi -b 0.0.0.0:8000'
     container_name: racedb_gunicorn
     image: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
     networks:
