@@ -16,8 +16,8 @@ services:
     volumes:
        - /srv/racedb_db:/docker-entrypoint-initdb.d
        - /srv/racedb_secrets:/run/secrets
-  gunicorn:
-    command: /bin/sh -c "./manage.py collectstatic --noinput; gunicorn racedb.wsgi -b 0.0.0.0:8000"
+  django:
+    command: /bin/sh -c "echo 'DEBUG = True' >> racedb/settings.py; ./manage.py runserver 0.0.0.0:8000"
     dns:
       - 8.8.8.8
       - 4.4.4.4
@@ -26,29 +26,19 @@ services:
     image: racedb:latest
     networks:
       - db
+      - traefik_default
       - web
-    volumes:
-      - /srv/racedb_static:/static
-      - /srv/racedb_secrets:/run/secrets
-      - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
-      - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
-  nginx:
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-    image: nginx:1.17-alpine
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik_default
-      - traefik.http.services.racedb.loadbalancer.server.port=80
+      - traefik.http.services.racedb.loadbalancer.server.port=8000
       - traefik.http.routers.racedb.entrypoints=web-secure
       - traefik.http.routers.racedb.rule=Host(`racedb.scrw.ca`)
       - traefik.http.routers.racedb.tls=true
       - traefik.http.routers.racedb.tls.certresolver=default
-    networks:
-      - traefik_default
-      - web 
     volumes:
-      - /srv/racedb_nginx:/etc/nginx/conf.d
-      - /srv/racedb_static:/static
+      - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
+      - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
   redis:
     image: redis:5.0.6-alpine
     networks:
