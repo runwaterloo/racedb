@@ -8,7 +8,7 @@
   "packageRules": [
     {
       "packageNames": ["boto3"],
-      "schedule": ["on the first day of the month"]
+      "schedule": ["on the first day of the month after 5:00 pm"]
     }
   ]
 }
