@@ -1,5 +1,14 @@
 {
   "extends": [
     "config:base"
+    
+  ],
+  "timezone": "America/Toronto",
+  "rebaseStalePrs": true,
+  "packageRules": [
+    {
+      "packageNames": ["boto3"],
+      "schedule": ["on the first day of the month"]
+    }
   ]
 }
