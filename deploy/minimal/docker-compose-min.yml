@@ -28,6 +28,6 @@ services:
       - ../../racedbapp/secrets.py.sample:/srv/racedb/racedbapp/secrets.py
   redis:
     container_name: racedb_redis
-    image: redis:5.0.6-alpine
+    image: redis:5.0.7-alpine
     networks:
       - web

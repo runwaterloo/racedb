@@ -71,7 +71,7 @@ services:
       - /srv/racedb_certbot/www:/var/www/certbot
       - /srv/racedb_static:/static
   redis:
-    image: redis:5.0.6-alpine
+    image: redis:5.0.7-alpine
     logging:
       driver: "awslogs"
       options:
