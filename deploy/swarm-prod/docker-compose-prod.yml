@@ -1,27 +1,27 @@
 version: '3.4'
 networks:
-  db:
+#  db:
   web:
 services:
-  db:
-    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
-    environment: 
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/MYSQL_ROOT_PASSWORD_FILE
-      MYSQL_USER: racedb
-      MYSQL_DATABASE: racedb
-      MYSQL_PASSWORD_FILE: /run/secrets/MYSQL_PASSWORD_FILE
-    image: mariadb:10.4.8
-    logging:
-      driver: "awslogs"
-      options:
-        awslogs-region: "us-east-1"
-        awslogs-group: "racedb"
-        awslogs-stream: "racedb_db"
-    networks:
-      - db
-    volumes:
-       - /srv/racedb_db:/docker-entrypoint-initdb.d
-       - /srv/racedb_secrets:/run/secrets
+#  db:
+#    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+#    environment: 
+#      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/MYSQL_ROOT_PASSWORD_FILE
+#      MYSQL_USER: racedb
+#      MYSQL_DATABASE: racedb
+#      MYSQL_PASSWORD_FILE: /run/secrets/MYSQL_PASSWORD_FILE
+#    image: mariadb:10.4.8
+#    logging:
+#      driver: "awslogs"
+#      options:
+#        awslogs-region: "us-east-1"
+#        awslogs-group: "racedb"
+#        awslogs-stream: "racedb_db"
+#    networks:
+#      - db
+#    volumes:
+#       - /srv/racedb_db:/docker-entrypoint-initdb.d
+#       - /srv/racedb_secrets:/run/secrets
   gunicorn:
     command: /bin/sh -c './manage.py collectstatic --noinput --settings=racedb.settings.prod; gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.prod racedb.wsgi -b 0.0.0.0:8000'
     deploy:
@@ -44,7 +44,7 @@ services:
         awslogs-group: "racedb"
         awslogs-stream: "racedb_gunicorn"
     networks:
-      - db
+#      - db
       - web
     volumes:
       - /srv/racedb_static:/static
@@ -97,7 +97,7 @@ services:
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
       - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
     networks:
-      - db
+#      - db
       - web
   beat:
     image: registry.gitlab.com/sl70176/racedb:latest
@@ -109,7 +109,7 @@ services:
         awslogs-group: "racedb"
         awslogs-stream: "racedb_beat"
     networks:
-      - db
+#      - db
       - web
     volumes:
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
