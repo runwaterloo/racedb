@@ -3,6 +3,7 @@
 # git_repo: git location of the code, comment out for new empty deployment
 ---
 - hosts: racedb:paris
+  become: yes
   vars:
     - app: racedb
   vars_files: 
