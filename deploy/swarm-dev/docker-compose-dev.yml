@@ -1,21 +1,5 @@
 version: '3.4'
-networks:
-  db:
-  web:
 services:
-  db:
-    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
-    environment: 
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/MYSQL_ROOT_PASSWORD_FILE
-      MYSQL_USER: racedb
-      MYSQL_DATABASE: racedb
-      MYSQL_PASSWORD_FILE: /run/secrets/MYSQL_PASSWORD_FILE
-    image: mariadb:10.4.8
-    networks:
-      - db
-    volumes:
-       - /srv/racedb_db:/docker-entrypoint-initdb.d
-       - /srv/racedb_secrets:/run/secrets
   django:
     command: /bin/sh -c "./manage.py runserver --settings=racedb.settings.dev 0.0.0.0:8000"
     dns:
@@ -25,7 +9,7 @@ services:
       BUILD: $BUILD
     image: racedb:latest
     networks:
-      - db
+      - mariadb_default
       - traefik_default
       - web
     labels:
@@ -54,13 +38,13 @@ services:
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
       - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
     networks:
-      - db
+      - mariadb_default
       - web
   beat:
     image: racedb:latest
     command: /bin/sh -c 'DJANGO_SETTINGS_MODULE="racedb.settings.dev" celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
     networks:
-      - db
+      - mariadb_default
       - web
     volumes:
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
@@ -68,5 +52,6 @@ services:
 networks:
   traefik_default:
     external: true
+  mariadb_default:
+    external: true
   web:
-  db:
