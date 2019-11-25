@@ -1,5 +1,6 @@
 from django_slack import slack_message
 from django.core.cache import cache
+from django.core.mail import send_mail                                                   
 from celery import shared_task
 import requests
 import os
@@ -188,3 +189,17 @@ def clear_cache():
     logger.info("Clearing cache")
     cache.clear()
     requests.get("https://results.runwaterloo.com")
+
+
+@shared_task
+def send_email_task(subject, content, recipients):
+    from_addr = Config.objects.get(name="email_from_address").value 
+    logger.info("Attempting to send email")
+    send_mail(                                                                       
+        subject,                
+        content,
+        from_addr,                                                                       
+        recipients,  # should be a list                                                                     
+        fail_silently=False,                                                         
+    )      
+    logger.info("Email sent!")

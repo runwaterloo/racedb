@@ -127,18 +127,24 @@
 
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-
-      <!-- search input -->
+      <!-- search / modal row -->
       <div class="row">
+        <!-- search input -->
         <div class="col-xs-3">
           <div class="form-group">
             <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search these results..." size="12">
           </div>
         </div>
+        <!-- end search input -->
+        <!-- contact button -->
+        <div class="col-xs-3">
+          <button type="button" data-toggle="modal" data-target="#contactModal">Submit a Correction</button>
+        </div>
+        <!-- end contact button -->
       </div>
-      <!-- end search input -->
+      <!-- end search / modal row -->
 
-
+    {% include "racedbapp/modal_contact.html" %}
 
       <table class="table table-bordered table-condensed table-striped table-hover">
         <thead>

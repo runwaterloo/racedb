@@ -3,6 +3,7 @@ from django.http import Http404
 from urllib import parse
 from collections import namedtuple
 from .models import *
+from racedbapp.tasks import send_email_task
 from . import view_shared, utils
 from django.http import HttpResponse
 from django.db.models import Count, Max, Q
@@ -67,6 +68,7 @@ def index(request, year, race_slug, distance_slug):
             x.guntime.microseconds for x in all_results if x.guntime.microseconds != 0
         ]
     )
+    process_post(request)
     context = {
                'event': event_json,
                'filters': filters,
@@ -580,3 +582,19 @@ def get_split_headings(event, max_splits):
         for i in range(1, max_splits+1):
             split_headings.append('Split {}'.format(i))
     return split_headings
+
+def process_post(request):
+    """ If request is a POST it should send email """
+    if request.method == "POST":                                                         
+        url = "https://{}{}".format(request.get_host(), request.get_full_path())
+        user_name = request.POST.get("user_name")
+        user_email = request.POST.get("user_email")
+        message_text = request.POST.get("message_text")
+        subject = "Automatic message from Run Waterloo to {}".format(user_name)
+        email_to_address = Config.objects.get(name="email_to_address").value
+        recipients = [email_to_address, user_email]
+        body = ""
+        body += "Thank you {} for your inquiry. We will review it and reply shortly.\n\n".format(user_name)
+        body += "{}\n\n".format(message_text)
+        body += url
+        send_email_task.delay(subject, body, recipients)
