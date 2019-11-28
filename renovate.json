@@ -4,6 +4,8 @@
     
   ],
   "timezone": "America/Toronto",
+  "stabilityDays": 3,
+  "prCreation": "not-pending",
   "rebaseStalePrs": true,
   "packageRules": [
     {
