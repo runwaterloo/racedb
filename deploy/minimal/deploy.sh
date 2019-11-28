@@ -9,11 +9,12 @@
 # RACEDB_DB_BACKUP
 
 echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-apk add awscli docker-compose
+apk add docker-compose mysql-client
 /usr/bin/pip3 install awscli
-export PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
-mkdir ./db_restore
-aws s3 cp ${RACEDB_DB_BACKUP} ./db_restore
-sed -i s/CHANGEME/$PASSWORD/g racedb/secrets.py.sample
+aws s3 cp ${RACEDB_DB_BACKUP} .
+zcat ./racedb.latest.sql.gz | mysql -h mariadb -u racedb -pCHANGEME racedb
+MARIADB_IP=`grep mariadb /etc/hosts | awk '{print $1}'`
+sed -i s/MARIADB_IP/$MARIADB_IP/g deploy/minimal/docker-compose-min.yml
+cp racedb/secrets.py.sample racedb/secrets.py
 cd deploy/minimal
 docker-compose -f ./docker-compose-min.yml up -d

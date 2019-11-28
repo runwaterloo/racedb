@@ -1,33 +1,14 @@
 version: '3.4'
-networks:
-  db:
-  web:
 services:
-  db:
-    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
-    container_name: racedb_db
-    environment:
-      MYSQL_ROOT_PASSWORD: ${PASSWORD}
-      MYSQL_USER: racedb
-      MYSQL_DATABASE: racedb
-      MYSQL_PASSWORD: ${PASSWORD}
-    image: mariadb:10.3.13
-    networks:
-      - db
-    volumes:
-       - ../../db_restore:/docker-entrypoint-initdb.d
   gunicorn:
     command: /bin/sh -c './manage.py collectstatic --noinput --settings=racedb.settings.dev; gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.dev racedb.wsgi -b 0.0.0.0:8000'
     container_name: racedb_gunicorn
+    extra_hosts:
+     - "mariadb:MARIADB_IP"
     image: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
-    networks:
-      - db
-      - web
     volumes:
-      - ../../racedb/secrets.py.sample:/srv/racedb/racedb/secrets.py
+      - ../../racedb/secrets.py:/srv/racedb/racedb/secrets.py
       - ../../racedbapp/secrets.py.sample:/srv/racedb/racedbapp/secrets.py
   redis:
     container_name: racedb_redis
     image: redis:5.0.7-alpine
-    networks:
-      - web

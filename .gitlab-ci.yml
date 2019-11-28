@@ -10,9 +10,6 @@
 
 image: docker:latest
 
-services:
-  - docker:dind
-
 stages:
   - build
   - test
@@ -25,6 +22,8 @@ build:
   except:
     variables:
       - $DEPLOY_ONLY == "true"
+  services:
+    - docker:dind
   stage: build
   script:
     - docker pull $CI_REGISTRY_IMAGE:latest || true
@@ -36,10 +35,17 @@ test:
     variables:
       - $DEPLOY_ONLY == "true"
   stage: test
+  services:
+    - docker:dind
+    - mariadb:10.3.13
+  variables:
+    MYSQL_DATABASE: racedb
+    MYSQL_USER: racedb
+    MYSQL_PASSWORD: CHANGEME
+    MYSQL_ROOT_PASSWORD: CHANGEME
   script:
      - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
      - /bin/ash deploy/minimal/deploy.sh
-     - sleep 40  # give the database time to come up
      - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.dev
 
 tag-latest:
@@ -50,6 +56,8 @@ tag-latest:
     variables:
       - $DEPLOY_ONLY == "true"
   stage: deploy
+  services:
+    - docker:dind
   script:
      - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
      - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
@@ -60,6 +68,8 @@ deploy-to-prod:
     refs:
       - master
   stage: deploy
+  services:
+    - docker:dind
   before_script:
     - apk add openssh-client
     - eval $(ssh-agent -s)

@@ -10,8 +10,9 @@ def setUpModule():
     print("Copying production database...")
     with open("racedb/secrets.py", "r") as f:
         lines = f.readlines()
+    DB_HOST = [x for x in lines if "DB_HOST" in x][0].split("'")[1]
     DB_PASSWORD = [x for x in lines if "DB_PASSWORD" in x][0].split("'")[1]
-    os.system("mysqldump -h racedb_db -u racedb -p{0} racedb | mysql -h racedb_db -u racedb -p{0} test_racedb".format(DB_PASSWORD))
+    os.system("mysqldump -h {0} -u racedb -p{1} racedb | mysql -h {0} -u racedb -p{1} test_racedb".format(DB_HOST, DB_PASSWORD))
 
 
 class SimpleTest(TestCase):
