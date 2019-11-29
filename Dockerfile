@@ -1,14 +1,13 @@
 FROM python:3.7.4-alpine
 ENV PYTHONUNBUFFERED 1
-RUN apk add --no-cache --virtual \
-    ca-certificates \
-    curl \
-    gcc \
-    mariadb-client \
-    mariadb-connector-c-dev \
-    musl-dev \
-    zlib-dev
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN apk add --no-cache --virtual .build-deps \
+     gcc \
+     musl-dev && \
+    apk add --no-cache \
+     mariadb-client \
+     mariadb-connector-c-dev && \
+    pip install -r requirements.txt && \
+    apk del .build-deps
 COPY . /srv/racedb
 WORKDIR /srv/racedb
