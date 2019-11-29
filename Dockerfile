@@ -5,6 +5,7 @@ RUN apk add --no-cache --virtual .build-deps \
      gcc \
      musl-dev && \
     apk add --no-cache \
+     curl \
      mariadb-client \
      mariadb-connector-c-dev && \
     pip install -r requirements.txt && \
