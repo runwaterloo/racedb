@@ -108,13 +108,3 @@ SLACK_BACKEND = "django_slack.backends.CeleryBackend"
 SLACK_USERNAME = "giskard"
 SLACK_ICON_EMOJI = ":robot_face:"
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://racedb_redis:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
-        },
-        "TIMEOUT": None,
-    }
-}

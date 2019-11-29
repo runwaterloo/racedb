@@ -46,7 +46,7 @@ test:
   script:
      - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
      - /bin/ash deploy/minimal/deploy.sh
-     - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.dev
+     - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.min
 
 tag-latest:
   only:

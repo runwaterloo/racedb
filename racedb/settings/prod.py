@@ -7,3 +7,15 @@ AWS_SECRET_ACCESS_KEY = secrets.RACEDB_STATIC_AWS_SECRET_ACCESS_KEY
 AWS_S3_BUCKET_NAME_STATIC = "racedb-static"
 AWS_S3_MAX_AGE_SECONDS = "315360000"
 STATICFILES_STORAGE = "django_s3_storage.storage.ManifestStaticS3Storage"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://racedb_redis:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        },
+        "TIMEOUT": None,
+    }
+}
+
