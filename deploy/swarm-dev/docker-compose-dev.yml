@@ -22,7 +22,6 @@ services:
       - traefik.http.routers.racedb.tls.certresolver=default
     volumes:
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
-      - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
   redis:
     image: redis:5.0.7-alpine
     networks:
@@ -36,7 +35,6 @@ services:
     volumes:
       - /srv/racedb_secrets/flickr_oauth-tokens.sqlite:/root/.flickr/oauth-tokens.sqlite
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
-      - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
     networks:
       - mariadb_default
       - web
@@ -48,7 +46,6 @@ services:
       - web
     volumes:
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
-      - /srv/racedb_secrets/app_secrets.py:/srv/racedb/racedbapp/secrets.py
 networks:
   traefik_default:
     external: true

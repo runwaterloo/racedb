@@ -4,10 +4,6 @@ dirs_to_create:
     owner: root
     group: admins
     mode: "0775"
-  - path: /srv/{{ app }}_static
-    owner: "{{ app }}"
-    group: admins
-    mode: "0775"
   - path: /srv/{{ app }}_certbot
     owner: root
     group: admins

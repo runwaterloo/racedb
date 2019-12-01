@@ -11,12 +11,6 @@
     - racedb
     - flickr
 
-- name: deploy racedb secrets
-  template: src=secrets.py.j2 dest=/srv/{{ app }}_secrets/app_secrets.py owner={{ app }} group=admins mode=0660
-  tags:
-    - racedb
-    - secrets
-
 - name: get stack status
   shell: "docker stack ls | grep {{ app }}"
   register: docker_stack_ls

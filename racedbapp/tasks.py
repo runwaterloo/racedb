@@ -5,7 +5,8 @@ from celery import shared_task
 import requests
 import os
 from datetime import date, timedelta
-from . import process_photoupdate, secrets, view_member, view_shared
+from . import process_photoupdate, view_member, view_shared
+from racedb import secrets
 from .models import Config, Endurathlete, Event, Rwmember
 import logging
 
@@ -31,7 +32,7 @@ def webhook():
 
 @shared_task
 def photoupdate(request_date=None, force=False):
-    prod_ipaddr = secrets.prod_ipaddr
+    PROD_IPADDR = secrets.PROD_IPADDR
     my_ip = None
     try:
         my_ip = requests.get(
@@ -39,7 +40,7 @@ def photoupdate(request_date=None, force=False):
         ).text.strip()
     except Exception:
         pass
-    if my_ip == prod_ipaddr or force:
+    if my_ip == PROD_IPADDR or force:
         process_photoupdate.index(request_date)
     else:
         logger.info("Not production host, skipping photoupdate")
@@ -112,7 +113,7 @@ def update_featured_member_id():
 
 @shared_task
 def slack_featured_member():
-    prod_ipaddr = secrets.prod_ipaddr
+    PROD_IPADDR = secrets.PROD_IPADDR
     my_ip = None
     try:
         my_ip = requests.get(
@@ -120,7 +121,7 @@ def slack_featured_member():
         ).text.strip()
     except Exception:
         pass
-    if my_ip == prod_ipaddr:
+    if my_ip == PROD_IPADDR:
         featured_member_id = int(Config.objects.get(name="featured_member_id").value)
         featured_member = Rwmember.objects.get(id=featured_member_id)
         logger.info(
@@ -135,7 +136,7 @@ def slack_featured_member():
 
 @shared_task
 def slack_results_update(results):
-    prod_ipaddr = secrets.prod_ipaddr
+    PROD_IPADDR = secrets.PROD_IPADDR
     my_ip = None
     try:
         my_ip = requests.get(
@@ -143,7 +144,7 @@ def slack_results_update(results):
         ).text.strip()
     except Exception:
         pass
-    if my_ip == prod_ipaddr:
+    if my_ip == PROD_IPADDR:
         logger.info("Sending results update to Slack")
         slack_message("racedbapp/results_update.slack", {"results": results})
     else:
@@ -152,7 +153,7 @@ def slack_results_update(results):
 
 @shared_task
 def slack_missing_urls():
-    prod_ipaddr = secrets.prod_ipaddr
+    PROD_IPADDR = secrets.PROD_IPADDR
     my_ip = None
     try:
         my_ip = requests.get(
@@ -160,7 +161,7 @@ def slack_missing_urls():
         ).text.strip()
     except Exception:
         pass
-    if my_ip == prod_ipaddr:
+    if my_ip == PROD_IPADDR:
         logger.info("Checking for events with no URL")
         missing_urls = []
         days = int(Config.objects.get(name="missing_url_alert_days").value)

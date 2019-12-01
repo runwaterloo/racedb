@@ -3,7 +3,7 @@ import time
 from datetime import date, datetime, timedelta
 import flickrapi  # https://github.com/sybrenstuvel/flickrapi
 from .models import Event, Phototag, Result, Rwmember
-from . import secrets
+from racedb import secrets
 from . import view_shared
 import logging
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 runwaterloo_flickr_id = "136573113@N04"
 photos_per_page = 500
 flickr = flickrapi.FlickrAPI(
-    secrets.flickr_api_key, secrets.flickr_secret_key, format="parsed-json"
+    secrets.FLICKR_API_KEY, secrets.FLICKR_SECRET_KEY, format="parsed-json"
 )
 
 
