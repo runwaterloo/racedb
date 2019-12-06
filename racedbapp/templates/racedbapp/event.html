@@ -199,8 +199,21 @@
                 {% else %}
                   {{ r.name }}
                 {% endif %}
+                {% if r.gender_place == 1 %}
+                  <i class="fas fa-trophy fa-icon-1st-oa" title="1st Overall ({{ r.gender }})"></i>
+                {% elif r.gender_place == 2 %}
+                  <i class="fas fa-medal fa-icon-2nd-oa" title="2nd Overall ({{ r.gender }})"></i>
+                {% elif r.gender_place == 3 %}
+                  <i class="fas fa-medal fa-icon-3rd-oa" title="3rd Overall ({{ r.gender }})"></i>
+                {% endif %}
+                {% if r.masters_place == 1 %}
+                  <i class="fas fa-medal fa-icon-1st-master" title="1st Master ({{ r.gender }})"></i>
+                {% endif %}
+                {% if r.isrwpb and r.member %}
+                  <i class="fas fa-stopwatch fa-icon-pb" title="RW PB for the {{ event.distance.name }}"></i>
+                {% endif %}
                 {% if r.relay_team %}
-                  <img src="{% static "team.png" %}" height="20px" data-toggle="tooltip" title="{{ r.relay_team }}">
+                  <i class="fas fa-users" title="{{ r.relay_team }}"></i>
                 {% endif %}
               </td>
               {% if phototags %}

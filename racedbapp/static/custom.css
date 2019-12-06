@@ -140,3 +140,20 @@ img.upcoming-race {
 .img-rounded{
   padding: 0;
 }
+
+/* custom styling for font awesome icons */
+.fa-icon-1st-oa{
+  color: #d4af37;
+}
+.fa-icon-2nd-oa{
+  color: #bec2cb;
+}
+.fa-icon-3rd-oa{
+  color: #b08d57;
+}
+.fa-icon-1st-master{
+  color: #d4af37;
+}
+.fa-icon-pb{
+  color: #aadcdc;
+}

@@ -347,13 +347,15 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                       'member',
                       'hasphotos',
                       'youtube_url',
+                      'masters_place',
+                      'isrwpb',
                      ])
     results = []
     endurrun_relay_dict = get_endurrun_relay_dict(event)
     gender_place_dict = {'F': 0, 'M': 0}
+    masters_place_dict = {'F': 0, 'M': 0}
     category_place_dict = {}
     haschiptime = False
-
     event_splits = Split.objects.filter(event=event)
     splits_list = event_splits.values_list('place', 'split_num', 'split_time')
     splits_dict = dict([((a, b), c) for a, b, c in splits_list])
@@ -368,12 +370,27 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
         youtube_duration_seconds = event.youtube_duration_seconds
     for r in all_results:
         relay_team = False
+        ismasters = False
+        if r.category.ismasters:
+            ismasters = True
+        else:
+            if page != 'Wheelchair':
+                if r.age:
+                    if r.age >= 40:
+                        ismasters = True
+        masters_place = False
         if r.gender == 'F':
             gender_place_dict['F'] += 1
             gender_place = gender_place_dict['F']
+            if ismasters:
+                masters_place_dict['F'] += 1
+                masters_place = masters_place_dict['F']
         elif r.gender == 'M':
             gender_place_dict['M'] += 1
             gender_place = gender_place_dict['M']
+            if ismasters:
+                masters_place_dict['M'] += 1
+                masters_place = masters_place_dict['M']
         category_place = ''
         if r.category.name != '':
             if r.category.name in category_place_dict:
@@ -402,14 +419,6 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
             prime = ''
         else:
             prime = get_short_time(prime)
-        ismasters = False
-        if r.category.ismasters:
-            ismasters = True
-        else:
-            if page != 'Wheelchair':
-                if r.age:
-                    if r.age >= 40:
-                        ismasters = True
         if page == 'Wheelchair':
             result_division = ''
         else:
@@ -443,6 +452,10 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                          youtube_url = False
         if r.bib in phototags:
             hasphotos = True
+        try:
+            isrwpb = r.isrwpb
+        except:
+            isrwpb = False
         results.append(named_result(r.place,
                                     r.bib,
                                     r.athlete,
@@ -461,7 +474,9 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                                     splits,
                                     member,
                                     hasphotos,
-                                    youtube_url
+                                    youtube_url,
+                                    masters_place,
+                                    isrwpb,
                                    ))
     results = filter_results(results, category, division)
     if page == 'Hill Sprint':
@@ -537,6 +552,8 @@ def get_hill_results(results, named_result):
            r.member,
            r.hasphotos,
            r.youtube_url,
+           r.masters_place,
+           r.isrwpb,
            ))
     hill_results = sorted(hill_results, key=attrgetter('prime', 'place'))
     return hill_results
