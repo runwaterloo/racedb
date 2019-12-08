@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import Http404
 from urllib import parse
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from .models import *
 from racedbapp.tasks import send_email_task
 from . import view_shared, utils
@@ -352,8 +352,8 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                      ])
     results = []
     endurrun_relay_dict = get_endurrun_relay_dict(event)
-    gender_place_dict = {'F': 0, 'M': 0}
-    masters_place_dict = {'F': 0, 'M': 0}
+    gender_place_dict = defaultdict(int)
+    masters_place_dict = defaultdict(int)
     category_place_dict = {}
     haschiptime = False
     event_splits = Split.objects.filter(event=event)
@@ -379,18 +379,13 @@ def get_results(event, all_results, page, category, division, hill_dict, photota
                     if r.age >= 40:
                         ismasters = True
         masters_place = False
-        if r.gender == 'F':
-            gender_place_dict['F'] += 1
-            gender_place = gender_place_dict['F']
+        gender_place = ''
+        if r.gender != '':
+            gender_place_dict[r.gender] += 1
+            gender_place = gender_place_dict[r.gender]
             if ismasters:
-                masters_place_dict['F'] += 1
-                masters_place = masters_place_dict['F']
-        elif r.gender == 'M':
-            gender_place_dict['M'] += 1
-            gender_place = gender_place_dict['M']
-            if ismasters:
-                masters_place_dict['M'] += 1
-                masters_place = masters_place_dict['M']
+                masters_place_dict[r.gender] += 1
+                masters_place = masters_place_dict[r.gender]
         category_place = ''
         if r.category.name != '':
             if r.category.name in category_place_dict:
