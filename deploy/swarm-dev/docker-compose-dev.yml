@@ -20,6 +20,11 @@ services:
       - traefik.http.routers.racedb.rule=Host(`racedb.scrw.ca`)
       - traefik.http.routers.racedb.tls=true
       - traefik.http.routers.racedb.tls.certresolver=default
+      # redirect http
+      - traefik.http.middlewares.racedb-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.racedb-insecure.entrypoints=web
+      - traefik.http.routers.racedb-insecure.rule=Host(`racedb.scrw.ca`)
+      - traefik.http.routers.racedb-insecure.middlewares=racedb-redirect
     volumes:
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
   redis:
