@@ -21,7 +21,21 @@
         </tr>
         {% for r in recap_results %}
           <tr>
-            <td>{{ r.place }}</td>
+            <td>
+              {% if r.place == "1st OA" %}
+                <i class="fas fa-trophy fa-icon-1st-oa" title="1st Overall"></i>
+              {% endif %}
+              {% if r.place == "2nd OA" %}
+                <i class="fas fa-medal fa-icon-2nd-oa" title="2nd Overall"></i>
+              {% endif %}
+              {% if r.place == "3rd OA" %}
+                <i class="fas fa-medal fa-icon-3rd-oa" title="3rd Overall"></i>
+              {% endif %}
+              {% if r.place == "1st Master" %}
+                <i class="fas fa-medal fa-icon-1st-master" title="1st Master"></i>
+              {% endif %}
+              {{ r.place }}
+            </td>
             {% if r.female_member_slug %}
               <td><a href="/member/{{ r.female_member_slug }}/">{{ r.female_athlete }}</a></td>
             {% else %}
