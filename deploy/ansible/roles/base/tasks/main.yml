@@ -1,7 +1,0 @@
-- import_tasks: centos_only.yml
-  when: ansible_distribution == 'CentOS'
-- import_tasks: security.yml
-- import_tasks: users.yml
-- import_tasks: swap.yml
-- import_tasks: misc.yml
-- import_tasks: postfix_gmail.yml

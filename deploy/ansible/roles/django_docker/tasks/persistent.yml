@@ -39,54 +39,6 @@
 #    - django_docker
 #    - persistent
 
-- name: check if {{ certbot_conf_path }}/accounts exists
-  stat:
-    path: "{{ certbot_conf_path }}/accounts"
-  register: certbot_accounts
-  tags:
-    - django_docker
-    - persistent
-
-- name: restore certbot configuration from S3
-  aws_s3:
-    bucket: "{{ s3_bucket }}"
-    object: "{{ certbot_object_to_restore }}"
-    dest: "/tmp/{{ app }}.certbot.tar.gz"
-    mode: get
-  when: not certbot_accounts.stat.exists and isprod == "true"
-  tags:
-    - django_docker
-    - persistent
-
-- name: unarchive certbot configuration
-  unarchive:
-    src: "/tmp/{{ app }}.certbot.tar.gz"
-    dest: "{{ certbot_conf_path }}"
-    remote_src: yes
-  when: not certbot_accounts.stat.exists and isprod == "true"
-  tags:
-    - django_docker
-    - persistent
-
-- name: ensure no certbot config is in /tmp
-  file:
-    path: "/tmp/{{ app }}.certbot.tar.gz"
-    state: absent
-  tags:
-    - django_docker
-    - persistent
-
-- name: deploy nginx configuration
-  template:
-    src: app.conf.j2
-    dest: "{{ nginx_path }}/app.conf"
-    owner: root
-    group: root
-    mode: "0644"
-  tags:
-    - django_docker
-    - persistent
-
 #- name: put django-compose secrets in place
 #  copy:
 #    dest: "{{ secrets_path }}/{{ item.dest }}"

@@ -1,7 +1,0 @@
----
-aws_yum_packages:
-  - python-pip
-aws_pip_packages:
-  - awscli
-  - boto3
-  - botocore

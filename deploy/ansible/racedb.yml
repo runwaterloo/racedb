@@ -10,8 +10,5 @@
     - vars.yml  
     - vault.yml  
   roles:
-    - base
-    - aws
-    - docker
     - django_docker
     - racedb

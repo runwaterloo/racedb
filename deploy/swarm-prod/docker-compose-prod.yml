@@ -1,6 +1,8 @@
 version: '3.4'
 networks:
   web:
+  traefik_default:
+    external: true
 services:
   gunicorn:
     command: /bin/sh -c './manage.py collectstatic --noinput --settings=racedb.settings.prod; gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.prod racedb.wsgi -b 0.0.0.0:8000'
@@ -17,6 +19,21 @@ services:
       timeout: 5s
       retries: 3
     image: registry.gitlab.com/sl70176/racedb:latest
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_default
+      - traefik.http.services.racedb.loadbalancer.server.port=8000
+      - traefik.http.routers.racedb.entrypoints=web-secure
+      - traefik.http.routers.racedb.rule=Host(`results.runwaterloo.com`)
+      - traefik.http.routers.racedb.tls=true
+      - traefik.http.routers.racedb.tls.certresolver=default
+      # accept wilcard, do not redirect
+      - traefik.http.routers.racedb-wildcard.rule=hostregexp(`{host:.+}`)
+      # redirect http for results.runwaterloo.com
+      - traefik.http.middlewares.racedb-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.racedb-insecure.entrypoints=web
+      - traefik.http.routers.racedb-insecure.rule=Host(`results.runwaterloo.com`)
+      - traefik.http.routers.racedb-insecure.middlewares=racedb-redirect
     logging:
       driver: "awslogs"
       options:
@@ -25,27 +42,10 @@ services:
         awslogs-stream: "racedb_gunicorn"
     networks:
       - web
+      - traefik_default
     volumes:
       - /srv/racedb_secrets:/run/secrets
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
-  nginx:
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-    image: nginx:1.17-alpine
-    logging:
-      driver: "awslogs"
-      options:
-        awslogs-region: "us-east-1"
-        awslogs-group: "racedb"
-        awslogs-stream: "racedb_nginx"
-    networks:
-      - web 
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /srv/racedb_nginx:/etc/nginx/conf.d
-      - /srv/racedb_certbot/conf:/etc/letsencrypt
-      - /srv/racedb_certbot/www:/var/www/certbot
   redis:
     image: redis:5.0.7-alpine
     logging:
@@ -86,15 +86,3 @@ services:
       - web
     volumes:
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
-  certbot:
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    image: certbot/certbot:v0.40.1
-    logging:
-      driver: "awslogs"
-      options:
-        awslogs-region: "us-east-1"
-        awslogs-group: "racedb"
-        awslogs-stream: "racedb_certbot"
-    volumes:
-      - /srv/racedb_certbot/conf:/etc/letsencrypt
-      - /srv/racedb_certbot/www:/var/www/certbot
