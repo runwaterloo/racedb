@@ -57,13 +57,3 @@ s3.meta.client.upload_file(gzip_file, bucket, key)
 os.remove(gzip_file)
 
 ######## END DATABASE ##########
-
-######## CERTBOT ##########
-if hour == 0:
-    os.system('cd {{ certbot_conf_path }}; tar zcf /tmp/{}.certbot.tar.gz *'.format(app))
-    src_file = '/tmp/{}.certbot.tar.gz'.format(app)
-    s3_prefix = 'certbot/'
-    key = '{}{}.certbot.tar.gz'.format(s3_prefix, app)
-    s3.meta.client.upload_file(src_file, bucket, key)
-    os.remove(src_file)
-######## END CERTBOT ##########
