@@ -1,4 +1,4 @@
-FROM python:3.7.4-alpine
+FROM python:3.8.1-alpine
 ENV PYTHONUNBUFFERED 1
 COPY requirements.txt .
 RUN apk add --no-cache --virtual .build-deps \
