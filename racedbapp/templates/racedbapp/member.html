@@ -26,8 +26,7 @@
       <strong>{{ member.name }}</strong>
       {% if member.hasphotos %}
         <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ member.id }}?sort=date-taken-desc" target="_blank">
-          <span class="glyphicon glyphicon-camera" aria-hidden="true"></span> 
-        </a>
+          <i class="fas fa-camera"></i>        </a>
       {% endif %}
     </h3>
     <h5>Run Waterloo Member since {{ member.joindate.year }}</h5>

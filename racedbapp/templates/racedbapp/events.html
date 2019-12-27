@@ -42,8 +42,7 @@
    <th colspan=2 class="text-center"><i class="fas fa-trophy fa-icon-1st-oa"></i> Female Winner</th>
    <th colspan=2 class="text-center"><i class="fas fa-trophy fa-icon-1st-oa"></i> Male Winner</th>
    <th class="text-center" scope="col">
-     <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
-   </th>
+    <i class="fas fa-camera"></i>   </th>
    </tr>
   {% for event in events %}
     <tr>
@@ -61,7 +60,7 @@
       {% endif %}
       <td>{{ event.maletime|round_up }}</td>
       {% if event.flickrsetid %}
-        <td class="text-center"><a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a></td>
+        <td class="text-center"><a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><i class="fas fa-camera"></i></a></td>
       {% else %}
         <td></td>
       {% endif %}

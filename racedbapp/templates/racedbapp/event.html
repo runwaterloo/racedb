@@ -50,10 +50,10 @@
       <p>
         {{ event.date }} - {{ event.city }}
         {% if event.flickrsetid %}
-          &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
+          &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><i class="fas fa-camera"></i></a>
         {% endif %}
         {% if event.youtube_id %}
-          &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}" target="_blank"><span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span></a>
+          &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}" target="_blank"><i class="fas fa-video"></i></span></a>
         {% endif %}
       </p>
       <ul class="pagination pagination-sm">
@@ -154,12 +154,12 @@
             <th class="text-left" scope="col">Name</th>
             {% if phototags %}
               <th class="text-center" scope="col">
-                <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+                <i class="fas fa-camera"></i>
               </th>
             {% endif %}
             {% if event.youtube_id and event.youtube_offset_seconds is not None %}
               <th class="text-center" scope="col">
-                <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>
+                <i class="fas fa-video"></i>
               </th>
             {% endif %}
             <th class="text-center" scope="col">Time</th>
@@ -220,7 +220,7 @@
                 {% if r.hasphotos %}
                   <td class="text-center">
                     <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ event.flickrsearchstr}},{{ r.bib }}" target="_blank">
-                      <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+                      <i class="fas fa-camera"></i>
                     </a>
                   </td>
                 {% else %}
@@ -231,7 +231,7 @@
                   {% if r.youtube_url %}
                     <td class="text-center">
                       <a href="{{ r.youtube_url }}" target="_blank">
-                        <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>
+                        <i class="fas fa-video"></i>
                       </a>
                     </td>
                   {% else %}

@@ -64,21 +64,21 @@
           <td class="text-center">{{ i.mp|floatformat:"2" }}</td>
           <td class="text-center">
             {% if i.classic_boost > 0 %}
-                <span class="glyphicon glyphicon-asterisk" title="Classic Event ({{ config_dict.boost_classic_points }} points)" style="color:orange" aria-hidden="true"></span>
+              <i class="fas fa-certificate fa-icon-classic" title="Classic Event ({{ config_dict.boost_classic_points }} points)"></i>
             {% endif %}
             {% if i.pb_boost > 0 %}
-                <span class="glyphicon glyphicon-time" title="Run Waterloo PB ({{ config_dict.boost_pb_points }} points)" style="color:blue" aria-hidden="true"></span>
+            <i class="fas fa-stopwatch fa-icon-pb" title="Run Waterloo PB ({{ config_dict.boost_pb_points }} points)"></i>
             {% endif %}
             {% if i.ditto_boost > 0 %}
-                <span class="glyphicon glyphicon-repeat" title="Ditto ({{ config_dict.boost_ditto_points }} points)" style="color:maroon" aria-hidden="true"></span>
+              <i class="fas fa-redo-alt fa-icon-ditto" title="Ditto ({{ config_dict.boost_ditto_points }} points)"></i></span>
             {% endif %}
           </td>
           <td class="text-center"><strong>{{ i.ep|floatformat:"2" }}</strong></td>
           <td class="text-center">
             {% if i.counts %}
-              <span class="glyphicon glyphicon-ok" style="color:green" aria-hidden="true"></span>
+              <i class="fas fa-check fa-icon-counts"></i>
             {% else %}
-              <span class="glyphicon glyphicon-remove" style="color:red" aria-hidden="true"></span>
+              <i class="fas fa-times fa-icon-notcounts"></i>
             {% endif %}
           </td>
         </tr>
@@ -94,8 +94,10 @@ Event points calculated as follows:<br>
 &nbsp;&nbsp;+ Merit points (1 - (gender place / gender finishers)) * {{ config_dict.boost_merit_max }}<br>
 &nbsp;&nbsp;+ Boosters<br>
 <strong>Boosters</strong><br>
-<span class="glyphicon glyphicon-asterisk" style="color:orange" aria-hidden="true"></span> = Classic ({{ config_dict.boost_classic_points }} points) - Finishing one of the two Classic races<br>
-<span class="glyphicon glyphicon-time" style="color:blue" aria-hidden="true"></span> = PB ({{ config_dict.boost_pb_points }} points) - RW personal best for the distance (including first time running that distance)<br>
-<span class="glyphicon glyphicon-repeat" style="color:maroon" aria-hidden="true"></span> = Ditto ({{ config_dict.boost_ditto_points }} points) - Repeating a race from last year (any event/distance)<br>
+<i class="fas fa-certificate fa-icon-classic"></i>
+= Classic ({{ config_dict.boost_classic_points }} points) - Finishing one of the two Classic races<br>
+<i class="fas fa-stopwatch fa-icon-pb"></i>
+= PB ({{ config_dict.boost_pb_points }} points) - RW personal best for the distance (including first time running that distance)<br>
+<i class="fas fa-redo-alt fa-icon-ditto"></i> = Ditto ({{ config_dict.boost_ditto_points }} points) - Repeating a race from last year (any event/distance)<br>
 </p>
 {% endblock content %}

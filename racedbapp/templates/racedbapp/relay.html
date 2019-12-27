@@ -34,10 +34,10 @@
       <p>
         {{ event.date }} - {{ event.city }}
         {% if event.flickrsetid %}
-          &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><span class="glyphicon glyphicon-camera" aria-hidden="true"></span></a>
+          &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><i class="fas fa-camera"></i></a>
         {% endif %}
         {% if event.youtube_id %}
-          &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}" target="_blank"><span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span></a>
+          &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}" target="_blank"><i class="fas fa-video"></i></a>
         {% endif %}
       </p>
       <ul class="pagination pagination-sm">
@@ -101,7 +101,7 @@
         {% for i in team_results %}
           <tr class="accordion-toggle" data-toggle="collapse" data-target="#team-{{ i.team_id }}">
             <td class="text-center">
-              <span class="glyphicon glyphicon-menu-right" style="color:blue" aria-hidden="true"></span>
+              <i class="fas fa-angle-right fa-icon-expand"></i>
             </td>
             <td class="text-center">{{ forloop.counter }}</td>
             <td class="text-left">{{ i.team }}</td>
@@ -110,9 +110,9 @@
             <td class="text-center">{{ i.gender }}</td>
             <td class="text-center">
               {% if i.ismasters %}
-                <span class="glyphicon glyphicon-ok" style="color:green" aria-hidden="true"></span>
+                <i class="fas fa-check fa-icon-counts"></i>
               {% else %}
-                <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
+                <i class="fas fa-minus"></i>
             {% endif %}
             </td>
           </tr>

@@ -35,7 +35,7 @@
           <th class="text-center">Results</th>
           <th class="text-center">Tags</th>
           <th class="text-center">Pct</th>
-          <th class="text-center"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></th>
+          <th class="text-center"><i class="fas fa-sync-alt"></i></th>
         </tr>
       </thead>
     <tbody>
@@ -45,7 +45,7 @@
         <td class="text-center">{{ e.num_results }}</td>
         <td class="text-center">{{ e.unique_tags }}</td>
         <td class="text-center">{{ e.pct }}</td>
-        <td class="text-center"><a href="/photoupdate/?notifykey={{ notifykey }}&date={{ e.event.date|date:"c" }}" target="_blank"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></a></td>
+        <td class="text-center"><a href="/photoupdate/?notifykey={{ notifykey }}&date={{ e.event.date|date:"c" }}" target="_blank"><i class="fas fa-sync-alt"></i></a></td>
       </tr>
     {% endfor %}
     </tbody>

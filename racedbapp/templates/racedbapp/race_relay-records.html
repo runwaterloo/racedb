@@ -13,7 +13,7 @@
       {% for i in v %}
         <tr class="accordion-toggle" data-toggle="collapse" data-target="#team-{{ i.team_id }}">
           <td class="text-center">
-            <span class="glyphicon glyphicon-menu-right" style="color:blue" aria-hidden="true"></span>
+            <i class="fas fa-angle-right fa-icon-expand"></i>
           </td>
           <td class="text-left">{{ k }}</td>
           <td class="text-left">{{ i.team_time }}</td>
@@ -50,7 +50,7 @@
     {% else %}
           <tr class="accordion-toggle" data-toggle="collapse" data-target="#team-{{ i.team_id }}">
             <td class="text-center">
-              <span class="glyphicon glyphicon-menu-right" style="color:grey" aria-hidden="true"></span>
+              <i class="fas fa-angle-right"></i>
             </td>
             <td class="text-left">{{ k }}</td>
             <td class="text-left"></td>
