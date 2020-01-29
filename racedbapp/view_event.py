@@ -68,6 +68,7 @@ def index(request, year, race_slug, distance_slug):
             x.guntime.microseconds for x in all_results if x.guntime.microseconds != 0
         ]
     )
+    ad = get_ad()
     process_post(request)
     context = {
                'event': event_json,
@@ -82,6 +83,7 @@ def index(request, year, race_slug, distance_slug):
                'extra_name': extra_name,
                'phototags': phototags,
                'guntimes_have_microseconds': guntimes_have_microseconds,
+               'ad': ad,
               }
     # Determine the format to return based on the query string
     if 'format' in qstring:
@@ -610,3 +612,19 @@ def process_post(request):
         body += "{}\n\n".format(message_text)
         body += url
         send_email_task.delay(subject, body, recipients)
+
+def get_ad():
+    ad = False
+    text = view_shared.get_config_value_or_false("ad_text")
+    url = view_shared.get_config_value_or_false("ad_url")
+    if text:
+        if url:
+            ad = Ad()
+            ad.text = text
+            ad.url = url
+    return ad
+
+class Ad:
+    def __init__(self):
+        self.text = False
+        self.url = False

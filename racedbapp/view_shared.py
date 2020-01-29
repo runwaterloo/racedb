@@ -2,6 +2,7 @@ from django.db.models import Q
 from django.http import Http404
 from collections import namedtuple
 from .models import (
+    Config,
     Distance,
     Endurathlete,
     Endurraceresult,
@@ -555,3 +556,14 @@ def get_ultimate_finished_all_events(years):
                 if athlete.name not in last_event_finishers:
                     ultimate_finished_all_events[year][athlete] = False
     return ultimate_finished_all_events
+
+
+def get_config_value_or_false(name):
+    try:
+        value = Config.objects.get(name=name).value
+    except:
+        value = False
+    else:
+        if value == "":
+            value = False
+    return value
