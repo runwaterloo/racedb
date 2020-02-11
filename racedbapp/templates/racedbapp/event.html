@@ -138,6 +138,11 @@
         <!-- end search input -->
         <!-- contact and ad buttons -->
         <div class="col-xs-6">
+          {% if event.medals != "none" %}
+            <button type="button" class="btn-secondary">
+              <a href="/medals/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/" style="color:inherit;text-decoration: none">Medal Winners</a>
+            </button>
+          {% endif %}
           <button type="button" class="btn-secondary" data-toggle="modal" data-target="#contactModal">Submit a Correction</button>
           {% if ad %}
             <button type="button" class="btn-secondary">

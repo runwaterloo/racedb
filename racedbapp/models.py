@@ -195,6 +195,7 @@ class Teamcategory(models.Model):
 
 
 class Event(models.Model):
+    MEDALS_CHOICES = (("none", "none"), ("standard", "standard"))
     race = models.ForeignKey(Race, on_delete=models.CASCADE)
     distance = models.ForeignKey(Distance, on_delete=models.CASCADE)
     date = models.DateField(db_index=True)
@@ -219,6 +220,7 @@ class Event(models.Model):
             "only required if the video cuts off early."
         ),
     )
+    medals = models.CharField(max_length=32, choices=MEDALS_CHOICES, default="none")
 
     class Meta:
         unique_together = ("race", "distance", "date")

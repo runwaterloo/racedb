@@ -15,6 +15,7 @@ from . import (
     view_health,
     view_notify,
     view_multiwins,
+    view_medals,
     view_member,
     view_members,
     view_recap,
@@ -65,6 +66,11 @@ urlpatterns = [
     url(r"^race_slugs", view_race_slugs.index, name="race_slugs"),
     url(
         r"^race/(?P<race_slug>.*)/(?P<distance_slug>.*)/$", view_race.index, name="race"
+    ),
+    url(
+        r"^medals/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/$",
+        view_medals.index,
+        name="medals",
     ),
     url(r"^members", view_members.index, name="members"),
     url(r"^member/(?P<member_slug>.*)/$", view_member.index, name="member"),

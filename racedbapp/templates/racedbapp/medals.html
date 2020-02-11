@@ -1,0 +1,113 @@
+{% extends "racedbapp/base.html" %}
+
+{% load static %}
+{% load racedbapp_extras %}
+
+{% block title %}
+  {{ event.date.year }}
+  {{ event.race.shortname }}
+  {{ event.distance.name }}
+  |
+{% endblock title %}
+
+{% block ogmeta %}
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Run Waterloo Results" />
+  <meta property="og:description" content="Medals for the {{ event.date.year }} {{ event.race.name }}." />
+  <meta property="og:image" content="{% static "race_logos/"|add:event.race.slug|add:".png" %}" />
+  <meta property="og:image:width" content="200" />
+  <meta property="og:image:height" content="200" />
+ <!-- https://sunnywalker.github.io/jQuery.FilterTable/ -->
+  <script src="{% static "jquery.filtertable.min.js" %}"></script>
+  <!-- highlight found cell 
+  <style>
+  .filter-table .quick { margin-left: 0.5em; font-size: 0.8em; text-decoration: none; }
+  .fitler-table .quick:hover { text-decoration: underline; }
+  td.alt { background-color: #ffc; background-color: rgba(255, 255, 0, 0.2); }
+  </style>
+  -->
+{% endblock ogmeta %}
+
+{% block content %}
+
+  <div class="row">
+    <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+      <h3>
+        Medals:
+        <small>
+          {{ event.date.year }}
+          {{ event.race.shortname }}
+          {{ extra_name }}
+          {{ event.distance.name }}
+        </small>
+      </h3>
+
+      <p>
+        <i>Disclaimer: Medals may differ from category place on the <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/">event results</a> because they are awarded without duplication. For male and female, the top three overall and then the top three masters are removed from other categories. To claim the medal after the race, check <a target="_blank" href="https://runwaterloo.com/{{ event.race.slug }}">here</a>.</i>
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <!-- search / modal row -->
+      <div class="row">
+        <!-- search input -->
+        <div class="col-xs-3">
+          <div class="form-group">
+            <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search these results..." size="12">
+          </div>
+        </div>
+        <!-- end search input -->
+        <button type="button" class="btn-secondary">
+            <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/" style="color:inherit;text-decoration: none"><i class="fas fa-arrow-alt-circle-left"></i> Back to results</a>
+          </button>
+      </div>
+      <!-- end search / modal row -->
+
+      <table class="table table-bordered table-condensed table-striped table-hover">
+        <thead>
+          <tr class="info">
+            <th class="text-center" scope="col">Bib</th>
+            <th class="text-left" scope="col">Name</th>
+            <th class="text-center" scope="col">Time</th>
+            <th class="text-left" scope="col">Medal</th>
+           </tr>
+        </thead>
+        <tbody>
+          {% for mr in medal_results %}
+            <tr>
+              <td class="text-center">{{ mr.bib }}</td>
+              <td class="text-left">
+                {% if mr.member_slug %}
+                <a href="/member/{{ mr.member_slug }}/">{{ mr.athlete }}</a>
+                {% else %}
+                {{ mr.athlete }}
+                {% endif %}
+              </td>
+              {% if guntimes_have_microseconds %}
+                <td class="text-center">{{ mr.guntime|show_decimal }}</td>
+              {% else %}
+                <td class="text-center">{{ mr.guntime }}</td>
+              {% endif %}
+              <td>{{ mr.award }} </td>
+            </tr>
+         {% endfor %}
+       </tbody>
+      </table>
+      <script>
+        $('table').filterTable({inputSelector: '#input-filter'}); // apply filterTable to all tables on this page
+      </script>
+      {% if 'chiptimeresults' in event.resultsurl %}
+        <div>
+          <center>
+            Timing provided by:<br>
+            <a href="http://www.chiptimeresults.com" target="_blank"><img class="img-rounded" src="{% static "ctr.png" %}"></a>
+            <br><br>
+          </center>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+{% endblock content %}

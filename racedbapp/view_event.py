@@ -113,12 +113,14 @@ def get_event_json(event):
                                     'youtube_id',
                                     'youtube_offset_seconds',
                                     'race',
-                                    'distance'])
+                                    'distance',
+                                    'medals'])
     named_race = namedtuple('nr', ['name',
                                    'shortname',
                                    'slug'])
     named_distance = namedtuple('nd', ['name',
-                                       'km'])
+                                       'km',
+                                       'slug'])
     flickrsearchstr = '{}-{}-{}'.format(event.date.year,
                                         event.race.slug,
                                         event.distance.slug).replace(
@@ -127,7 +129,8 @@ def get_event_json(event):
                            event.race.shortname,
                            event.race.slug)
     this_distance = named_distance(event.distance.name,
-                                   event.distance.km)
+                                   event.distance.km,
+                                   event.distance.slug)
     event_json = named_event(event.id,
                              event.city,
                              event.date,
@@ -137,7 +140,8 @@ def get_event_json(event):
                              event.youtube_id,
                              event.youtube_offset_seconds,
                              this_race,
-                             this_distance)
+                             this_distance,
+                             event.medals)
     return event_json
 
 def get_masters(event, division):
