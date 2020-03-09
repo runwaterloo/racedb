@@ -6,7 +6,7 @@ from operator import attrgetter
 from urllib import parse
 from . import view_shared
 from .config import ValidRelayCategories
-from .models import Event, Relay, Result
+from .models import Event, Relay, Result, Teamcategory, Teamresult
 
 named_filter = namedtuple("nf", ["current", "choices"])
 named_choice = namedtuple("nc", ["name", "url"])
@@ -19,41 +19,55 @@ def index(request, year, race_slug, distance_slug):
     category = False
     if "category" in qstring:
         category = qstring["category"][0]
-    event = get_event(year, race_slug, distance_slug)
-    individual_results_dict = get_individual_results_dict([event])
-    relay_results = get_relay_results([event])
+    events = get_events(year, race_slug, distance_slug)
+    individual_results_dict = get_individual_results_dict(events)
+    relay_results = get_relay_results(events)
     team_results = get_team_results(relay_results, individual_results_dict)
     team_results = sorted(team_results, key=attrgetter("place"))
-    team_categories = view_shared.get_team_categories(event)
-    pages = view_shared.get_pages(
-        event, "Relay", team_categories, laurier_relay_dict=True
-    )
+    team_categories = local_get_team_categories(events)
+    pages = []
     filters = {
-        "year_filter": get_year_filter(event),
-        "category_filter": get_category_filter(event, category, team_results),
+        "year_filter": get_year_filter(events[0]),
+        "category_filter": get_category_filter(events[0], category, team_results, year),
     }
     if category:
         team_results = [
             x for x in team_results if valid_categories[category] in x.categories
         ]
+    if year != "all":
+        pages = view_shared.get_pages(
+            events[0], "Relay", team_categories, laurier_relay_dict=True
+        )
     context = {
-        "event": EventV(event),
+        "event": EventV(events[0]),
         "pages": pages,
         "filters": filters,
         "team_results": team_results,
+        "year": year,
     }
     return render(request, "racedbapp/relay.html", context)
 
 
-def get_event(year, race_slug, distance_slug):
-    """ Get the event based on query parameters or return 404 """
-    try:
-        event = Event.objects.select_related().get(
-            race__slug=race_slug, distance__slug=distance_slug, date__icontains=year
-        )
-    except ObjectDoesNotExist:
+def local_get_team_categories(events):
+    present_team_categories = Teamresult.objects.filter(event__in=events).values_list(
+        "team_category__name", flat=True
+    )
+    present_team_categories = set(sorted(present_team_categories))
+    team_categories = Teamcategory.objects.filter(name__in=present_team_categories)
+    return team_categories
+
+def get_events(year, race_slug, distance_slug):
+    """ Get the events based on query parameters or return 404 """
+    events = Event.objects.select_related().filter(
+        race__slug=race_slug, distance__slug=distance_slug
+    )
+    if year == "all":
+        events = events.filter(date__gte="2018-01-01")
+    else:
+        events = events.filter(date__icontains=year)
+    if not events:
         raise Http404("Event not found")
-    return event
+    return events
 
 
 def get_individual_results_dict(events):
@@ -93,8 +107,12 @@ def get_year_filter(event):
     return year_filter
 
 
-def get_category_filter(event, category, team_results):
+def get_category_filter(event, category, team_results, year):
     choices = []
+    if year == "all":
+        event_date_year = "all"
+    else:
+        event_date_year = event.date.year
     if category:
         if category not in valid_categories:
             raise Http404("No results found")
@@ -103,7 +121,7 @@ def get_category_filter(event, category, team_results):
             named_choice(
                 "All",
                 "/relay/{}/{}/{}/".format(
-                    event.date.year, event.race.slug, event.distance.slug
+                    event_date_year, event.race.slug, event.distance.slug
                 ),
             )
         )
@@ -119,7 +137,7 @@ def get_category_filter(event, category, team_results):
                 named_choice(
                     v,
                     "/relay/{}/{}/{}/?category={}".format(
-                        event.date.year, event.race.slug, event.distance.slug, k
+                        event_date_year, event.race.slug, event.distance.slug, k
                     ),
                 )
             )

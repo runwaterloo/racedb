@@ -85,7 +85,7 @@ urlpatterns = [
     url(r"^notify", view_notify.index, name="notify"),
     url(r"^photoupdate", view_photoupdate.index, name="photoupdate"),
     url(
-        r"^relay/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/$",
+        r"^relay/(?P<year>.*)/(?P<race_slug>.*)/(?P<distance_slug>.*)/$",
         view_relay.index,
         name="relay",
     ),

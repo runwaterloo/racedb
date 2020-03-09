@@ -4,7 +4,11 @@
 {% load racedbapp_extras %}
 
 {% block title %}
-  {{ event.date.year }}
+  {% if year != "all" %}
+    {{ event.date.year }}
+  {% else %}
+    All-Time
+  {% endif %}
   {{ event.race_shortname }}
   {{ event.distance_name }}
   Relay
@@ -24,14 +28,30 @@
   <div class="row">
     <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
       <h3>
+        {% if year == "all" %}
+          All-Time
+        {% endif %}
         Relay Results:
         <small>
-          {{ event.date.year }}
+          {% if year != "all" %}
+            {{ event.date.year }}
+          {% endif %}
           {{ event.race_shortname }}
           {{ event.distance_name }}
         </small>
       </h3>
       <p>
+
+{% if year == "all" %}
+  <select onchange="location = this.options[this.selectedIndex].value;">
+  <option>{{ filters.category_filter.current }}</option>
+  {% for cc in filters.category_filter.choices %}
+    <option value="{{ cc.url }}">{{ cc.name }}</option>
+  {% endfor %}
+  </select>
+{% endif %}
+
+      {% if year != "all" %}
         {{ event.date }} - {{ event.city }}
         {% if event.flickrsetid %}
           &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><i class="fas fa-camera"></i></a>
@@ -57,12 +77,12 @@
           <tr>
             <td class="text-center">
               <select onchange="location = this.options[this.selectedIndex].value;">
-              <option>{{ filters.year_filter.current }}</option>
-              {% for yc in filters.year_filter.choices %}
-                <option value="{{ yc.url }}">{{ yc.name }}</option>
-              {% endfor %}
-              </select>
-            </td>
+                  <option>{{ filters.year_filter.current }}</option>
+                  {% for yc in filters.year_filter.choices %}
+                  <option value="{{ yc.url }}">{{ yc.name }}</option>
+                  {% endfor %}
+                </select>
+              </td>
             <td class="text-center">
               <select onchange="location = this.options[this.selectedIndex].value;">
               <option>{{ filters.category_filter.current }}</option>
@@ -75,7 +95,6 @@
         </tbody>
       </table>
       <!-- End Filter Table -->
-
     </div>
     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
       <div style="padding-top: 20px; padding-bottom: 20px">
@@ -83,6 +102,8 @@
       </div>
     </div>
   </div>
+  {% endif %}
+
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <table class="table table-bordered table-condensed table-hover">
@@ -90,6 +111,9 @@
           <tr class="info"?>
             <th class="text-center" scope="col"></th>
             <th class="text-center" scope="col">#</th>
+            {% if year == "all" %}
+              <th class="text-center" scope="col">Year</th>
+            {% endif %}
             <th class="text-left" scope="col">Team Name</th>
             <th class="text-center" scope="col">Time</th>
             <th class="text-center" scope="col">Pace</th>
@@ -104,6 +128,9 @@
               <i class="fas fa-angle-right fa-icon-expand"></i>
             </td>
             <td class="text-center">{{ forloop.counter }}</td>
+            {% if year == "all" %}
+              <td class="text-center" scope="col">{{ i.year }}</td>
+            {% endif %}
             <td class="text-left">{{ i.team }}</td>
             <td class="text-center">{{ i.team_time }}</td>
             <td class="text-center">{{ i.team_time|get_pace:event.total_relay_distance }}</td>
