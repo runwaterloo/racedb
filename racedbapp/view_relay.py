@@ -23,7 +23,7 @@ def index(request, year, race_slug, distance_slug):
     individual_results_dict = get_individual_results_dict(events)
     relay_results = get_relay_results(events)
     team_results = get_team_results(relay_results, individual_results_dict)
-    team_results = sorted(team_results, key=attrgetter("place"))
+    team_results = sorted(team_results, key=attrgetter("team_time", "place"))
     team_categories = local_get_team_categories(events)
     pages = []
     filters = {
@@ -80,7 +80,7 @@ def get_individual_results_dict(events):
 
 
 def get_relay_results(events):
-    relay_results = Relay.objects.filter(event__in=events).order_by("relay_team_place")
+    relay_results = Relay.objects.filter(event__in=events)
     if len(relay_results) == 0:
         raise Http404("No results found")
     return relay_results
