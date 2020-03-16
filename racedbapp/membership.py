@@ -18,12 +18,13 @@ def update_membership(member):
     results_list = sorted(set(results_list), key=attrgetter('event.date'))
     excludes = get_excludes(member)            
     rwpbs = {}
+    pb_exclude_events = (1266, 1267, 1268)
     for r in results_list:
         if r in excludes:
             continue
         r.rwmember=member
         dist = r.event.distance
-        if dist.slug != 'roughly-five':
+        if dist.slug != 'roughly-five' and r.event.id not in pb_exclude_events:
             if dist in rwpbs:
                 if r.guntime < rwpbs[dist]:
                     rwpbs[dist] = r.guntime

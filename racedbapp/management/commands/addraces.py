@@ -573,6 +573,7 @@ def get_member(event, result, membership):
 
 
 def process_rwpbs(event):
+    pb_exclude_events = (1266, 1267, 1268)
     rwpbs = {}
     members = (
         Result.objects.values("rwmember_id")
@@ -597,7 +598,7 @@ def process_rwpbs(event):
     ).order_by("event__date")
     for i in future_results:
         i.isrwpb = False
-        if i.event.distance.slug != "roughly-five":
+        if i.event.distance.slug != "roughly-five" and i.event.id not in pb_exclude_events:
             if i.rwmember_id in rwpbs:
                 if i.guntime < rwpbs[i.rwmember_id]:
                     rwpbs[i.rwmember_id] = i.guntime
