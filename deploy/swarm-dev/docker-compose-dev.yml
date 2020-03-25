@@ -28,7 +28,7 @@ services:
     volumes:
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
   redis:
-    image: redis:5.0.7-alpine
+    image: redis:5.0.8-alpine
     networks:
       - web
   celery:
