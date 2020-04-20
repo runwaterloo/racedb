@@ -47,7 +47,7 @@ services:
       - /srv/racedb_secrets:/run/secrets
       - /srv/racedb_secrets/secrets.py:/srv/racedb/racedb/secrets.py
   redis:
-    image: redis:5.0.8-alpine
+    image: redis:5.0.9-alpine
     logging:
       driver: "awslogs"
       options:
