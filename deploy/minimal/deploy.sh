@@ -9,7 +9,7 @@
 # RACEDB_DB_BACKUP
 
 echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-apk add docker-compose mysql-client
+apk add docker-compose mysql-client py-pip
 /usr/bin/pip3 install awscli
 aws s3 cp ${RACEDB_DB_BACKUP} .
 zcat ./racedb.latest.sql.gz | mysql -h mariadb -u racedb -pCHANGEME racedb
