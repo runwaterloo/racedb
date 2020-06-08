@@ -194,13 +194,14 @@ def clear_cache():
 
 @shared_task
 def send_email_task(subject, content, recipients):
-    from_addr = Config.objects.get(name="email_from_address").value 
-    logger.info("Attempting to send email")
-    send_mail(                                                                       
-        subject,                
-        content,
-        from_addr,                                                                       
-        recipients,  # should be a list                                                                     
-        fail_silently=False,                                                         
-    )      
-    logger.info("Email sent!")
+    # from_addr = Config.objects.get(name="email_from_address").value 
+    # logger.info("Attempting to send email")
+    # send_mail(                                                                       
+    #     subject,                
+    #     content,
+    #     from_addr,                                                                       
+    #     recipients,  # should be a list                                                                     
+    #     fail_silently=False,                                                         
+    # )      
+    # logger.info("Email sent!")
+    logger.warning("Sending email is temporarily disabled")
