@@ -18,7 +18,7 @@ def update_membership(member):
     results_list = sorted(set(results_list), key=attrgetter('event.date'))
     excludes = get_excludes(member)            
     rwpbs = {}
-    pb_exclude_events = (1266, 1267, 1268)
+    pb_exclude_events = (1266, 1267, 1268, 1316, 1317, 1318)
     for r in results_list:
         if r in excludes:
             continue

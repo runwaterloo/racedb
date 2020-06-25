@@ -573,7 +573,7 @@ def get_member(event, result, membership):
 
 
 def process_rwpbs(event):
-    pb_exclude_events = (1266, 1267, 1268)
+    pb_exclude_events = (1266, 1267, 1268, 1316, 1317, 1318)
     rwpbs = {}
     members = (
         Result.objects.values("rwmember_id")
