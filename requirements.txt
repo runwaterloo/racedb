@@ -1,7 +1,7 @@
 celery==4.4.6
 django==2.2.14
 django-redis==4.12.1
-django-s3-storage==0.13.2
+django-s3-storage==0.13.3
 django-slack==5.14.4
 flickrapi==2.4.0
 gunicorn==20.0.4
