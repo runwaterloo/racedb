@@ -1,4 +1,4 @@
-celery==4.4.6
+celery==4.4.7
 django==2.2.14
 django-redis==4.12.1
 django-s3-storage==0.13.3
