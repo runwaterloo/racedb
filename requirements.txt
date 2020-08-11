@@ -2,7 +2,7 @@ celery==4.4.7
 django==2.2.15
 django-redis==4.12.1
 django-s3-storage==0.13.3
-django-slack==5.14.4
+django-slack==5.15.2
 flickrapi==2.4.0
 gunicorn==20.0.4
 mysqlclient==2.0.1
