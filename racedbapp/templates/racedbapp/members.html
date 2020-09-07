@@ -54,11 +54,23 @@
               <td class="text-left">{{ m.city }}</td>
               <td class="text-center">{{ m.joindate.year }}</td>
               {% if m.hasphotos %}
+                {% if m not in no_camera_members %}
                  <td class="text-center">
                     <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ m.id }}?sort=date-taken-desc" target="_blank">
                       <i class="fas fa-camera"></i>
                     </a>
                   </td>
+                {% else %}
+                  {% if user.is_authenticated %}
+                    <td class="text-center">
+                      <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ m.id }}?sort=date-taken-desc" target="_blank">
+                        <i class="fas fa-camera fa-icon-notcounts"></i>
+                      </a>
+                    </td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                {% endif %}
               {% else %}
                 <td></td>
               {% endif %}

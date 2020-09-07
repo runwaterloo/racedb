@@ -25,8 +25,17 @@
     <h3>
       <strong>{{ member.name }}</strong>
       {% if member.hasphotos %}
-        <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ member.id }}?sort=date-taken-desc" target="_blank">
-          <i class="fas fa-camera"></i>        </a>
+        {% if no_profile_camera %}
+          {% if user.is_authenticated %}
+            <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ member.id }}?sort=date-taken-desc" target="_blank">
+              <i class="fas fa-camera fa-icon-notcounts"></i>
+            </a>
+          {% endif %}
+        {% else %}
+          <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ member.id }}?sort=date-taken-desc" target="_blank">
+            <i class="fas fa-camera"></i>
+          </a>
+        {% endif %}
       {% endif %}
     </h3>
     <h5>Run Waterloo Member since {{ member.joindate.year }}</h5>

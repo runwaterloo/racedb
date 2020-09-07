@@ -39,6 +39,9 @@ def index(request, member_slug):
     badges = get_badges(member, results)
     nophoto_url = Config.objects.get(name="nophoto_url").value
     boost = get_boost(member, request)
+    no_profile_camera = False
+    if "no-profile-camera" in [x.name for x in member.tags.all()]:
+        no_profile_camera = True
     context = {
         "member": member,
         "results": results,
@@ -51,6 +54,7 @@ def index(request, member_slug):
         "badges": badges,
         "nophoto_url": nophoto_url,
         "boost": boost,
+        "no_profile_camera": no_profile_camera,
     }
     return render(request, "racedbapp/member.html", context)
 
@@ -466,3 +470,4 @@ def get_boost_years(member):
             else:
                 boost_years.append(boost_year)
     return sorted(boost_years, reverse=True)
+
