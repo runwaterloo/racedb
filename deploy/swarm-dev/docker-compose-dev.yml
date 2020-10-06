@@ -33,7 +33,7 @@ services:
       - web
   celery:
     image: racedb:latest
-    command: /bin/sh -c 'DJANGO_SETTINGS_MODULE="racedb.settings.dev" celery -A racedb worker -l INFO --pidfile=/tmp/celery.pid'
+    command: /bin/sh -c 'DJANGO_SETTINGS_MODULE="racedb.settings.dev" celery -A racedb worker -l info --pidfile=/tmp/celery.pid'
     dns:
       - 8.8.8.8
       - 4.4.4.4
@@ -45,7 +45,7 @@ services:
       - web
   beat:
     image: racedb:latest
-    command: /bin/sh -c 'DJANGO_SETTINGS_MODULE="racedb.settings.dev" celery -A racedb beat -l INFO --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
+    command: /bin/sh -c 'DJANGO_SETTINGS_MODULE="racedb.settings.dev" celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule'
     networks:
       - mariadb_default
       - web
