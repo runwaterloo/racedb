@@ -25,3 +25,7 @@ chmod 600 /traefik/etc/acme.json
 
 # install traefik
 kubectl apply -f ./traefik_yaml
+
+# fix bug where redirect resource doesn't get created the first time
+sleep 5
+kubectl apply -f ./traefik_yaml
