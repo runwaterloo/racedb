@@ -1,0 +1,29 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: racedb-beat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: racedb-beat
+  template:
+    metadata:
+      labels:
+        app: racedb-beat
+    spec:
+      containers:
+        - name: racedb-beat
+          command: [
+            "/bin/sh",
+            "-c",
+            "DJANGO_SETTINGS_MODULE=racedb.settings.prod celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule",
+            ]
+          image: registry.gitlab.com/sl70176/racedb:0b4a4e9d
+          volumeMounts:
+            - mountPath: /srv/racedb/racedb/secrets.py
+              name: racedb-secrets
+      volumes:
+        - name: racedb-secrets
+          hostPath:
+            path: /srv/racedb_secrets/secrets.py

@@ -19,7 +19,7 @@ spec:
             "-c",
             "./manage.py collectstatic --noinput --settings=racedb.settings.prod",
             ]
-          image: registry.gitlab.com/sl70176/racedb:latest
+          image: registry.gitlab.com/sl70176/racedb:0b4a4e9d
           volumeMounts:
             - mountPath: /srv/racedb/racedb/secrets.py
               name: racedb-secrets
@@ -30,7 +30,7 @@ spec:
             "-c",
             "gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.prod racedb.wsgi -b 0.0.0.0:8000",
             ]
-          image: registry.gitlab.com/sl70176/racedb:latest
+          image: registry.gitlab.com/sl70176/racedb:0b4a4e9d
           volumeMounts:
             - mountPath: /srv/racedb/racedb/secrets.py
               name: racedb-secrets
@@ -78,9 +78,6 @@ spec:
   routes:
     - match: Host(`results-test.scrw.ca`)
       kind: Rule
-      services:
-        - name: racedb-gunicorn
-          port: 8000
       middlewares:
         - name: redirect-https
           namespace: default
