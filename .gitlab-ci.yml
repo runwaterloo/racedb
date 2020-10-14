@@ -13,7 +13,7 @@ image: docker:latest
 stages:
   - build
   - test
-  # - deploy
+  - deploy
 
 before_script:
   - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
@@ -48,20 +48,22 @@ test:
      - /bin/ash deploy/minimal/deploy.sh
      - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.min
 
-# tag-latest:
-#   only:
-#     refs:
-#       - master
-#   except:
-#     variables:
-#       - $DEPLOY_ONLY == "true"
-#   stage: deploy
-#   services:
-#     - docker:dind
-#   script:
-#      - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-#      - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
-#      - docker push $CI_REGISTRY_IMAGE:latest
+tag-latest:
+  only:
+    refs:
+      - master
+  except:
+    variables:
+      - $DEPLOY_ONLY == "true"
+  stage: deploy
+  services:
+    - docker:dind
+  script:
+     - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
+     - docker push $CI_REGISTRY_IMAGE:latest
+     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:master-$CI_COMMIT_SHORT_SHA
+     - docker push $CI_REGISTRY_IMAGE:master-$CI_COMMIT_SHORT_SHA
 
 # deploy-to-prod:
 #   only:
