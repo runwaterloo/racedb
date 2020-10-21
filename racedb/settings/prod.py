@@ -11,7 +11,7 @@ STATICFILES_STORAGE = "django_s3_storage.storage.ManifestStaticS3Storage"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://racedb-redis:6379/1",
+        "LOCATION": "redis://racedb-redis-master:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient"
         },
