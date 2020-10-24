@@ -21,7 +21,7 @@
     - stack
 
 - name: deploy stack (prod)
-  shell: curl -X POST -F "token={{ gitlab_racedb_trigger_token }}" -F "ref=master" -F "variables[DEPLOY_ONLY]=true" -F "variables[DEPLOY_TARGET]=`curl http://169.254.169.254/latest/meta-data/public-ipv4`" https://gitlab.com/api/v4/projects/2322084/trigger/pipeline
+  shell: curl -X POST -F "token={{ gitlab_racedb_trigger_token }}" -F "ref=main" -F "variables[DEPLOY_ONLY]=true" -F "variables[DEPLOY_TARGET]=`curl http://169.254.169.254/latest/meta-data/public-ipv4`" https://gitlab.com/api/v4/projects/2322084/trigger/pipeline
   when: docker_stack_ls.rc != 0 and isprod == 'true'
   tags:
     - racedb
