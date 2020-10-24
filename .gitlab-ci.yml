@@ -51,7 +51,7 @@ test:
 tag-latest:
   only:
     refs:
-      - master
+      - main
   except:
     variables:
       - $DEPLOY_ONLY == "true"
@@ -62,13 +62,13 @@ tag-latest:
      - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
      - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
      - docker push $CI_REGISTRY_IMAGE:latest
-     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:master-$CI_COMMIT_SHORT_SHA
-     - docker push $CI_REGISTRY_IMAGE:master-$CI_COMMIT_SHORT_SHA
+     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA
+     - docker push $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA
 
 # deploy-to-prod:
 #   only:
 #     refs:
-#       - master
+#       - main
 #   stage: deploy
 #   services:
 #     - docker:dind
