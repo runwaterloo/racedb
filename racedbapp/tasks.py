@@ -214,4 +214,4 @@ def dump_database():
         "mysqldump -h {} -u racedb --password={} --skip-dump-date racedb > /tmp/racedb.sql"
         .format(secrets.DB_HOST, secrets.DB_PASSWORD)
     )
-    os.system("gzip /tmp/racedb.sql")
+    os.system("gzip -f /tmp/racedb.sql")
