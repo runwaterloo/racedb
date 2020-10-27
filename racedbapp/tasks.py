@@ -205,3 +205,13 @@ def send_email_task(subject, content, recipients):
     # )      
     # logger.info("Email sent!")
     logger.warning("Sending email is temporarily disabled")
+
+
+@shared_task
+def dump_database():
+    logger.info("Dumping database to /tmp/racedb.sql.gz")
+    os.system(
+        "mysqldump -h {} -u racedb --password={} --skip-dump-date racedb > /tmp/racedb.sql"
+        .format(secrets.DB_HOST, secrets.DB_PASSWORD)
+    )
+    os.system("gzip /tmp/racedb.sql")
