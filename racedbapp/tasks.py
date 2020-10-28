@@ -248,7 +248,7 @@ def copy_database_to_s3():
         s3_prefix = "database_backup/"
         gzip_file = '/tmp/{}.sql.gz'.format(app)
         s3 = boto3.resource('s3')
-        if hour == 0:
+        if hour == 4:
             if monthday == 1:
                 monthly = month % 4
                 key = '{}{}.monthly{}.sql.gz'.format(s3_prefix, app, monthly)
