@@ -1,9 +1,0 @@
----
-admin_users:
-  - sam
-  - ci-runner
-app: racedb
-pull_repo: "http://gitlab.com/sl70176/racedb.git"
-push_repo: "git@gitlab.com:sl70176/racedb.git"
-#db_host: racedb_db  ## moved to vault
-mysql_s3_backup_hours: 0
