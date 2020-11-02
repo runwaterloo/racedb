@@ -11,7 +11,7 @@ STATICFILES_STORAGE = "django_s3_storage.storage.ManifestStaticS3Storage"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis-racedb-master:6379/1",
+        "LOCATION": "redis://racedb-redis:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient"
         },
@@ -19,8 +19,8 @@ CACHES = {
     }
 }
 
-CELERY_BROKER_URL = "redis://redis-racedb-master:6379"
-CELERY_RESULT_BACKEND = "redis://redis-racedb-master:6379"
+CELERY_BROKER_URL = "redis://racedb-redis:6379"
+CELERY_RESULT_BACKEND = "redis://racedb-redis:6379"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
