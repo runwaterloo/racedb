@@ -37,7 +37,7 @@ test:
   stage: test
   services:
     - docker:dind
-    - mariadb:10.3.23
+    - mariadb:10.3.13
   variables:
     MYSQL_DATABASE: racedb
     MYSQL_USER: racedb
