@@ -5,6 +5,7 @@ from celery import shared_task
 import boto3
 import requests
 import os
+import pytz
 import time
 from datetime import date, datetime, timedelta
 from . import process_photoupdate, view_member, view_shared
@@ -229,7 +230,7 @@ def copy_database_to_s3():
     - 4 weeklies
     - 4 monthlies
     """
-    hour = datetime.now().hour
+    hour = datetime.now(pytz.timezone('America/Toronto')).hour
     monthday = datetime.now().day
     month = datetime.now().month
     weekday = datetime.now().weekday()
@@ -248,7 +249,7 @@ def copy_database_to_s3():
         s3_prefix = "database_backup/"
         gzip_file = '/tmp/{}.sql.gz'.format(app)
         s3 = boto3.resource('s3')
-        if hour == 4:
+        if hour == 0:
             if monthday == 1:
                 monthly = month % 4
                 key = '{}{}.monthly{}.sql.gz'.format(s3_prefix, app, monthly)
