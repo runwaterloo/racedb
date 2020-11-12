@@ -3,6 +3,9 @@
 .git
 .gitignore
 .gitlab-ci.yml
+.heartbeat
+.pre-commit-config.yaml
+.vscode
 db_prod_to_dev.sh
 deploy
 Dockerfile
