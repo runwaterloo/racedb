@@ -12,20 +12,24 @@ Needs a csv file with the following fields:
  - country
 
 """
-from django.core.management.base import BaseCommand, CommandError
-from racedbapp.models import * 
-import os
 import csv
-import sys
 import logging
+import os
+import sys
+
+from django.core.management.base import BaseCommand, CommandError
+
+from racedbapp.models import *
+
 logger = logging.getLogger(__name__)
 
+
 class Command(BaseCommand):
-    help = 'Adds bow athletes from csv file'
+    help = "Adds bow athletes from csv file"
 
     def handle(self, *args, **options):
-        with open('/tmp/endur_athletes.csv') as csvfile:
-            endurathletes = csv.reader(csvfile, delimiter=',')
+        with open("/tmp/endur_athletes.csv") as csvfile:
+            endurathletes = csv.reader(csvfile, delimiter=",")
             for a in endurathletes:
                 year = a[0]
                 division = a[1]
@@ -35,12 +39,14 @@ class Command(BaseCommand):
                 city = a[5]
                 province = a[6]
                 country = a[7]
-                newathlete = Endurathlete(year=year,
-                                          division=division,
-                                          name=name,
-                                          gender=gender,
-                                          age=age,
-                                          city=city,
-                                          province=province,
-                                          country=country)
+                newathlete = Endurathlete(
+                    year=year,
+                    division=division,
+                    name=name,
+                    gender=gender,
+                    age=age,
+                    city=city,
+                    province=province,
+                    country=country,
+                )
                 newathlete.save()

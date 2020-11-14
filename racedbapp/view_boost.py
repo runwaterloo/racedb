@@ -1,10 +1,11 @@
-from django.shortcuts import redirect, render
-from django.db.models import Count
-from django.http import Http404
-from collections import namedtuple, defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict, namedtuple
 from datetime import datetime
 from operator import attrgetter
 from urllib import parse
+
+from django.db.models import Count
+from django.http import Http404
+from django.shortcuts import redirect, render
 
 from .models import Config, Event, Result, Rwmember, Rwmembertag
 

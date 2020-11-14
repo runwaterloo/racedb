@@ -1,11 +1,14 @@
-from collections import namedtuple
-import time
-from datetime import date, datetime, timedelta
-import flickrapi  # https://github.com/sybrenstuvel/flickrapi
-from .models import Event, Phototag, Result, Rwmember
-from racedb import secrets
-from . import view_shared
 import logging
+import time
+from collections import namedtuple
+from datetime import date, datetime, timedelta
+
+import flickrapi  # https://github.com/sybrenstuvel/flickrapi
+
+from racedb import secrets
+
+from . import view_shared
+from .models import Event, Phototag, Result, Rwmember
 
 flickrapi.set_log_level(logging.WARNING)
 logger = logging.getLogger(__name__)

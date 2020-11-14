@@ -1,6 +1,7 @@
-from django.test import TestCase
-from django.test import Client
 import os
+
+from django.test import Client, TestCase
+
 from ..models import Race
 from . import urls_to_test
 
@@ -12,7 +13,11 @@ def setUpModule():
         lines = f.readlines()
     DB_HOST = [x for x in lines if "DB_HOST" in x][0].split("'")[1]
     DB_PASSWORD = [x for x in lines if "DB_PASSWORD" in x][0].split("'")[1]
-    os.system("mysqldump -h {0} -u racedb -p{1} racedb | mysql -h {0} -u racedb -p{1} test_racedb".format(DB_HOST, DB_PASSWORD))
+    os.system(
+        "mysqldump -h {0} -u racedb -p{1} racedb | mysql -h {0} -u racedb -p{1} test_racedb".format(
+            DB_HOST, DB_PASSWORD
+        )
+    )
 
 
 class SimpleTest(TestCase):

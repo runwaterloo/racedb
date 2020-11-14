@@ -1,11 +1,13 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+import urllib
 from collections import namedtuple
 from datetime import timedelta
+
 import simplejson
-import urllib
-from .view_shared import get_membership, get_member_endurrace
+from django.http import HttpResponse
+from django.shortcuts import render
+
 from .models import Endurraceresult, Event, Prime, Result, Teamresult
+from .view_shared import get_member_endurrace, get_membership
 
 namediresult = namedtuple(
     "ni",

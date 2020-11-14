@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """ parseresults.py - Race result parsing utility. """
-from django.core.management.base import BaseCommand
-from racedbapp import tasks, view_shared
 import datetime
-import requests
 import logging
+
+import requests
+from django.core.management.base import BaseCommand
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+from racedbapp import tasks, view_shared
 from racedbapp.models import (
     Category,
     Config,
@@ -415,7 +417,9 @@ def process_endurrace(years, slack_results):
                 results.append(this_result)
         Endurraceresult.objects.filter(year=year).delete()
         Endurraceresult.objects.bulk_create(results)
-        info = "{} ENDURrace combined results processed for {}".format(len(results), year)
+        info = "{} ENDURrace combined results processed for {}".format(
+            len(results), year
+        )
         logger.info(info)
         slack_results.append(info)
         return slack_results
@@ -598,7 +602,10 @@ def process_rwpbs(event):
     ).order_by("event__date")
     for i in future_results:
         i.isrwpb = False
-        if i.event.distance.slug != "roughly-five" and i.event.id not in pb_exclude_events:
+        if (
+            i.event.distance.slug != "roughly-five"
+            and i.event.id not in pb_exclude_events
+        ):
             if i.rwmember_id in rwpbs:
                 if i.guntime < rwpbs[i.rwmember_id]:
                     rwpbs[i.rwmember_id] = i.guntime

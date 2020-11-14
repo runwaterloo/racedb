@@ -1,15 +1,17 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.core.cache import cache
+import urllib
 
 # from django.db.models import Min, Q
 # from django import db
 from collections import namedtuple
-import urllib
-import simplejson
-from . import config, view_boost, view_endurrun, view_recap, view_member, view_shared
 from datetime import datetime, timedelta
 from operator import attrgetter
+
+import simplejson
+from django.core.cache import cache
+from django.http import HttpResponse
+from django.shortcuts import render
+
+from . import config, view_boost, view_endurrun, view_member, view_recap, view_shared
 from .models import Config, Endurraceresult, Event, Relay, Result, Rwmember
 
 named_future_event = namedtuple("nfe", ["event", "race", "distance", "records"])

@@ -1,9 +1,11 @@
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404
-from django.shortcuts import render
 from collections import namedtuple
 from operator import attrgetter
 from urllib import parse
+
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
+from django.shortcuts import render
+
 from . import view_shared
 from .config import ValidRelayCategories
 from .models import Event, Relay, Result, Teamcategory, Teamresult
@@ -55,6 +57,7 @@ def local_get_team_categories(events):
     present_team_categories = set(sorted(present_team_categories))
     team_categories = Teamcategory.objects.filter(name__in=present_team_categories)
     return team_categories
+
 
 def get_events(year, race_slug, distance_slug):
     """ Get the events based on query parameters or return 404 """

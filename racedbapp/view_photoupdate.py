@@ -1,9 +1,11 @@
-from django.http import Http404, HttpResponse
+import logging
 import urllib
 from datetime import datetime
+
+from django.http import Http404, HttpResponse
+
 from .models import Config
 from .tasks import photoupdate
-import logging
 
 logger = logging.getLogger(__name__)
 

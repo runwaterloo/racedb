@@ -1,10 +1,23 @@
 repos:
--   repo: https://github.com/ambv/black
-    rev: stable
-    hooks:
-    - id: black
-      language_version: python3.7
--   repo: https://gitlab.com/pycqa/flake8
+  - repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.4
     hooks:
-    - id: flake8
+      - id: flake8
+  - repo: https://github.com/ambv/black
+    rev: stable
+    hooks:
+      - id: black
+        exclude: ^migrations/
+        language_version: python3.7
+  - repo: https://github.com/pycqa/isort
+    rev: 5.5.2
+    hooks:
+      - id: isort
+        exclude: ^migrations/
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.3.0
+    hooks:
+      - id: check-ast
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace

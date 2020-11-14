@@ -1,11 +1,14 @@
-from django import template
 from datetime import timedelta
+
+from django import template
+
 from ..models import Config, Distance
 
 register = template.Library()
 
-@register.filter(name='get_pace')
-def get_pace(guntime, distance): 
+
+@register.filter(name="get_pace")
+def get_pace(guntime, distance):
     """
     Calculate a pace from guntime and distance.
     If calculation doesn't work out just return ''
@@ -13,38 +16,41 @@ def get_pace(guntime, distance):
     try:
         paceseconds = guntime.total_seconds() / float(distance)
     except:
-        pace = ''
+        pace = ""
     else:
-        rawpace = timedelta(seconds = round(paceseconds,0))
-        pace = str(rawpace).lstrip('0:')
+        rawpace = timedelta(seconds=round(paceseconds, 0))
+        pace = str(rawpace).lstrip("0:")
     return pace
 
-@register.filter(name='get_place')
+
+@register.filter(name="get_place")
 def get_place(raw_place):
     """ Substitute strings when place should be DQ, DNF, DNS """
     if raw_place < 990000:
         place = raw_place
     elif raw_place >= 990000 and raw_place < 991000:
-        place = 'DQ'
+        place = "DQ"
     elif raw_place >= 991000 and raw_place < 992000:
-        place = 'DNF'
+        place = "DNF"
     else:
-        place = 'DNS'
+        place = "DNS"
     return place
 
-@register.filter(name='get_time')
+
+@register.filter(name="get_time")
 def get_time(orig_time):
     """ Truncate time and handle other weirdness """
     try:
         clean_time = orig_time - timedelta(microseconds=orig_time.microseconds)
     except:
-        clean_time = ''
+        clean_time = ""
     else:
         if clean_time.total_seconds() >= 356400:
-            clean_time = ''
+            clean_time = ""
     return clean_time
 
-@register.filter(name='show_decimal')
+
+@register.filter(name="show_decimal")
 def show_decimal(orig_time):
     """ Show one decimal place for time """
     if orig_time.microseconds == 0:
@@ -53,7 +59,8 @@ def show_decimal(orig_time):
         decimal_time = str(orig_time).rstrip("0")
     return decimal_time
 
-@register.filter(name='round_up')
+
+@register.filter(name="round_up")
 def round_up(orig_time):
     """ Round times up to the second """
     if orig_time.microseconds == 0:
@@ -63,13 +70,15 @@ def round_up(orig_time):
         rounded_up_time = orig_time + timedelta(microseconds=round_up_amount)
     return rounded_up_time
 
-@register.filter(name='get_prekey')
+
+@register.filter(name="get_prekey")
 def get_prekey(string):
     """ Get preupdate key """
-    prekey = Config.objects.get(name='prekey').value
+    prekey = Config.objects.get(name="prekey").value
     return prekey
 
-@register.filter(name='get_default_record_distance_slug')
+
+@register.filter(name="get_default_record_distance_slug")
 def get_default_record_distance_slug(string):
     """ Get default record distance slug """
     default_record_distance_slug = "5-km"

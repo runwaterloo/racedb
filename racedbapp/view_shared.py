@@ -1,6 +1,9 @@
+from collections import namedtuple
+
 from django.db.models import Q
 from django.http import Http404
-from collections import namedtuple
+
+from .config import ValidRelayCategories
 from .models import (
     Config,
     Distance,
@@ -9,15 +12,14 @@ from .models import (
     Event,
     Prime,
     Race,
-    Result,
     Relay,
+    Result,
     Rwmember,
     Rwmembercorrection,
     Samerace,
     Teamcategory,
     Teamresult,
 )
-from .config import ValidRelayCategories
 from .view_relay import get_individual_results_dict, get_relay_results, get_team_results
 
 namedresult = namedtuple(
@@ -109,10 +111,16 @@ def getracerecords(race, distance, division_choice=False, individual_only=False)
                 results_to_include = []
                 for r in rawresults:
                     try:
-                        ultimate_athlete = Endurathlete.objects.get(name=r.athlete, division=division_choice, year=r.event.date.year)
+                        ultimate_athlete = Endurathlete.objects.get(
+                            name=r.athlete,
+                            division=division_choice,
+                            year=r.event.date.year,
+                        )
                     except:
                         continue
-                    if ultimate_finished_all_events[r.event.date.year][ultimate_athlete]:
+                    if ultimate_finished_all_events[r.event.date.year][
+                        ultimate_athlete
+                    ]:
                         results_to_include.append(r.id)
                 rawresults = rawresults.filter(id__in=results_to_include)
         else:
@@ -545,10 +553,14 @@ def get_ultimate_finished_all_events(years):
     for year in years:
         ultimate_finished_all_events[year] = {}
         last_event = False
-        result_set = Result.objects.filter(event__race__slug="endurrun", event__date__icontains=year).order_by('-event__date')
+        result_set = Result.objects.filter(
+            event__race__slug="endurrun", event__date__icontains=year
+        ).order_by("-event__date")
         if result_set:
             last_event = result_set.first().event
-            last_event_finishers = result_set.filter(event=last_event, division="Ultimate", place__lt=990000).values_list('athlete', flat=True)
+            last_event_finishers = result_set.filter(
+                event=last_event, division="Ultimate", place__lt=990000
+            ).values_list("athlete", flat=True)
         ultimate_athletes = Endurathlete.objects.filter(year=year)
         for athlete in ultimate_athletes:
             ultimate_finished_all_events[year][athlete] = True

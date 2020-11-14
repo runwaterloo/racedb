@@ -1,17 +1,20 @@
-from django_slack import slack_message
-from django.core.cache import cache
-from django.core.mail import send_mail                                                   
-from celery import shared_task
-import boto3
-import requests
+import logging
 import os
-import pytz
 import time
 from datetime import date, datetime, timedelta
-from . import process_photoupdate, view_member, view_shared
+
+import boto3
+import pytz
+import requests
+from celery import shared_task
+from django.core.cache import cache
+from django.core.mail import send_mail
+from django_slack import slack_message
+
 from racedb import secrets
+
+from . import process_photoupdate, view_member, view_shared
 from .models import Config, Endurathlete, Event, Rwmember
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +76,9 @@ def update_featured_member_id():
         .order_by("?")
     )
     member = False
-    featured_member_id_next = Config.objects.filter(name="featured_member_id_next").first()
+    featured_member_id_next = Config.objects.filter(
+        name="featured_member_id_next"
+    ).first()
     if featured_member_id_next is not None:
         if featured_member_id_next.value.isdigit():
             if int(featured_member_id_next.value) in [x.id for x in members]:
@@ -197,15 +202,15 @@ def clear_cache():
 
 @shared_task
 def send_email_task(subject, content, recipients):
-    # from_addr = Config.objects.get(name="email_from_address").value 
+    # from_addr = Config.objects.get(name="email_from_address").value
     # logger.info("Attempting to send email")
-    # send_mail(                                                                       
-    #     subject,                
+    # send_mail(
+    #     subject,
     #     content,
-    #     from_addr,                                                                       
-    #     recipients,  # should be a list                                                                     
-    #     fail_silently=False,                                                         
-    # )      
+    #     from_addr,
+    #     recipients,  # should be a list
+    #     fail_silently=False,
+    # )
     # logger.info("Email sent!")
     logger.warning("Sending email is temporarily disabled")
 
@@ -214,8 +219,9 @@ def send_email_task(subject, content, recipients):
 def dump_database():
     logger.info("Dumping database to /tmp/racedb.sql.gz")
     os.system(
-        "mysqldump -h {} -u racedb --password={} --skip-dump-date racedb > /tmp/racedb.sql"
-        .format(secrets.DB_HOST, secrets.DB_PASSWORD)
+        "mysqldump -h {} -u racedb --password={} --skip-dump-date racedb > /tmp/racedb.sql".format(
+            secrets.DB_HOST, secrets.DB_PASSWORD
+        )
     )
     os.system("gzip -f /tmp/racedb.sql")
 
@@ -230,7 +236,7 @@ def copy_database_to_s3():
     - 4 weeklies
     - 4 monthlies
     """
-    hour = datetime.now(pytz.timezone('America/Toronto')).hour
+    hour = datetime.now(pytz.timezone("America/Toronto")).hour
     monthday = datetime.now().day
     month = datetime.now().month
     weekday = datetime.now().weekday()
@@ -247,26 +253,26 @@ def copy_database_to_s3():
         app = "racedb"
         bucket = secrets.S3_PRIVATE_BUCKET
         s3_prefix = "database_backup/"
-        gzip_file = '/tmp/{}.sql.gz'.format(app)
-        s3 = boto3.resource('s3')
+        gzip_file = "/tmp/{}.sql.gz".format(app)
+        s3 = boto3.resource("s3")
         if hour == 0:
             if monthday == 1:
                 monthly = month % 4
-                key = '{}{}.monthly{}.sql.gz'.format(s3_prefix, app, monthly)
+                key = "{}{}.monthly{}.sql.gz".format(s3_prefix, app, monthly)
                 s3.meta.client.upload_file(gzip_file, bucket, key)
             elif weekday == 0:
                 weekly = week % 4
-                key = '{}{}.weekly{}.sql.gz'.format(s3_prefix, app, weekly)
+                key = "{}{}.weekly{}.sql.gz".format(s3_prefix, app, weekly)
                 s3.meta.client.upload_file(gzip_file, bucket, key)
             else:
-                key = '{}{}.day{}.sql.gz'.format(s3_prefix, app, weekday)
+                key = "{}{}.day{}.sql.gz".format(s3_prefix, app, weekday)
                 s3.meta.client.upload_file(gzip_file, bucket, key)
         else:
-            key = '{}{}.hour{}.sql.gz'.format(s3_prefix, app, hour)
+            key = "{}{}.hour{}.sql.gz".format(s3_prefix, app, hour)
             s3.meta.client.upload_file(gzip_file, bucket, key)
         # Upload as latest
         time.sleep(2)
-        key = '{}{}.latest.sql.gz'.format(s3_prefix, app)
+        key = "{}{}.latest.sql.gz".format(s3_prefix, app)
         s3.meta.client.upload_file(gzip_file, bucket, key)
     else:
         logger.info("Not production host, skipping copy_database_to_s3")

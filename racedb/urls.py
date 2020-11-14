@@ -13,21 +13,21 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
+from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
-from django.conf import settings
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^', include('racedbapp.urls')),
+    url(r"^admin/", admin.site.urls),
+    url(r"^", include("racedbapp.urls")),
 ]
 
 # workaround for eror:
 # 'djdt' is not a registered namespace
 # introduced in debug_toolbar 1.6
-if 'debug_toolbar' in settings.INSTALLED_APPS:
+if "debug_toolbar" in settings.INSTALLED_APPS:
     import debug_toolbar
 
     urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
+        url(r"^__debug__/", include(debug_toolbar.urls)),
     ]

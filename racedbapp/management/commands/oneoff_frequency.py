@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-from django.core.management.base import BaseCommand
 from collections import defaultdict
+
+from django.core.management.base import BaseCommand
+
 from racedbapp.models import Result
 
 

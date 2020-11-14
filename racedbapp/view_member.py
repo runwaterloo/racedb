@@ -1,10 +1,12 @@
-from django.db.models import Min
-from django.shortcuts import render, redirect
 from collections import namedtuple
-from .models import Bow, Bowathlete, Config, Event, Race, Result, Rwmember, Samerace
-from . import view_boost
 from datetime import date, timedelta
 from operator import attrgetter
+
+from django.db.models import Min
+from django.shortcuts import redirect, render
+
+from . import view_boost
+from .models import Bow, Bowathlete, Config, Event, Race, Result, Rwmember, Samerace
 
 named_result = namedtuple(
     "nr", ["result", "guntime", "gender_place", "category_place", "chiptime"]
@@ -452,8 +454,12 @@ def get_boost(member, request):
     boost = []
     boost_years = get_boost_years(member)
     for boost_year in boost_years:
-        boost_year_standings = view_boost.index(request, boost_year, standings_only=True)
-        member_boost_standings = [x for x in boost_year_standings if x.member_id == member.id]
+        boost_year_standings = view_boost.index(
+            request, boost_year, standings_only=True
+        )
+        member_boost_standings = [
+            x for x in boost_year_standings if x.member_id == member.id
+        ]
         if member_boost_standings:
             boost.append(member_boost_standings[0])
     return boost
@@ -470,4 +476,3 @@ def get_boost_years(member):
             else:
                 boost_years.append(boost_year)
     return sorted(boost_years, reverse=True)
-

@@ -1,7 +1,9 @@
-from django.db import models
-from django.db.models import Avg, Count, Min, Sum, Q
 from collections import namedtuple
 from datetime import datetime
+
+from django.db import models
+from django.db.models import Avg, Count, Min, Q, Sum
+
 from . import utils
 
 #########################################

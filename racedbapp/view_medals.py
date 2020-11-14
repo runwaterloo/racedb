@@ -1,8 +1,10 @@
-from django.shortcuts import render
 from django.http import Http404
+from django.shortcuts import render
+
 # from urllib import parse
 # from collections import defaultdict, namedtuple
 from .models import Event, Result
+
 # from racedbapp.tasks import send_email_task
 # from . import view_shared, utils
 # from django.http import HttpResponse
@@ -11,28 +13,27 @@ from .models import Event, Result
 # from operator import attrgetter
 # import simplejson
 
+
 def index(request, year, race_slug, distance_slug):
     try:
-        event = Event.objects.select_related().get(race__slug=race_slug,
-                                                   distance__slug=distance_slug,
-                                                   date__icontains=year)
+        event = Event.objects.select_related().get(
+            race__slug=race_slug, distance__slug=distance_slug, date__icontains=year
+        )
     except Exception:
-        raise Http404('Matching event not found')
+        raise Http404("Matching event not found")
     else:
         event_results = Result.objects.filter(event=event)
     guntimes_have_microseconds = set(
-        [
-            x.guntime.microseconds for x in event_results if x.guntime.microseconds != 0
-        ]
+        [x.guntime.microseconds for x in event_results if x.guntime.microseconds != 0]
     )
     medals_type = event.medals
     medal_results = get_medal_results(medals_type, event_results)
     context = {
-               'event': event,
-               'guntimes_have_microseconds': guntimes_have_microseconds,
-               'medal_results': medal_results,
-              }
-    return render(request, 'racedbapp/medals.html', context)
+        "event": event,
+        "guntimes_have_microseconds": guntimes_have_microseconds,
+        "medal_results": medal_results,
+    }
+    return render(request, "racedbapp/medals.html", context)
 
 
 def get_medal_results(medals_type, event_results):

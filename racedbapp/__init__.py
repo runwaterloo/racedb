@@ -1,1 +1,1 @@
-default_app_config = 'racedbapp.apps.RacedbappConfig'
+default_app_config = "racedbapp.apps.RacedbappConfig"

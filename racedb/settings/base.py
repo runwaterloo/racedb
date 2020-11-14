@@ -6,7 +6,8 @@ https://simpleisbetterthancomplex.com/tips/2017/07/03/django-tip-20-working-with
 """
 
 import os
-from racedb import secrets, celery_beats
+
+from racedb import celery_beats, secrets
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = secrets.SECRET_KEY

@@ -4,7 +4,7 @@ test_urls = (
     "/?asofdate=2019-01-01",  # standard last race
     "/?asofdate=2019-03-24",  # relay last race
     "/?asofdate=2019-04-14",  # endurrace combined last race
-    "/?asofdate=2019-08-19",  # endurrun last race 
+    "/?asofdate=2019-08-19",  # endurrun last race
     # /boost
     "/boost/2018/",
     "/boost/2018/?member=vicki-zandbergen",
