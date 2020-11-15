@@ -4,13 +4,13 @@ repos:
     hooks:
       - id: flake8
   - repo: https://github.com/ambv/black
-    rev: stable
+    rev: 20.8b1
     hooks:
       - id: black
         exclude: ^migrations/
         language_version: python3.7
   - repo: https://github.com/pycqa/isort
-    rev: 5.5.2
+    rev: 5.6.4
     hooks:
       - id: isort
         exclude: ^migrations/
