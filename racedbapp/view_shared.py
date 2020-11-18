@@ -99,6 +99,7 @@ def getracerecords(race, distance, division_choice=False, individual_only=False)
                 gender="F", category__ismasters=True, guntime=fmrtime
             ).order_by("year")
     else:
+        distance = Distance.objects.get(id=distance.id)
         events = Event.objects.filter(race__in=races, distance=distance)
         if division_choice and division_choice != "All" and race.slug == "endurrun":
             rawresults = Result.objects.filter(
