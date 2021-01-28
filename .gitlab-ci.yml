@@ -5,6 +5,8 @@
 # AWS_SECRET_ACCESS_KEY (AWS secret access key for S3)
 # RACEDB_DB_BACKUP      (location of backup s3://...)
 
+#  inspired by https://www.auroria.io/docker-multi-architecture-builds-with-gitlab-runner/
+
 stages:
   - buildx
   - docker
