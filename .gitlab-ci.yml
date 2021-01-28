@@ -33,7 +33,7 @@ buildx:
     - docker build --platform=local -o . ./docker-buildx
 
 containerize:
-  image: docker
+  image: docker:latest
   services:
     - name: docker:dind
       command: ["--experimental"]
@@ -72,11 +72,17 @@ tag-latest:
     refs:
       - main
   stage: deploy
+  before_script:
+    - mkdir -p ~/.docker/cli-plugins
+    - mv buildx ~/.docker/cli-plugins/docker-buildx
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
   services:
-    - docker:dind
+    - name: docker:dind
+      command: ["--experimental"]
   script:
     - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
     - docker push $CI_REGISTRY_IMAGE:latest
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA
     - docker push $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA
+  retry: 2
