@@ -44,9 +44,8 @@ containerize:
     - mv buildx ~/.docker/cli-plugins/docker-buildx
     - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
   script:
-    - docker pull $CI_REGISTRY_IMAGE:latest || true
     - docker buildx create --use
-    - docker buildx build --platform linux/amd64,linux/arm64 --cache-from $CI_REGISTRY_IMAGE:latest --push --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker buildx build --platform linux/amd64,linux/arm64 --push --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
   retry: 2
 
 test:
@@ -66,19 +65,23 @@ test:
     - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.min
   retry: 2
 
-tag-latest:
+tag-main-latest:
   image: docker:latest
+  services:
+    - name: docker:dind
+      command: ["--experimental"]
+  before_script:
+    - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
+    - mkdir -p ~/.docker/cli-plugins
+    - mv buildx ~/.docker/cli-plugins/docker-buildx
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA || true
+    - docker buildx create --use
+    - docker buildx build --platform linux/amd64,linux/arm64 --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --push --tag $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA .
+    - docker buildx build --platform linux/amd64,linux/arm64 --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --push --tag $CI_REGISTRY_IMAGE:latest .
   only:
     refs:
       - main
   stage: tag
-  services:
-    - docker:dind
-  before_script:
-    - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
-  script:
-    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
-    - docker push $CI_REGISTRY_IMAGE:latest
-    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA
-    - docker push $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA
+  retry: 2
