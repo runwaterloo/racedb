@@ -58,8 +58,8 @@ WSGI_APPLICATION = "racedb.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "racedb",
-        "USER": "racedb",
+        "NAME": "secrets.DB_NAME",
+        "USER": "secrets.DB_USER",
         "PASSWORD": secrets.DB_PASSWORD,
         "HOST": secrets.DB_HOST,
         "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
