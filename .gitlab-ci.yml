@@ -30,6 +30,7 @@ build-test:
     - /bin/ash deploy/minimal/deploy.sh
     - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.min
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  retry: 2
 
 tag-latest-main:
   only:
@@ -39,6 +40,7 @@ tag-latest-main:
   services:
     - docker:dind
   script:
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
     - docker push $CI_REGISTRY_IMAGE:latest
     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA
