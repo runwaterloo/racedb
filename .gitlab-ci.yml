@@ -5,52 +5,16 @@
 # AWS_SECRET_ACCESS_KEY (AWS secret access key for S3)
 # RACEDB_DB_BACKUP      (location of backup s3://...)
 
-#  inspired by https://www.auroria.io/docker-multi-architecture-builds-with-gitlab-runner/
+image: docker:latest
 
 stages:
-  - buildx
-  - docker
-  - test
-  - tag
+  - build-test-push
+  - tag-latest-main
 
 before_script:
   - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
 
-buildx:
-  image: docker:git
-  stage: buildx
-  variables:
-    GIT_STRATEGY: none
-  artifacts:
-    paths:
-      - buildx
-    expire_in: 1 hour
-  services:
-    - docker:dind
-  script:
-    - export DOCKER_BUILDKIT=1
-    - git clone git://github.com/docker/buildx ./docker-buildx
-    - docker build --platform=local -o . ./docker-buildx
-
-containerize:
-  image: docker:latest
-  services:
-    - name: docker:dind
-      command: ["--experimental"]
-  stage: docker
-  before_script:
-    - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
-    - mkdir -p ~/.docker/cli-plugins
-    - mv buildx ~/.docker/cli-plugins/docker-buildx
-    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-  script:
-    - docker buildx create --use
-    - docker buildx build --platform linux/amd64,linux/arm64 --push --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
-  retry: 2
-
-test:
-  image: docker:latest
-  stage: test
+build-test:
   services:
     - docker:dind
     - mariadb:10.3.23
@@ -59,29 +23,23 @@ test:
     MYSQL_USER: racedb
     MYSQL_PASSWORD: CHANGEME
     MYSQL_ROOT_PASSWORD: CHANGEME
+  stage: build-test-push
   script:
-    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
     - /bin/ash deploy/minimal/deploy.sh
     - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.min
-  retry: 2
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
-tag-main-latest:
-  image: docker:latest
-  services:
-    - name: docker:dind
-      command: ["--experimental"]
-  before_script:
-    - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
-    - mkdir -p ~/.docker/cli-plugins
-    - mv buildx ~/.docker/cli-plugins/docker-buildx
-    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-  script:
-    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA || true
-    - docker buildx create --use
-    - docker buildx build --platform linux/amd64,linux/arm64 --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --push --tag $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA .
-    - docker buildx build --platform linux/amd64,linux/arm64 --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --push --tag $CI_REGISTRY_IMAGE:latest .
+tag-latest-main:
   only:
     refs:
       - main
-  stage: tag
-  retry: 2
+  stage: tag-latest-main
+  services:
+    - docker:dind
+  script:
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:latest
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE:main-$CI_COMMIT_SHORT_SHA
