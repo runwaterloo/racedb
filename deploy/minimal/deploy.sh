@@ -8,6 +8,8 @@
 # AWS_SECRET_ACCESS_KEY
 # RACEDB_DB_BACKUP
 
+export WEBHOST=testing
+
 echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 apk add docker-compose mysql-client py-pip
 /usr/bin/pip3 install awscli
