@@ -18,6 +18,8 @@ from .models import Config, Endurathlete, Event, Rwmember
 
 logger = logging.getLogger(__name__)
 
+WEBHOST = os.environ["WEBHOST"]
+
 
 @shared_task
 def heartbeat():
@@ -38,15 +40,7 @@ def webhook():
 
 @shared_task
 def photoupdate(request_date=None, force=False):
-    PROD_IPADDR = secrets.PROD_IPADDR
-    my_ip = None
-    try:
-        my_ip = requests.get(
-            "http://169.254.169.254/latest/meta-data/public-ipv4", timeout=5
-        ).text.strip()
-    except Exception:
-        pass
-    if my_ip == PROD_IPADDR or force:
+    if WEBHOST == "results.runwaterloo.com":
         process_photoupdate.index(request_date)
     else:
         logger.info("Not production host, skipping photoupdate")
@@ -54,7 +48,7 @@ def photoupdate(request_date=None, force=False):
 
 @shared_task
 def update_featured_member_id():
-    """ Update featured_member_id to someone new """
+    """Update featured_member_id to someone new"""
     db_member = Config.objects.filter(name="featured_member_id")
     if db_member.count() == 0:
         Config(name="featured_member_id", value=0).save()
@@ -121,15 +115,7 @@ def update_featured_member_id():
 
 @shared_task
 def slack_featured_member():
-    PROD_IPADDR = secrets.PROD_IPADDR
-    my_ip = None
-    try:
-        my_ip = requests.get(
-            "http://169.254.169.254/latest/meta-data/public-ipv4", timeout=5
-        ).text.strip()
-    except Exception:
-        pass
-    if my_ip == PROD_IPADDR:
+    if WEBHOST == "results.runwaterloo.com":
         featured_member_id = int(Config.objects.get(name="featured_member_id").value)
         featured_member = Rwmember.objects.get(id=featured_member_id)
         logger.info(
@@ -144,15 +130,7 @@ def slack_featured_member():
 
 @shared_task
 def slack_results_update(results):
-    PROD_IPADDR = secrets.PROD_IPADDR
-    my_ip = None
-    try:
-        my_ip = requests.get(
-            "http://169.254.169.254/latest/meta-data/public-ipv4", timeout=5
-        ).text.strip()
-    except Exception:
-        pass
-    if my_ip == PROD_IPADDR:
+    if WEBHOST == "results.runwaterloo.com":
         logger.info("Sending results update to Slack")
         slack_message("racedbapp/results_update.slack", {"results": results})
     else:
@@ -161,15 +139,7 @@ def slack_results_update(results):
 
 @shared_task
 def slack_missing_urls():
-    PROD_IPADDR = secrets.PROD_IPADDR
-    my_ip = None
-    try:
-        my_ip = requests.get(
-            "http://169.254.169.254/latest/meta-data/public-ipv4", timeout=5
-        ).text.strip()
-    except Exception:
-        pass
-    if my_ip == PROD_IPADDR:
+    if WEBHOST == "results.runwaterloo.com":
         logger.info("Checking for events with no URL")
         missing_urls = []
         days = int(Config.objects.get(name="missing_url_alert_days").value)
@@ -217,13 +187,16 @@ def send_email_task(subject, content, recipients):
 
 @shared_task
 def dump_database():
-    logger.info("Dumping database to /tmp/racedb.sql.gz")
-    os.system(
-        "mysqldump -h {} -u racedb --password={} --skip-dump-date racedb > /tmp/racedb.sql".format(
-            secrets.DB_HOST, secrets.DB_PASSWORD
+    if WEBHOST == "results.runwaterloo.com":
+        logger.info("Dumping database to /tmp/racedb.sql.gz")
+        os.system(
+            "mysqldump -h {} -u racedb --password={} --skip-dump-date racedb > /tmp/racedb.sql".format(
+                secrets.DB_HOST, secrets.DB_PASSWORD
+            )
         )
-    )
-    os.system("gzip -f /tmp/racedb.sql")
+        os.system("gzip -f /tmp/racedb.sql")
+    else:
+        logger.info("Not production host, skipping database dump")
 
 
 @shared_task
@@ -241,15 +214,7 @@ def copy_database_to_s3():
     month = datetime.now().month
     weekday = datetime.now().weekday()
     week = datetime.now().isocalendar()[1]
-    PROD_IPADDR = secrets.PROD_IPADDR
-    my_ip = None
-    try:
-        my_ip = requests.get(
-            "http://169.254.169.254/latest/meta-data/public-ipv4", timeout=5
-        ).text.strip()
-    except Exception:
-        pass
-    if my_ip == PROD_IPADDR:
+    if WEBHOST == "results.runwaterloo.com":
         app = "racedb"
         bucket = secrets.S3_PRIVATE_BUCKET
         s3_prefix = "database_backup/"
