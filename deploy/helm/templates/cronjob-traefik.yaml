@@ -1,0 +1,38 @@
+{{- if eq .Values.racedb.settings "prod" -}}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: "{{ include "racedb.fullname" . }}-cronjob-traefik"
+  labels:
+    {{- include "racedb.labels" . | nindent 4 }}
+    app.kubernetes.io/task: cronjob-traefik
+spec:
+  schedule: "* 5 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: cronjob-traefik
+            image: amazon/aws-cli
+            imagePullPolicy: IfNotPresent
+            env:
+              - name: BACKUP_PATH
+                valueFrom:
+                  secretKeyRef:
+                    name: racedb-aws
+                    key: traefik_backup_path
+            args:
+            - s3
+            - cp
+            - /acme.json
+            - "$(BACKUP_PATH)"
+            volumeMounts:
+              - mountPath: /acme.json
+                name: traefik
+          restartPolicy: OnFailure
+          volumes:
+          - name: traefik
+            hostPath:
+              path: /pv/traefik/acme.json
+{{- end }}

@@ -1,0 +1,8 @@
+fullnameOverride: racedbdev
+racedb:
+  settings: dev
+  secretsVolumePath: /srv/racedb_secrets_dev
+ingress:
+  catchall:
+    enabled: false
+  host: racedb.runwaterloo.com

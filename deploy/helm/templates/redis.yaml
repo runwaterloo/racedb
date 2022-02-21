@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "racedb.fullname" . }}-redis"
+  labels:
+    {{- include "racedb.labels" . | nindent 4 }}
+    app.kubernetes.io/task: redis
+spec:
+  selector:
+    matchLabels:
+      {{- include "racedb.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/task: redis
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        {{- include "racedb.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/task: redis
+    spec:
+      containers:
+      - name: "{{ include "racedb.fullname" . }}-redis"
+        image: "{{ .Values.redis.image.name }}:{{ .Values.redis.image.tag }}"
+        ports:
+        - containerPort: 6379
+        imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ include "racedb.fullname" . }}-redis"
+  labels:
+    {{- include "racedb.labels" . | nindent 4 }}
+    app.kubernetes.io/task: redis
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+  selector:
+    {{- include "racedb.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/task: redis

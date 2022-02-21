@@ -1,0 +1,8 @@
+[Unit]
+Description=Node Exporter
+
+[Service]
+ExecStart=/usr/local/bin/node_exporter --collector.textfile.directory /var/lib/node_exporter/textfile_collector --collector.netclass.ignored-devices=lo|cni0|flannel.*|veth.* --collector.netdev.device-blacklist=lo|cni0|flannel.*|veth.* --collector.filesystem.ignored-fs-types=tmpfs|rpc_pipefs|nsfs|overlay|squashfs
+
+[Install]
+WantedBy=multi-user.target

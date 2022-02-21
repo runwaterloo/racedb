@@ -1,0 +1,6 @@
+racedb:
+  settings: prod
+ingress:
+  catchall:
+    enabled: true
+  host: results.runwaterloo.com

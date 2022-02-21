@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ include "racedb.fullname" . }}"
+  labels:
+    {{- include "racedb.labels" . | nindent 4 }}
+    app.kubernetes.io/task: web
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "racedb.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/task: web

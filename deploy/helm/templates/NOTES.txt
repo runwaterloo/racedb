@@ -1,0 +1,1 @@
+Deployed racedb at the following URL: https://{{ .Values.ingress.host }}/

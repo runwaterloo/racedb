@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ include "racedb.fullname" . }}-web"
+  labels:
+    {{- include "racedb.labels" . | nindent 4 }}
+    app.kubernetes.io/task: web
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "racedb.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/task: web
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "racedb.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/task: web
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "racedb.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if eq .Values.racedb.settings "prod" }}
+      initContainers:
+        - name: "{{ .Chart.Name }}-collectstatic"
+          command: [
+            "/bin/sh",
+            "-c",
+            "./manage.py collectstatic --noinput --settings=racedb.settings.{{ .Values.racedb.settings }}",
+            ]
+          env:
+            - name: CHART
+              value: {{ .Chart.Version }}
+            - name: BUILD
+              value: {{ .Values.image.tag }}
+            - name: WEBHOST
+              value: {{ .Values.ingress.host }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          volumeMounts:
+            - mountPath: /srv/racedb/racedb/secrets.py
+              name: racedb-secrets
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: [
+            "/bin/sh",
+            "-c",
+            {{- if eq .Values.racedb.settings "prod" }}
+            "gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.{{ .Values.racedb.settings }} racedb.wsgi -b 0.0.0.0:8000",
+            {{- else }}
+            "./manage.py runserver --settings=racedb.settings.{{ .Values.racedb.settings }} 0.0.0.0:8000",
+            {{- end }}
+            ]
+          env:
+            - name: CHART
+              value: {{ .Chart.Version }}
+            - name: BUILD
+              value: {{ .Values.image.tag }}
+            - name: WEBHOST
+              value: {{ .Values.ingress.host }}
+          volumeMounts:
+            {{- if eq .Values.racedb.settings "dev" }}
+            - mountPath: /srv/racedb
+              name: racedb
+            {{- end }}
+            - mountPath: /srv/racedb/racedb/secrets.py
+              name: racedb-secrets
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          {{- if eq .Values.racedb.settings "prod" }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        {{- if eq .Values.racedb.settings "dev" }}
+        - name: racedb
+          hostPath:
+            path: {{ .Values.racedb.devVolumePath }}
+        {{- end }}
+        - name: racedb-secrets
+          hostPath:
+            path: "{{ .Values.racedb.secretsVolumePath }}/secrets.py"
+      {{- with .Values.nodeSelector }}
+      strategy:
+        rollingUpdate:
+          maxUnavailable: 0
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

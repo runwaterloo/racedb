@@ -1,0 +1,50 @@
+{{- if .Values.ingress.enabled -}}
+{{- if .Values.ingress.catchall.enabled -}}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: racedb-catchall
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: {{ .Values.ingress.catchall.hostmatch}}
+      priority: 1
+      kind: Rule
+      services:
+        - name: "{{ include "racedb.fullname" . }}"
+          port: {{ .Values.service.port}}
+---
+{{- end }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: "{{ include "racedb.fullname" . }}-insecure"
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: "Host(`{{ .Values.ingress.host}}`)"
+      kind: Rule
+      services:
+        - name: "{{ include "racedb.fullname" . }}"
+          port: {{ .Values.service.port}}
+      middlewares:
+        - name: "{{ include "racedb.fullname" . }}-redirect"
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: "{{ include "racedb.fullname" . }}-secure"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: "Host(`{{ .Values.ingress.host}}`)"
+      kind: Rule
+      services:
+        - name: "{{ include "racedb.fullname" . }}"
+          port: {{ .Values.service.port}}
+  tls:
+    certResolver: le
+{{- end }}
