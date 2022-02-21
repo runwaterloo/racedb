@@ -58,6 +58,7 @@ helm upgrade --install racedb . --values values-rrw.yaml --set image.tag="${LATE
 # dev environment
 apt-get -y install python3-pip
 ./restore-secrets-racedb.sh
+rm -rf .kube
 helm upgrade --install racedbdev . --values values-racedb.yaml --set image.tag="${LATEST_TAG:1}"
 
 # setup autorecovery
