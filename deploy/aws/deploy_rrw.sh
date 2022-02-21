@@ -23,7 +23,7 @@ systemctl enable node_exporter
 systemctl start node_exporter
 
 # install helm
-/srv/racedb/deploy/helm/install.sh
+/srv/racedb/deploy/helm/install_helm.sh
 
 # install K3S
 cd /srv/racedb/deploy/k3s
