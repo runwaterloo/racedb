@@ -58,5 +58,5 @@ deploy:
     - echo "$KUBECONFIG" > /kubeconfig
     - export KUBECONFIG=/kubeconfig
     - cd deploy/helm
-    - helm upgrade racedb . --values values-rrw.yaml --set image.tag="$CI_COMMIT_TAG" --wait
-    - helm upgrade racedbdev . --values values-racedb.yaml --set image.tag="$CI_COMMIT_TAG" --wait
+    - helm upgrade racedb . --values values-rrw.yaml --set image.tag="${CI_COMMIT_TAG:1}" --wait
+    - helm upgrade racedbdev . --values values-racedb.yaml --set image.tag="${CI_COMMIT_TAG:1}" --wait
