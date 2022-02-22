@@ -60,11 +60,10 @@ apt-get -y install python3-pip
 ./restore-secrets-racedb.sh
 rm -rf .kube
 helm upgrade --install racedbdev . --values values-racedb.yaml --set image.tag="${LATEST_TAG:1}"
-cd ..
-runuser -l ubuntu -c 'git config --global user.name "${GIT_USER}"'
-runuser -l ubuntu -c 'git config --global user.email "${GIT_EMAIL}"'
+runuser -l ubuntu -c "git config --global user.name \"${GIT_USER}\""
+runuser -l ubuntu -c "git config --global user.email \"${GIT_EMAIL}\""
 runuser -l ubuntu -c 'python3 -m pip install pre-commit'
-runuser -l ubuntu -c '/home/ubuntu/.local/bin/pre-commit install'
+runuser -l ubuntu -c 'cd /srv/racedb; /home/ubuntu/.local/bin/pre-commit install'
 
 # setup autorecovery
 REGION="us-east-1"
