@@ -7,6 +7,8 @@
 export BUCKET=<private_bucket>
 export PROJECT_ID=<gitlab_project_id>
 export PERSONAL_ACCESS_TOKEN=<gitlab_personal_access_token>
+export GIT_USER=<git_user>
+export GIT_EMAIL=<git_password>
 apt-get update
 apt-get -y install awscli git jq
 aws s3 cp --recursive s3://${BUCKET}/ubuntu-ssh/ /home/ubuntu/.ssh/
