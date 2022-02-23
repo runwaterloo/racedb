@@ -4,9 +4,8 @@
 .gitignore
 .gitlab-ci.yml
 .heartbeat
+.isort.cfg
 .pre-commit-config.yaml
 .vscode
-db_prod_to_dev.sh
 deploy
 Dockerfile
-renovate.json
