@@ -1,6 +1,7 @@
 #!/bin/bash
 
-curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-chmod 700 get_helm.sh
-./get_helm.sh
-rm -f get_helm.sh
+export HELM_VERSION=`cat ./HELM_VERSION`
+curl -fsSL -o helm.tar.gz https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz
+tar -zxvf helm.tar.gz -C /usr/local/bin/
+chmod +x /usr/local/bin/helm
+rm -f helm.tar.gz
