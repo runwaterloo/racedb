@@ -5,4 +5,4 @@ curl -fsSL -o helm.tar.gz https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.t
 tar -zxvf helm.tar.gz
 mv linux-amd64/helm /usr/local/bin
 chmod +x /usr/local/bin/helm
-rm -f helm.tar.gz linux-amd64
+rm -rf helm.tar.gz linux-amd64
