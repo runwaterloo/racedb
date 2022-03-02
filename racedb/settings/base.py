@@ -101,3 +101,5 @@ SLACK_CHANNEL = "#notifications"
 SLACK_BACKEND = "django_slack.backends.CeleryBackend"
 SLACK_USERNAME = "giskard"
 SLACK_ICON_EMOJI = ":robot_face:"
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

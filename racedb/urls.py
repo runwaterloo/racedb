@@ -14,12 +14,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.conf import settings
-from django.conf.urls import include, url
+from django.conf.urls import include
 from django.contrib import admin
+from django.urls import re_path
 
 urlpatterns = [
-    url(r"^admin/", admin.site.urls),
-    url(r"^", include("racedbapp.urls")),
+    re_path(r"^admin/", admin.site.urls),
+    re_path(r"^", include("racedbapp.urls")),
 ]
 
 # workaround for eror:
@@ -29,5 +30,5 @@ if "debug_toolbar" in settings.INSTALLED_APPS:
     import debug_toolbar
 
     urlpatterns += [
-        url(r"^__debug__/", include(debug_toolbar.urls)),
+        re_path(r"^__debug__/", include(debug_toolbar.urls)),
     ]
