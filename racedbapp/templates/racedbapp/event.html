@@ -4,22 +4,22 @@
 {% load racedbapp_extras %}
 
 {% block title %}
-  {{ event.date.year }}
-  {{ event.race.shortname }}
-  {{ event.distance.name }}
-  |
+{{ event.date.year }}
+{{ event.race.shortname }}
+{{ event.distance.name }}
+|
 {% endblock title %}
 
 {% block ogmeta %}
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description" content="Race results for the {{ event.date.year }} {{ event.race.name }}." />
-  <meta property="og:image" content="{% static "race_logos/"|add:event.race.slug|add:".png" %}" />
-  <meta property="og:image:width" content="200" />
-  <meta property="og:image:height" content="200" />
- <!-- https://sunnywalker.github.io/jQuery.FilterTable/ -->
-  <script src="{% static "jquery.filtertable.min.js" %}"></script>
-  <!-- highlight found cell 
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Run Waterloo Results" />
+<meta property="og:description" content="Race results for the {{ event.date.year }} {{ event.race.name }}." />
+<meta property="og:image" content="{% static " race_logos/"|add:event.race.slug|add:".png" %}" />
+<meta property="og:image:width" content="200" />
+<meta property="og:image:height" content="200" />
+<!-- https://sunnywalker.github.io/jQuery.FilterTable/ -->
+<script src="{% static " jquery.filtertable.min.js" %}"></script>
+<!-- highlight found cell
   <style>
   .filter-table .quick { margin-left: 0.5em; font-size: 0.8em; text-decoration: none; }
   .fitler-table .quick:hover { text-decoration: underline; }
@@ -30,277 +30,284 @@
 
 {% block content %}
 
-  <div class="row">
-    <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
-      <h3>
-        {% if page == 'Wheelchair' %}
-        Wheelchair Results
-        {% elif page == 'Hill Sprint' %}
-        Hill Sprint Results
-        {% else %}
-        Results:
-        {% endif %}
-        <small>
-          {{ event.date.year }}
-          {{ event.race.shortname }}
-          {{ extra_name }}
-          {{ event.distance.name }}
-        </small>
-      </h3>
-      <p>
-        {{ event.date }} - {{ event.city }}
-        {% if event.flickrsetid %}
-          &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><i class="fas fa-camera"></i></a>
-        {% endif %}
-        {% if event.youtube_id %}
-          &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}" target="_blank"><i class="fas fa-video"></i></span></a>
-        {% endif %}
-      </p>
-      <ul class="pagination pagination-sm">
-        {% for p in pages %}
-            <li class="{{ p.active }}"><a href="{{ p.href }}">{{ p.label }}</a></li>
-        {% endfor %}
-      </ul>
+<div class="row">
+  <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+    <h3>
+      {% if page == 'Wheelchair' %}
+      Wheelchair Results
+      {% elif page == 'Hill Sprint' %}
+      Hill Sprint Results
+      {% else %}
+      Results:
+      {% endif %}
+      <small>
+        {{ event.date.year }}
+        {{ event.race.shortname }}
+        {{ extra_name }}
+        {{ event.distance.name }}
+      </small>
+    </h3>
+    <p>
+      {{ event.date }} - {{ event.city }}
+      {% if event.flickrsetid %}
+      &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><i
+          class="fas fa-camera"></i></a>
+      {% endif %}
+      {% if event.youtube_id %}
+      &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}" target="_blank"><i
+          class="fas fa-video"></i></span></a>
+      {% endif %}
+    </p>
+    <ul class="pagination pagination-sm">
+      {% for p in pages %}
+      <li class="{{ p.active }}"><a href="{{ p.href }}">{{ p.label }}</a></li>
+      {% endfor %}
+    </ul>
 
-  <!-- Filter table -->
+    <!-- Filter table -->
     {% if page != 'Wheelchair' %}
-      <table class="table table-bordered table-condensed">
-        <thead>
-          <tr class="info">
-            <th class="text-center">Year</th>
-            <th class="text-center">Distance</th>
-            <th class="text-center">Age/Gender Filter</th>
-            {% if filters.division_filter %}
-              <th class="text-center">Division</th>
-            {% endif %}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="text-center">
-              <select onchange="location = this.options[this.selectedIndex].value;">
+    <table class="table table-bordered table-condensed">
+      <thead>
+        <tr class="info">
+          <th class="text-center">Year</th>
+          <th class="text-center">Distance</th>
+          <th class="text-center">Age/Gender Filter</th>
+          {% if filters.division_filter %}
+          <th class="text-center">Division</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-center">
+            <select onchange="location = this.options[this.selectedIndex].value;">
               <option>{{ filters.year_filter.current }}</option>
               {% for yc in filters.year_filter.choices %}
-                <option value="{{ yc.url }}">{{ yc.name }}</option>
+              <option value="{{ yc.url }}">{{ yc.name }}</option>
               {% endfor %}
-              </select>
-            </td>
-            <td class="text-center">
-              <select onchange="location = this.options[this.selectedIndex].value;">
+            </select>
+          </td>
+          <td class="text-center">
+            <select onchange="location = this.options[this.selectedIndex].value;">
               <option>{{ filters.distance_filter.current }}</option>
               {% for dc in filters.distance_filter.choices %}
-                <option value="{{ dc.url }}">{{ dc.name }}</option>
+              <option value="{{ dc.url }}">{{ dc.name }}</option>
               {% endfor %}
-              </select>
-            </td>
-            <td class="text-center">
-              <select onchange="location = this.options[this.selectedIndex].value;">
+            </select>
+          </td>
+          <td class="text-center">
+            <select onchange="location = this.options[this.selectedIndex].value;">
               <option>{{ filters.category_filter.current }}</option>
               {% for cc in filters.category_filter.choices %}
-                <option value="{{ cc.url }}">{{ cc.name }}</option>
+              <option value="{{ cc.url }}">{{ cc.name }}</option>
               {% endfor %}
-              </select>
-            </td>
-            {% if filters.division_filter %}
-              <td class="text-center">
-                <select onchange="location = this.options[this.selectedIndex].value;">
-                <option>{{ filters.division_filter.current }}</option>
-                {% for dc in filters.division_filter.choices %}
-                  <option value="{{ dc.url }}">{{ dc.name }}</option>
-                {% endfor %}
-                </select>
-              </td>
-            {% endif %}
-          </tr>
-        </tbody>
-      </table>
+            </select>
+          </td>
+          {% if filters.division_filter %}
+          <td class="text-center">
+            <select onchange="location = this.options[this.selectedIndex].value;">
+              <option>{{ filters.division_filter.current }}</option>
+              {% for dc in filters.division_filter.choices %}
+              <option value="{{ dc.url }}">{{ dc.name }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          {% endif %}
+        </tr>
+      </tbody>
+    </table>
     {% endif %}
     <!-- End Filter Table -->
 
-    </div>
-    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
-      <div style="padding-top: 20px; padding-bottom: 20px">
-        <img class="img-rounded pull-right" src="{% static "race_logos/"|add:event.race.slug|add:".png" %}" height="170">
-      </div>
+  </div>
+  <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+    <div style="padding-top: 20px; padding-bottom: 20px">
+      <img class="img-rounded pull-right" src="{% static " race_logos/"|add:event.race.slug|add:".png" %}" height="170">
     </div>
   </div>
+</div>
 
-  <div class="row">
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <!-- search / modal row -->
-      <div class="row">
-        <!-- search input -->
-        <div class="col-xs-3">
-          <div class="form-group">
-            <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search these results..." size="12">
-          </div>
+<div class="row">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+    <!-- search / modal row -->
+    <div class="row">
+      <!-- search input -->
+      <div class="col-xs-3">
+        <div class="form-group">
+          <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search these results..."
+            size="12">
         </div>
-        <!-- end search input -->
-        <!-- contact and ad buttons -->
-        <div class="col-xs-6">
-          {% if event.medals != "none" %}
-            <button type="button" class="btn-secondary">
-              <a href="/medals/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/" style="color:inherit;text-decoration: none">Medal Winners</a>
-            </button>
-          {% endif %}
-          <!-- <button type="button" class="btn-secondary" data-toggle="modal" data-target="#contactModal">Submit a Correction</button> -->
-          {% if ad %}
-            <button type="button" class="btn-secondary">
-              <a href="{{ ad.url }}" style="color:inherit;text-decoration: none" target="_blank">{{ ad.text }}</a>
-            </button>
-          {% endif %}
-        </div>
-        <!-- end contact and ad buttons -->
       </div>
-      <!-- end search / modal row -->
+      <!-- end search input -->
+      <!-- contact and ad buttons -->
+      <div class="col-xs-6">
+        {% if event.medals != "none" %}
+        <button type="button" class="btn-secondary">
+          <a href="/medals/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/"
+            style="color:inherit;text-decoration: none">Medal Winners</a>
+        </button>
+        {% endif %}
+        <!-- <button type="button" class="btn-secondary" data-toggle="modal" data-target="#contactModal">Submit a Correction</button> -->
+        {% if ad %}
+        <button type="button" class="btn-secondary">
+          <a href="{{ ad.url }}" style="color:inherit;text-decoration: none" target="_blank">{{ ad.text }}</a>
+        </button>
+        {% endif %}
+      </div>
+      <!-- end contact and ad buttons -->
+    </div>
+    <!-- end search / modal row -->
 
     {% include "racedbapp/modal_contact.html" %}
 
-      <table class="table table-bordered table-condensed table-striped table-hover">
-        <thead>
-          <tr class="info">
-            <th class="text-center" scope="col">#</th>
-            <th class="text-center" scope="col">Bib</th>
-            <th class="text-left" scope="col">Name</th>
-            {% if phototags %}
-              <th class="text-center" scope="col">
-                <i class="fas fa-camera"></i>
-              </th>
+    <table class="table table-bordered table-condensed table-striped table-hover">
+      <thead>
+        <tr class="info">
+          <th class="text-center" scope="col">#</th>
+          <th class="text-center" scope="col">Bib</th>
+          <th class="text-left" scope="col">Name</th>
+          {% if phototags %}
+          <th class="text-center" scope="col">
+            <i class="fas fa-camera"></i>
+          </th>
+          {% endif %}
+          {% if event.youtube_id and event.youtube_offset_seconds is not None %}
+          <th class="text-center" scope="col">
+            <i class="fas fa-video"></i>
+          </th>
+          {% endif %}
+          <th class="text-center" scope="col">Time</th>
+          {% if hill_dict %}
+          <th class="text-center" scope="col">Hill Sprint</th>
+          {% endif %}
+          <th class="text-center" scope="col">G</th>
+          <th class="text-center" scope="col">GP</th>
+          {% if filters.category_filter.choices|length > 5 %}
+          <th class="text-center" scope="col">Cat</th>
+          <th class="text-center" scope="col">CP</th>
+          {% endif %}
+          {% if hasage %}
+          <th class="text-center" scope="col">Age</th>
+          {% endif %}
+          {% if hasdivision %}
+          <th class="text-left" scope="col">Division</th>
+          {% endif %}
+          <th class="text-center" scope="col">Pace</th>
+          {% if results.0.chiptime %}
+          <th class="text-center" scope="col">Chip Time</th>
+          {% endif %}
+          <th class="text-left" scope="col">City</th>
+          {% for s in split_headings %}
+          <th class="text-center">{{ s }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+        <tr>
+          <td class="text-center">{{ r.place|get_place }}</td>
+          <td class="text-center">{{ r.bib }}</td>
+          <td class="text-left">
+            {% if r.member %}
+            <a href="/member/{{ r.member.slug }}/">{{ r.name }}</a>
+            {% else %}
+            {{ r.name }}
             {% endif %}
-            {% if event.youtube_id and event.youtube_offset_seconds is not None %}
-              <th class="text-center" scope="col">
-                <i class="fas fa-video"></i>
-              </th>
+            {% if r.gender_place == 1 %}
+            <i class="fas fa-trophy fa-icon-1st-oa" title="1st Overall ({{ r.gender }})"></i>
+            {% elif r.gender_place == 2 %}
+            <i class="fas fa-medal fa-icon-2nd-oa" title="2nd Overall ({{ r.gender }})"></i>
+            {% elif r.gender_place == 3 %}
+            <i class="fas fa-medal fa-icon-3rd-oa" title="3rd Overall ({{ r.gender }})"></i>
             {% endif %}
-            <th class="text-center" scope="col">Time</th>
-            {% if hill_dict %}
-              <th class="text-center" scope="col">Hill Sprint</th>
+            {% if r.masters_place == 1 %}
+            <i class="fas fa-medal fa-icon-1st-master" title="1st Master ({{ r.gender }})"></i>
             {% endif %}
-            <th class="text-center" scope="col">G</th>
-            <th class="text-center" scope="col">GP</th>
-            {% if filters.category_filter.choices|length > 5 %}
-              <th class="text-center" scope="col">Cat</th>
-              <th class="text-center" scope="col">CP</th>
+            {% if r.isrwpb and r.member %}
+            <i class="fas fa-stopwatch fa-icon-pb" title="RW PB for the {{ event.distance.name }}"></i>
             {% endif %}
-            {% if hasage %}
-              <th class="text-center" scope="col">Age</th>
+            {% if r.relay_team %}
+            <i class="fas fa-users" title="{{ r.relay_team }}"></i>
             {% endif %}
-            {% if hasdivision %}
-              <th class="text-left" scope="col">Division</th>
-            {% endif %}
-            <th class="text-center" scope="col">Pace</th>
-            {% if results.0.chiptime %}
-              <th class="text-center" scope="col">Chip Time</th>
-            {% endif %}
-            <th class="text-left" scope="col">City</th>
-            {% for s in split_headings %}
-              <th class="text-center">{{ s }}</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in results %}
-            <tr>
-              <td class="text-center">{{ r.place|get_place }}</td>
-              <td class="text-center">{{ r.bib }}</td>
-              <td class="text-left">
-                {% if r.member %}
-                  <a href="/member/{{ r.member.slug }}/">{{ r.name }}</a>
-                {% else %}
-                  {{ r.name }}
-                {% endif %}
-                {% if r.gender_place == 1 %}
-                  <i class="fas fa-trophy fa-icon-1st-oa" title="1st Overall ({{ r.gender }})"></i>
-                {% elif r.gender_place == 2 %}
-                  <i class="fas fa-medal fa-icon-2nd-oa" title="2nd Overall ({{ r.gender }})"></i>
-                {% elif r.gender_place == 3 %}
-                  <i class="fas fa-medal fa-icon-3rd-oa" title="3rd Overall ({{ r.gender }})"></i>
-                {% endif %}
-                {% if r.masters_place == 1 %}
-                  <i class="fas fa-medal fa-icon-1st-master" title="1st Master ({{ r.gender }})"></i>
-                {% endif %}
-                {% if r.isrwpb and r.member %}
-                  <i class="fas fa-stopwatch fa-icon-pb" title="RW PB for the {{ event.distance.name }}"></i>
-                {% endif %}
-                {% if r.relay_team %}
-                  <i class="fas fa-users" title="{{ r.relay_team }}"></i>
-                {% endif %}
-              </td>
-              {% if phototags %}
-                {% if r.hasphotos %}
-                  <td class="text-center">
-                    <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ event.flickrsearchstr}},{{ r.bib }}" target="_blank">
-                      <i class="fas fa-camera"></i>
-                    </a>
-                  </td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-              {% endif %}
-              {% if event.youtube_id and event.youtube_offset_seconds is not None %}
-                  {% if r.youtube_url %}
-                    <td class="text-center">
-                      <a href="{{ r.youtube_url }}" target="_blank">
-                        <i class="fas fa-video"></i>
-                      </a>
-                    </td>
-                  {% else %}
-                    <td></td>
-                  {% endif %}
-              {% endif %}
-              {% if guntimes_have_microseconds %}
-                <td class="text-center">{{ r.guntime|show_decimal }}</td>
-              {% else %}
-                <td class="text-center">{{ r.guntime }}</td>
-              {% endif %}
-              {% if hill_dict %}
-                <td class="text-center">{{ r.prime }}</td>
-              {% endif %}
-              <td class="text-center">{{ r.gender }}</td>
-              <td class="text-center">{{ r.gender_place }}</td>
-              {% if filters.category_filter.choices|length > 5 %}
-                <td class="text-center">{{ r.category }}</td>
-                <td class="text-center">{{ r.category_place }}</td>
-              {% endif %}
-              {% if hasage %}
-                <td class="text-center">{{ r.age }}</td>
-              {% endif %}
-              {% if hasdivision %}
-                {% if r.division != 'Guest' %}
-                  <td class="text-left"><a href="/endurrun/{{ r.division|lower }}/?year={{ event.date.year }}">{{ r.division }}</a></td>
-                {% else %}
-                  <td class="text-left">{{ r.division }}</td>
-                {% endif %}
-              {% endif %}
-              <td class="text-center">{{ r.guntime|get_pace:event.distance.km }}</td>
-              {% if results.0.chiptime %}
-                <td class="text-center">{{ r.chiptime }}</td>
-              {% endif %}
-              <td class="text-left">{{ r.city }}</td>
-              {% for s in r.splits %}
-                {% if s.split_time != 'None' %}
-                  <td class="text-center">{{ s.split_time }}</td>
-                {% else %}
-                  <td></td>
-                {% endif %}
-              {% endfor %}
-            </tr>
-         {% endfor %}
-       </tbody>
-      </table>
-      <script>
-        $('table').filterTable({inputSelector: '#input-filter'}); // apply filterTable to all tables on this page
-      </script>
-      {% if 'chiptimeresults' in event.resultsurl %}
-        <div>
-          <center>
-            Timing provided by:<br>
-            <a href="http://www.chiptimeresults.com" target="_blank"><img class="img-rounded" src="{% static "ctr.png" %}"></a>
-            <br><br>
-          </center>
-        </div>
-      {% endif %}
+          </td>
+          {% if phototags %}
+          {% if r.hasphotos %}
+          <td class="text-center">
+            <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ event.flickrsearchstr}},{{ r.bib }}"
+              target="_blank">
+              <i class="fas fa-camera"></i>
+            </a>
+          </td>
+          {% else %}
+          <td></td>
+          {% endif %}
+          {% endif %}
+          {% if event.youtube_id and event.youtube_offset_seconds is not None %}
+          {% if r.youtube_url %}
+          <td class="text-center">
+            <a href="{{ r.youtube_url }}" target="_blank">
+              <i class="fas fa-video"></i>
+            </a>
+          </td>
+          {% else %}
+          <td></td>
+          {% endif %}
+          {% endif %}
+          {% if guntimes_have_microseconds %}
+          <td class="text-center">{{ r.guntime|show_decimal }}</td>
+          {% else %}
+          <td class="text-center">{{ r.guntime }}</td>
+          {% endif %}
+          {% if hill_dict %}
+          <td class="text-center">{{ r.prime }}</td>
+          {% endif %}
+          <td class="text-center">{{ r.gender }}</td>
+          <td class="text-center">{{ r.gender_place }}</td>
+          {% if filters.category_filter.choices|length > 5 %}
+          <td class="text-center">{{ r.category }}</td>
+          <td class="text-center">{{ r.category_place }}</td>
+          {% endif %}
+          {% if hasage %}
+          <td class="text-center">{{ r.age }}</td>
+          {% endif %}
+          {% if hasdivision %}
+          {% if r.division != 'Guest' %}
+          <td class="text-left"><a href="/endurrun/{{ r.division|lower }}/?year={{ event.date.year }}">{{ r.division
+              }}</a></td>
+          {% else %}
+          <td class="text-left">{{ r.division }}</td>
+          {% endif %}
+          {% endif %}
+          <td class="text-center">{{ r.guntime|get_pace:event.distance.km }}</td>
+          {% if results.0.chiptime %}
+          <td class="text-center">{{ r.chiptime }}</td>
+          {% endif %}
+          <td class="text-left">{{ r.city }}</td>
+          {% for s in r.splits %}
+          {% if s.split_time != 'None' %}
+          <td class="text-center">{{ s.split_time }}</td>
+          {% else %}
+          <td></td>
+          {% endif %}
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <script>
+      $('table').filterTable({ inputSelector: '#input-filter' }); // apply filterTable to all tables on this page
+    </script>
+    {% if 'chiptimeresults' in event.resultsurl %}
+    <div>
+      <center>
+        Timing provided by:<br>
+        <a href="http://www.chiptimeresults.com" target="_blank"><img class="img-rounded" src="{% static " ctr.png"
+            %}"></a>
+        <br><br>
+      </center>
     </div>
+    {% endif %}
   </div>
+</div>
 
 {% endblock content %}
