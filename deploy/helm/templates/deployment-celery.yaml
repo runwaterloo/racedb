@@ -39,13 +39,15 @@ spec:
           command: [
             "/bin/sh",
             "-c",
-            "DJANGO_SETTINGS_MODULE=racedb.settings.{{ .Values.racedb.settings }} celery -A racedb worker --concurrency={{ .Values.racedb.celeryWorkers }} -l info --pidfile=/tmp/celery.pid",
+            "celery -A racedb worker --concurrency={{ .Values.racedb.celeryWorkers }} -l info --pidfile=/tmp/celery.pid",
             ]
           env:
             - name: CHART
               value: {{ .Chart.Version }}
             - name: BUILD
               value: {{ .Values.image.tag }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: racedb.settings.{{ .Values.racedb.settings }}
             - name: WEBHOST
               value: {{ .Values.ingress.host }}
           volumeMounts:

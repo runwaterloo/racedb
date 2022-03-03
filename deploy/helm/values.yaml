@@ -2,7 +2,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 racedb:
-  settings: prod
   devVolumePath: /srv/racedb
   secretsVolumePath: /srv/racedb_secrets
   celeryWorkers: 1

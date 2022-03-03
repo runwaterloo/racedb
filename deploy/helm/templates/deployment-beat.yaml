@@ -39,13 +39,15 @@ spec:
           command: [
             "/bin/sh",
             "-c",
-            "DJANGO_SETTINGS_MODULE=racedb.settings.{{ .Values.racedb.settings }} celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule",
+            "celery -A racedb beat -l info --pidfile=/tmp/celery.pid -s /tmp/celerybeat-schedule",
             ]
           env:
             - name: CHART
               value: {{ .Chart.Version }}
             - name: BUILD
               value: {{ .Values.image.tag }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: racedb.settings.{{ .Values.racedb.settings }}
             - name: WEBHOST
               value: {{ .Values.ingress.host }}
           volumeMounts:
@@ -66,4 +68,3 @@ spec:
         - name: racedb-secrets
           hostPath:
             path: "{{ .Values.racedb.secretsVolumePath }}/secrets.py"
-

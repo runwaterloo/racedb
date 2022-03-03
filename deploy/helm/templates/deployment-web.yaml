@@ -36,13 +36,15 @@ spec:
           command: [
             "/bin/sh",
             "-c",
-            "./manage.py collectstatic --noinput --settings=racedb.settings.{{ .Values.racedb.settings }}",
+            "./manage.py collectstatic --noinput",
             ]
           env:
             - name: CHART
               value: {{ .Chart.Version }}
             - name: BUILD
               value: {{ .Values.image.tag }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: racedb.settings.{{ .Values.racedb.settings }}
             - name: WEBHOST
               value: {{ .Values.ingress.host }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -60,9 +62,9 @@ spec:
             "/bin/sh",
             "-c",
             {{- if eq .Values.racedb.settings "prod" }}
-            "gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.{{ .Values.racedb.settings }} racedb.wsgi -b 0.0.0.0:8000",
+            "gunicorn racedb.wsgi -b 0.0.0.0:8000",
             {{- else }}
-            "./manage.py runserver --settings=racedb.settings.{{ .Values.racedb.settings }} 0.0.0.0:8000",
+            "./manage.py runserver 0.0.0.0:8000",
             {{- end }}
             ]
           env:
@@ -70,6 +72,8 @@ spec:
               value: {{ .Chart.Version }}
             - name: BUILD
               value: {{ .Values.image.tag }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: racedb.settings.{{ .Values.racedb.settings }}
             - name: WEBHOST
               value: {{ .Values.ingress.host }}
           volumeMounts:
@@ -119,4 +123,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-
