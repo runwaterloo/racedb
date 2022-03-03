@@ -19,7 +19,7 @@
   <meta property="og:image:height" content="200" />
  <!-- https://sunnywalker.github.io/jQuery.FilterTable/ -->
   <script src="{% static "jquery.filtertable.min.js" %}"></script>
-  <!-- highlight found cell 
+  <!-- highlight found cell
   <style>
   .filter-table .quick { margin-left: 0.5em; font-size: 0.8em; text-decoration: none; }
   .fitler-table .quick:hover { text-decoration: underline; }
@@ -41,10 +41,12 @@
         Results:
         {% endif %}
         <small>
-          {{ event.date.year }}
-          {{ event.race.shortname }}
-          {{ extra_name }}
-          {{ event.distance.name }}
+          <a href="https://runwaterloo.com/{{ event.date.year }}-{{ event.race.slug }}">
+            {{ event.date.year }}
+            {{ event.race.shortname }}
+            {{ extra_name }}
+            {{ event.distance.name }}
+          </a>
         </small>
       </h3>
       <p>
@@ -120,7 +122,9 @@
     </div>
     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
       <div style="padding-top: 20px; padding-bottom: 20px">
-        <img class="img-rounded pull-right" src="{% static "race_logos/"|add:event.race.slug|add:".png" %}" height="170">
+        <a href="https://runwaterloo.com/{{ event.date.year }}-{{ event.race.slug }}">
+          <img class="img-rounded pull-right" src="{% static "race_logos/"|add:event.race.slug|add:".png" %}" height="170">
+        </a>
       </div>
     </div>
   </div>
