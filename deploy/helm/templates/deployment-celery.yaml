@@ -39,7 +39,7 @@ spec:
           command: [
             "/bin/sh",
             "-c",
-            "DJANGO_SETTINGS_MODULE=racedb.settings.{{ .Values.racedb.settings }} celery -A racedb worker -l info --pidfile=/tmp/celery.pid",
+            "DJANGO_SETTINGS_MODULE=racedb.settings.{{ .Values.racedb.settings }} celery -A racedb worker --concurrency={{ .Values.racedb.celeryWorkers }} -l info --pidfile=/tmp/celery.pid",
             ]
           env:
             - name: CHART

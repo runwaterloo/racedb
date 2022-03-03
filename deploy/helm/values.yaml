@@ -5,6 +5,7 @@ racedb:
   settings: prod
   devVolumePath: /srv/racedb
   secretsVolumePath: /srv/racedb_secrets
+  celeryWorkers: 1
 
 replicaCount: 1
 
