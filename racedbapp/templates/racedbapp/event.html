@@ -41,16 +41,15 @@
         Results:
         {% endif %}
         <small>
-          <a href="https://runwaterloo.com/{{ event.date.year }}-{{ event.race.slug }}">
-            {{ event.date.year }}
-            {{ event.race.shortname }}
-            {{ extra_name }}
-            {{ event.distance.name }}
-          </a>
+          {{ event.date.year }}
+          {{ event.race.shortname }}
+          {{ extra_name }}
+          {{ event.distance.name }}
         </small>
       </h3>
       <p>
         {{ event.date }} - {{ event.city }}
+        &nbsp;&nbsp;<a href="https://runwaterloo.com/{{ event.date.year }}-{{ event.race.slug }}" target="_blank"><i class="fas fa-newspaper"></i></a>
         {% if event.flickrsetid %}
           &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ event.flickrsetid }}" target="_blank"><i class="fas fa-camera"></i></a>
         {% endif %}

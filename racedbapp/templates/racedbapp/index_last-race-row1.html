@@ -7,15 +7,16 @@
     <h2>
       <strong>LAST RACE</strong>
       <small>
+           &nbsp;&nbsp;<a href="https://runwaterloo.com/{{ recap_event.date.year }}-{{ recap_event.race.slug }}" target="_blank"><i class="fas fa-newspaper"></i></a>
+      </small>
+      <small>
         {% if recap_event.flickrsetid %}
            &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ recap_event.flickrsetid }}" target="_blank"><i class="fas fa-camera"></i></a>
         {% endif %}
       </small>
     </h2>
     <h3>
-      <a href="https://runwaterloo.com/{{ recap_event.date.year }}-{{ recap_event.race.slug }}">
-        {{ recap_event.race.name }}
-      </a>
+      {{ recap_event.race.name }}
     </h3>
     <div class="date">{{ recap_event.date }}</div>
     <div class="city">{{ recap_event.city }}</div>
