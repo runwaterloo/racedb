@@ -5,15 +5,15 @@ from datetime import date, datetime, timedelta
 
 import boto3
 import pytz
-import requests
 from celery import shared_task
 from django.core.cache import cache
-from django.core.mail import send_mail
+
+# from django.core.mail import send_mail
 from django_slack import slack_message
 
 from racedb import secrets
 
-from . import process_photoupdate, view_member, view_shared
+from . import process_photoupdate, view_member
 from .models import Config, Endurathlete, Event, Rwmember
 
 logger = logging.getLogger(__name__)
@@ -167,7 +167,6 @@ def slack_missing_urls():
 def clear_cache():
     logger.info("Clearing cache")
     cache.clear()
-    requests.get("https://results.runwaterloo.com")
 
 
 @shared_task

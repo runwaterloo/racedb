@@ -6,6 +6,7 @@ from . import (
     view_boost,
     view_bow,
     view_bowrecap,
+    view_cache_clear,
     view_distance,
     view_durelay,
     view_endurrace,
@@ -41,6 +42,7 @@ urlpatterns = [
         name="bowrecap",
     ),
     re_path(r"^bow/(?P<bow_slug>.*)/$", view_bow.index, name="bow"),
+    re_path(r"^cache_clear", view_cache_clear.index, name="cache_clear"),
     re_path(r"^distance/(?P<distance_slug>.*)/$", view_distance.index, name="distance"),
     re_path(
         r"^distance",

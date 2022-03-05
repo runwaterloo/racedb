@@ -5,6 +5,7 @@
 # AWS_SECRET_ACCESS_KEY (AWS secret access key for S3)
 # RACEDB_DB_BACKUP      (location of backup s3://...)
 # PERSONAL_ACCESS_TOKEN (Gitlab personal access token)
+# NOTIFYKEY             (RRW key to accept notifications)
 
 stages:
   - build-test-push
@@ -48,6 +49,7 @@ deploy-to-dev:
     - echo "$KUBECONFIG" > /kubeconfig
     - export KUBECONFIG=/kubeconfig
     - /usr/local/bin/helm upgrade racedbdev . --values values-racedb.yaml --set image.tag="${CI_COMMIT_SHORT_SHA}" --wait
+    - curl --retry 6 "https://racedb.runwaterloo.com/cache_clear/?notifykey=${NOTIFYKEY}"
 
 tag:
   stage: tag
@@ -73,4 +75,5 @@ deploy:
     - echo "$KUBECONFIG" > /kubeconfig
     - export KUBECONFIG=/kubeconfig
     - /usr/local/bin/helm upgrade racedb . --values values-rrw.yaml --set image.tag="${CI_COMMIT_TAG:1}" --wait
+    - curl --retry 6 "https://results.runwaterloo.com/cache_clear/?notifykey=${NOTIFYKEY}"
     - /usr/local/bin/helm upgrade racedbdev . --values values-racedb.yaml --set image.tag="${CI_COMMIT_TAG:1}" --wait
