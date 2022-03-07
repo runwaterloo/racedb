@@ -65,6 +65,7 @@ runuser -l ubuntu -c "git config --global user.name \"${GIT_USER}\""
 runuser -l ubuntu -c "git config --global user.email \"${GIT_EMAIL}\""
 runuser -l ubuntu -c 'python3 -m pip install pre-commit'
 runuser -l ubuntu -c 'cd /srv/racedb; /home/ubuntu/.local/bin/pre-commit install'
+echo 'PATH=$PATH:/srv/racedb/deploy/misc/' >> /home/ubuntu/.profile
 
 # setup autorecovery
 REGION="us-east-1"
