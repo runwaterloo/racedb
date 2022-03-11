@@ -24,6 +24,10 @@ html {
         padding: 10px 0px;
 }
 
+.padding-for-sponsor {
+    margin-bottom: 40px;
+}
+
 /* navbar */
 
 .navbar-default, .navbar, .navbar-inner {

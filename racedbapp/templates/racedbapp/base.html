@@ -104,7 +104,7 @@
 
       {% block content %}{% endblock content %}
       {% if not nomenu %}
-      <div>
+      <div class="padding-for-sponsor">
         <p>
           Results &copy; 1978-2022 Run Waterloo. Owned and maintained by Run Waterloo. For more information, contact <a
             href="mailto:results@runwaterloo.com?Subject=Run Waterloo Results"
@@ -115,6 +115,17 @@
             src="{% static "flickr-logo.png" %}" height="50"></a>
         <a href="http://runwaterloo.com" target="_blank" class="pull-right"><img
             src="{% static "rw-logo-horizontal.png" %}" height="50"></a>
+      </div>
+      <div class="text-center">
+        <nav class="navbar navbar-default navbar-fixed-bottom navbar-left">
+          <div class="container">
+            <div class="navbar-header">
+              <a href="https://runwaterloo.com/about/sponsors/" target="_blank">
+                <img src="{% static "runwaterloo-sponsor-logos.png" %}" class="img-responsive">
+              </a>
+            </div>
+          </div>
+        </nav>
       </div>
       {% endif %}
     </div>
