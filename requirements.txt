@@ -1,5 +1,5 @@
 celery==5.2.3
-Django==3.2.12
+Django==4.0.3
 django-redis==5.2.0
 django-s3-storage==0.13.6
 django-slack==5.17.6
