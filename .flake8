@@ -7,3 +7,4 @@ per-file-ignores =
     racedb/settings/base.py: F401,F403,F405
     racedb/settings/dev.py: F401,F403,F405
     racedb/settings/prod.py: F401,F403,F405
+    racedbapp/admin.py: F403,F405

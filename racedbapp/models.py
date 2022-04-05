@@ -459,3 +459,17 @@ class Durelay(models.Model):
     bike_time = models.DurationField(null=True)
     run2_athlete = models.CharField(max_length=128)
     run2_time = models.DurationField(null=True)
+
+
+class Series(models.Model):
+    year = models.IntegerField()
+    name = models.CharField(max_length=256)
+    slug = models.SlugField()
+    event_ids = models.CharField(
+        max_length=64, help_text="Comma-separated list of event IDs"
+    )
+    show_records = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ("year", "slug")
+        verbose_name_plural = "Series"

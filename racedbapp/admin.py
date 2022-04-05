@@ -180,3 +180,16 @@ class RelayAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Relay, RelayAdmin)
+
+
+class SeriesAdmin(admin.ModelAdmin):
+    list_display = (
+        "year",
+        "name",
+        "slug",
+        "event_ids",
+        "show_records",
+    )
+
+
+admin.site.register(Series, SeriesAdmin)
