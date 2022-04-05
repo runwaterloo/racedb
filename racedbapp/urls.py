@@ -29,6 +29,7 @@ from . import (
     view_recap,
     view_records,
     view_relay,
+    view_series,
     view_stats,
     view_webhook,
 )
@@ -102,6 +103,7 @@ urlpatterns = [
         view_records.index,
         name="records",
     ),
+    re_path(r"^series/(?P<series_slug>.*)/$", view_series.index, name="series"),
     re_path(r"^stats", view_stats.index, name="stats"),
     re_path(r"^webhook", view_webhook.index, name="webhook"),
 ]
