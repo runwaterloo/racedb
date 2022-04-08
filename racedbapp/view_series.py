@@ -1,19 +1,168 @@
+from collections import namedtuple
+from operator import attrgetter
 from urllib import parse
 
 from django.shortcuts import render
 
-from .models import Series
+from .models import Event, Result, Series
+
+named_filter = namedtuple("nf", ["current", "choices"])
+named_choice = namedtuple("nc", ["name", "url"])
 
 
 def index(request, series_slug):
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
     year = False
-    series = Series.objects.filter(slug=series_slug)
+    all_series = Series.objects.filter(slug=series_slug).order_by("-year")
+    show_records = all_series.reverse()[0].show_records
+    years = [x.year for x in all_series]
     if "year" in qstring:
         year = int(qstring["year"][0])
-        series = series.filter(year=year)
+        all_series = all_series.filter(year=year)
+    category = "All"
+    if "filter" in qstring:
+        category = qstring["filter"][0]
+    all_series = [SeriesOccurence(x) for x in all_series]
+    results = []
+    for series in all_series:
+        series_results = []
+        event_ids = [x.id for x in series.events]
+
+        # Create initial list of athletes from first event
+        event1_results = Result.objects.filter(event_id=event_ids[0])
+
+        # Apply filters
+        if category in ("Female", "F-Masters"):
+            event1_results = event1_results.filter(gender="F")
+        if category in ("Male", "M-Masters"):
+            event1_results = event1_results.filter(gender="M")
+        if category in ("Masters", "F-Masters", "M-Masters"):
+            event1_results = event1_results.filter(category__ismasters=True)
+
+        # Create list of filtered athletes
+        for result in event1_results:
+            series_results.append(SeriesResult(result, series.year))
+
+        # Populate times for additional events
+        for event in event_ids[1:]:
+            event_dict = dict(
+                Result.objects.filter(event_id=event).values_list("athlete", "guntime")
+            )
+            prev_results = series_results.copy()
+            series_results = []
+            if event_dict:  # if the event has results...
+                for result in prev_results:
+                    event_time = event_dict.get(result.athlete, None)
+                    if event_time:
+                        result.times.append(event_time)
+                        result.total_time += event_time
+                        series_results.append(result)
+            elif year:  # if event has no results, but the URL has a year...
+                for result in prev_results:
+                    result.times.append(False)
+                    series_results.append(result)
+        results += series_results
+
+    # create filters
+    year_filter = get_year_filter(series_slug, year, years, show_records)
+    category_filter = get_category_filter(series_slug, category, year)
+    filters = {
+        "category_filter": category_filter,
+        "year_filter": year_filter,
+    }
+
+    # send results to template
     context = {
-        "series": series,
+        "all_series": all_series,
+        "filters": filters,
+        "results": sorted(results, key=attrgetter("total_time")),
         "year": year,
     }
     return render(request, "racedbapp/series.html", context)
+
+
+def get_year_filter(series_slug, year, years, show_records):
+    choices = []
+    for y in years:
+        if y == year:
+            continue
+        choices.append(named_choice(y, "/series/{}/?year={}".format(series_slug, y)))
+    choices = sorted(choices, reverse=True)
+    if year and show_records:
+        current_choice = year
+        choices.insert(0, named_choice("All", "/series/{}/".format(series_slug)))
+    else:
+        current_choice = "All"
+    year_filter = named_filter(current_choice, choices)
+    return year_filter
+
+
+def get_category_filter(series_slug, category, year):
+    choices = []
+    if category == "All":
+        current_choice = "All"
+    else:
+        current_choice = category
+    for cat in ("Female", "Male", "Masters", "F-Masters", "M-Masters"):
+        if category != cat:
+            if year:
+                choices.append(
+                    named_choice(
+                        cat,
+                        "/series/{}/?year={}&filter={}".format(series_slug, year, cat),
+                    )
+                )
+            else:
+                choices.append(
+                    named_choice(cat, "/series/{}/?filter={}".format(series_slug, cat))
+                )
+    if category != "All":
+        if year:
+            choices.insert(
+                0, named_choice("All", "/series/{}/?year={}".format(series_slug, year))
+            )
+        else:
+            choices.insert(0, named_choice("All", "/series/{}/".format(series_slug)))
+    category_filter = named_filter(current_choice, choices)
+    return category_filter
+
+
+class SeriesOccurence:
+    def __init__(self, series):
+        self.year = series.year
+        self.name = series.name
+        self.events = Event.objects.filter(id__in=series.event_ids.split(",")).order_by(
+            "date"
+        )
+
+    def __repr__(self):
+        return "SeriesOccurence(year={}, name={}, events={})".format(
+            self.year, self.name, list(self.events)
+        )
+
+
+class SeriesResult:
+    def __init__(self, result, year):
+        self.year = year
+        self.athlete = result.athlete
+        if result.rwmember:
+            self.member_id = result.rwmember.id
+        else:
+            self.member_id = False
+        self.gender = result.gender
+        self.category = result.category
+        self.times = [
+            result.guntime,
+        ]
+        self.total_time = result.guntime
+
+    def __repr__(self):
+        return "SeriesResult(year={}, athlete={}, member={}, gender={}, category={}, total_time={}, times={})".format(
+            self.year,
+            self.athlete,
+            self.member_id,
+            self.gender,
+            self.category,
+            self.total_time,
+            [str(x) for x in self.times],
+        )
