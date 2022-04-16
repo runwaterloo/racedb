@@ -33,7 +33,7 @@ build-test-push:
     - docker pull $CI_REGISTRY_IMAGE:latest || true
     - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
     - /bin/ash deploy/minimal/deploy.sh
-    # - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.min
+    - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.min
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
   retry: 2
 
