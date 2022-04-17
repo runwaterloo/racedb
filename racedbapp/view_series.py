@@ -29,15 +29,8 @@ def index(request, series_slug):
         event_ids = [x.id for x in series.events]
 
         # Create initial list of athletes from first event
-        event1_results = Result.objects.filter(event_id=event_ids[0])
-
-        # Apply filters
-        if category in ("Female", "F-Masters"):
-            event1_results = event1_results.filter(gender="F")
-        if category in ("Male", "M-Masters"):
-            event1_results = event1_results.filter(gender="M")
-        if category in ("Masters", "F-Masters", "M-Masters"):
-            event1_results = event1_results.filter(category__ismasters=True)
+        event1_all_results = Result.objects.filter(event_id=event_ids[0])
+        event1_results = event1_all_results
 
         # Create list of filtered athletes
         for result in event1_results:
@@ -65,11 +58,24 @@ def index(request, series_slug):
 
     # create filters
     year_filter = get_year_filter(series_slug, year, years, show_records)
-    category_filter = get_category_filter(series_slug, category, year)
+    category_filter = get_category_filter(
+        series_slug, category, year, event1_all_results, results
+    )
     filters = {
         "category_filter": category_filter,
         "year_filter": year_filter,
     }
+
+    # Apply filters
+    if category in ("Female", "Male", "Masters", "F-Masters", "M-Masters"):
+        if category in ("Female", "F-Masters"):
+            results = [x for x in results if x.gender == "F"]
+        if category in ("Male", "M-Masters"):
+            results = [x for x in results if x.gender == "M"]
+        if category in ("Masters", "F-Masters", "M-Masters"):
+            results = [x for x in results if x.category.ismasters]
+    elif category != "All":
+        results = [x for x in results if x.category.name == category]
 
     # send results to template
     context = {
@@ -97,13 +103,26 @@ def get_year_filter(series_slug, year, years, show_records):
     return year_filter
 
 
-def get_category_filter(series_slug, category, year):
+def get_category_filter(series_slug, category, year, event1_all_results, results):
     choices = []
     if category == "All":
         current_choice = "All"
     else:
         current_choice = category
-    for cat in ("Female", "Male", "Masters", "F-Masters", "M-Masters"):
+    event_categories = []
+    if year:
+        event_categories = (
+            event1_all_results.exclude(category__name="")
+            .values("category__name")
+            .order_by("category__name")
+            .distinct()
+        ).values_list("category__name", flat=True)
+    results_categories = [x.category.name for x in results]
+    event_categories = [x for x in event_categories if x in results_categories]
+    all_categories = ["Female", "Male", "Masters", "F-Masters", "M-Masters"] + list(
+        event_categories
+    )
+    for cat in all_categories:
         if category != cat:
             if year:
                 choices.append(
@@ -146,9 +165,9 @@ class SeriesResult:
         self.year = year
         self.athlete = result.athlete
         if result.rwmember:
-            self.member_id = result.rwmember.id
+            self.member_slug = result.rwmember.slug
         else:
-            self.member_id = False
+            self.member_slug = False
         self.gender = result.gender
         self.category = result.category
         self.times = [
@@ -160,7 +179,7 @@ class SeriesResult:
         return "SeriesResult(year={}, athlete={}, member={}, gender={}, category={}, total_time={}, times={})".format(
             self.year,
             self.athlete,
-            self.member_id,
+            self.member_slug,
             self.gender,
             self.category,
             self.total_time,

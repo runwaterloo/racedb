@@ -44,7 +44,7 @@
     <tr>
       <td class="text-center">{{ series.year }}</td>
       {% for event in series.events %}
-      <td class="text-center">{{ event }}</td>
+      <td class="text-center"><a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}">{{ event }}</a></td>
       {% endfor %}
     </tr>
     {% endfor %}
@@ -82,11 +82,48 @@
 </table>
 <!-- End Filter Table -->
 
-<h4>Results:</h4>
-{% for result in results %}
-{{ result }}<br>
-{% endfor %}
-{% if not results %}
+{% if results %}
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr class="info">
+      <th class="text-center">Place</th>
+      {% if not year %}
+      <th class="text-center">Year</th>
+      {% endif %}
+      <th class="text-center">Name</th>
+      <th class="text-center">Category</th>
+      <th class="text-center">Total Time</th>
+      {% for i in results.0.times %}
+      <th class="text-center">Event {{ forloop.counter }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for result in results %}
+    <tr>
+      <td class="text-center">{{ forloop.counter }}</td>
+      {% if not year %}
+      <td class="text-center">{{ result.year }}</td>
+      {% endif %}
+      {% if result.member_slug %}
+      <td><a href="/member/{{ result.member_slug}}">{{ result.athlete }}</a></td>
+      {% else %}
+      <td>{{ result.athlete }}</td>
+      {% endif %}
+      <td class="text-center">{{ result.category }}</td>
+      <td class="text-center">{{ result.total_time }}</td>
+      {% for time in results.0.times %}
+      {% if time %}
+      <td class="text-center">{{ time }}</td>
+      {% else %}
+      <td></td>
+      {% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
 No results
 {% endif %}
 
