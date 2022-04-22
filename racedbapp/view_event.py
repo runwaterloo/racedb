@@ -87,6 +87,11 @@ def index(request, year, race_slug, distance_slug):
         [x.guntime.microseconds for x in all_results if x.guntime.microseconds != 0]
     )
     ad = get_ad()
+    series = []
+    all_series = Series.objects.all().order_by("year")
+    for s in all_series:
+        if event.id in [int(x.strip()) for x in s.event_ids.split(",")]:
+            series.append(s)
     process_post(request)
     context = {
         "event": event_json,
@@ -102,6 +107,7 @@ def index(request, year, race_slug, distance_slug):
         "phototags": phototags,
         "guntimes_have_microseconds": guntimes_have_microseconds,
         "ad": ad,
+        "series": series,
     }
     # Determine the format to return based on the query string
     if "format" in qstring:

@@ -61,6 +61,18 @@
         {% for p in pages %}
             <li class="{{ p.active }}"><a href="{{ p.href }}">{{ p.label }}</a></li>
         {% endfor %}
+        {% if series|length == 1 %}
+          <li class="inactive"><a href="/series/{{ series.0.slug }}/?year={{ series.0.year }}">Series</a></li>
+        {% elif series|length > 1 %}
+        <li class="inactive"><a href="#">
+          <select style="border: 0px;background-color: white" onchange="location = this.options[this.selectedIndex].value;">
+            <option value="#">Series</option>
+              {% for s in series %}
+              <option value="/series/{{ s.slug }}/?year={{ s.year }}">{{s.year}} {{ s.name }}</option>
+              {% endfor %}
+            </select>
+        </a></li>
+        {% endif %}
       </ul>
 
   <!-- Filter table -->
