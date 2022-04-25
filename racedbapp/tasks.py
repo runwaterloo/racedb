@@ -8,7 +8,7 @@ import pytz
 from celery import shared_task
 from django.core.cache import cache
 
-# from django.core.mail import send_mail
+from django.core.mail import send_mail
 from django_slack import slack_message
 
 from racedb import secrets
@@ -171,17 +171,16 @@ def clear_cache():
 
 @shared_task
 def send_email_task(subject, content, recipients):
-    # from_addr = Config.objects.get(name="email_from_address").value
-    # logger.info("Attempting to send email")
-    # send_mail(
-    #     subject,
-    #     content,
-    #     from_addr,
-    #     recipients,  # should be a list
-    #     fail_silently=False,
-    # )
-    # logger.info("Email sent!")
-    logger.warning("Sending email is temporarily disabled")
+    from_addr = Config.objects.get(name="email_from_address").value
+    logger.info("Attempting to send email")
+    send_mail(
+        subject,
+        content,
+        from_addr,
+        recipients,  # should be a list
+        fail_silently=False,
+    )
+    logger.info("Email sent!")
 
 
 @shared_task
