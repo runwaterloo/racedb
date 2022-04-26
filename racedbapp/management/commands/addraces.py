@@ -259,8 +259,8 @@ class Command(BaseCommand):
                     slack_results.append(info)
 
                 # Process LL relays
-                Relay.objects.filter(event_id=event["id"]).delete()
                 if len(relays) > 0:
+                    Relay.objects.filter(event_id=event["id"]).delete()
                     Relay.objects.bulk_create(relays)
                     info = "{} relay results processed for {} {} {} (Event {})".format(
                         len(relays), year, race.name, distance.name, event["id"]
@@ -426,7 +426,7 @@ def process_endurrace(years, slack_results):
 
 
 def endurrace_category_fix(curcategory):
-    """ Fix to override ENDURrace combined categories """
+    """Fix to override ENDURrace combined categories"""
     categoryname = curcategory.name
     categoryname = categoryname.replace("S", "B")
     categoryname = categoryname.replace("L", "B")
@@ -446,7 +446,7 @@ def endurrace_category_fix(curcategory):
 
 
 def add_splits(event, result, extra_dict, splits):
-    """ Add any splits """
+    """Add any splits"""
     for k, v in extra_dict.items():
         if "split" not in k:
             continue
