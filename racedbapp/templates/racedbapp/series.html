@@ -111,10 +111,10 @@
       <td>{{ result.athlete }}</td>
       {% endif %}
       <td class="text-center">{{ result.category }}</td>
-      <td class="text-center">{{ result.total_time }}</td>
-      {% for time in results.0.times %}
+      <td class="text-center">{{ result.total_time|get_time }}</td>
+      {% for time in result.times %}
       {% if time %}
-      <td class="text-center">{{ time }}</td>
+      <td class="text-center">{{ time|get_time }}</td>
       {% else %}
       <td></td>
       {% endif %}
