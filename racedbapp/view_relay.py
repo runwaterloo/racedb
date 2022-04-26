@@ -3,6 +3,7 @@ from operator import attrgetter
 from urllib import parse
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Max
 from django.http import Http404
 from django.shortcuts import render
 
@@ -24,6 +25,7 @@ def index(request, year, race_slug, distance_slug):
     events = get_events(year, race_slug, distance_slug)
     individual_results_dict = get_individual_results_dict(events)
     relay_results = get_relay_results(events)
+    max_leg = relay_results.aggregate(Max("relay_leg"))["relay_leg__max"]
     team_results = get_team_results(relay_results, individual_results_dict)
     team_results = sorted(team_results, key=attrgetter("team_time", "place"))
     team_categories = local_get_team_categories(events)
@@ -38,10 +40,10 @@ def index(request, year, race_slug, distance_slug):
         ]
     if year != "all":
         pages = view_shared.get_pages(
-            events[0], "Relay", team_categories, laurier_relay_dict=True
+            events[0], "Relay", team_categories, relay_dict=True
         )
     context = {
-        "event": EventV(events[0]),
+        "event": EventV(events[0], max_leg),
         "pages": pages,
         "filters": filters,
         "team_results": team_results,
@@ -60,7 +62,7 @@ def local_get_team_categories(events):
 
 
 def get_events(year, race_slug, distance_slug):
-    """ Get the events based on query parameters or return 404 """
+    """Get the events based on query parameters or return 404"""
     events = Event.objects.select_related().filter(
         race__slug=race_slug, distance__slug=distance_slug
     )
@@ -166,14 +168,14 @@ def get_team_results(relay_results, individual_results_dict):
 
 
 class EventV:
-    def __init__(self, event):
+    def __init__(self, event, max_leg):
         self.city = event.city
         self.date = event.date
         self.flickrsetid = event.flickrsetid
         self.youtube_id = event.youtube_id
         self.distance_name = event.distance.name
         self.relay_leg_distance = event.distance.km
-        self.total_relay_distance = event.distance.km * 4
+        self.total_relay_distance = event.distance.km * max_leg
         self.race_name = event.race.name
         self.race_shortname = event.race.shortname
         self.race_slug = event.race.slug
@@ -191,7 +193,7 @@ class RelayResult:
         self.year = relay_result.event.date.year
 
     def calc_categories(self):
-        self.genders = list(set([x.gender for x in self.legs]))
+        self.genders = list({x.gender for x in self.legs})
         if len(self.genders) > 1:
             self.gender = "Mixed"
             self.categories.append("Mixed")

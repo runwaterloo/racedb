@@ -32,7 +32,7 @@ def index(request, year, race_slug, distance_slug):
     races = view_shared.create_samerace_list(event.race)
     team_categories = view_shared.get_team_categories(event)
     hill_dict = get_hill_dict(event)
-    laurier_relay_dict = get_laurier_relay_dict(event)
+    relay_dict = get_relay_dict(event)
     dbphototags = list(
         Phototag.objects.filter(event=event).values_list("tag", flat=True)
     )
@@ -49,7 +49,7 @@ def index(request, year, race_slug, distance_slug):
         team_categories,
         hill_dict=hill_dict,
         wheelchair_results=wheelchair_results,
-        laurier_relay_dict=laurier_relay_dict,
+        relay_dict=relay_dict,
     )
     year_filter = get_year_filter(event, races)
     distance_filter = get_distance_filter(event, races)
@@ -69,7 +69,7 @@ def index(request, year, race_slug, distance_slug):
         division,
         hill_dict,
         phototags,
-        laurier_relay_dict,
+        relay_dict,
     )
     split_headings = get_split_headings(event, max_splits)
     hasdivision = False
@@ -83,9 +83,9 @@ def index(request, year, race_slug, distance_slug):
         "year_filter": year_filter,
     }
     event_json = get_event_json(event)
-    guntimes_have_microseconds = set(
-        [x.guntime.microseconds for x in all_results if x.guntime.microseconds != 0]
-    )
+    guntimes_have_microseconds = {
+        x.guntime.microseconds for x in all_results if x.guntime.microseconds != 0
+    }
     ad = get_ad()
     series = []
     all_series = Series.objects.all().order_by("year")
@@ -508,7 +508,7 @@ def get_results(
     division,
     hill_dict,
     phototags,
-    laurier_relay_dict,
+    relay_dict,
 ):
     named_result = namedtuple(
         "nr",
@@ -544,7 +544,7 @@ def get_results(
     haschiptime = False
     event_splits = Split.objects.filter(event=event)
     splits_list = event_splits.values_list("place", "split_num", "split_time")
-    splits_dict = dict([((a, b), c) for a, b, c in splits_list])
+    splits_dict = {(a, b): c for a, b, c in splits_list}
     max_splits = False
     if event_splits:
         max_splits = int(event_splits.aggregate(Max("split_num"))["split_num__max"])
@@ -580,9 +580,9 @@ def get_results(
             else:
                 category_place_dict[r.category.name] = 1
                 category_place = 1
-        if laurier_relay_dict:
-            if r.place in laurier_relay_dict:
-                relay_team = laurier_relay_dict[r.place]
+        if relay_dict:
+            if r.place in relay_dict:
+                relay_team = relay_dict[r.place]
         elif r.athlete in endurrun_relay_dict:
             relay_team = endurrun_relay_dict[r.athlete]
         age = ""
@@ -801,15 +801,12 @@ def get_extra_name(event):
     return extra_name
 
 
-def get_laurier_relay_dict(event):
-    laurier_relay_dict = False
-    if event.race.slug == "laurier-loop" and event.distance.slug == "2_5-km":
-        laurier_relay_results = Relay.objects.filter(event=event).values_list(
-            "place", "relay_team"
-        )
-        if len(laurier_relay_results) > 0:
-            laurier_relay_dict = dict(laurier_relay_results)
-    return laurier_relay_dict
+def get_relay_dict(event):
+    relay_dict = False
+    relay_results = Relay.objects.filter(event=event).values_list("place", "relay_team")
+    if len(relay_results) > 0:
+        relay_dict = dict(relay_results)
+    return relay_dict
 
 
 def get_split_headings(event, max_splits):
@@ -823,7 +820,7 @@ def get_split_headings(event, max_splits):
 
 
 def process_post(request):
-    """ If request is a POST it should send email """
+    """If request is a POST it should send email"""
     if request.method == "POST":
         url = "https://{}{}".format(request.get_host(), request.get_full_path())
         user_name = request.POST.get("user_name")

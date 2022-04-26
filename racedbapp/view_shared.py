@@ -55,11 +55,11 @@ def getwinnersdict():
     malewinners = Result.objects.filter(gender="M", gender_place=1).values_list(
         "event_id", "athlete", "guntime"
     )
-    malewinnersdict = dict([(a, namedwinner(b, c)) for a, b, c in malewinners])
+    malewinnersdict = {a: namedwinner(b, c) for a, b, c in malewinners}
     femalewinners = Result.objects.filter(gender="F", gender_place=1).values_list(
         "event_id", "athlete", "guntime"
     )
-    femalewinnersdict = dict([(a, namedwinner(b, c)) for a, b, c in femalewinners])
+    femalewinnersdict = {a: namedwinner(b, c) for a, b, c in femalewinners}
     return malewinnersdict, femalewinnersdict
 
 
@@ -107,7 +107,7 @@ def getracerecords(race, distance, division_choice=False, individual_only=False)
             )
             if division_choice == "Ultimate":
                 dates = rawresults.values_list("event__date", flat=True).distinct()
-                years = set([x.year for x in dates])
+                years = {x.year for x in dates}
                 ultimate_finished_all_events = get_ultimate_finished_all_events(years)
                 results_to_include = []
                 for r in rawresults:
@@ -342,7 +342,7 @@ def makerecords(place, rtime, results, distance, membership):
 
 
 def create_samerace_list(race):
-    """ Make a list of races that are the same """
+    """Make a list of races that are the same"""
     races = [race]
     for i in Samerace.objects.filter(current_race=race):
         races.append(i.old_race)
@@ -431,7 +431,7 @@ def get_pages(
     team_categories,
     hill_dict=False,
     wheelchair_results=False,
-    laurier_relay_dict=False,
+    relay_dict=False,
 ):
     named_page = namedtuple("np", ("active", "href", "label"))
     pages = []
@@ -447,7 +447,7 @@ def get_pages(
                 "Overall",
             )
         )
-    if laurier_relay_dict:
+    if relay_dict:
         if page == "Relay":
             pages.append(named_page("active", "#", "Relay"))
         else:
@@ -501,7 +501,7 @@ def get_pages(
 
 
 def get_relay_records(year=None):
-    """ Get records for 2.5K Laurier Loop relay """
+    """Get records for Loop relay"""
     events = Relay.objects.order_by().values_list("event").distinct()
     if year:
         events = events.filter(event__date__year=year)
@@ -524,7 +524,7 @@ def get_relay_records(year=None):
 
 
 def sort_endurrun_distances(distances):
-    """ Sort ENDURrun distances into stage order """
+    """Sort ENDURrun distances into stage order"""
     endurrun_distances = []
     endurrun_slugs = [
         "half-marathon",

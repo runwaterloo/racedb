@@ -380,11 +380,17 @@ class Prime(models.Model):
 
 class Relay(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    place = models.IntegerField()
-    relay_team = models.CharField(max_length=128)
-    relay_team_place = models.IntegerField()
-    relay_team_time = models.DurationField(null=True)
-    relay_leg = models.IntegerField()
+    place = models.IntegerField(
+        help_text="Overall place this person finished in the individual event"
+    )
+    relay_team = models.CharField(max_length=128, help_text="Relay team name")
+    relay_team_place = models.IntegerField(help_text="Place the relay team finished")
+    relay_team_time = models.DurationField(
+        null=True, help_text="Total time for the relay team"
+    )
+    relay_leg = models.IntegerField(
+        help_text="Relay leg for this individual (e.g. 1, 2)"
+    )
 
 
 class Split(models.Model):
