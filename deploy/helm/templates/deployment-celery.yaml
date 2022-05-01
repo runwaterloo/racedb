@@ -59,6 +59,8 @@ spec:
               name: racedb-secrets
             - mountPath: /root/.flickr/oauth-tokens.sqlite
               name: racedb-flickr-oauth
+            - mountPath: /root/google_service_account.json
+              name: racedb-google-service-account
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
@@ -73,3 +75,6 @@ spec:
         - name: racedb-flickr-oauth
           hostPath:
             path: "{{ .Values.racedb.secretsVolumePath }}/flickr_oauth-tokens.sqlite"
+        - name: racedb-google-service-account
+          hostPath:
+            path: "{{ .Values.racedb.secretsVolumePath }}/google_service_account.json"
