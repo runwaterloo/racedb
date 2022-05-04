@@ -11,7 +11,6 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from racedbapp import tasks, view_shared
 from racedbapp.models import (
     Category,
-    Config,
     Distance,
     Endurathlete,
     Endurraceresult,
@@ -63,10 +62,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        races = Race.objects.values_list("slug", flat=True)
         events = []
-        done = False
         slack_results = []
+        self.stdout.write("RRW UPDATE FROM GOOGLE SHEET TO RRW")
         if options["event_id"]:
             event_id = options["event_id"]
             self.stdout.write("Processing event_id: {}".format(event_id))
@@ -77,11 +75,12 @@ class Command(BaseCommand):
             events = Event.objects.filter(date=today)
         self.stdout.write("Events:")
         for e in events:
-            self.stdout.write("  {}".format(e))
+            self.stdout.write("  {} (Event {})".format(e, e.id))
         if len(events) == 0:
             self.stdout.write("No events found to update")
             exit()
         endurrace_years = []
+        self.stdout.write("Results:")
         for event in events:
             event = event2pre(event)
             year = event["date"].year
@@ -125,198 +124,198 @@ class Command(BaseCommand):
                     "ERROR: Resuts URL for {} is not a google sheet".format(e)
                 )
                 return
-            results = get_results_from_google(e.resultsurl)
-            self.stdout.write("{} results:".format(e))
-            for result in results["individual"]:
-                self.stdout.write(
-                    "  {} {} {}".format(
-                        result["place"], result["athlete"], result["guntime"]
-                    )
+            google_results = get_results_from_google(e.resultsurl)
+            for result in google_results["individual"]:
+                extra_dict = get_extra_dict(result)
+                resultcategory = result["category"]
+                try:
+                    category = Category.objects.get(name=resultcategory)
+                except Exception:
+                    ismasters = False
+                    for i in MASTERS_SUBSTRINGS:
+                        if i in resultcategory:
+                            ismasters = True
+                    category = Category(name=resultcategory, ismasters=ismasters)
+                    category.save()
+                guntime = maketimedelta(result["guntime"])
+                if "chiptime" in result:
+                    chiptime = maketimedelta(result["chiptime"])
+                else:
+                    chiptime = guntime
+                if guntime != chiptime:
+                    gun_equal_chip = False
+                if "age" in result:
+                    age = int(result["age"])
+                else:
+                    age = None
+                division = ""
+                if "division" in extra_dict:
+                    division = extra_dict["division"]
+                member = get_member(event, result, membership)
+                gender_place = category_place = None
+                if result["place"] < 990000:
+                    if result["gender"] == "F":
+                        gender_place_dict["F"] += 1
+                        gender_place = gender_place_dict["F"]
+                    elif result["gender"] == "M":
+                        gender_place_dict["M"] += 1
+                        gender_place = gender_place_dict["M"]
+                    if category.name != "":
+                        if category.name in category_place_dict:
+                            category_place_dict[category.name] += 1
+                            category_place = category_place_dict[category.name]
+                        else:
+                            category_place_dict[category.name] = 1
+                            category_place = 1
+                newresult = Result(
+                    event_id=event["id"],
+                    place=result["place"],
+                    bib=result["bib"],
+                    athlete=result["athlete"],
+                    gender=result["gender"],
+                    category=category,
+                    city=result.get("city", None),
+                    chiptime=chiptime,
+                    guntime=guntime,
+                    age=age,
+                    division=division,
+                    rwmember=member,
+                    gender_place=gender_place,
+                    category_place=category_place,
                 )
-        #                 extra_dict = {}
-        #                 if result["extra"] != "":
-        #                     extra_dict = eval(result["extra"])
-        #                 resultcategory = result["category"]
-        #                 try:
-        #                     category = Category.objects.get(name=resultcategory)
-        #                 except Exception:
-        #                     ismasters = False
-        #                     for i in MASTERS_SUBSTRINGS:
-        #                         if i in resultcategory:
-        #                             ismasters = True
-        #                     category = Category(
-        #                         name=resultcategory, ismasters=ismasters
-        #                     )
-        #                     category.save()
-        #                 guntime = maketimedelta(result["guntime"])
-        #                 chiptime = maketimedelta(result["chiptime"])
-        #                 if guntime != chiptime:
-        #                     gun_equal_chip = False
-        #                 age = result["age"]
-        #                 try:
-        #                     int(age)
-        #                 except Exception:
-        #                     age = None
-        #                 division = ""
-        #                 if "division" in extra_dict:
-        #                     division = extra_dict["division"]
-        #                 member = get_member(event, result, membership)
-        #                 gender_place = category_place = None
-        #                 if result["place"] < 990000:
-        #                     if result["gender"] == "F":
-        #                         gender_place_dict["F"] += 1
-        #                         gender_place = gender_place_dict["F"]
-        #                     elif result["gender"] == "M":
-        #                         gender_place_dict["M"] += 1
-        #                         gender_place = gender_place_dict["M"]
-        #                     if category.name != "":
-        #                         if category.name in category_place_dict:
-        #                             category_place_dict[category.name] += 1
-        #                             category_place = category_place_dict[category.name]
-        #                         else:
-        #                             category_place_dict[category.name] = 1
-        #                             category_place = 1
-        #                 newresult = Result(
-        #                     event_id=event["id"],
-        #                     place=result["place"],
-        #                     bib=result["bib"],
-        #                     athlete=result["athlete"],
-        #                     gender=result["gender"],
-        #                     category=category,
-        #                     city=result["city"],
-        #                     chiptime=chiptime,
-        #                     guntime=guntime,
-        #                     age=age,
-        #                     division=division,
-        #                     rwmember=member,
-        #                     gender_place=gender_place,
-        #                     category_place=category_place,
-        #                 )
-        #                 results.append(newresult)
-        #                 splits = add_splits(event, result, extra_dict, splits)
-        #                 if "division" in extra_dict:
-        #                     process_endurathlete(event, result, extra_dict)
-        #                 if "relay_team" in extra_dict:
-        #                     if e.race.slug == "endurrun":
-        #                         process_endurteam(event, result, extra_dict)
-        #                     elif e.race.slug == "laurier-loop":
-        #                         newrelayresult = Relay(
-        #                             event_id=event["id"],
-        #                             place=result["place"],
-        #                             relay_team=extra_dict["relay_team"],
-        #                             relay_team_place=extra_dict["relay_team_place"],
-        #                             relay_team_time=maketimedelta(
-        #                                 extra_dict["relay_team_time"]
-        #                             ),
-        #                             relay_leg=extra_dict["relay_leg"],
-        #                         )
-        #                         relays.append(newrelayresult)
-        #                 if dohill:
-        #                     if result["extra"] != "":
-        #                         if "Hill Time" in result["extra"]:
-        #                             raw_hill_time = eval(result["extra"])["Hill Time"]
-        #                             hill_time = maketimedelta(raw_hill_time)
-        #                             newhillresult = Prime(
-        #                                 event_id=event["id"],
-        #                                 place=result["place"],
-        #                                 gender=result["gender"],
-        #                                 time=hill_time,
-        #                             )
-        #                             hill_results.append(newhillresult)
-        #         # Process results
-        #         Result.objects.filter(event_id=event["id"]).delete()
-        #         for result in results:
-        #             if gun_equal_chip:
-        #                 result.chiptime = None
-        #             result.save()
-        #         if race.slug == "endurrace":
-        #             endurrace_years.append(e.date[0:4])
-        #         info = "{} results processed for {} {} {} (Event {})".format(
-        #             len(results), year, race.name, distance.name, event["id"]
-        #         )
-        #         logger.info(info)
-        #         slack_results.append(info)
+                results.append(newresult)
+                splits = add_splits(event, result, extra_dict, splits)
+                if "division" in extra_dict:
+                    process_endurathlete(event, result, extra_dict)
+                if "relay_team" in extra_dict:
+                    if e.race.slug == "endurrun":
+                        process_endurteam(event, result, extra_dict)
+                    elif e.race.slug == "laurier-loop":
+                        newrelayresult = Relay(
+                            event_id=event["id"],
+                            place=result["place"],
+                            relay_team=extra_dict["relay_team"],
+                            relay_team_place=extra_dict["relay_team_place"],
+                            relay_team_time=maketimedelta(
+                                extra_dict["relay_team_time"]
+                            ),
+                            relay_leg=extra_dict["relay_leg"],
+                        )
+                        relays.append(newrelayresult)
+                if dohill:
+                    if result["extra"] != "":
+                        if "Hill Time" in result["extra"]:
+                            raw_hill_time = eval(result["extra"])["Hill Time"]
+                            hill_time = maketimedelta(raw_hill_time)
+                            newhillresult = Prime(
+                                event_id=event["id"],
+                                place=result["place"],
+                                gender=result["gender"],
+                                time=hill_time,
+                            )
+                            hill_results.append(newhillresult)
+            # Process results
+            Result.objects.filter(event_id=event["id"]).delete()
+            for result in results:
+                if gun_equal_chip:
+                    result.chiptime = None
+                result.save()
+            if race.slug == "endurrace":
+                endurrace_years.append(e.date[0:4])
+            info = "{} results processed for {} {} {} (Event {})".format(
+                len(results), year, race.name, distance.name, event["id"]
+            )
+            logger.info(info)
+            self.stdout.write("  {}".format(info))
+            slack_results.append(info)
 
-        #         # Process splits
-        #         Split.objects.filter(event_id=event["id"]).delete()
-        #         if len(splits) > 0:
-        #             Split.objects.bulk_create(splits)
-        #             info = "{} splits processed for {} {} {} (Event {})".format(
-        #                 len(splits), year, race.name, distance.name, event["id"]
-        #             )
-        #             logger.info(info)
-        #             slack_results.append(info)
+            # Process splits
+            Split.objects.filter(event_id=event["id"]).delete()
+            if len(splits) > 0:
+                Split.objects.bulk_create(splits)
+                info = "{} splits processed for {} {} {} (Event {})".format(
+                    len(splits), year, race.name, distance.name, event["id"]
+                )
+                logger.info(info)
+                self.stdout.write("  {}".format(info))
+                slack_results.append(info)
 
-        #         # Process LL relays
-        #         if len(relays) > 0:
-        #             Relay.objects.filter(event_id=event["id"]).delete()
-        #             Relay.objects.bulk_create(relays)
-        #             info = "{} relay results processed for {} {} {} (Event {})".format(
-        #                 len(relays), year, race.name, distance.name, event["id"]
-        #             )
-        #             logger.info(info)
-        #             slack_results.append(info)
+            #         # Process relays  ## NOT IMPLEMENTED YET
+            #         if len(relays) > 0:
+            #             Relay.objects.filter(event_id=event["id"]).delete()
+            #             Relay.objects.bulk_create(relays)
+            #             info = "{} relay results processed for {} {} {} (Event {})".format(
+            #                 len(relays), year, race.name, distance.name, event["id"]
+            #             )
+            #             logger.info(info)
+            #             slack_results.append(info)
 
-        #         # Process hills
-        #         if dohill:
-        #             Prime.objects.filter(event_id=event["id"]).delete()
-        #             for hillresult in hill_results:
-        #                 hillresult.save()
-        #             info = "{} hill results processed for {} {} {} (Event {})".format(
-        #                 len(hill_results), year, race.name, distance.name, event["id"]
-        #             )
-        #             logger.info(info)
-        #             slack_results.append(info)
+            # Process hills
+            if dohill:
+                Prime.objects.filter(event_id=event["id"]).delete()
+                for hillresult in hill_results:
+                    hillresult.save()
+                info = "{} hill results processed for {} {} {} (Event {})".format(
+                    len(hill_results), year, race.name, distance.name, event["id"]
+                )
+                logger.info(info)
+                self.stdout.write("  {}".format(info))
+                slack_results.append(info)
 
-        #         teamurl = "http://pre.scrw.ca/api/teamresults"
-        #         teamresults = []
-        #         teamresultsurl = "{}/?event={}&page_size={}".format(
-        #             teamurl, event["id"], page_size
-        #         )
-        #         while True:
-        #             r = requests.get(teamresultsurl, verify=False)
-        #             pageresults = r.json()["results"]
-        #             for result in pageresults:
-        #                 team_category_id = Teamcategory.objects.get(
-        #                     name=result["team_category"]
-        #                 ).id
-        #                 athlete_time = maketimedelta(result["athlete_time"])
-        #                 newteamresult = Teamresult(
-        #                     event_id=event["id"],
-        #                     team_category_id=team_category_id,
-        #                     team_place=result["team_place"],
-        #                     team_name=result["team_name"],
-        #                     athlete_team_place=result["athlete_team_place"],
-        #                     athlete_time=athlete_time,
-        #                     athlete_name=result["athlete_name"],
-        #                     counts=result["counts"],
-        #                     estimated=result["estimated"],
-        #                 )
-        #                 teamresults.append(newteamresult)
-        #             if r.json()["next"]:
-        #                 teamresultsurl = r.json()["next"]
-        #             else:
-        #                 break
-        #         # Delete any existing team results for this event
-        #         Teamresult.objects.filter(event_id=event["id"]).delete()
-        #         for teamresult in teamresults:
-        #             teamresult.save()
-        #         info = "{} team results processed for {} {} {} (Event {})".format(
-        #             len(teamresults), year, race.name, distance.name, event["id"]
-        #         )
-        #         logger.info(info)
-        #         if len(teamresults) > 0:
-        #             slack_results.append(info)
+            # Process team results
+            if google_results["team"]:
+                teamresults = []
+                for result in google_results["team"]:
+                    team_category_id = Teamcategory.objects.get(
+                        name=result["team_category"]
+                    ).id
+                    athlete_time = maketimedelta(result["athlete_time"])
+                    if result["counts"] == "TRUE":
+                        result_counts = True
+                    else:
+                        result_counts = False
+                    if result["estimated"] == "TRUE":
+                        result_estimated = True
+                    else:
+                        result_estimated = False
+                    newteamresult = Teamresult(
+                        event_id=event["id"],
+                        team_category_id=team_category_id,
+                        team_place=result["team_place"],
+                        team_name=result["team_name"],
+                        athlete_team_place=result["athlete_team_place"],
+                        athlete_time=athlete_time,
+                        athlete_name=result["athlete_name"],
+                        counts=result_counts,
+                        estimated=result_estimated,
+                    )
+                    teamresults.append(newteamresult)
+                # Delete any existing team results for this event
+                Teamresult.objects.filter(event_id=event["id"]).delete()
+                for teamresult in teamresults:
+                    teamresult.save()
+                info = "{} team results processed for {} {} {} (Event {})".format(
+                    len(teamresults), year, race.name, distance.name, event["id"]
+                )
+                logger.info(info)
+                self.stdout.write("  {}".format(info))
+                if len(teamresults) > 0:
+                    slack_results.append(info)
 
-        #         # Process PBs
-        #         info = "Process PBs"
-        #         logger.info(info)
-        #         process_rwpbs(e)
+            # Process PBs
+            info = "Processed PBs for {} ({})".format(e, e.id)
+            logger.info(info)
+            process_rwpbs(e)
         if len(endurrace_years) > 0:
             slack_results = process_endurrace(set(endurrace_years), slack_results)
         if len(slack_results) > 0:
             tasks.slack_results_update.delay(slack_results)
+        info = "Clearing cache"
+        logger.info(info)
         tasks.clear_cache.delay()
+        info = "Process complete"
+        logger.info(info)
+        self.stdout.write("Process complete!")
 
 
 def maketimedelta(strtime):
@@ -602,12 +601,16 @@ def get_results_from_google(url):
     """Grab results from a Google Sheet"""
     gc = gspread.service_account("/root/google_service_account.json")
     sh = gc.open_by_url(url)
-    worksheet = sh.worksheet("individual")
     results = {
-        "individual": [],
-        "team": [],
+        "individual": {},
+        "team": {},
     }
+    worksheet = sh.worksheet("individual")
     results["individual"] = worksheet.get_all_records()
+    worksheet_list = [x.title for x in sh.worksheets()]
+    if "team" in worksheet_list:
+        worksheet = sh.worksheet("team")
+        results["team"] = worksheet.get_all_records()
     return results
 
 
@@ -621,3 +624,17 @@ def event2pre(event):
     pre_event["city"] = event.city
     pre_event["resultsurl"] = event.resultsurl
     return pre_event
+
+
+def get_extra_dict(result):
+    extra_dict = {}
+    for k, v in result.items():
+        if k == "division":
+            extra_dict["division"] = v
+        elif k == "relay_team":
+            extra_dict["relay_team"] = v
+        elif k == "Hill Time":
+            extra_dict["Hill Time"] = v
+        elif "split" in k:
+            extra_dict[k] = v
+    return extra_dict
