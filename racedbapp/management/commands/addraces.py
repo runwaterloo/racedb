@@ -126,8 +126,13 @@ class Command(BaseCommand):
                 return
             google_results = get_results_from_google(e.resultsurl)
             for result in google_results["individual"]:
+                if "athlete" not in result:
+                    result["athlete"] = result["name"]
                 extra_dict = get_extra_dict(result)
-                resultcategory = result["category"]
+                if "category" in result:
+                    resultcategory = result["category"]
+                else:
+                    resultcategory = ""
                 try:
                     category = Category.objects.get(name=resultcategory)
                 except Exception:
@@ -154,6 +159,10 @@ class Command(BaseCommand):
                 member = get_member(event, result, membership)
                 gender_place = category_place = None
                 if result["place"] < 990000:
+                    if result["gender"] == "Male":
+                        result["gender"] = "M"
+                    if result["gender"] == "Female":
+                        result["gender"] = "F"
                     if result["gender"] == "F":
                         gender_place_dict["F"] += 1
                         gender_place = gender_place_dict["F"]
