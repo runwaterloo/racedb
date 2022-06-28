@@ -82,12 +82,11 @@ class Command(BaseCommand):
         endurrace_years = []
         self.stdout.write("Results:")
         for event in events:
-            event = event2pre(event)
-            year = event["date"].year
+            year = event.date.year
             gender_place_dict = {"F": 0, "M": 0}
             category_place_dict = {}
-            race = Race.objects.get(slug=event["race_slug"])
-            distance = event["distance"]
+            race = Race.objects.get(slug=event.race.slug)
+            distance = event.distance
             dohill = False
             splits = []
             relays = []
@@ -95,36 +94,15 @@ class Command(BaseCommand):
                 if distance.slug == "7-mi":
                     dohill = True
                     hill_results = []
-            flickrsetid = None
-            youtube_id = ""
-            youtube_offset_seconds = None
-            if len(Event.objects.filter(id=event["id"])) == 1:
-                flickrsetid = Event.objects.get(id=event["id"]).flickrsetid
-                youtube_id = Event.objects.get(id=event["id"]).youtube_id
-                youtube_offset_seconds = Event.objects.get(
-                    id=event["id"]
-                ).youtube_offset_seconds
-            e = Event(
-                id=event["id"],
-                race=race,
-                distance=distance,
-                date=event["date"],
-                city=event["city"],
-                resultsurl=event["resultsurl"],
-                flickrsetid=flickrsetid,
-                youtube_id=youtube_id,
-                youtube_offset_seconds=youtube_offset_seconds,
-            )
-            e.save()
-            membership = view_shared.get_membership(event=e, include_inactive=True)
+            membership = view_shared.get_membership(event=event, include_inactive=True)
             results = []
             gun_equal_chip = True
-            if "docs.google.com" not in e.resultsurl:
+            if "docs.google.com" not in event.resultsurl:
                 self.stdout.write(
                     "ERROR: Resuts URL for {} is not a google sheet".format(e)
                 )
                 return
-            google_results = get_results_from_google(e.resultsurl)
+            google_results = get_results_from_google(event.resultsurl)
             for result in google_results["individual"]:
                 if "athlete" not in result:
                     result["athlete"] = result["name"]
@@ -177,7 +155,7 @@ class Command(BaseCommand):
                             category_place_dict[category.name] = 1
                             category_place = 1
                 newresult = Result(
-                    event_id=event["id"],
+                    event_id=event.id,
                     place=result["place"],
                     bib=result["bib"],
                     athlete=result["athlete"],
@@ -197,11 +175,11 @@ class Command(BaseCommand):
                 if "division" in extra_dict:
                     process_endurathlete(event, result, extra_dict)
                 if "relay_team" in extra_dict:
-                    if e.race.slug == "endurrun":
+                    if event.race.slug == "endurrun":
                         process_endurteam(event, result, extra_dict)
-                    elif e.race.slug == "laurier-loop":
+                    elif event.race.slug == "laurier-loop":
                         newrelayresult = Relay(
-                            event_id=event["id"],
+                            event_id=event.id,
                             place=result["place"],
                             relay_team=extra_dict["relay_team"],
                             relay_team_place=extra_dict["relay_team_place"],
@@ -217,33 +195,33 @@ class Command(BaseCommand):
                             raw_hill_time = eval(result["extra"])["Hill Time"]
                             hill_time = maketimedelta(raw_hill_time)
                             newhillresult = Prime(
-                                event_id=event["id"],
+                                event_id=event.id,
                                 place=result["place"],
                                 gender=result["gender"],
                                 time=hill_time,
                             )
                             hill_results.append(newhillresult)
             # Process results
-            Result.objects.filter(event_id=event["id"]).delete()
+            Result.objects.filter(event_id=event.id).delete()
             for result in results:
                 if gun_equal_chip:
                     result.chiptime = None
                 result.save()
             if race.slug == "endurrace":
-                endurrace_years.append(e.date[0:4])
+                endurrace_years.append(event.date[0:4])
             info = "{} results processed for {} {} {} (Event {})".format(
-                len(results), year, race.name, distance.name, event["id"]
+                len(results), year, race.name, distance.name, event.id
             )
             logger.info(info)
             self.stdout.write("  {}".format(info))
             slack_results.append(info)
 
             # Process splits
-            Split.objects.filter(event_id=event["id"]).delete()
+            Split.objects.filter(event_id=event.id).delete()
             if len(splits) > 0:
                 Split.objects.bulk_create(splits)
                 info = "{} splits processed for {} {} {} (Event {})".format(
-                    len(splits), year, race.name, distance.name, event["id"]
+                    len(splits), year, race.name, distance.name, event.id
                 )
                 logger.info(info)
                 self.stdout.write("  {}".format(info))
@@ -251,21 +229,21 @@ class Command(BaseCommand):
 
             #         # Process relays  ## NOT IMPLEMENTED YET
             #         if len(relays) > 0:
-            #             Relay.objects.filter(event_id=event["id"]).delete()
+            #             Relay.objects.filter(event_id=event.id).delete()
             #             Relay.objects.bulk_create(relays)
             #             info = "{} relay results processed for {} {} {} (Event {})".format(
-            #                 len(relays), year, race.name, distance.name, event["id"]
+            #                 len(relays), year, race.name, distance.name, event.id
             #             )
             #             logger.info(info)
             #             slack_results.append(info)
 
             # Process hills
             if dohill:
-                Prime.objects.filter(event_id=event["id"]).delete()
+                Prime.objects.filter(event_id=event.id).delete()
                 for hillresult in hill_results:
                     hillresult.save()
                 info = "{} hill results processed for {} {} {} (Event {})".format(
-                    len(hill_results), year, race.name, distance.name, event["id"]
+                    len(hill_results), year, race.name, distance.name, event.id
                 )
                 logger.info(info)
                 self.stdout.write("  {}".format(info))
@@ -288,7 +266,7 @@ class Command(BaseCommand):
                     else:
                         result_estimated = False
                     newteamresult = Teamresult(
-                        event_id=event["id"],
+                        event_id=event.id,
                         team_category_id=team_category_id,
                         team_place=result["team_place"],
                         team_name=result["team_name"],
@@ -300,11 +278,11 @@ class Command(BaseCommand):
                     )
                     teamresults.append(newteamresult)
                 # Delete any existing team results for this event
-                Teamresult.objects.filter(event_id=event["id"]).delete()
+                Teamresult.objects.filter(event_id=event.id).delete()
                 for teamresult in teamresults:
                     teamresult.save()
                 info = "{} team results processed for {} {} {} (Event {})".format(
-                    len(teamresults), year, race.name, distance.name, event["id"]
+                    len(teamresults), year, race.name, distance.name, event.id
                 )
                 logger.info(info)
                 self.stdout.write("  {}".format(info))
@@ -312,7 +290,7 @@ class Command(BaseCommand):
                     slack_results.append(info)
 
             # Process PBs
-            info = "Processed PBs for {} ({})".format(e, e.id)
+            info = "Processed PBs for {} ({})".format(event, event.id)
             logger.info(info)
             process_rwpbs(e)
         if len(endurrace_years) > 0:
@@ -446,7 +424,7 @@ def add_splits(event, result, extra_dict, splits):
         else:
             split_time = maketimedelta(v)
         this_split = Split(
-            event_id=event["id"],
+            event_id=event.id,
             place=result["place"],
             split_num=split_num,
             split_time=split_time,
@@ -458,7 +436,7 @@ def add_splits(event, result, extra_dict, splits):
 def process_endurathlete(event, result, extra_dict):
     division = extra_dict["division"]
     if division in ("Ultimate", "Sport"):
-        year = int(event["date"][0:4])
+        year = int(event.date.year)
         name = result["athlete"]
         gender = result["gender"]
         try:
@@ -502,7 +480,7 @@ def process_endurathlete(event, result, extra_dict):
 
 
 def process_endurteam(event, result, extra_dict):
-    year = int(event["date"][0:4])
+    year = int(event.date.year)
     name = extra_dict["relay_team"]
     athlete = result["athlete"]
     athlete_gender = result["gender"]
@@ -510,7 +488,7 @@ def process_endurteam(event, result, extra_dict):
         age = int(result["age"])
     except Exception:
         age = None
-    distance = event["distance"]
+    distance = event.distance
     try:
         et = Endurteam.objects.get(year=year, name=name)
     except Exception:
@@ -554,14 +532,11 @@ def get_member(event, result, membership):
     lower_athlete = result["athlete"].lower()
     if lower_athlete in membership.names:
         member = membership.names[lower_athlete]
-    if "{}-{}".format(event["id"], result["place"]) in membership.includes:
-        member = membership.includes["{}-{}".format(event["id"], result["place"])]
+    if "{}-{}".format(event.id, result["place"]) in membership.includes:
+        member = membership.includes["{}-{}".format(event.id, result["place"])]
     if member:
-        if "{}-{}".format(event["id"], result["place"]) in membership.excludes:
-            if (
-                member
-                in membership.excludes["{}-{}".format(event["id"], result["place"])]
-            ):
+        if "{}-{}".format(event.id, result["place"]) in membership.excludes:
+            if member in membership.excludes["{}-{}".format(event.id, result["place"])]:
                 member = None
     return member
 
@@ -621,18 +596,6 @@ def get_results_from_google(url):
         worksheet = sh.worksheet("team")
         results["team"] = worksheet.get_all_records()
     return results
-
-
-def event2pre(event):
-    """Convert event to old pre dict format"""
-    pre_event = {}
-    pre_event["date"] = event.date
-    pre_event["race_slug"] = event.race.slug
-    pre_event["distance"] = event.distance
-    pre_event["id"] = event.id
-    pre_event["city"] = event.city
-    pre_event["resultsurl"] = event.resultsurl
-    return pre_event
 
 
 def get_extra_dict(result):
