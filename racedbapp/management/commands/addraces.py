@@ -312,9 +312,9 @@ def maketimedelta(strtime):
             milliseconds = 0
         else:
             if microsec[0] == 0:
-                milliseconds = int(microsec) / 10000
+                milliseconds = int(microsec) * 10
             else:
-                milliseconds = int(microsec) / 1000
+                milliseconds = int(microsec) * 100
         hours, minutes, seconds = strtime.split(".")[0].split(":")
     else:
         milliseconds = 0
