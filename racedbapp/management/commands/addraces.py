@@ -82,6 +82,9 @@ class Command(BaseCommand):
         endurrace_years = []
         self.stdout.write("Results:")
         for event in events:
+            dqplace = 990000
+            dnfplace = 991000
+            dnsplace = 992000
             year = event.date.year
             gender_place_dict = {"F": 0, "M": 0}
             category_place_dict = {}
@@ -120,23 +123,49 @@ class Command(BaseCommand):
                             ismasters = True
                     category = Category(name=resultcategory, ismasters=ismasters)
                     category.save()
-                guntime = maketimedelta(result["guntime"])
-                if "chiptime" in result:
-                    chiptime = maketimedelta(result["chiptime"])
+                try:
+                    place = int(result["place"])
+                except:
+                    if result["place"] == "DQ":
+                        place = dqplace
+                        dqplace += 1
+                    elif result["place"] == "DNF":
+                        place = dnfplace
+                        dnfplace += 1
+                    elif result["place"] == "DNS":
+                        place = dnsplace
+                        dnsplace += 1
+                    else:
+                        continue
+                if place >= 990000:
+                    rawguntime = "99:00:00"
+                    rawchiptime = "99:00:00"
+                    if place >= 991000:
+                        rawguntime = "99:10:00"
+                        rawchiptime = "99:10:00"
+                        if place >= 992000:
+                            rawguntime = "99:20:00"
+                            rawchiptime = "99:20:00"
                 else:
-                    chiptime = guntime
+                    rawguntime = result["guntime"]
+                    rawchiptime = rawguntime
+                    if "chiptime" in result:
+                        if result["chiptime"]:
+                            rawchiptime = result["chiptime"]
+                guntime = maketimedelta(rawguntime)
+                chiptime = maketimedelta(rawchiptime)
                 if guntime != chiptime:
                     gun_equal_chip = False
+                age = None
                 if "age" in result:
-                    age = int(result["age"])
-                else:
-                    age = None
+                    if result["age"]:
+                        age = int(result["age"])
                 division = ""
                 if "division" in extra_dict:
                     division = extra_dict["division"]
                 member = get_member(event, result, membership)
                 gender_place = category_place = None
-                if result["place"] < 990000:
+                if place < 990000:
                     if result["gender"] == "Male":
                         result["gender"] = "M"
                     if result["gender"] == "Female":
@@ -156,7 +185,7 @@ class Command(BaseCommand):
                             category_place = 1
                 newresult = Result(
                     event_id=event.id,
-                    place=result["place"],
+                    place=place,
                     bib=result["bib"],
                     athlete=result["athlete"],
                     gender=result["gender"],
@@ -171,6 +200,7 @@ class Command(BaseCommand):
                     category_place=category_place,
                 )
                 results.append(newresult)
+                result["place"] = place
                 splits = add_splits(event, result, extra_dict, splits)
                 if "division" in extra_dict:
                     process_endurathlete(event, result, extra_dict)
