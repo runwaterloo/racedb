@@ -205,20 +205,21 @@ class Command(BaseCommand):
                 if "division" in extra_dict:
                     process_endurathlete(event, result, extra_dict)
                 if "relay_team" in extra_dict:
-                    if event.race.slug == "endurrun":
-                        process_endurteam(event, result, extra_dict)
-                    elif event.race.slug == "laurier-loop":
-                        newrelayresult = Relay(
-                            event_id=event.id,
-                            place=result["place"],
-                            relay_team=extra_dict["relay_team"],
-                            relay_team_place=extra_dict["relay_team_place"],
-                            relay_team_time=maketimedelta(
-                                extra_dict["relay_team_time"]
-                            ),
-                            relay_leg=extra_dict["relay_leg"],
-                        )
-                        relays.append(newrelayresult)
+                    if extra_dict["relay_team"]:
+                        if event.race.slug == "endurrun":
+                            process_endurteam(event, result, extra_dict)
+                        elif event.race.slug == "laurier-loop":
+                            newrelayresult = Relay(
+                                event_id=event.id,
+                                place=result["place"],
+                                relay_team=extra_dict["relay_team"],
+                                relay_team_place=extra_dict["relay_team_place"],
+                                relay_team_time=maketimedelta(
+                                    extra_dict["relay_team_time"]
+                                ),
+                                relay_leg=extra_dict["relay_leg"],
+                            )
+                            relays.append(newrelayresult)
                 if dohill:
                     if result["extra"] != "":
                         if "Hill Time" in result["extra"]:
@@ -540,19 +541,19 @@ def process_endurteam(event, result, extra_dict):
             else:
                 if age < 40:
                     et.ismasters = False
-    if distance == "Half Marathon":
+    if distance.slug == "half-marathon":
         et.st1 = athlete
-    elif distance == "15K":
+    elif distance.slug == "15-km":
         et.st2 = athlete
-    elif distance == "30K":
+    elif distance.slug == "30-km":
         et.st3 = athlete
-    elif distance == "10M":
+    elif distance.slug == "10-mi":
         et.st4 = athlete
-    elif distance == "25.6K":
+    elif distance.slug == "25_6-km":
         et.st5 = athlete
-    elif distance == "10K":
+    elif distance.slug == "10-km":
         et.st6 = athlete
-    elif distance == "Marathon":
+    elif distance.slug == "marathon":
         et.st7 = athlete
     et.save()
 
