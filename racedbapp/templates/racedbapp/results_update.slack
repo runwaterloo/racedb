@@ -2,7 +2,6 @@
 
 {% block text %}
 *RRW results have been added or updated!*
-
 {% for result in results %}
 {{ result }}
 {% endfor %}
