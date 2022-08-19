@@ -4,7 +4,8 @@
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <ul class="pagination">
-          <li><a href="/endurrun/ultimate/?year={{ recap_results.year }}"><b>Ultimate {{ recap_results.ultimate_suffix }}</b></a></li>
+          <li><a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ recap_event.distance.slug }}">Latest results</a></li>
+          <li><a href="/endurrun/ultimate/?year={{ recap_results.year }}">Ultimate</a></li>
           <li><a href="/endurrun/relay/?year={{ recap_results.year }}">Relay</a></li>
           <li><a href="/endurrun/">More</a></li>
       </ul>
