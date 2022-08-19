@@ -55,6 +55,7 @@ def index(request, division, results_only=False):
         .distinct()
     )
     contest_slug = False
+    ultimate_winners, ultimate_gold_jerseys = view_shared.get_ultimate_winners_and_gold_jerseys(years)
     if "contest" in qstring:
         contest_slug = qstring["contest"][0]
         if year:
@@ -125,7 +126,7 @@ def index(request, division, results_only=False):
     year_events_results_dict = {}
     events_results_count = []
     flags = os.listdir("/srv/racedb/racedbapp/static/flags")
-    valid_flag_slugs = set([x.split("_")[0] for x in flags])
+    valid_flag_slugs = {x.split("_")[0] for x in flags}
     year_bibs = {}
     for loopyear in years:
         if year:
@@ -270,6 +271,8 @@ def index(request, division, results_only=False):
         "maxstages": maxstages,
         "results": results,
         "contest_slug": contest_slug,
+        "ultimate_winners": ultimate_winners,
+        "ultimate_gold_jerseys": ultimate_gold_jerseys,
     }
     return render(request, "racedbapp/endurrun.html", context)
 
@@ -630,7 +633,7 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, division, 
 
 
 def addgap(results):
-    """ Calculate time gap between places and add them """
+    """Calculate time gap between places and add them"""
     newresults = []
     previous_seconds = False
     if len(results) > 0:

@@ -1,6 +1,5 @@
 from collections import namedtuple
 
-from django.db.models import Q
 from django.http import Http404
 
 from .config import ValidRelayCategories
@@ -569,6 +568,66 @@ def get_ultimate_finished_all_events(years):
                 if athlete.name not in last_event_finishers:
                     ultimate_finished_all_events[year][athlete] = False
     return ultimate_finished_all_events
+
+
+def get_ultimate_winners_and_gold_jerseys(years):
+    """
+    Get a list of names of people who have won the ENDURrun ultimate.
+    If there is ever a tie for winner times in a year, this won't work.
+    """
+    ultimate_winners = []
+    ultimate_gold_jerseys = []
+    for year in years:
+        year_results = Result.objects.filter(
+            event__race__slug="endurrun",
+            division="Ultimate",
+            place__lt=990000,
+            event__date__icontains=year,
+        ).order_by("event__date")
+        athlete_event_count = {}
+        female_cumulative_time = {}
+        male_cumulative_time = {}
+        event_ids = year_results.values_list("event__id", flat=True).distinct()
+        num_events = 0
+        for event_id in event_ids:
+            num_events += 1
+            event_results = year_results.filter(event_id=event_id)
+            for result in event_results:
+                if result.athlete in athlete_event_count:
+                    athlete_event_count[result.athlete] += 1
+                else:
+                    athlete_event_count[result.athlete] = 1
+                if result.gender == "F":
+                    if result.athlete in female_cumulative_time:
+                        female_cumulative_time[result.athlete] += result.guntime
+                    else:
+                        female_cumulative_time[result.athlete] = result.guntime
+                if result.gender == "M":
+                    if result.athlete in male_cumulative_time:
+                        male_cumulative_time[result.athlete] += result.guntime
+                    else:
+                        male_cumulative_time[result.athlete] = result.guntime
+            if female_cumulative_time:
+                female_cumulative_time = {key:val for key, val in female_cumulative_time.items() if athlete_event_count[key] == num_events}
+                female_gold_jersey = min(
+                    female_cumulative_time, key=female_cumulative_time.get
+                )
+                ultimate_gold_jerseys.append(female_gold_jersey)
+                if female_gold_jersey == "Melanie Boultbee":
+                    print(event_id)
+                if num_events == 7:
+                    ultimate_winners.append(female_gold_jersey)
+            if male_cumulative_time:
+                male_cumulative_time = {key:val for key, val in male_cumulative_time.items() if athlete_event_count[key] == num_events}
+                male_gold_jersey = min(
+                    male_cumulative_time, key=male_cumulative_time.get
+                )
+                ultimate_gold_jerseys.append(male_gold_jersey)
+                if num_events == 7:
+                    ultimate_winners.append(male_gold_jersey)
+    ultimate_winners = set(ultimate_winners)
+    ultimate_gold_jerseys = set(ultimate_gold_jerseys)
+    return ultimate_winners, ultimate_gold_jerseys
 
 
 def get_config_value_or_false(name):

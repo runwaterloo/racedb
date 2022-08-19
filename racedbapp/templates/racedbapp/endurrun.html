@@ -96,9 +96,11 @@
 
   <!-- start temporary fix until better solution -->
   {% if year >= 2014 and division != 'relay' %}
+    {% if results.0.total_time %}
     <th class="text-center" scope="col">
         <i class="fas fa-camera"></i>
     </th>
+    {% endif %}
   {% endif %}
   <!-- end temporary fix until better solution -->
 
@@ -109,27 +111,29 @@
     <th class="text-center" title="Gender">G</th>
     <th class="text-center">Age</th>
   {% endif %}
-  <th class="text-center">Total</th>
-  <th class="text-center" title="Time gap to 1st place">Gap 1</th>
-  <th class="text-center" title="Time gap to the next place up">Gap 2</th>
-  {% if contest_slug == "sprint" %}
-  <th class="text-center">Stage 2</th>
-  <th class="text-center">Stage 6</th>
-  {% elif contest_slug == "trail" %}
-  <th class="text-center">Stage 3</th>
-  <th class="text-center">Stage 5</th>
-  {% elif division == 'sport' %}
-  <th class="text-center">Stage 5</th>
-  <th class="text-center">Stage 6</th>
-  <th class="text-center">Stage 7</th>
-  {% else %}
-  <th class="text-center">Stage 1</th>
-  <th class="text-center">Stage 2</th>
-  <th class="text-center">Stage 3</th>
-  <th class="text-center">Stage 4</th>
-  <th class="text-center">Stage 5</th>
-  <th class="text-center">Stage 6</th>
-  <th class="text-center">Stage 7</th>
+  {% if results.0.total_time %}
+    <th class="text-center">Total</th>
+    <th class="text-center" title="Time gap to 1st place">Gap 1</th>
+    <th class="text-center" title="Time gap to the next place up">Gap 2</th>
+    {% if contest_slug == "sprint" %}
+    <th class="text-center">Stage 2</th>
+    <th class="text-center">Stage 6</th>
+    {% elif contest_slug == "trail" %}
+    <th class="text-center">Stage 3</th>
+    <th class="text-center">Stage 5</th>
+    {% elif division == 'sport' %}
+    <th class="text-center">Stage 5</th>
+    <th class="text-center">Stage 6</th>
+    <th class="text-center">Stage 7</th>
+    {% else %}
+    <th class="text-center">Stage 1</th>
+    <th class="text-center">Stage 2</th>
+    <th class="text-center">Stage 3</th>
+    <th class="text-center">Stage 4</th>
+    <th class="text-center">Stage 5</th>
+    <th class="text-center">Stage 6</th>
+    <th class="text-center">Stage 7</th>
+    {% endif %}
   {% endif %}
   </tr>
   </thead>
@@ -168,24 +172,31 @@
       {% endif %}
       <!--
       Flag images available at http://www.iconarchive.com/show/flag-icons-by-gosquared.html
-      Currently using default (shiny) 24px. 
+      Currently using default (shiny) 24px.
       -->
       {% if result.flag_slug %}
       <img title="{{ result.athlete.country }}" src="{% static "flags/"|add:result.flag_slug|add:"_shiny_24px.png" %}">
-      {% endif %} 
+      {% endif %}
+      {% if result.athlete.name in ultimate_winners %}
+      <i class="fa-solid fa-shirt-running fa-icon-ultimate-gold-jersey" title="Past ENDURrun Ultimate Champion"></i>
+      {% elif result.athlete.name in ultimate_gold_jerseys %}
+      <i class="fa-solid fa-shirt-tank-top fa-icon-ultimate-gold-jersey"  title="Gold Jersey Club member"></i>
+      {% endif %}
       {% if result.member_slug %}
         <a href="/member/{{ result.member_slug }}/">{{ result.athlete.name }}</a>
       {% else %}
         {{ result.athlete.name }}
       {% endif %}
-      </td>
+    </td>
 
   <!-- start temporary fix until better solution -->
   {% if year >= 2014 and division != 'relay' %}
+    {% if results.0.total_time %}
     <td class="text-center">
       <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ year }}endurrun,{{ result.bib }}" target="_blank">
         <i class="fas fa-camera"></i>      </a>
     </td>
+    {% endif %}
   {% endif %}
   <!-- end temporary fix until better solution -->
 
@@ -235,4 +246,3 @@
   $('table').filterTable({inputSelector: '#input-filter', minRows: 0});
 </script>
 {% endblock content %}
-
