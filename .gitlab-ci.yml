@@ -22,7 +22,7 @@ build-test-push:
   image: docker:latest
   services:
     - docker:dind
-    - mariadb:10.4.22
+    - mariadb:10.6.8
   variables:
     MYSQL_DATABASE: racedb
     MYSQL_USER: racedb
