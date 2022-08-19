@@ -61,6 +61,11 @@ def index(request, year, race_slug, distance_slug):
     else:
         all_results = Result.objects.select_related().filter(event=event)
         hasage = all_results.hasage(event)
+    event_splits = Split.objects.filter(event=event)
+    all_split_microseconds = {
+        x.split_time.microseconds for x in event_splits if x.split_time
+    }
+    splits_have_microseconds = [x for x in all_split_microseconds if x != 0]
     results, max_splits = get_results(
         event,
         all_results,
@@ -70,6 +75,7 @@ def index(request, year, race_slug, distance_slug):
         hill_dict,
         phototags,
         relay_dict,
+        event_splits,
     )
     split_headings = get_split_headings(event, max_splits)
     hasdivision = False
@@ -106,6 +112,7 @@ def index(request, year, race_slug, distance_slug):
         "extra_name": extra_name,
         "phototags": phototags,
         "guntimes_have_microseconds": guntimes_have_microseconds,
+        "splits_have_microseconds": splits_have_microseconds,
         "ad": ad,
         "series": series,
     }
@@ -509,6 +516,7 @@ def get_results(
     hill_dict,
     phototags,
     relay_dict,
+    event_splits,
 ):
     named_result = namedtuple(
         "nr",
@@ -542,7 +550,6 @@ def get_results(
     masters_place_dict = defaultdict(int)
     category_place_dict = {}
     haschiptime = False
-    event_splits = Split.objects.filter(event=event)
     splits_list = event_splits.values_list("place", "split_num", "split_time")
     splits_dict = {(a, b): c for a, b, c in splits_list}
     max_splits = False

@@ -294,7 +294,11 @@
               <td class="text-left">{{ r.city }}</td>
               {% for s in r.splits %}
                 {% if s.split_time != 'None' %}
+                  {% if splits_have_microseconds %}
+                  <td class="text-center">{{ s.split_time|show_str_decimal }}</td>
+                  {% else %}
                   <td class="text-center">{{ s.split_time }}</td>
+                  {% endif %}
                 {% else %}
                   <td></td>
                 {% endif %}
