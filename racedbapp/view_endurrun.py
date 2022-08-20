@@ -32,6 +32,7 @@ namedresult = namedtuple(
         "place_gap",
         "member_slug",
         "bib",
+        "change",
     ],
 )
 
@@ -55,7 +56,10 @@ def index(request, division, results_only=False):
         .distinct()
     )
     contest_slug = False
-    ultimate_winners, ultimate_gold_jerseys = view_shared.get_ultimate_winners_and_gold_jerseys(years)
+    (
+        ultimate_winners,
+        ultimate_gold_jerseys,
+    ) = view_shared.get_ultimate_winners_and_gold_jerseys(years)
     if "contest" in qstring:
         contest_slug = qstring["contest"][0]
         if year:
@@ -102,6 +106,7 @@ def index(request, division, results_only=False):
         if division == "sport":
             stop_event = stop_event - 4
     results = []
+    prev_stage_results = []
     if division in ("ultimate", "sport"):
         if filter_choice == "Female":
             athletes = athletes.filter(gender="F")
@@ -242,11 +247,50 @@ def index(request, division, results_only=False):
                 place_gap,
                 member_slug,
                 bib,
+                "",
+            )
+        )
+        prev_total_time = total_time
+        prev_total_seconds = total_seconds
+        prev_stages = stages
+        completed_stage_times = [
+            x for x in stage_times if x.name != ""
+        ]  # remove future stages
+        if completed_stage_times and division != "relay":
+            if not isinstance(
+                completed_stage_times[-1].time, str
+            ):  # ensure most recent stage completed
+                prev_total_time = total_time - completed_stage_times[-1].time
+                prev_total_seconds = prev_total_time.total_seconds()
+                prev_stages = stages - 1
+        prev_stage_results.append(
+            namedresult(
+                athlete,
+                prev_stages,
+                prev_total_time,
+                prev_total_seconds,
+                # placeholder data from here on
+                [],
+                "",
+                0,
+                "",
+                0,
+                0,
+                "",
+                "",
+                "",
             )
         )
     results = sorted(results, key=attrgetter("total_seconds"))
     results = sorted(results, key=attrgetter("stages"), reverse=True)
     results = addgap(results)
+    results_ranked_athletes = [x.athlete for x in results]
+    prev_stage_results = sorted(prev_stage_results, key=attrgetter("total_seconds"))
+    prev_stage_results = sorted(
+        prev_stage_results, key=attrgetter("stages"), reverse=True
+    )
+    prev_stage_ranked_athletes = [x.athlete for x in prev_stage_results]
+    results = addchange(results, results_ranked_athletes, prev_stage_ranked_athletes)
     maxstages = 0
     if len(results) > 0:
         maxstages = results[0].stages
@@ -666,6 +710,55 @@ def addgap(results):
                 place_gap,
                 r.member_slug,
                 r.bib,
+                "",
             )
         )
+    return newresults
+
+
+def addchange(results, results_ranked_athletes, prev_stage_ranked_athletes):
+    """Calculate rank change"""
+    newresults = []
+    if results[0].stages < 2:
+        change = False
+        for r in results:
+            newresults.append(
+                namedresult(
+                    r.athlete,
+                    r.stages,
+                    r.total_time,
+                    r.total_seconds,
+                    r.stage_times,
+                    r.flag_slug,
+                    r.final_status,
+                    r.mouseover,
+                    r.lead_gap,
+                    r.place_gap,
+                    r.member_slug,
+                    r.bib,
+                    change,
+                )
+            )
+    else:
+        for r in results:
+            change = prev_stage_ranked_athletes.index(
+                r.athlete
+            ) - results_ranked_athletes.index(r.athlete)
+            newresults.append(
+                namedresult(
+                    r.athlete,
+                    r.stages,
+                    r.total_time,
+                    r.total_seconds,
+                    r.stage_times,
+                    r.flag_slug,
+                    r.final_status,
+                    r.mouseover,
+                    r.lead_gap,
+                    r.place_gap,
+                    r.member_slug,
+                    r.bib,
+                    change,
+                )
+            )
     return newresults

@@ -81,6 +81,13 @@ def round_up(orig_time):
     return rounded_up_time
 
 
+@register.filter(name="neg_to_pos")
+def neg_to_pos(orig_value):
+    """Turn a negative number to positive"""
+    pos_value = orig_value * -1
+    return pos_value
+
+
 @register.filter(name="get_prekey")
 def get_prekey(string):
     """Get preupdate key"""
