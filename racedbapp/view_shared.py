@@ -1,5 +1,6 @@
 from collections import namedtuple
 
+from django.db.models import Q
 from django.http import Http404
 
 from .config import ValidRelayCategories
@@ -608,7 +609,11 @@ def get_ultimate_winners_and_gold_jerseys(years):
                     else:
                         male_cumulative_time[result.athlete] = result.guntime
             if female_cumulative_time:
-                female_cumulative_time = {key:val for key, val in female_cumulative_time.items() if athlete_event_count[key] == num_events}
+                female_cumulative_time = {
+                    key: val
+                    for key, val in female_cumulative_time.items()
+                    if athlete_event_count[key] == num_events
+                }
                 female_gold_jersey = min(
                     female_cumulative_time, key=female_cumulative_time.get
                 )
@@ -618,7 +623,11 @@ def get_ultimate_winners_and_gold_jerseys(years):
                 if num_events == 7:
                     ultimate_winners.append(female_gold_jersey)
             if male_cumulative_time:
-                male_cumulative_time = {key:val for key, val in male_cumulative_time.items() if athlete_event_count[key] == num_events}
+                male_cumulative_time = {
+                    key: val
+                    for key, val in male_cumulative_time.items()
+                    if athlete_event_count[key] == num_events
+                }
                 male_gold_jersey = min(
                     male_cumulative_time, key=male_cumulative_time.get
                 )

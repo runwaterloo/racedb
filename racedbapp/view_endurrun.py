@@ -1,18 +1,15 @@
-import datetime
 import os
 import urllib
 from collections import namedtuple
 from datetime import timedelta
 from operator import attrgetter
 
-from django import db
-from django.db.models import Count, Min
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.shortcuts import render
 from django.utils.text import slugify
 
 from . import view_shared
-from .models import *
+from .models import Endurathlete, Endurteam, Event, Result
 
 namedfilter = namedtuple("nf", ["current", "choices"])
 namedchoice = namedtuple("nc", ["name", "url"])
@@ -365,8 +362,6 @@ def getresultfilter(
         contest_qs2 = "&contest={}".format(contest_slug)
     if year:
         if phase_choice == "Final Results":
-            if contest_slug:
-                conest_qs = "&contest={}".format(contest_slug)
             choices = [
                 namedchoice(
                     "", "/endurrun/{}/?year={}{}".format(division, year, contest_qs2)
