@@ -192,3 +192,14 @@ class SeriesAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Series, SeriesAdmin)
+
+
+class TimerAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "website_url",
+        "image_url",
+    )
+
+
+admin.site.register(Timer, TimerAdmin)
