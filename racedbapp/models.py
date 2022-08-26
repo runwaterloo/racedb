@@ -196,6 +196,15 @@ class Teamcategory(models.Model):
         return self.name
 
 
+class Timer(models.Model):
+    image_url = models.URLField(max_length=500)
+    name = models.CharField(max_length=100)
+    website_url = models.URLField(max_length=500)
+
+    def __str__(self):
+        return self.name
+
+
 class Event(models.Model):
     MEDALS_CHOICES = (("none", "none"), ("standard", "standard"))
     race = models.ForeignKey(Race, on_delete=models.CASCADE)
@@ -223,6 +232,7 @@ class Event(models.Model):
         ),
     )
     medals = models.CharField(max_length=32, choices=MEDALS_CHOICES, default="none")
+    timer = models.ForeignKey(Timer, on_delete=models.CASCADE, null=True, default=None)
 
     class Meta:
         unique_together = ("race", "distance", "date")
