@@ -600,7 +600,7 @@ def get_results(
         if r.place < 990000:
             guntime = r.guntime
             if r.chiptime:
-                chiptime = r.chiptime - timedelta(microseconds=r.chiptime.microseconds)
+                chiptime = r.chiptime
         try:
             prime = hill_dict[r.place]
         except:

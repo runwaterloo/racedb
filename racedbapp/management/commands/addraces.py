@@ -338,14 +338,15 @@ class Command(BaseCommand):
 
 def maketimedelta(strtime):
     if "." in strtime:
-        microsec = strtime.split(".")[1]
-        if int(microsec) == 0:
+        decimal_part = strtime.split(".")[1].rstrip("0")
+        if decimal_part == "":
             milliseconds = 0
         else:
-            if microsec[0] == 0:
-                milliseconds = int(microsec) * 10
+            decimal_part = int(decimal_part)
+            if decimal_part < 10:
+                milliseconds = decimal_part * 100
             else:
-                milliseconds = int(microsec) * 100
+                milliseconds = decimal_part * 10
         hours, minutes, seconds = strtime.split(".")[0].split(":")
     else:
         milliseconds = 0

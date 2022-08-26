@@ -289,7 +289,11 @@
               {% endif %}
               <td class="text-center">{{ r.guntime|get_pace:event.distance.km }}</td>
               {% if results.0.chiptime %}
-                <td class="text-center">{{ r.chiptime }}</td>
+                {% if guntimes_have_microseconds %}
+                  <td class="text-center">{{ r.chiptime|show_decimal }}</td>
+                {% else %}
+                  <td class="text-center">{{ r.chiptime }}</td>
+                {% endif %}
               {% endif %}
               <td class="text-left">{{ r.city }}</td>
               {% for s in r.splits %}
