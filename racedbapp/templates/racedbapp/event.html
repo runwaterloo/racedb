@@ -314,13 +314,15 @@
       <script>
         $('table').filterTable({inputSelector: '#input-filter'}); // apply filterTable to all tables on this page
       </script>
-<!--        <div>
+      {% if event.timer %}
+       <div>
           <center>
             Timing provided by:<br>
-            <a href="https://www.chiptimeresults.com" target="_blank"><img class="img-rounded" src="https://runwaterloo.com/wp-content/uploads/2022/05/Chiptimeresults.png"></a>
+            <a href="{{ event.timer.website_url }}" target="_blank"><img class="img-rounded" src="{{ event.timer.image_url }}"></a>
             <br><br>
           </center>
-        </div>-->
+       </div>
+      {% endif %}
     </div>
   </div>
 

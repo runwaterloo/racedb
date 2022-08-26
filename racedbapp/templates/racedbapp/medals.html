@@ -19,7 +19,7 @@
   <meta property="og:image:height" content="200" />
  <!-- https://sunnywalker.github.io/jQuery.FilterTable/ -->
   <script src="{% static "jquery.filtertable.min.js" %}"></script>
-  <!-- highlight found cell 
+  <!-- highlight found cell
   <style>
   .filter-table .quick { margin-left: 0.5em; font-size: 0.8em; text-decoration: none; }
   .fitler-table .quick:hover { text-decoration: underline; }
@@ -98,13 +98,15 @@
       <script>
         $('table').filterTable({inputSelector: '#input-filter'}); // apply filterTable to all tables on this page
       </script>
-        <div>
-          <center>
-            Timing provided by:<br>
-            <a href="https://www.chiptimeresults.com" target="_blank"><img class="img-rounded" src="http://runwaterloo.com/wp-content/uploads/2022/05/Chiptimeresults.png"></a>
-            <br><br>
-          </center>
-        </div>
+      {% if event.timer %}
+      <div>
+         <center>
+           Timing provided by:<br>
+           <a href="{{ event.timer.website_url }}" target="_blank"><img class="img-rounded" src="{{ event.timer.image_url }}"></a>
+           <br><br>
+         </center>
+      </div>
+     {% endif %}
     </div>
   </div>
 
