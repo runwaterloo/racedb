@@ -233,7 +233,7 @@ class Event(models.Model):
     )
     medals = models.CharField(max_length=32, choices=MEDALS_CHOICES, default="none")
     timer = models.ForeignKey(
-        Timer, on_delete=models.CASCADE, null=True, blank=True, default=None
+        Timer, models.SET_NULL, null=True, blank=True, default=None
     )
 
     class Meta:
