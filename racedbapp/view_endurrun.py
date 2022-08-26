@@ -30,6 +30,7 @@ namedresult = namedtuple(
         "member_slug",
         "bib",
         "change",
+        "gp",
     ],
 )
 
@@ -245,6 +246,7 @@ def index(request, division, results_only=False):
                 member_slug,
                 bib,
                 "",
+                "",
             )
         )
         prev_total_time = total_time
@@ -276,6 +278,7 @@ def index(request, division, results_only=False):
                 "",
                 "",
                 "",
+                "",
             )
         )
     results = sorted(results, key=attrgetter("total_seconds"))
@@ -288,6 +291,9 @@ def index(request, division, results_only=False):
     )
     prev_stage_ranked_athletes = [x.athlete for x in prev_stage_results]
     results = addchange(results, results_ranked_athletes, prev_stage_ranked_athletes)
+    if not year and phase_choice == "Final Results":
+        ultimate_gp = view_shared.get_ultimate_gp()
+        results = addgp(results, ultimate_gp)
     maxstages = 0
     if len(results) > 0:
         maxstages = results[0].stages
@@ -706,6 +712,7 @@ def addgap(results):
                 r.member_slug,
                 r.bib,
                 "",
+                "",
             )
         )
     return newresults
@@ -732,6 +739,7 @@ def addchange(results, results_ranked_athletes, prev_stage_ranked_athletes):
                     r.member_slug,
                     r.bib,
                     change,
+                    "",
                 )
             )
     else:
@@ -754,6 +762,35 @@ def addchange(results, results_ranked_athletes, prev_stage_ranked_athletes):
                     r.member_slug,
                     r.bib,
                     change,
+                    "",
                 )
             )
+    return newresults
+
+
+def addgp(results, ultimate_gp):
+    """Calculate gender place"""
+    newresults = []
+    for r in results:
+        gp = False
+        if r.athlete.year in ultimate_gp:
+            gp = ultimate_gp[r.athlete.year].get(r.athlete.name, False)
+        newresults.append(
+            namedresult(
+                r.athlete,
+                r.stages,
+                r.total_time,
+                r.total_seconds,
+                r.stage_times,
+                r.flag_slug,
+                r.final_status,
+                r.mouseover,
+                r.lead_gap,
+                r.place_gap,
+                r.member_slug,
+                r.bib,
+                r.change,
+                gp,
+            )
+        )
     return newresults

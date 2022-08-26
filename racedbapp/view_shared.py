@@ -639,6 +639,68 @@ def get_ultimate_winners_and_gold_jerseys(years):
     return ultimate_winners, ultimate_gold_jerseys
 
 
+def get_ultimate_gp():
+    """
+    Calculate the gender place of all ultimates regardless of filters, etc
+    """
+    ultimate_gp = {}
+    ultimate_gp1 = {}
+    ultimate_gp_female = {}
+    ultimate_gp_male = {}
+    ultimate_gp_starters = {}
+    ultimate_results = Result.objects.filter(
+        event__race__slug="endurrun",
+        division="Ultimate",
+        place__lt=990000,
+    ).select_related("event")
+    years = ultimate_results.values("event__date__year").distinct().order_by()
+    for year in years:
+        ultimate_gp[year.get("event__date__year")] = {}
+        ultimate_gp1[year.get("event__date__year")] = {}
+        ultimate_gp_female[year.get("event__date__year")] = {}
+        ultimate_gp_male[year.get("event__date__year")] = {}
+    for result in ultimate_results:
+        if result.athlete in ultimate_gp1[result.event.date.year]:
+            ultimate_gp1[result.event.date.year][result.athlete]["events"] += 1
+            ultimate_gp1[result.event.date.year][result.athlete][
+                "total_time"
+            ] += result.guntime
+        else:
+            ultimate_gp1[result.event.date.year][result.athlete] = {
+                "events": 1,
+                "gender": result.gender,
+                "total_time": result.guntime,
+            }
+    for year, athlete in ultimate_gp1.items():  # copy over only results with 7 events
+        ultimate_gp_starters[year] = {"F": 0, "M": 0}
+        for name, data in athlete.items():
+            ultimate_gp_starters[year][data["gender"]] += 1
+            if data["events"] == 7:
+                if data["gender"] == "F":
+                    ultimate_gp_female[year][name] = data["total_time"]
+                elif data["gender"] == "M":
+                    ultimate_gp_male[year][name] = data["total_time"]
+    for year in ultimate_gp_female.keys():
+        female_rank = {
+            key: rank
+            for rank, key in enumerate(
+                sorted(ultimate_gp_female[year], key=ultimate_gp_female[year].get), 1
+            )
+        }
+        for k, v in female_rank.items():
+            female_rank[k] = "{}/{}".format(v, ultimate_gp_starters[year]["F"])
+        male_rank = {
+            key: rank
+            for rank, key in enumerate(
+                sorted(ultimate_gp_male[year], key=ultimate_gp_male[year].get), 1
+            )
+        }
+        for k, v in male_rank.items():
+            male_rank[k] = "{}/{}".format(v, ultimate_gp_starters[year]["M"])
+        ultimate_gp[year] = female_rank | male_rank
+    return ultimate_gp
+
+
 def get_config_value_or_false(name):
     try:
         value = Config.objects.get(name=name).value

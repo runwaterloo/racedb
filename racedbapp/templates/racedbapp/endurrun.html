@@ -113,6 +113,9 @@
   {% endif %}
   {% if division != 'relay' %}
     <th class="text-center" title="Gender">G</th>
+    {% if not year and phasefilter.current == "Final Results" %}
+    <th class="text-center" title="Gender place for that year">GP</th>
+    {% endif %}
     <th class="text-center">Age</th>
   {% endif %}
   {% if results.0.total_time %}
@@ -218,6 +221,13 @@
       {% endif %}
       {% if division != 'relay' %}
           <td class="text-center">{{ result.athlete.gender }}</td>
+          {% if not year and phasefilter.current == "Final Results" %}
+            {% if result.gp %}
+            <td class="text-center">{{ result.gp }}</td>
+            {% else %}
+            <td></td>
+            {% endif %}
+          {% endif %}
         {% if result.athlete.age %}
           <td class="text-center">{{ result.athlete.age }}</td>
         {% else %}
