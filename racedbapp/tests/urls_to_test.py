@@ -56,6 +56,7 @@ test_urls = (
     "/endurrun/relay/?phase=after-stage-3",
     "/endurrun/relay/?year=2013",
     "/endurrun/relay/?year=2012&filter=Mixed&phase=after-stage-4",
+    "/endurrun/stats/"
     # /event
     "/event/2012/re-fridgee-eighter/8-km/",  # regular event
     "/event/2013/endurrace/5-km/?filter=Female",  # gender filter

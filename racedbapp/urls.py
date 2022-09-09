@@ -12,6 +12,7 @@ from . import (
     view_endurrace,
     view_endurrun,
     view_endurrunhome,
+    view_endurrunstats,
     view_event,
     view_event_team,
     view_events,
@@ -52,6 +53,7 @@ urlpatterns = [
     ),
     re_path(r"^durelay/(?P<year>[0-9]{4})/$", view_durelay.index, name="durelay"),
     re_path(r"^endurrace/(?P<year>.*)/$", view_endurrace.index, name="endurrace"),
+    re_path(r"^endurrun/stats", view_endurrunstats.index, name="endurrunstats"),
     re_path(r"^endurrun/(?P<division>.*)/$", view_endurrun.index, name="endurrun"),
     re_path(r"^endurrun", view_endurrunhome.index, name="endurrunhome"),
     re_path(
