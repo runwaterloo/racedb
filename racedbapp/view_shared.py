@@ -571,11 +571,12 @@ def get_ultimate_finished_all_events(years):
     return ultimate_finished_all_events
 
 
-def get_ultimate_winners_and_gold_jerseys(years):
+def get_ultimate_winners_and_gold_jerseys(years, athletes):
     """
     Get a list of names of people who have won the ENDURrun ultimate.
     If there is ever a tie for winner times in a year, this won't work.
     """
+    same_name_dict = get_endurrun_same_name_dict()
     ultimate_winners = []
     ultimate_gold_jerseys = []
     for year in years:
@@ -618,8 +619,6 @@ def get_ultimate_winners_and_gold_jerseys(years):
                     female_cumulative_time, key=female_cumulative_time.get
                 )
                 ultimate_gold_jerseys.append(female_gold_jersey)
-                if female_gold_jersey == "Melanie Boultbee":
-                    print(event_id)
                 if num_events == 7:
                     ultimate_winners.append(female_gold_jersey)
             if male_cumulative_time:
@@ -634,6 +633,13 @@ def get_ultimate_winners_and_gold_jerseys(years):
                 ultimate_gold_jerseys.append(male_gold_jersey)
                 if num_events == 7:
                     ultimate_winners.append(male_gold_jersey)
+    for athlete in athletes:
+        if athlete in same_name_dict:
+            for same_name in same_name_dict[athlete]:
+                if same_name in ultimate_winners:
+                    ultimate_winners.append(athlete)
+                if same_name in ultimate_gold_jerseys:
+                    ultimate_gold_jerseys.append(athlete)
     ultimate_winners = set(ultimate_winners)
     ultimate_gold_jerseys = set(ultimate_gold_jerseys)
     return ultimate_winners, ultimate_gold_jerseys
@@ -710,3 +716,19 @@ def get_config_value_or_false(name):
         if value == "":
             value = False
     return value
+
+
+def get_endurrun_same_name_dict():
+    """
+    Return a dictionary of names that are the same as each other, based on
+    endurrun_same_name objects in Config
+    """
+    same_name_dict = {}
+    db_same_names = Config.objects.filter(name="endurrun_same_name").values_list(
+        "value", flat=True
+    )
+    for i in db_same_names:
+        names = [x.strip() for x in i.split(";")]
+        for name in names:
+            same_name_dict[name] = names
+    return same_name_dict

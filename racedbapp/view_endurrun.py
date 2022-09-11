@@ -54,10 +54,6 @@ def index(request, division, results_only=False):
         .distinct()
     )
     contest_slug = False
-    (
-        ultimate_winners,
-        ultimate_gold_jerseys,
-    ) = view_shared.get_ultimate_winners_and_gold_jerseys(years)
     if "contest" in qstring:
         contest_slug = qstring["contest"][0]
         if year:
@@ -306,6 +302,11 @@ def index(request, division, results_only=False):
     phasefilter = getphasefilter(
         phase_choice, filter_choice, events_results_count, division, year
     )
+    athletes = [x.athlete.name for x in results]
+    (
+        ultimate_winners,
+        ultimate_gold_jerseys,
+    ) = view_shared.get_ultimate_winners_and_gold_jerseys(years, athletes)
     context = {
         "events": events,
         "events_results_count": events_results_count,
