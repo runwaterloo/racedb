@@ -179,3 +179,8 @@ img.upcoming-race {
 .fa-icon-ultimate-gold-jersey{
   color: #fbb117;
 }
+
+/* wrap enclosed items together */
+.nowrap {
+  white-space: nowrap;
+}

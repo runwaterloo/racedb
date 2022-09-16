@@ -15,6 +15,8 @@ endurrun_same_name: Sam Lalonde;Jordan Schmidt
 endurrun_same_name: Bob Smith;Bobby Smith;Robert Smith
 ```
 
+**endurrun_stats_min_finishes**: Minimum number of finishes to be included in the ENDURrun finishers section of the ENDURrun Stats view (`/endurrun/stats/`)
+
 **featured_member_id_next**: Member ID to be used next time `update_featured_member_id()` is executed. This will only work for active members with a profile photo. Once used this option will be unset.
 
 ## Misc Developer Info
