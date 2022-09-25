@@ -197,7 +197,7 @@
               <th class="text-center" scope="col">Cat</th>
               <th class="text-center" scope="col">CP</th>
             {% endif %}
-            {% if hasage %}
+            {% if hasage and filters.category_filter.choices|length <= 5%}
               <th class="text-center" scope="col">Age</th>
             {% endif %}
             {% if hasdivision %}
@@ -277,7 +277,7 @@
                 <td class="text-center">{{ r.category }}</td>
                 <td class="text-center">{{ r.category_place }}</td>
               {% endif %}
-              {% if hasage %}
+              {% if hasage and filters.category_filter.choices|length <= 5%}
                 <td class="text-center">{{ r.age }}</td>
               {% endif %}
               {% if hasdivision %}
