@@ -264,7 +264,7 @@
                   {% endif %}
               {% endif %}
               {% if guntimes_have_microseconds %}
-                <td class="text-center">{{ r.guntime|show_decimal }}</td>
+                <td class="text-center">{{ r.guntime|round_up }}</td>
               {% else %}
                 <td class="text-center">{{ r.guntime }}</td>
               {% endif %}
@@ -290,7 +290,7 @@
               <td class="text-center">{{ r.guntime|get_pace:event.distance.km }}</td>
               {% if results.0.chiptime %}
                 {% if guntimes_have_microseconds %}
-                  <td class="text-center">{{ r.chiptime|show_decimal }}</td>
+                  <td class="text-center">{{ r.chiptime|round_up }}</td>
                 {% else %}
                   <td class="text-center">{{ r.chiptime }}</td>
                 {% endif %}
