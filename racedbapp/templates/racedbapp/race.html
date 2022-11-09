@@ -168,10 +168,10 @@
 {% if team_records|length > 0 %}
   {% if race.slug == 'laurier-loop' and distance.slug == '2_5-km' %}
     {% include "racedbapp/race_relay-records.html" %}
+    <a href="/relay/all/laurier-loop/2_5-km/">Complete relay list</a><br><br>
   {% else %}
     {% include "racedbapp/race_team-records.html" %}
   {% endif %}
-<a href="/relay/all/laurier-loop/2_5-km/">Complete relay list</a><br><br>
 {% endif %}
 
 </p>
