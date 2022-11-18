@@ -345,8 +345,10 @@ def maketimedelta(strtime):
             decimal_part = int(decimal_part)
             if decimal_part < 10:
                 milliseconds = decimal_part * 100
-            else:
+            elif decimal_part < 100:
                 milliseconds = decimal_part * 10
+            else:
+                milliseconds = decimal_part
         hours, minutes, seconds = strtime.split(".")[0].split(":")
     else:
         milliseconds = 0
