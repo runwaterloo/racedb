@@ -11,9 +11,8 @@ fi
 
 # setup install envars
 export INSTALL_K3S_VERSION=`cat ./K3S_VERSION`
-export INSTALL_K3S_EXEC="--no-deploy=traefik --tls-san results.runwaterloo.com $PUBLIC_TLS_SAN"
+export INSTALL_K3S_EXEC="--disable=traefik --tls-san results.runwaterloo.com $PUBLIC_TLS_SAN"
 export K3S_KUBECONFIG_MODE="644"
 
 # install k3s
 curl -sfL https://get.k3s.io | sh -
-
