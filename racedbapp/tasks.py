@@ -7,14 +7,13 @@ import boto3
 import pytz
 from celery import shared_task
 from django.core.cache import cache
-
 from django.core.mail import send_mail
 from django_slack import slack_message
 
 from racedb import secrets
 
 from . import process_photoupdate, view_member
-from .models import Config, Endurathlete, Event, Rwmember
+from .models import Config, Endurathlete, Event, Rwmember, Rwmembertag
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +68,15 @@ def update_featured_member_id():
         .exclude(photourl="")
         .order_by("?")
     )
+    featured_member_tag_config = Config.objects.filter(
+        name="featured_member_tag"
+    ).first()
+    if featured_member_tag_config is not None:
+        featured_member_tag = Rwmembertag.objects.filter(
+            name=featured_member_tag_config.value
+        ).first()
+        if featured_member_tag is not None:
+            members = members.filter(tags=featured_member_tag)
     member = False
     featured_member_id_next = Config.objects.filter(
         name="featured_member_id_next"

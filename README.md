@@ -19,6 +19,8 @@ endurrun_same_name: Bob Smith;Bobby Smith;Robert Smith
 
 **featured_member_id_next**: Member ID to be used next time `update_featured_member_id()` is executed. This will only work for active members with a profile photo. Once used this option will be unset.
 
+**featured_member_tag**: Restrict featured member to ones with this tag.
+
 ## Misc Developer Info
 
 Adding `[push dev]` to a commit message in a non-main branch will trigger a pipeline job that pushes the build to dev.
