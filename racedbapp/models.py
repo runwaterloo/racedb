@@ -253,7 +253,7 @@ class Rwmembertag(models.Model):
 
 
 class Rwmember(models.Model):
-    GENDER_CHOICES = (("F", "Female"), ("M", "Male"))
+    GENDER_CHOICES = (("F", "Female"), ("M", "Male"), ("NB", "Nonbinary"))
 
     def membertag_defaults():
         return Rwmembertag.objects.filter(auto_select=True)
@@ -262,7 +262,7 @@ class Rwmember(models.Model):
     slug = models.SlugField(
         unique=True, help_text="https://blog.tersmitten.nl/slugify/"
     )
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=2, choices=GENDER_CHOICES)
     year_of_birth = models.IntegerField(null=True, blank=True)
     city = models.CharField(max_length=50)
     joindate = models.DateField(default=datetime.now)
@@ -284,7 +284,7 @@ class Result(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     athlete = models.CharField(max_length=100)
-    gender = models.CharField(max_length=1)
+    gender = models.CharField(max_length=2)
     city = models.CharField(max_length=50)
     place = models.IntegerField()
     bib = models.CharField(max_length=6, blank=True)
@@ -314,7 +314,7 @@ class Wheelchairresult(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     athlete = models.CharField(max_length=100)
-    gender = models.CharField(max_length=1)
+    gender = models.CharField(max_length=2)
     city = models.CharField(max_length=50)
     place = models.IntegerField()
     bib = models.CharField(max_length=6, blank=True)
@@ -350,7 +350,7 @@ class Endurraceresult(models.Model):
     year = models.IntegerField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     athlete = models.CharField(max_length=100)
-    gender = models.CharField(max_length=1)
+    gender = models.CharField(max_length=2)
     city = models.CharField(max_length=50)
     bib = models.CharField(max_length=6, blank=True)
     guntime = models.DurationField()
@@ -373,10 +373,10 @@ class Bow(models.Model):
 
 
 class Bowathlete(models.Model):
-    GENDER_CHOICES = (("F", "Female"), ("M", "Male"))
+    GENDER_CHOICES = (("F", "Female"), ("M", "Male"), ("NB", "Nonbinary"))
     bow = models.ForeignKey(Bow, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=2, choices=GENDER_CHOICES)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
 
     class Meta:
@@ -386,7 +386,7 @@ class Bowathlete(models.Model):
 class Prime(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     place = models.IntegerField()
-    gender = models.CharField(max_length=1)
+    gender = models.CharField(max_length=2)
     time = models.DurationField(null=True)
 
 
@@ -417,11 +417,11 @@ class Split(models.Model):
 
 class Endurathlete(models.Model):
     DIVISION_CHOICES = (("Ultimate", "Ultimate"), ("Sport", "Sport"))
-    GENDER_CHOICES = (("F", "Female"), ("M", "Male"))
+    GENDER_CHOICES = (("F", "Female"), ("M", "Male"), ("NB", "Nonbinary"))
     year = models.IntegerField()
     division = models.CharField(max_length=32, choices=DIVISION_CHOICES)
     name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=2, choices=GENDER_CHOICES)
     age = models.IntegerField(null=True)
     city = models.CharField(max_length=100)
     province = models.CharField(max_length=100)
@@ -439,7 +439,7 @@ class Endurteam(models.Model):
         )
     )
     name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=1)
+    gender = models.CharField(max_length=2)
     ismasters = models.BooleanField(default=False)
     st1 = models.CharField(max_length=100)
     st2 = models.CharField(max_length=100)

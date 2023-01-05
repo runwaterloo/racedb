@@ -86,7 +86,7 @@ class Command(BaseCommand):
             dnfplace = 991000
             dnsplace = 992000
             year = event.date.year
-            gender_place_dict = {"F": 0, "M": 0}
+            gender_place_dict = {"F": 0, "M": 0, "NB": 0}
             category_place_dict = {}
             race = Race.objects.get(slug=event.race.slug)
             distance = event.distance
@@ -170,12 +170,17 @@ class Command(BaseCommand):
                         result["gender"] = "M"
                     if result["gender"] == "Female":
                         result["gender"] = "F"
+                    if result["gender"] == "Nonbinary":
+                        result["gender"] = "NB"
                     if result["gender"] == "F":
                         gender_place_dict["F"] += 1
                         gender_place = gender_place_dict["F"]
                     elif result["gender"] == "M":
                         gender_place_dict["M"] += 1
                         gender_place = gender_place_dict["M"]
+                    elif result["gender"] == "NB":
+                        gender_place_dict["NB"] += 1
+                        gender_place = gender_place_dict["NB"]
                     if category.name != "":
                         if category.name in category_place_dict:
                             category_place_dict[category.name] += 1
