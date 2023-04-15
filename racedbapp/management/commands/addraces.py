@@ -244,7 +244,7 @@ class Command(BaseCommand):
                     result.chiptime = None
                 result.save()
             if race.slug == "endurrace":
-                endurrace_years.append(event.date[0:4])
+                endurrace_years.append(str(event.date)[0:4])
             info = "{} results processed for {} {} {} (Event {})".format(
                 len(results), year, race.name, distance.name, event.id
             )
@@ -331,8 +331,8 @@ class Command(BaseCommand):
             process_rwpbs(e)
         if len(endurrace_years) > 0:
             slack_results = process_endurrace(set(endurrace_years), slack_results)
-        if len(slack_results) > 0:
-            tasks.slack_results_update.delay(slack_results)
+        # if len(slack_results) > 0:
+        #     tasks.slack_results_update.delay(slack_results)
         info = "Clearing cache"
         logger.info(info)
         tasks.clear_cache.delay()
