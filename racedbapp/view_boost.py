@@ -78,9 +78,9 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         )
     for v in battlers.values():
         v.calculate(max_events, max_endurrun)
-    gender_place_dict = {"F": 0, "M": 0}
+    gender_place_dict = {"F": 0, "M": 0, "NB": 0}
     category_place_dict = {}
-    leaders = {"F40-": [], "M40-": [], "F40+": [], "M40+": []}
+    leaders = {"F40-": [], "M40-": [], "F40+": [], "M40+": [], "NB40-": [], "NB40+": []}
     standings = []
     count = 1
     for i in sorted(battlers.values(), key=attrgetter("total_points"), reverse=True):
