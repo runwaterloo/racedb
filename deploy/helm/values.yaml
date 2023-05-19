@@ -78,4 +78,4 @@ affinity: {}
 redis:
   image:
     name: redis
-    tag: 7.0.7-alpine3.17
+    tag: 7.0.11-alpine3.18
