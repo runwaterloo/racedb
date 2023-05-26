@@ -88,15 +88,18 @@ def index(request, year, leaderboard_only=False, standings_only=False):
             continue
         i.place = count
         count += 1
-        gender_place_dict[i.gender] += 1
-        i.gender_place = gender_place_dict[i.gender]
+        if i.gender in gender_place_dict:
+            gender_place_dict[i.gender] += 1
+            i.gender_place = gender_place_dict[i.gender]
         if i.category in category_place_dict:
             category_place_dict[i.category] += 1
             i.category_place = category_place_dict[i.category]
         else:
-            i.category_place = category_place_dict[i.category] = 1
-        if len(leaders[i.category]) < leaderboard_size:
-            leaders[i.category].append(i)
+            if i.gender in gender_place_dict:
+                i.category_place = category_place_dict[i.category] = 1
+        if i.gender in gender_place_dict:
+            if len(leaders[i.category]) < leaderboard_size:
+                leaders[i.category].append(i)
         if qs_filter != "":
             if qs_filter in ("F", "M"):
                 if i.gender != qs_filter:

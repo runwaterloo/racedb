@@ -262,7 +262,7 @@ class Rwmember(models.Model):
     slug = models.SlugField(
         unique=True, help_text="https://blog.tersmitten.nl/slugify/"
     )
-    gender = models.CharField(max_length=2, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=2, choices=GENDER_CHOICES, blank=True)
     year_of_birth = models.IntegerField(null=True, blank=True)
     city = models.CharField(max_length=50)
     joindate = models.DateField(default=datetime.now)
