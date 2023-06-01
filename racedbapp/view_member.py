@@ -40,7 +40,10 @@ def index(request, member_slug):
         racing_since = results[-1].result.event.date.year
     badges = get_badges(member, results)
     nophoto_url = Config.objects.get(name="nophoto_url").value
-    boost = get_boost(member, request)
+    if member.gender in ("M", "F"):
+        boost = get_boost(member, request)
+    else:
+        boost = False
     no_profile_camera = False
     if "no-profile-camera" in [x.name for x in member.tags.all()]:
         no_profile_camera = True
@@ -230,12 +233,9 @@ def get_endurrun_finishes_badges(member, results):
             if ultimate_finishes >= i:
                 break
         image = "endurrun-ultimate-finisher-{}.png".format(i)
-        plural = ""
-        if ultimate_finishes > 1:
-            plural = "s"
         endurrun_finishes_badges.append(
             named_badge(
-                "ENDURrun Ultimate {} Time Finisher".format(ultimate_finishes, plural),
+                "ENDURrun Ultimate {} Time Finisher".format(ultimate_finishes),
                 ultimate_date_earned,
                 image,
                 False,

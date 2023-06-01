@@ -56,7 +56,9 @@ def index(request, year, leaderboard_only=False, standings_only=False):
     gender_finishers = get_gender_finishers(first_day, last_day)
     boost_tag = get_boost_tag(year)
     included_members = Rwmember.objects.filter(
-        year_of_birth__isnull=False, tags=boost_tag
+        year_of_birth__isnull=False,
+        tags=boost_tag,
+        gender__in=["M", "F"],
     )
     qs_member = get_qs_member(qstring, included_members)
     previous_races = get_previous_races(year, included_members)
