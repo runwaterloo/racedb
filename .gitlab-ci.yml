@@ -18,7 +18,7 @@ update-dependencies:
   stage: update-dependencies
   image: python:latest
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$UPDATE_DEPENDENCIES == "true"'
   script:
     - ./update-dependencies.sh
 
