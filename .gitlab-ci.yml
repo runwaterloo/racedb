@@ -12,6 +12,15 @@ stages:
   - deploy-to-dev # only triggered on non-main when [push dev] in commit message
   - tag
   - deploy
+  - update-dependencies
+
+update-dependencies:
+  stage: update-dependencies
+  image: python:latest
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+  script:
+    - ./update-dependencies.sh
 
 build-test-push:
   stage: build-test-push
