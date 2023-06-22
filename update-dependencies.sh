@@ -44,13 +44,14 @@ else
     git config --global user.email "du-no-reply@scrw.ca"
 
     # Create a new branch and commit changes
-    git checkout -b update-dependencies
+    BRANCH="update-dependencies-`date +%s`"
+    git checkout -b $BRANCH
     git add requirements.txt version.txt
     git commit -m "Update dependencies"
 
     # Push the branch to the remote repository
     git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DU_ACCESS_TOKEN}@gitlab.com}.git
-    git push -u origin update-dependencies
+    git push -u origin $BRANCH
 
     # Use GitLab's API to create a Merge Request (replace with your GitLab private token, project ID, and desired MR title and description)
     # curl --header "PRIVATE-TOKEN: $DU_ACCESS_TOKEN" -X POST "https://gitlab.com/api/v4/projects/2322084/merge_requests" -d "source_branch=update-dependencies" -d "target_branch=main" -d "title=Update dependencies"
