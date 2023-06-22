@@ -53,5 +53,5 @@ else
     git push -u origin update-dependencies
 
     # Use GitLab's API to create a Merge Request (replace with your GitLab private token, project ID, and desired MR title and description)
-    curl --header "PRIVATE-TOKEN: $DU_ACCESS_TOKEN" -X POST "https://gitlab.com/api/v4/projects/2322084/merge_requests" -d "source_branch=update-dependencies" -d "target_branch=main" -d "title=Update dependencies"
+    # curl --header "PRIVATE-TOKEN: $DU_ACCESS_TOKEN" -X POST "https://gitlab.com/api/v4/projects/2322084/merge_requests" -d "source_branch=update-dependencies" -d "target_branch=main" -d "title=Update dependencies"
 fi
