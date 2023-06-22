@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# DU_ACCESS_TOKEN needs to be set in the environment
+# The following environment variables need to be set
+# DEPUP_NAME
+# DEPUP_EMAIL
+# DEPUP_TOKEN
 
 # Update requirements.txt
 pip install pur
@@ -40,8 +43,8 @@ else
     echo $new_version > version.txt
 
     # Git configuration (replace with your username and email)
-    git config --global user.name "Dependency Updater"
-    git config --global user.email "du-no-reply@scrw.ca"
+    git config --global user.name "$DEPUP_NAME"
+    git config --global user.email "$DEPUP_EMAIL"
 
     # Create a new branch and commit changes
     BRANCH="update-dependencies-`date +%s`"
@@ -50,7 +53,7 @@ else
     git commit -m "Update dependencies"
 
     # Push the branch to the remote repository
-    git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DU_ACCESS_TOKEN}@gitlab.com}.git
+    git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN_TOKEN}@gitlab.com}.git
     git push -u origin $BRANCH
 
     # Use GitLab's API to create a Merge Request (replace with your GitLab private token, project ID, and desired MR title and description)
