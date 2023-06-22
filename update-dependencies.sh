@@ -5,6 +5,9 @@
 # DEPUP_EMAIL
 # DEPUP_TOKEN
 
+# exit on any error
+set -e
+
 # Update requirements.txt
 pip install pur
 pur
@@ -53,7 +56,7 @@ else
     git commit -m "Update dependencies"
 
     # Push the branch to the remote repository
-    git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN_TOKEN}@gitlab.com}.git
+    git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git
     git push -u origin $BRANCH
 
     # Use GitLab's API to create a Merge Request (replace with your GitLab private token, project ID, and desired MR title and description)
