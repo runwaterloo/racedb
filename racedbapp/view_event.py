@@ -196,6 +196,11 @@ def get_masters(event, division):
         male_masters_count = all_masters.filter(gender="M").count()
         if male_masters_count > 0:
             masters.append({"category__name": "M-Masters", "count": male_masters_count})
+        nonbinary_masters_count = all_masters.filter(gender="NB").count()
+        if nonbinary_masters_count > 0:
+            masters.append(
+                {"category__name": "NB-Masters", "count": nonbinary_masters_count}
+            )
     return masters
 
 
@@ -216,6 +221,8 @@ def get_genders(event, division):
             genders.append({"category__name": "Female", "count": i["count"]})
         elif i["gender"] == "M":
             genders.append({"category__name": "Male", "count": i["count"]})
+        elif i["gender"] == "NB":
+            genders.append({"category__name": "Nonbinary", "count": i["count"]})
     return genders
 
 
@@ -248,6 +255,10 @@ def get_divisions(event, category):
             )
         elif category == "M-Masters":
             all_results = all_results.filter(gender="M").filter(
+                Q(category__ismasters=True) | Q(age__gte=40)
+            )
+        elif category == "NB-Masters":
+            all_results = all_results.filter(gender="NB").filter(
                 Q(category__ismasters=True) | Q(age__gte=40)
             )
         else:
@@ -440,6 +451,10 @@ def get_division_filter(event, division, category):
                 )
             elif category == "M-Masters":
                 all_results = all_results.filter(gender="M").filter(
+                    Q(category__ismasters=True) | Q(age__gte=40)
+                )
+            elif category == "NB-Masters":
+                all_results = all_results.filter(gender="NB").filter(
                     Q(category__ismasters=True) | Q(age__gte=40)
                 )
             else:
@@ -741,12 +756,16 @@ def filter_results(results, category, division):
         results = [x for x in results if x.gender == "F"]
     elif category == "Male":
         results = [x for x in results if x.gender == "M"]
+    elif category == "Nonbinary":
+        results = [x for x in results if x.gender == "NB"]
     elif category == "Masters":
         results = [x for x in results if x.ismasters]
     elif category == "F-Masters":
         results = [x for x in results if x.ismasters and x.gender == "F"]
     elif category == "M-Masters":
         results = [x for x in results if x.ismasters and x.gender == "M"]
+    elif category == "NB-Masters":
+        results = [x for x in results if x.ismasters and x.gender == "NB"]
     elif category != "All":
         results = [x for x in results if x.category == category]
     if division != "All":
