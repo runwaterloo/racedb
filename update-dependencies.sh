@@ -59,6 +59,5 @@ else
     git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git
     git push -u origin $BRANCH
 
-    # Use GitLab's API to create a Merge Request (replace with your GitLab private token, project ID, and desired MR title and description)
-    # curl --header "PRIVATE-TOKEN: $DU_ACCESS_TOKEN" -X POST "https://gitlab.com/api/v4/projects/2322084/merge_requests" -d "source_branch=update-dependencies" -d "target_branch=main" -d "title=Update dependencies"
+    curl --header "PRIVATE-TOKEN: $DEPUP_TOKEN" -X POST "https://gitlab.com/api/v4/projects/2322084/merge_requests" -d "source_branch=$BRANCH" -d "target_branch=main" -d "title=Update Python package dependencies"
 fi
