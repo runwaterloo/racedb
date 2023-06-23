@@ -3,6 +3,7 @@ ENV PYTHONUNBUFFERED 1
 COPY requirements.txt .
 RUN apk add --no-cache --virtual .build-deps \
      gcc \
+     mariadb-dev
      musl-dev && \
     apk add --no-cache \
      curl \
