@@ -53,7 +53,7 @@ else
     BRANCH="update-dependencies-`date +%s`"
     git checkout -b $BRANCH
     git add requirements.txt version.txt
-    git commit -m "Update dependencies"
+    git commit -m "Python package dependencies"
 
     # Push the branch to the remote repository
     git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git
