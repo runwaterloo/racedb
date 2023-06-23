@@ -59,5 +59,5 @@ else
     git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git
     git push -u origin $BRANCH
 
-    curl --header "PRIVATE-TOKEN: $DEPUP_TOKEN" -X POST "https://gitlab.com/api/v4/projects/2322084/merge_requests" -d "source_branch=$BRANCH" -d "target_branch=main" -d "title=Update Python package dependencies"
+    curl --header "PRIVATE-TOKEN: $DEPUP_TOKEN" -X POST "https://gitlab.com/api/v4/projects/2322084/merge_requests" -d "source_branch=$BRANCH" -d "remove_source_branch=true" -d "target_branch=main" -d "title=Update Python package dependencies"
 fi
