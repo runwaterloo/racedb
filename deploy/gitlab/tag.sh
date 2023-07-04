@@ -28,5 +28,5 @@ docker push $CI_REGISTRY_IMAGE:${VERSION}
 
 # tag branch
 git tag v${VERSION}
-git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${PERSONAL_ACCESS_TOKEN}@gitlab.com}.git
+git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git
 git push --tags
