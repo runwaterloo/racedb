@@ -251,11 +251,14 @@ def index(request, division, results_only=False):
         completed_stage_times = [
             x for x in stage_times if x.name != ""
         ]  # remove future stages
-        if completed_stage_times and division != "relay":
+        if completed_stage_times and year:
             if not isinstance(
                 completed_stage_times[-1].time, str
             ):  # ensure most recent stage completed
-                prev_total_time = total_time - completed_stage_times[-1].time
+                try:
+                    prev_total_time = total_time - completed_stage_times[-1].time
+                except Exception:
+                    prev_total_time = timedelta(seconds=0)
                 prev_total_seconds = prev_total_time.total_seconds()
                 prev_stages = stages - 1
         prev_stage_results.append(
