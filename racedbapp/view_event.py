@@ -730,7 +730,7 @@ def get_endurrun_relay_dict(event):
                 )
             )
         if event.distance.slug == "10-km":
-            enddurrun_relay_dict = dict(
+            endurrun_relay_dict = dict(
                 Endurteam.objects.filter(year=event.date.year).values_list(
                     "st6", "name"
                 )
