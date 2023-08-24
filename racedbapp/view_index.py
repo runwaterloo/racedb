@@ -3,7 +3,7 @@ import urllib
 # from django.db.models import Min, Q
 # from django import db
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import datetime
 from operator import attrgetter
 
 import simplejson
@@ -93,8 +93,6 @@ def get_future_events(featured_event):
         event_result_count = Result.objects.filter(event=i).count()
         if event_result_count > 0:
             continue
-        race = named_race(i.race.name, i.race.shortname, i.race.slug)
-        distance = named_distance(i.distance.name, i.distance.slug, i.distance.km)
         numresults = Result.objects.filter(
             event__race=i.race, event__distance=i.distance
         ).count()
@@ -211,7 +209,7 @@ def get_event_data(featured_event):
 
 
 def get_recap_event(last_race_day_events, recap_type, distances):
-    """ Choose which event to use for a recap """
+    """Choose which event to use for a recap"""
     distance_slugs = [x.slug for x in distances]
     if recap_type == "relay" and "2_5-km" in distance_slugs:
         recap_event = last_race_day_events.filter(distance__slug="2_5-km")[0]
@@ -288,8 +286,11 @@ def get_last_race_day_events(asofdate):
         date_of_last_event = (
             Result.objects.all().order_by("-event__date")[:1][0].event.date
         )
+    last_race = Result.objects.all().order_by("-event__date")[:1][0].event.race
     last_race_day_event_ids = (
-        Result.objects.filter(event__date=date_of_last_event)
+        Result.objects.filter(
+            event__race=last_race, event__date__year=date_of_last_event.year
+        )
         .values_list("event", flat=True)
         .distinct()
     )
