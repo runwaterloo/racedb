@@ -133,11 +133,17 @@ def get_total_kms_badge(results):
 
 def get_wc_finishes_badge(results):
     WC_THRESHOLDS = [40, 20, 10, 5]
-    wc_finishes_badge = []
     wc_finishes = [x for x in results if x.result.event.race.slug == "waterloo-classic"]
+    wc_finishes_years = []
+    wc_finishes_dates = []
+    wc_finishes_badge = []
+    for i in wc_finishes:
+        if i.result.event.date.year not in wc_finishes_years:
+            wc_finishes_years.append(i.result.event.date.year)
+            wc_finishes_dates.append(i.result.event.date)
     for i in WC_THRESHOLDS:
-        if len(wc_finishes) >= i:
-            date_earned = wc_finishes[-i].result.event.date
+        if len(wc_finishes_dates) >= i:
+            date_earned = wc_finishes_dates[-i]
             image = "waterloo-classic-finisher-{}.png".format(i)
             wc_finishes_badge.append(
                 named_badge(
