@@ -1,4 +1,6 @@
 import logging
+import os
+import shutil
 import time
 from collections import namedtuple
 from datetime import date, datetime, timedelta
@@ -14,6 +16,18 @@ flickrapi.set_log_level(logging.WARNING)
 logger = logging.getLogger(__name__)
 runwaterloo_flickr_id = "136573113@N04"
 photos_per_page = 500
+
+# Check if the directory exists and remove it if it does (including all contents)
+cache_directory = "/root/.flickr"
+if os.path.exists(cache_directory) and os.path.isdir(cache_directory):
+    try:
+        shutil.rmtree(cache_directory)  # Remove the directory and its contents
+        logger.info(f"Removed existing cache directory: {cache_directory}")
+    except OSError as e:
+        logger.error(f"Error removing cache directory: {e}")
+else:
+    logger.info(f"Cache directory does not exist: {cache_directory}")
+
 flickr = flickrapi.FlickrAPI(
     secrets.FLICKR_API_KEY, secrets.FLICKR_SECRET_KEY, format="parsed-json"
 )
