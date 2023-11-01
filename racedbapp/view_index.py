@@ -286,7 +286,12 @@ def get_last_race_day_events(asofdate):
         date_of_last_event = (
             Result.objects.all().order_by("-event__date")[:1][0].event.date
         )
-    last_race = Result.objects.all().order_by("-event__date")[:1][0].event.race
+    last_race = (
+        Result.objects.all()
+        .filter(event__date=date_of_last_event)
+        .order_by("-event__date")[:1][0]
+        .event.race
+    )
     last_race_day_event_ids = (
         Result.objects.filter(
             event__race=last_race, event__date__year=date_of_last_event.year
