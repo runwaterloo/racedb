@@ -1,11 +1,11 @@
 celery==5.3.6
-Django==4.2.7
+Django==5.0
 django-redis==5.4.0
 django-s3-storage==0.15.0
 django-slack==5.19.0
 flickrapi==2.4.0
 gunicorn==21.2.0
-gspread==5.12.0
+gspread==5.12.2
 mysqlclient==2.2.0
 pytz==2023.3.post1
 requests==2.31.0
