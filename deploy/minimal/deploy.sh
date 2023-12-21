@@ -13,7 +13,9 @@ export WEBHOST=testing
 echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 apk add docker-compose mysql-client py-pip
 echo "Installing awscli"
-/usr/bin/pip3 install awscli
+python3 -m venv .venv
+source .venv/bin/activate
+pip install awscli
 echo "Copying backup from s3"
 aws s3 cp ${RACEDB_DB_BACKUP} .
 echo "GRANT ALL PRIVILEGES ON *.* TO 'racedb'@'%';" | mysql -h mariadb -u root -pCHANGEME
