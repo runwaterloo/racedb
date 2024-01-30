@@ -5,8 +5,8 @@ django-s3-storage==0.15.0
 django-slack==5.19.0
 flickrapi==2.4.0
 gunicorn==21.2.0
-gspread==5.12.4
+gspread==6.0.0
 mysqlclient==2.2.1
-pytz==2023.3.post1
+pytz==2023.4
 requests==2.31.0
 simplejson==3.19.2
