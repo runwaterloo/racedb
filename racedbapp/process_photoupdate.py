@@ -323,7 +323,7 @@ def get_member_assumption(event):
     member bibs should not be worn.
     """
     no_assumption_races = ("endurrun",)
-    no_assumption_events = (813, 819, 1344)
+    no_assumption_events = (813, 819, 1344, 1181, 1182, 1068, 1069, 1185, 1186)
     member_assumption = False
     if event.date > date(2017, 4, 1):
         if event.race.slug not in no_assumption_races:
