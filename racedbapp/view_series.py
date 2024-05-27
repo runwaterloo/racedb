@@ -124,7 +124,7 @@ def get_category_filter(series_slug, category, year, event1_all_results, results
     )
     for cat in all_categories:
         # TODO remove hack and use url encoding properly. 
-        clean_category = cat["category__name"].replace("+", "%2B") 
+        clean_category = cat.replace("+", "%2B") 
         if category != cat:
             if year:
                 choices.append(
