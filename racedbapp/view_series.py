@@ -102,7 +102,7 @@ def get_year_filter(series_slug, year, years, show_records):
     year_filter = named_filter(current_choice, choices)
     return year_filter
 
-
+# TODO refactor with event version and have both call same. 
 def get_category_filter(series_slug, category, year, event1_all_results, results):
     choices = []
     if category == "All":
@@ -123,17 +123,19 @@ def get_category_filter(series_slug, category, year, event1_all_results, results
         event_categories
     )
     for cat in all_categories:
+        # TODO remove hack and use url encoding properly. 
+        clean_category = cat["category__name"].replace("+", "%2B") 
         if category != cat:
             if year:
                 choices.append(
                     named_choice(
                         cat,
-                        "/series/{}/?year={}&filter={}".format(series_slug, year, cat),
+                        "/series/{}/?year={}&filter={}".format(series_slug, year, clean_category),
                     )
                 )
             else:
                 choices.append(
-                    named_choice(cat, "/series/{}/?filter={}".format(series_slug, cat))
+                    named_choice(cat, "/series/{}/?filter={}".format(series_slug, clean_category))
                 )
     if category != "All":
         if year:
