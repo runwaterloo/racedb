@@ -1,12 +1,11 @@
-version: '3.4'
 services:
   gunicorn:
     command: /bin/sh -c './manage.py collectstatic --noinput --settings=racedb.settings.min; gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.min racedb.wsgi -b 0.0.0.0:8000'
     container_name: racedb_gunicorn
     environment:
-     - WEBHOST
+      - WEBHOST
     extra_hosts:
-     - "mariadb:MARIADB_IP"
+      - "mariadb=${MARIADB_IP}"
     image: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
     volumes:
       - ../../racedb/secrets.py:/srv/racedb/racedb/secrets.py

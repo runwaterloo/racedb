@@ -21,8 +21,6 @@ aws s3 cp ${RACEDB_DB_BACKUP} .
 echo "GRANT ALL PRIVILEGES ON *.* TO 'racedb'@'%';" | mysql -h mariadb -u root -pCHANGEME
 echo "FLUSH PRIVILEGES;" | mysql -h mariadb -u root -pCHANGEME
 zcat ./racedb.latest.sql.gz | mysql -h mariadb -u racedb -pCHANGEME racedb
-MARIADB_IP=`grep mariadb /etc/hosts | head -n 1 | awk '{print $1}'`
-sed -i s/MARIADB_IP/$MARIADB_IP/g deploy/minimal/docker-compose-min.yml
 cp racedb/secrets.py.sample racedb/secrets.py
 cd deploy/minimal
 docker-compose -f ./docker-compose-min.yml up -d
