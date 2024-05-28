@@ -1,133 +1,193 @@
+---
 - model: racedbapp.distance
   pk: 1
   fields:
     prename: 10K
     name: 10 KM
     slug: 10-km
-    km: 10
+    km: '10.00000'
+    showrecord: true
 - model: racedbapp.distance
   pk: 2
   fields:
     prename: 5K
     name: 5 KM
     slug: 5-km
-    km: 5
+    km: '5.00000'
+    showrecord: true
 - model: racedbapp.distance
   pk: 3
   fields:
     prename: Half Marathon
     name: Half Marathon
     slug: half-marathon
-    km: 21.0975
+    km: '21.09750'
+    showrecord: true
 - model: racedbapp.distance
   pk: 4
   fields:
     prename: Quarter Marathon
     name: Quarter Marathon
     slug: quarter-marathon
-    km: 10.54875
+    km: '10.54875'
+    showrecord: false
 - model: racedbapp.distance
   pk: 5
   fields:
     prename: 2.5K
     name: 2.5 KM
     slug: 2_5-km
-    km: 2.5
+    km: '2.50000'
+    showrecord: true
 - model: racedbapp.distance
   pk: 6
   fields:
     prename: 3K
     name: 3 KM
     slug: 3-km
-    km: 3
+    km: '3.00000'
+    showrecord: false
 - model: racedbapp.distance
   pk: 7
   fields:
     prename: 4K
     name: 4 KM
     slug: 4-km
-    km: 4
+    km: '4.00000'
+    showrecord: false
 - model: racedbapp.distance
   pk: 8
   fields:
     prename: 8K
     name: 8 KM
     slug: 8-km
-    km: 8
+    km: '8.00000'
+    showrecord: true
 - model: racedbapp.distance
   pk: 9
   fields:
     prename: 7M
     name: 7 MI
     slug: 7-mi
-    km: 11.26540
+    km: '11.26540'
+    showrecord: false
 - model: racedbapp.distance
   pk: 10
   fields:
     prename: 8M
     name: 8 MI
     slug: 8-mi
-    km: 12.87480
+    km: '12.87480'
+    showrecord: false
 - model: racedbapp.distance
   pk: 11
   fields:
     prename: 15K
     name: 15 KM
     slug: 15-km
-    km: 15
+    km: '15.00000'
+    showrecord: false
 - model: racedbapp.distance
   pk: 12
   fields:
     prename: Marathon
     name: Marathon
     slug: marathon
-    km: 42.19500
+    km: '42.19500'
+    showrecord: true
 - model: racedbapp.distance
   pk: 13
   fields:
     prename: 10M
     name: 10 MI
     slug: 10-mi
-    km: 16.09340
+    km: '16.09340'
+    showrecord: false
 - model: racedbapp.distance
   pk: 14
   fields:
     prename: 30K
     name: 30 KM
     slug: 30-km
-    km: 30
+    km: '30.00000'
+    showrecord: false
 - model: racedbapp.distance
   pk: 15
   fields:
     prename: 25.6K
     name: 25.6 KM
     slug: 25_6-km
-    km: 25.6
+    km: '25.60000'
+    showrecord: false
 - model: racedbapp.distance
   pk: 16
   fields:
     prename: Mile
     name: Mile
     slug: mile
-    km: 1.60934
+    km: '1.60934'
+    showrecord: true
 - model: racedbapp.distance
   pk: 17
   fields:
     prename: 2M
     name: 2 MI
     slug: 2-mi
-    km: 3.21869
+    km: '3.21869'
+    showrecord: false
 - model: racedbapp.distance
   pk: 18
   fields:
     prename: 11K
     name: 11 KM
     slug: 11-km
-    km: 11
+    km: '11.00000'
+    showrecord: false
 - model: racedbapp.distance
   pk: 19
   fields:
     prename: 6K
     name: 6 KM
     slug: 6-km
-    km: 6
+    km: '6.00000'
+    showrecord: false
+- model: racedbapp.distance
+  pk: 20
+  fields:
+    prename: Roughly Five
+    name: Roughly Five
+    slug: roughly-five
+    km: '4.50000'
+    showrecord: false
+- model: racedbapp.distance
+  pk: 21
+  fields:
+    prename: Sprint Duathlon 35.6
+    name: Sprint Duathlon 35.6
+    slug: sprint-duathlon-35_6
+    km: '35.60000'
+    showrecord: false
+- model: racedbapp.distance
+  pk: 22
+  fields:
+    prename: Sprint Duathlon 26.1
+    name: Sprint Duathlon 26.1
+    slug: sprint-duathlon-26_1
+    km: '26.10000'
+    showrecord: false
+- model: racedbapp.distance
+  pk: 23
+  fields:
+    prename: 7.5K
+    name: 7.5 KM
+    slug: 7_5-km
+    km: '7.50000'
+    showrecord: false
+- model: racedbapp.distance
+  pk: 24
+  fields:
+    prename: 5M
+    name: 5 MI
+    slug: 5-mi
+    km: '8.04672'
+    showrecord: false

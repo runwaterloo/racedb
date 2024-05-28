@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: ROOTCHANGEME
+      MARIADB_DATABASE: racedb
+      MARIADB_USER: racedb
+      MARIADB_PASSWORD: CHANGEME
+    ports:
+      - "3306:3306"
+    command: ["--init-file", "/docker-entrypoint-initdb.d/init-script.sql"]
+    volumes:
+      - ./init-script.sql:/docker-entrypoint-initdb.d/init-script.sql
+
+  racedb-web:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    command: >
+      /bin/sh -c 'sleep 10;
+      ./manage.py collectstatic --noinput --settings=racedb.settings.min;
+      ./manage.py migrate --noinput --settings=racedb.settings.min;
+      ./manage.py loaddata racedbapp/fixtures/* --settings=racedb.settings.min;
+      export DJANGO_SUPERUSER_PASSWORD=admin;
+      ./manage.py createsuperuser --noinput --username admin --email admin@example.com --settings=racedb.settings.min;
+      ./manage.py runserver 0.0.0.0:8000 --settings=racedb.settings.min'
+    container_name: racedb-web
+    environment:
+      WEBHOST: 127.0.0.1
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../racedb/secrets.py.sample:/srv/racedb/racedb/secrets.py
