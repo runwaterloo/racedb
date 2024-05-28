@@ -122,4 +122,6 @@ test_urls = (
     "/records/laurier-loop/5-km/?format=json&callback=blah",  # jsonp
     # stats
     "/stats/",  # with teams
+    # series
+    "/series/baden-back-2-back/?year=2024"
 )
