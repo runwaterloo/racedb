@@ -25,7 +25,7 @@ endurrun_same_name: Bob Smith;Bobby Smith;Robert Smith
 
 ```
 cd deploy/local
-docker-compose up
+docker-compose up --build
 ```
 
 This will bring up MariaDB and run `migrate` which will create the schema. 
@@ -35,6 +35,12 @@ Racedb should be available at http://localhost:8000/
 Note: This is still a WIP and things are very broken without actual data in the tables. Until we generate fake data, the main page will give an error. You can see things kind of working-ish at http://localhost:8000/events .
 
 Django admin interface is available at http://localhost:8000/admin
+
+Optionally populate the database with:
+
+```
+./loaddata.sh
+```
 
 Tests can be run locally with:
 

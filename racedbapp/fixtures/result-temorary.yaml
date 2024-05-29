@@ -1,0 +1,85 @@
+---
+- model: racedbapp.result
+  pk: 1
+  fields:
+    event: 1
+    category: 1
+    athlete: anAthlete
+    gender: M
+    city: Waterloo
+    place: 1
+    bib: 7777
+    chiptime: "50:00"
+    guntime: "50:00"
+    age: 37
+    gender_place: 1
+- model: racedbapp.result
+  pk: 2
+  fields:
+    event: 1
+    category: 1
+    athlete: anAthleteFemale
+    gender: F
+    city: Waterloo
+    place: 2
+    bib: 7778
+    chiptime: "50:00"
+    guntime: "50:00"
+    age: 37
+    gender_place: 1
+- model: racedbapp.result
+  pk: 3
+  fields:
+    event: 1
+    category: 1
+    athlete: anAthleteFemale2
+    gender: F
+    city: Waterloo
+    place: 3
+    bib: 7779
+    chiptime: "50:00"
+    guntime: "50:00"
+    age: 37
+    gender_place: 2
+- model: racedbapp.result
+  pk: 4
+  fields:
+    event: 1
+    category: 1
+    athlete: anAthleteFemale3
+    gender: F
+    city: Waterloo
+    place: 4
+    bib: 7780
+    chiptime: "50:00"
+    guntime: "50:00"
+    age: 37
+    gender_place: 3
+- model: racedbapp.result
+  pk: 5
+  fields:
+    event: 1
+    category: 1
+    athlete: anAthlete2
+    gender: M
+    city: Waterloo
+    place: 5
+    bib: 8777
+    chiptime: "50:00"
+    guntime: "50:00"
+    age: 37
+    gender_place: 2
+- model: racedbapp.result
+  pk: 6
+  fields:
+    event: 1
+    category: 1
+    athlete: anAthlete2
+    gender: M
+    city: Waterloo
+    place: 6
+    bib: 9777
+    chiptime: "50:00"
+    guntime: "50:00"
+    age: 37
+    gender_place: 3

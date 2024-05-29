@@ -31,7 +31,6 @@ services:
       /bin/sh -c '
       python ./manage.py collectstatic --noinput --settings=racedb.settings.min;
       python ./manage.py migrate --noinput --settings=racedb.settings.min;
-      python ./manage.py loaddata racedbapp/fixtures/* --settings=racedb.settings.min;
       export DJANGO_SUPERUSER_PASSWORD=admin;
       python ./manage.py createsuperuser --noinput --username admin --email admin@example.com --settings=racedb.settings.min;
       python ./manage.py runserver 0.0.0.0:8000 --settings=racedb.settings.min'

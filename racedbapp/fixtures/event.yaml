@@ -1,0 +1,145 @@
+---
+- model: racedbapp.event
+  pk: 1
+  fields:
+    race: 1
+    distance: 1
+    date: 2021-06-20
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 2
+  fields:
+    race: 1
+    distance: 2
+    date: 2021-06-20
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 3
+  fields:
+    race: 1
+    distance: 6
+    date: 2021-06-20
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 4
+  fields:
+    race: 1
+    distance: 1
+    date: 2022-06-19
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 5
+  fields:
+    race: 1
+    distance: 2
+    date: 2022-06-19
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 6
+  fields:
+    race: 1
+    distance: 6
+    date: 2022-06-19
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 7
+  fields:
+    race: 1
+    distance: 1
+    date: 2023-06-18
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 8
+  fields:
+    race: 1
+    distance: 2
+    date: 2023-06-18
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 9
+  fields:
+    race: 1
+    distance: 6
+    date: 2023-06-18
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 10
+  fields:
+    race: 2
+    distance: 2
+    date: 2019-10-06
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 11
+  fields:
+    race: 2
+    distance: 2
+    date: 2022-10-23
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 12
+  fields:
+    race: 2
+    distance: 2
+    date: 2023-10-22
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 13
+  fields:
+    race: 3
+    distance: 10
+    date: 2020-02-09
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 14
+  fields:
+    race: 3
+    distance: 8
+    date: 2020-02-09
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 15
+  fields:
+    race: 3
+    distance: 10
+    date: 2022-02-13
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 16
+  fields:
+    race: 3
+    distance: 8
+    date: 2022-02-13
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 17
+  fields:
+    race: 3
+    distance: 10
+    date: 2023-02-12
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 18
+  fields:
+    race: 3
+    distance: 8
+    date: 2023-02-12
+    city: Waterloo
+    medals: none

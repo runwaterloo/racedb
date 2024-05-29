@@ -1,0 +1,6 @@
+---
+- model: racedbapp.category
+  pk: 1
+  fields:
+    name: aCategory
+    ismasters: False

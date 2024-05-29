@@ -1,0 +1,19 @@
+---
+- model: racedbapp.race
+  pk: 1
+  fields:
+    name: Waterloo 10 KM Classic
+    shortname: Waterloo Classic
+    slug: waterloo-classic
+- model: racedbapp.race
+  pk: 2
+  fields:
+    name: Fall 5 KM Classic
+    shortname: Fall Classic
+    slug: fall-classic
+- model: racedbapp.race
+  pk: 3
+  fields:
+    name: Re-Fridgee-Eighter
+    shortname: Re-Fridgee-Eighter
+    slug: re-fridgee-eighter

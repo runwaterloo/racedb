@@ -22,7 +22,6 @@ cache_directory = "/root/.flickr"
 if os.path.exists(cache_directory) and os.path.isdir(cache_directory):
     try:
         shutil.rmtree(cache_directory)  # Remove the directory and its contents
-        logger.info(f"Removed existing cache directory: {cache_directory}")
     except OSError as e:
         logger.error(f"Error removing cache directory: {e}")
 else:
