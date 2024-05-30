@@ -2,6 +2,7 @@ from collections import namedtuple
 from datetime import date, timedelta
 from operator import attrgetter
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min
 from django.shortcuts import redirect, render
 
@@ -39,7 +40,10 @@ def index(request, member_slug):
     if len(results) > 0:
         racing_since = results[-1].result.event.date.year
     badges = get_badges(member, results)
-    nophoto_url = Config.objects.get(name="nophoto_url").value
+    try:
+        nophoto_url = Config.objects.get(name="nophoto_url").value
+    except ObjectDoesNotExist:
+        nophoto_url = ""
     if member.gender in ("M", "F"):
         boost = get_boost(member, request)
     else:
