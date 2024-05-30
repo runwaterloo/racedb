@@ -5,6 +5,8 @@ racedb:
   devVolumePath: /srv/racedb
   secretsVolumePath: /srv/racedb_secrets
   celeryWorkers: 1
+  # mount local filesytem into container
+  mountLocal: false
 
 replicaCount: 1
 

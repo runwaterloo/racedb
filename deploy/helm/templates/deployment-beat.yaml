@@ -51,7 +51,7 @@ spec:
             - name: WEBHOST
               value: {{ .Values.ingress.host }}
           volumeMounts:
-            {{- if eq .Values.racedb.settings "dev" }}
+            {{- if .Values.racedb.mountLocal }}
             - mountPath: /srv/racedb
               name: racedb
             {{- end }}
@@ -60,7 +60,7 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
-        {{- if eq .Values.racedb.settings "dev" }}
+        {{- if .Values.racedb.mountLocal }}
         - name: racedb
           hostPath:
             path: {{ .Values.racedb.devVolumePath }}
