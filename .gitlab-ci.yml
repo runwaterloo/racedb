@@ -93,3 +93,4 @@ deploy:
     - /usr/local/bin/helm upgrade racedb . --values values-rrw.yaml --set image.tag="${CI_COMMIT_TAG:1}" --wait
     - curl --retry 6 "https://results.runwaterloo.com/cache_clear/?notifykey=${NOTIFYKEY}"
     - /usr/local/bin/helm upgrade racedbdev . --values values-racedb.yaml --set image.tag="${CI_COMMIT_TAG:1}" --wait
+    - curl --retry 6 "https://racedb.runwaterloo.com/cache_clear/?notifykey=${NOTIFYKEY}"
