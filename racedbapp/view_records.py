@@ -7,7 +7,7 @@ from django.db.models import Count, Min
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from . import utils, view_shared
+from . import view_shared
 from .models import *
 
 

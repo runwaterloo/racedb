@@ -11,15 +11,15 @@ from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from . import config, view_boost, view_endurrun, view_member, view_recap, view_shared
+from . import config,view_endurrun, view_member, view_recap, view_shared
 from .models import Config, Endurraceresult, Event, Relay, Result, Rwmember
 
-named_future_event = namedtuple("nfe", ["event", "race", "distance", "records"])
-
-named_event = namedtuple("ne", ["date", "city"])
-named_race = namedtuple("nr", ["name", "shortname", "slug"])
-named_distance = namedtuple("nd", ["name", "slug", "km"])
-
+EventContext = namedtuple("EventContext", ["date", "city"],defaults=(None,None))
+RaceContext = namedtuple("RaceContext", ["name", "shortname", "slug"],defaults=(None,None,None))
+DistanceContext = namedtuple("DistanceContext", ["name", "slug", "km"],defaults=(None,None,None))
+MemberInfoContext = namedtuple("MemberInfoContext", ["member", "racing_since", "km", "fivek_pb", "tenk_pb"],defaults=(None,None,None,None,None))
+RecapContext = namedtuple("RecapContext",["results","event","type","distances"],defaults=(None,None,None,None))
+FeaturedEventContext = namedtuple("FeaturedEventContext",["event", "data","future_events"],defaults=(None,None,None))
 
 def index(request):
     cache_key = "index.{}".format(request.META["QUERY_STRING"])
@@ -31,29 +31,19 @@ def index(request):
         cached_html = cache.get(cache_key)
         if cached_html:
             return cached_html  # return the page immediately if it's cached
-    last_race_day_events = get_last_race_day_events(asofdate)
-    recap_type = get_recap_type(last_race_day_events)
-    distances = get_distances(last_race_day_events)
-    recap_event = get_recap_event(last_race_day_events, recap_type, distances)
-    recap_results = get_recap_results(recap_event, recap_type)
-    memberinfo = get_memberinfo()
-    featured_event = get_featured_event()
-    featured_event_data = get_featured_event_data(featured_event)
-    future_events = get_future_events(featured_event)
-    boost_year = view_boost.get_boost_years()[0]
-    boost_leaderboard = view_boost.index(request, boost_year, leaderboard_only=True)
+    recap_context = get_recap_context(asofdate)
+    member_info_context = get_memberinfo()
+    featured_event_context = get_featured_event_context()
     notification = get_notification()
     context = {
-        "distances": distances,
-        "recap_type": recap_type,
-        "recap_event": recap_event,
-        "recap_results": recap_results,
-        "memberinfo": memberinfo,
-        "featured_event": featured_event,
-        "featured_event_data": featured_event_data,
-        "future_events": future_events,
-        "boost_year": boost_year,
-        "boost_leaderboard": boost_leaderboard,
+        "distances": recap_context.distances,
+        "recap_type": recap_context.type,
+        "recap_event": recap_context.event,
+        "recap_results": recap_context.results,
+        "memberinfo": member_info_context,
+        "featured_event": featured_event_context.event,
+        "featured_event_data": featured_event_context.data,
+        "future_events": featured_event_context.future_events,
         "notification": notification,
     }
     # Determine the format to return based on what is seen in the URL
@@ -74,47 +64,137 @@ def index(request):
         return html
 
 
-def get_future_events(featured_event):
-    today = datetime.today()
-    future_events = []
-    dbfuture_events = Event.objects.filter(date__gte=today).order_by(
-        "date", "-distance__km"
-    )
-    upcoming_races_count = int(
-        Config.objects.get(name="homepage_upcoming_races_count").value
-    )
-    races_seen = []
-    for i in dbfuture_events:
-        if len(races_seen) == upcoming_races_count:
-            if i.race not in races_seen:
-                break
-        if i == featured_event:
-            continue
-        event_result_count = Result.objects.filter(event=i).count()
-        if event_result_count > 0:
-            continue
-        numresults = Result.objects.filter(
-            event__race=i.race, event__distance=i.distance
-        ).count()
-        event_data = False
-        if numresults > 0:
-            event_data = get_event_data(i)
-        future_events.append((i, event_data))
-        if i.race not in races_seen:
-            races_seen.append(i.race)
-    return future_events
+def get_recap_context(asofdate):
+    allResults = Result.objects.all()
+    if not allResults.exists():
+        return RecapContext()
+    last_race_day_events = get_last_race_day_events(allResults,asofdate)
+    recap_type = get_recap_type(last_race_day_events)
+    distances = get_distances(last_race_day_events)
+    recap_event = get_recap_event(last_race_day_events, recap_type, distances)
+    recap_results = get_recap_results(recap_event, recap_type)
+    return RecapContext(recap_results,recap_event, recap_type,distances)
 
+def get_last_race_day_events(allResults, asofdate):
+    if  not allResults.exists():
+        return
+    if asofdate:
+        maxdate = datetime.strptime(asofdate, "%Y-%m-%d")
+        date_of_last_event = (
+            allResults
+            .filter(event__date__lte=maxdate)
+            .order_by("-event__date")[:1][0]
+            .event.date
+        )
+    else:
+        date_of_last_event = (
+            allResults.order_by("-event__date")[:1][0].event.date
+        )
+    last_race = (
+        allResults
+        .filter(event__date=date_of_last_event)
+        .order_by("-event__date")[:1][0]
+        .event.race
+    )
+    last_race_day_event_ids = (
+        Result.objects.filter(
+            event__race=last_race, event__date__year=date_of_last_event.year
+        )
+        .values_list("event", flat=True)
+        .distinct()
+    )
+    last_race_day_events = Event.objects.filter(
+        id__in=last_race_day_event_ids
+    ).order_by("-distance__km")
+    return last_race_day_events
+
+def get_recap_results(recap_event, recap_type):
+    if recap_type == "relay":
+        recap_results = get_recap_results_relay(recap_event)
+    elif recap_type == "combined":
+        recap_results = get_recap_results_combined(recap_event)
+    elif recap_type == "endurrun":
+        recap_results = get_recap_results_endurrun(recap_event)
+    else:
+        recap_results = get_recap_results_standard(recap_event)
+    return recap_results
+
+def get_recap_results_relay(recap_event):
+    # TODO calling other view functions and indices has code smell refactor 
+    relay_records = view_shared.get_relay_records(year=recap_event.date.year)
+    categories = config.ValidRelayCategories().categories.values()
+    recap_results = {}
+    for i in categories:
+        if relay_records[i]:
+            fastest_times = relay_records[i]
+            winner = sorted(fastest_times, key=attrgetter("team_place"))[0]
+            recap_results[i] = winner
+    return recap_results
+
+def get_recap_results_combined(recap_event):
+    request = {}
+    year = recap_event.date.year
+    race_slug = recap_event.race.slug
+    distance_slug = "combined"
+    recap_results = view_recap.index(
+        request, year, race_slug, distance_slug, individual_only=True
+    )
+    return recap_results
+
+def get_recap_results_endurrun(recap_event):
+    recap_results = Endurrunrecap(recap_event)
+    return recap_results
+
+def get_recap_results_standard(recap_event):
+    event_results = Result.objects.filter(event=recap_event)
+    hasmasters = Result.objects.hasmasters(recap_event)
+    distance_slug = recap_event.distance.slug
+    recap_results = view_recap.get_individual_results(
+        recap_event, event_results, hasmasters, distance_slug
+    )
+    return recap_results
+
+def get_recap_event(last_race_day_events, recap_type, distances):
+    """Choose which event to use for a recap"""
+    distance_slugs = [x.slug for x in distances]
+    if recap_type == "relay" and "2_5-km" in distance_slugs:
+        recap_event = last_race_day_events.filter(distance__slug="2_5-km")[0]
+    else:
+        recap_event = last_race_day_events[0]
+    return recap_event
+
+def get_recap_type(last_race_day_events):
+    if not last_race_day_events.exists():
+        return
+    recap_type = "standard"
+    if last_race_day_events[0].race.slug == "laurier-loop":
+        relay_event = [x for x in last_race_day_events if x.distance.slug == "2_5-km"]
+        if len(relay_event) == 1:
+            if Relay.objects.filter(event=relay_event[0]).count() > 0:
+                recap_type = "relay"
+    if last_race_day_events[0].race.slug == "endurrace":
+        year = last_race_day_events[0].date.year
+        if Endurraceresult.objects.filter(year=year).count() > 0:
+            recap_type = "combined"
+    if last_race_day_events[0].race.slug == "endurrun":
+        recap_type = "endurrun"
+    return recap_type
+
+def get_distances(last_race_day_events):
+    if not last_race_day_events.exists():
+        return
+    distances = [x.distance for x in last_race_day_events]
+    return distances
 
 def get_memberinfo():
-    named_memberinfo = namedtuple(
-        "nm", ["member", "racing_since", "km", "fivek_pb", "tenk_pb"]
-    )
     members = (
         Rwmember.objects.filter(active=True)
         .exclude(photourl=None)
         .exclude(photourl="")
         .order_by("?")
     )
+    if not members.exists():
+        return MemberInfoContext()
     featured_member_id = "0"
     db_featured_member_id = Config.objects.filter(name="featured_member_id")
     if db_featured_member_id.count() > 0:
@@ -136,9 +216,15 @@ def get_memberinfo():
     tenk_pb = view_member.get_pb(member_results, "10-km")
     if len(member_results) > 0:
         racing_since = member_results[-1].result.event.date.year
-    memberinfo = named_memberinfo(member, racing_since, km, fivek_pb, tenk_pb)
-    return memberinfo
+    MemberInfoContext(member, racing_since, km, fivek_pb, tenk_pb)
+    return MemberInfoContext(member, racing_since, km, fivek_pb, tenk_pb)
 
+def get_featured_event_context():
+    events = Event.objects.all()
+    if not events.exists():
+        return FeaturedEventContext()
+    event = get_featured_event()
+    return FeaturedEventContext(event,get_event_data(event),get_future_events(event))
 
 def get_featured_event():
     featured_event = None
@@ -159,29 +245,23 @@ def get_featured_event():
                 featured_event = event
     return featured_event
 
-
-def get_featured_event_data(featured_event):
-    featured_event_data = get_event_data(featured_event)
-    return featured_event_data
-
-
-def get_event_data(featured_event):
-    if not featured_event:
+def get_event_data(event):
+    if not event:
         return None
     previous_event = (
-        Event.objects.filter(race=featured_event.race, distance=featured_event.distance)
-        .exclude(id=featured_event.id)
+        Event.objects.filter(race=event.race, distance=event.distance)
+        .exclude(id=event.id)
         .order_by("-date")
         .first()
     )
     previous_event_recap = get_recap_results_standard(previous_event)
     featured_event_records = view_shared.getracerecords(
-        featured_event.race, featured_event.distance, individual_only=True
+        event.race, event.distance, individual_only=True
     )
-    featured_event_data = []
+    event_data = []
     for i in featured_event_records:
         row = UpcomingEvent()
-        row.event = featured_event
+        row.event = event
         row.demographic = i.place
         row.record_athlete = i.athlete
         row.record_member = i.member
@@ -204,122 +284,38 @@ def get_event_data(featured_event):
                 recap_row
             ].male_member_slug
             row.last_year_winning_time = previous_event_recap[recap_row].male_time
-        featured_event_data.append(row)
-    return featured_event_data
+        event_data.append(row)
+    return event_data
 
-
-def get_recap_event(last_race_day_events, recap_type, distances):
-    """Choose which event to use for a recap"""
-    distance_slugs = [x.slug for x in distances]
-    if recap_type == "relay" and "2_5-km" in distance_slugs:
-        recap_event = last_race_day_events.filter(distance__slug="2_5-km")[0]
-    else:
-        recap_event = last_race_day_events[0]
-    return recap_event
-
-
-def get_recap_results(recap_event, recap_type):
-    if recap_type == "relay":
-        recap_results = get_recap_results_relay(recap_event)
-    elif recap_type == "combined":
-        recap_results = get_recap_results_combined(recap_event)
-    elif recap_type == "endurrun":
-        recap_results = get_recap_results_endurrun(recap_event)
-    else:
-        recap_results = get_recap_results_standard(recap_event)
-    return recap_results
-
-
-def get_recap_results_standard(recap_event):
-    event_results = Result.objects.filter(event=recap_event)
-    hasmasters = Result.objects.hasmasters(recap_event)
-    distance_slug = recap_event.distance.slug
-    recap_results = view_recap.get_individual_results(
-        recap_event, event_results, hasmasters, distance_slug
+def get_future_events(event):
+    today = datetime.today()
+    future_events = []
+    dbfuture_events = Event.objects.filter(date__gte=today).order_by(
+        "date", "-distance__km"
     )
-    return recap_results
-
-
-def get_recap_results_relay(recap_event):
-    relay_records = view_shared.get_relay_records(year=recap_event.date.year)
-    categories = config.ValidRelayCategories().categories.values()
-    recap_results = {}
-    for i in categories:
-        if relay_records[i]:
-            fastest_times = relay_records[i]
-            winner = sorted(fastest_times, key=attrgetter("team_place"))[0]
-            recap_results[i] = winner
-    return recap_results
-
-
-def get_recap_results_combined(recap_event):
-    request = {}
-    year = recap_event.date.year
-    race_slug = recap_event.race.slug
-    distance_slug = "combined"
-    recap_results = view_recap.index(
-        request, year, race_slug, distance_slug, individual_only=True
+    upcoming_races_count = int(
+        Config.objects.get(name="homepage_upcoming_races_count").value
     )
-    return recap_results
-
-
-def get_recap_results_endurrun(recap_event):
-    recap_results = Endurrunrecap(recap_event)
-    return recap_results
-
-
-def get_distances(last_race_day_events):
-    distances = [x.distance for x in last_race_day_events]
-    return distances
-
-
-def get_last_race_day_events(asofdate):
-    if asofdate:
-        maxdate = datetime.strptime(asofdate, "%Y-%m-%d")
-        date_of_last_event = (
-            Result.objects.all()
-            .filter(event__date__lte=maxdate)
-            .order_by("-event__date")[:1][0]
-            .event.date
-        )
-    else:
-        date_of_last_event = (
-            Result.objects.all().order_by("-event__date")[:1][0].event.date
-        )
-    last_race = (
-        Result.objects.all()
-        .filter(event__date=date_of_last_event)
-        .order_by("-event__date")[:1][0]
-        .event.race
-    )
-    last_race_day_event_ids = (
-        Result.objects.filter(
-            event__race=last_race, event__date__year=date_of_last_event.year
-        )
-        .values_list("event", flat=True)
-        .distinct()
-    )
-    last_race_day_events = Event.objects.filter(
-        id__in=last_race_day_event_ids
-    ).order_by("-distance__km")
-    return last_race_day_events
-
-
-def get_recap_type(last_race_day_events):
-    recap_type = "standard"
-    if last_race_day_events[0].race.slug == "laurier-loop":
-        relay_event = [x for x in last_race_day_events if x.distance.slug == "2_5-km"]
-        if len(relay_event) == 1:
-            if Relay.objects.filter(event=relay_event[0]).count() > 0:
-                recap_type = "relay"
-    if last_race_day_events[0].race.slug == "endurrace":
-        year = last_race_day_events[0].date.year
-        if Endurraceresult.objects.filter(year=year).count() > 0:
-            recap_type = "combined"
-    if last_race_day_events[0].race.slug == "endurrun":
-        recap_type = "endurrun"
-    return recap_type
-
+    races_seen = []
+    for i in dbfuture_events:
+        if len(races_seen) == upcoming_races_count:
+            if i.race not in races_seen:
+                break
+        if i == event:
+            continue
+        event_result_count = Result.objects.filter(event=i).count()
+        if event_result_count > 0:
+            continue
+        numresults = Result.objects.filter(
+            event__race=i.race, event__distance=i.distance
+        ).count()
+        event_data = False
+        if numresults > 0:
+            event_data = get_event_data(i)
+        future_events.append((i, event_data))
+        if i.race not in races_seen:
+            races_seen.append(i.race)
+    return future_events
 
 def get_notification():
     notification = False

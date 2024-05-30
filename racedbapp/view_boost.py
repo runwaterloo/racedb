@@ -144,7 +144,6 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         }
         return render(request, "racedbapp/boost.html", context)
 
-
 def get_boost_years():
     boost_tags = Rwmembertag.objects.values_list("name", flat=True).filter(
         name__icontains="boost-"
@@ -165,14 +164,12 @@ def get_boost_years():
                     found_year_results = True
     return boost_years
 
-
 def get_boost_tag(year):
     try:
         boost_tag = Rwmembertag.objects.get(name="boost-{}".format(year))
     except Exception:
         raise Http404("No results found")
     return boost_tag
-
 
 def get_qs_filter(qstring):
     valid_filters = ("F", "M", "F40-", "F40+", "M40-", "M40+")

@@ -10,7 +10,7 @@ from django.shortcuts import render
 
 from racedbapp.tasks import send_email_task
 
-from . import utils, view_shared
+from . import view_shared
 from .models import *
 
 named_filter = namedtuple("nf", ["current", "choices"])
