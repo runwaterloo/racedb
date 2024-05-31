@@ -28,11 +28,13 @@ def index(request, year, leaderboard_only=False, standings_only=False):
     config_dict = dict(
         Config.objects.values_list("name", "value").filter(name__in=config_values)
     )
-    max_events = int(config_dict["boost_max_events"])
-    max_endurrun = int(config_dict["boost_max_endurrun"])
-    leaderboard_size = int(config_dict["boost_leaderboard_size"])
-    nophoto_url = config_dict["nophoto_url"]
+    max_events = int(config_dict.get("boost_max_events",0))
+    max_endurrun = int(config_dict.get("boost_max_endurrun",0))
+    leaderboard_size = int(config_dict.get("boost_leaderboard_size",0))
+    nophoto_url = config_dict.get("nophoto_url", "") 
     boost_years = get_boost_years()
+    if not boost_years:
+        return render(request, "racedbapp/boost.html")
     if year == "latest":
         return redirect("/boost/{}/".format(boost_years[0]))
     else:
