@@ -78,7 +78,6 @@ tag:
     - docker:dind
   script:
     - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
-    - export VERSION=`cat version.txt | xargs`
     - sh deploy/gitlab/tag.sh
 
 deploy:
