@@ -1,6 +1,37 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 # RaceDB
 
+## Quick Start
+
+### Start application
+
+```
+docker-compose -f deploy/local/docker-compose.yml up --build
+```
+
+or to mount local directory into container:
+
+```
+docker-compose -f deploy/local/docker-compose-mount-local.yml up --build
+```
+
+### Access application
+
+- Racedb: http://localhost:8000/
+- Admin interface: http://localhost:8000/admin (admin/admin)
+
+### Generate fake data
+
+```
+deploy/local/loaddata.sh
+```
+
+### Run tests
+
+```
+docker exec racedb-web ./manage.py test --settings=racedb.settings.min
+```
+
 ## Configurable Options
 The following options can be configured in Configs in the Django admin site.
 
@@ -21,33 +52,16 @@ endurrun_same_name: Bob Smith;Bobby Smith;Robert Smith
 
 **featured_member_tag**: Restrict featured member to ones with this tag.
 
-## Local development
-
-```
-cd deploy/local
-docker-compose up --build
-```
-
-This will bring up MariaDB and run `migrate` which will create the schema. 
-
-Racedb should be available at http://localhost:8000/
-
-Note: This is still a WIP and things are very broken without actual data in the tables. Until we generate fake data, the main page will give an error. You can see things kind of working-ish at http://localhost:8000/events .
-
-Django admin interface is available at http://localhost:8000/admin
-
-Optionally populate the database with:
-
-```
-./loaddata.sh
-```
-
-Tests can be run locally with:
-
-```
-docker exec racedb-web ./manage.py test --settings=racedb.settings.min
-```
 
 ## Misc Developer Info
 
-Adding `[push dev]` to a commit message in a non-main branch will trigger a pipeline job that pushes the build to dev.
+### Pipelines
+
+Add `[push dev]` to a commit message to trigger a pipeline job that pushes the build to https://racedb.runwaterloo.com
+
+Add `[skip ci]` to a commit message to prevent CI from running at all
+
+### Formatting and linting
+
+- black
+- flake8
