@@ -4,7 +4,7 @@
 apk add git -f
 
 # set version
-export VERSION=$(date +'%y.%-m.%-d%H%M%S')
+export VERSION=$(TZ=America/Toronto date +'%y.%-m.%-d%H%M%S')
 
 # pull image
 docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
