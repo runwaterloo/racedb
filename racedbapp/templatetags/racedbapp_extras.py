@@ -91,8 +91,8 @@ def neg_to_pos(orig_value):
 @register.filter(name="get_prekey")
 def get_prekey(string):
     """Get preupdate key"""
-    prekey = Config.objects.get(name="prekey").value
-    return prekey
+    prekey_object = Config.objects.filter(name="prekey").first()
+    return prekey_object.value if prekey_object else ""
 
 
 @register.filter(name="get_default_record_distance_slug")
