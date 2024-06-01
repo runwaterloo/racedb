@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # install git package
-apk add git -f
+apk add git tzdata -f
 
 # set version
 export VERSION=$(TZ=America/Toronto date +'%y.%-m.%-d%H%M%S')
