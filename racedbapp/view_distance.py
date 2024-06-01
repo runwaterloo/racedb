@@ -13,11 +13,11 @@ named_distance_record = namedtuple("ndr", ["place", "result", "member"])
 def index(request, distance_slug):
     membership = view_shared.get_membership()
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
-    topx = int(Config.objects.get(name="distance_topx").value)
+    topx = int(view_shared.get_config_value_or_false("distance_topx"))
     topx_filter = False
     if "filter" in qstring:
         topx_filter = qstring["filter"][0]
-    distance = Distance.objects.get(slug=distance_slug)
+    distance = view_shared.get_distance_by_slug_or_false(distance_slug)
     distances = Distance.objects.filter(showrecord=True).order_by("km")
     named_distance_record = namedtuple(
         "ndr", ["female", "male", "masters_female", "masters_male"]

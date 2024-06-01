@@ -255,7 +255,7 @@ def get_event_data(event):
         .first()
     )
     previous_event_recap = get_recap_results_standard(previous_event)
-    featured_event_records = view_shared.getracerecords(
+    featured_event_records = view_shared.get_race_records(
         event.race, event.distance, individual_only=True
     )
     event_data = []

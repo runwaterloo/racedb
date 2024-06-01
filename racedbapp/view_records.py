@@ -27,7 +27,7 @@ def index(request, race_slug, distance_slug):
         distance = nameddistance(
             rawdistance.id, rawdistance.name, rawdistance.slug, rawdistance.km
         )
-    records, team_records, hill_records = view_shared.getracerecords(race, distance)
+    records, team_records, hill_records = view_shared.get_race_records(race, distance)
     context = {
         "race": race,
         "distance": distance,

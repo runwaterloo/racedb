@@ -290,11 +290,11 @@ def index(request, division, results_only=False):
     )
     prev_stage_ranked_athletes = [x.athlete for x in prev_stage_results]
     results = addchange(results, results_ranked_athletes, prev_stage_ranked_athletes)
-    if not year and phase_choice == "Final Results":
+    if results and not year and phase_choice == "Final Results":
         ultimate_gp = view_shared.get_ultimate_gp()
         results = addgp(results, ultimate_gp)
     maxstages = 0
-    if len(results) > 0:
+    if results and len(results) > 0:
         maxstages = results[0].stages
     if results_only:
         return results
@@ -305,11 +305,8 @@ def index(request, division, results_only=False):
     phasefilter = getphasefilter(
         phase_choice, filter_choice, events_results_count, division, year
     )
-    athletes = [x.athlete.name for x in results]
-    (
-        ultimate_winners,
-        ultimate_gold_jerseys,
-    ) = view_shared.get_ultimate_winners_and_gold_jerseys(years, athletes)
+    athletes = [x.athlete.name for x in results] if results else None
+    ultimate_winners, ultimate_gold_jerseys, = view_shared.get_ultimate_winners_and_gold_jerseys(years, athletes)
     context = {
         "events": events,
         "events_results_count": events_results_count,
@@ -725,6 +722,8 @@ def addgap(results):
 def addchange(results, results_ranked_athletes, prev_stage_ranked_athletes):
     """Calculate rank change"""
     newresults = []
+    if not results:
+        return None
     if results[0].stages < 2:
         change = False
         for r in results:

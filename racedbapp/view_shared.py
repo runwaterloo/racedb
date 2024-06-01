@@ -63,7 +63,9 @@ def getwinnersdict():
     return malewinnersdict, femalewinnersdict
 
 
-def getracerecords(race, distance, division_choice=False, individual_only=False):
+def get_race_records(race, distance, division_choice=False, individual_only=False)-> tuple[list, list | dict | None, list | None]:
+    if not race:
+        return [], None, None
     membership = get_membership()
     race = Race.objects.get(id=race.id)
     races = create_samerace_list(race)
@@ -571,7 +573,7 @@ def get_ultimate_finished_all_events(years):
     return ultimate_finished_all_events
 
 
-def get_ultimate_winners_and_gold_jerseys(years, athletes):
+def get_ultimate_winners_and_gold_jerseys(years, athletes)-> tuple[set | None, set | None]:
     """
     Get a list of names of people who have won the ENDURrun ultimate.
     If there is ever a tie for winner times in a year, this won't work.
@@ -579,6 +581,8 @@ def get_ultimate_winners_and_gold_jerseys(years, athletes):
     same_name_dict = get_endurrun_same_name_dict()
     ultimate_winners = []
     ultimate_gold_jerseys = []
+    if not athletes:
+        return None, None
     for year in years:
         year_results = Result.objects.filter(
             event__race__slug="endurrun",
@@ -717,6 +721,19 @@ def get_config_value_or_false(name):
             value = False
     return value
 
+def get_race_by_slug_or_false(slug):
+    try:
+        race = Race.objects.get(slug=slug)
+    except:
+        race = False
+    return race
+
+def get_distance_by_slug_or_false(slug):
+    try:
+        distance = Distance.objects.get(slug=slug)
+    except:
+        distance = False
+    return distance
 
 def get_endurrun_same_name_dict():
     """

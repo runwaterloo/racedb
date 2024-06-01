@@ -33,7 +33,7 @@ def index(request):
         yearfilter = ""
     if "race" in qstring:
         race_slug = qstring["race"][0]
-        race_name = Race.objects.get(slug=race_slug)
+        race_name = view_shared.get_race_by_slug_or_false(race_slug)
         races = view_shared.create_samerace_list(race_name)
         events = events.filter(race__in=races)
         yearfilter_events = yearfilter_events.filter(race__in=races)
