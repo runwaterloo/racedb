@@ -7,12 +7,11 @@ from django.db.models import Max
 from django.http import Http404
 from django.shortcuts import render
 
-from . import view_shared
+from racedbapp.shared.types import Choice, Filter
+
+from .shared import shared
 from .config import ValidRelayCategories
 from .models import Event, Relay, Result, Teamcategory, Teamresult
-
-named_filter = namedtuple("nf", ["current", "choices"])
-named_choice = namedtuple("nc", ["name", "url"])
 
 valid_categories = ValidRelayCategories().categories
 
@@ -39,7 +38,7 @@ def index(request, year, race_slug, distance_slug):
             x for x in team_results if valid_categories[category] in x.categories
         ]
     if year != "all":
-        pages = view_shared.get_pages(
+        pages = shared.get_pages(
             events[0], "Relay", team_categories, relay_dict=True
         )
     context = {
@@ -104,11 +103,11 @@ def get_year_filter(event):
         if year == event.date.year:
             continue
         choices.append(
-            named_choice(
+            Choice(
                 year, "/relay/{}/{}/{}/".format(year, d[1], event.distance.slug)
             )
         )
-    year_filter = named_filter(event.date.year, choices)
+    year_filter = Filter(event.date.year, choices)
     return year_filter
 
 
@@ -123,7 +122,7 @@ def get_category_filter(event, category, team_results, year):
             raise Http404("No results found")
         full_category = valid_categories[category]
         choices.append(
-            named_choice(
+            Choice(
                 "All",
                 "/relay/{}/{}/{}/".format(
                     event_date_year, event.race.slug, event.distance.slug
@@ -139,14 +138,14 @@ def get_category_filter(event, category, team_results, year):
     for k, v in valid_categories.items():
         if v in present_categories and k != category:
             choices.append(
-                named_choice(
+                Choice(
                     v,
                     "/relay/{}/{}/{}/?category={}".format(
                         event_date_year, event.race.slug, event.distance.slug, k
                     ),
                 )
             )
-    category_filter = named_filter(full_category, choices)
+    category_filter = Filter(full_category, choices)
     return category_filter
 
 

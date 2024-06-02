@@ -8,7 +8,7 @@ import requests
 from django.core.management.base import BaseCommand
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-from racedbapp import tasks, view_shared
+from racedbapp import tasks
 from racedbapp.models import (
     Category,
     Distance,
@@ -24,6 +24,7 @@ from racedbapp.models import (
     Teamcategory,
     Teamresult,
 )
+from racedbapp.shared import shared
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -97,7 +98,7 @@ class Command(BaseCommand):
                 if distance.slug == "7-mi":
                     dohill = True
                     hill_results = []
-            membership = view_shared.get_membership(event=event, include_inactive=True)
+            membership = shared.get_membership(event=event, include_inactive=True)
             results = []
             gun_equal_chip = True
             if "docs.google.com" not in event.resultsurl:

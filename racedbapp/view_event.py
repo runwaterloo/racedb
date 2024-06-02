@@ -2,19 +2,18 @@ from collections import defaultdict, namedtuple
 from datetime import timedelta
 from operator import attrgetter
 from urllib import parse
-
 import simplejson
 from django.db.models import Count, Max, Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 
+import racedbapp.shared.endurrun
 from racedbapp.tasks import send_email_task
+from racedbapp.shared.types import Choice, Filter
 
-from . import view_shared
+from .shared import shared
 from .models import *
 
-named_filter = namedtuple("nf", ["current", "choices"])
-named_choice = namedtuple("nc", ["name", "url"])
 named_split = namedtuple("ns", ["split_num", "split_time"])
 
 
@@ -29,8 +28,8 @@ def index(request, year, race_slug, distance_slug):
         )
     except:
         raise Http404("Matching event not found".format(division))
-    races = view_shared.create_samerace_list(event.race)
-    team_categories = view_shared.get_team_categories(event)
+    races = shared.create_samerace_list(event.race)
+    team_categories = shared.get_team_categories(event)
     hill_dict = get_hill_dict(event)
     relay_dict = get_relay_dict(event)
     dbphototags = list(
@@ -43,7 +42,7 @@ def index(request, year, race_slug, distance_slug):
         .replace("_", "")
     )
     wheelchair_results = Wheelchairresult.objects.filter(event=event)
-    pages = view_shared.get_pages(
+    pages = shared.get_pages(
         event,
         page,
         team_categories,
@@ -51,10 +50,6 @@ def index(request, year, race_slug, distance_slug):
         wheelchair_results=wheelchair_results,
         relay_dict=relay_dict,
     )
-    year_filter = get_year_filter(event, races)
-    distance_filter = get_distance_filter(event, races)
-    category_filter = get_category_filter(event, category, division)
-    division_filter = get_division_filter(event, division, category)
     if page == "Wheelchair":
         all_results = Wheelchairresult.objects.filter(event=event)
         hasage = False
@@ -83,10 +78,10 @@ def index(request, year, race_slug, distance_slug):
         hasdivision = True
     extra_name = get_extra_name(event)
     filters = {
-        "category_filter": category_filter,
-        "distance_filter": distance_filter,
-        "division_filter": division_filter,
-        "year_filter": year_filter,
+        "category_filter": get_category_filter(event, category, division),
+        "distance_filter": get_distance_filter(event, races),
+        "division_filter": get_division_filter(event, division, category),
+        "year_filter": get_year_filter(event, races),
     }
     event_json = get_event_json(event)
     guntimes_have_microseconds = {
@@ -315,13 +310,13 @@ def get_distance_filter(event, races):
     ).values_list("event__distance", flat=True)
     distances = Distance.objects.filter(pk__in=set(distance_ids)).order_by("-km")
     if event.race.slug == "endurrun":
-        distances = view_shared.sort_endurrun_distances(distances)
+        distances = racedbapp.shared.endurrun.sort_endurrun_distances(distances)
     choices = []
     for d in distances:
         if d == event.distance:
             continue
         choices.append(
-            named_choice(
+            Choice(
                 d.name,
                 "/event/{}/{}/{}/".format(event.date.year, event.race.slug, d.slug),
             )
@@ -330,11 +325,11 @@ def get_distance_filter(event, races):
         durelaycount = Durelay.objects.filter(year=event.date.year).count()
         if durelaycount > 0:
             choices.append(
-                named_choice(
+                Choice(
                     "Sprint Duathlon Relay", "/durelay/{}/".format(event.date.year)
                 )
             )
-    distance_filter = named_filter(event.distance.name, choices)
+    distance_filter = Filter(event.distance.name, choices)
     return distance_filter
 
 
@@ -353,11 +348,11 @@ def get_year_filter(event, races):
         if year == event.date.year:
             continue
         choices.append(
-            named_choice(
+            Choice(
                 year, "/event/{}/{}/{}/".format(year, d[1], event.distance.slug)
             )
         )
-    year_filter = named_filter(event.date.year, choices)
+    year_filter = Filter(event.date.year, choices)
     return year_filter
 
 
@@ -383,16 +378,16 @@ def get_category_filter(event, category, division):
         current = "{} ({})".format(category, category_count)
         if division == "All":
             choices.append(
-                named_choice(
+                Choice(
                     "All ({})".format(total_count),
-                    "/event/{}/{}/{}/".format(
+                   "/event/{}/{}/{}/".format(
                         event.date.year, event.race.slug, event.distance.slug
                     ),
                 )
             )
         else:
             choices.append(
-                named_choice(
+                Choice(
                     "All ({})".format(total_count),
                     "/event/{}/{}/{}/?division={}".format(
                         event.date.year, event.race.slug, event.distance.slug, division
@@ -402,33 +397,32 @@ def get_category_filter(event, category, division):
     for a in all_categories:
         if a["category__name"] == category:
             continue
-        clean_category = a["category__name"].replace("+", "%2B")
         if division == "All":
             choices.append(
-                named_choice(
+                Choice(
                     "{} ({})".format(a["category__name"], a["count"]),
                     "/event/{}/{}/{}/?filter={}".format(
                         event.date.year,
                         event.race.slug,
                         event.distance.slug,
-                        clean_category,
+                        a["category__name"],
                     ),
                 )
             )
         else:
             choices.append(
-                named_choice(
+                Choice(
                     "{} ({})".format(a["category__name"], a["count"]),
                     "/event/{}/{}/{}/?filter={}&division={}".format(
                         event.date.year,
                         event.race.slug,
                         event.distance.slug,
-                        clean_category,
+                        a["category__name"],
                         division,
                     ),
                 )
             )
-    category_filter = named_filter(current, choices)
+    category_filter = Filter(current, choices)
     return category_filter
 
 
@@ -473,7 +467,7 @@ def get_division_filter(event, division, category):
             current = "{} ({})".format(division, division_count)
             if category == "All":
                 choices.append(
-                    named_choice(
+                    Choice(
                         "All ({})".format(total_count),
                         "/event/{}/{}/{}/".format(
                             event.date.year, event.race.slug, event.distance.slug
@@ -482,7 +476,7 @@ def get_division_filter(event, division, category):
                 )
             else:
                 choices.append(
-                    named_choice(
+                    Choice(
                         "All ({})".format(total_count),
                         "/event/{}/{}/{}/?filter={}".format(
                             event.date.year,
@@ -497,7 +491,7 @@ def get_division_filter(event, division, category):
                 continue
             if category == "All":
                 choices.append(
-                    named_choice(
+                    Choice(
                         "{} ({})".format(d["division"], d["count"]),
                         "/event/{}/{}/{}/?division={}".format(
                             event.date.year,
@@ -509,7 +503,7 @@ def get_division_filter(event, division, category):
                 )
             else:
                 choices.append(
-                    named_choice(
+                    Choice(
                         "{} ({})".format(d["division"], d["count"]),
                         "/event/{}/{}/{}/?filter={}&division={}".format(
                             event.date.year,
@@ -520,7 +514,7 @@ def get_division_filter(event, division, category):
                         ),
                     )
                 )
-        division_filter = named_filter(current, choices)
+        division_filter = Filter(current, choices)
     return division_filter
 
 
@@ -572,7 +566,7 @@ def get_results(
     max_splits = False
     if event_splits:
         max_splits = int(event_splits.aggregate(Max("split_num"))["split_num__max"])
-    membership = view_shared.get_membership(event=event)
+    membership = shared.get_membership(event=event)
     has_youtube = False
     if event.youtube_id and event.youtube_offset_seconds is not None:
         has_youtube = True
@@ -637,7 +631,7 @@ def get_results(
                     )
                 except:
                     splits.append(named_split(i, ""))
-        member = view_shared.get_member(r, membership)
+        member = shared.get_member(r, membership)
         hasphotos = False
         youtube_url = False
         if has_youtube and r.place < 990000:
@@ -868,8 +862,8 @@ def process_post(request):
 
 def get_ad():
     ad = False
-    text = view_shared.get_config_value_or_false("ad_text")
-    url = view_shared.get_config_value_or_false("ad_url")
+    text = shared.get_config_value_or_false("ad_text")
+    url = shared.get_config_value_or_false("ad_url")
     if text:
         if url:
             ad = Ad()

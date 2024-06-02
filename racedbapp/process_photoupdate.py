@@ -9,7 +9,7 @@ import flickrapi  # https://github.com/sybrenstuvel/flickrapi
 
 from racedb import secrets
 
-from . import view_shared
+from .shared import shared
 from .models import Event, Phototag, Result, Rwmember
 
 flickrapi.set_log_level(logging.WARNING)
@@ -282,11 +282,11 @@ def do_tags(photos, event):
 
 def get_bib2member(event):
     bib2member = {}
-    membership = view_shared.get_membership(event=event)
+    membership = shared.get_membership(event=event)
     member_assumption = get_member_assumption(event)
     results = Result.objects.filter(event=event)
     for r in results:
-        member = view_shared.get_member(r, membership)
+        member = shared.get_member(r, membership)
         if member:
             bib2member[r.bib] = member.id
     if member_assumption:
@@ -300,11 +300,11 @@ def get_bib2member(event):
 
 def get_member2bib(event):
     member2bib = {}
-    membership = view_shared.get_membership(event=event, include_inactive=True)
+    membership = shared.get_membership(event=event, include_inactive=True)
     member_assumption = get_member_assumption(event)
     results = Result.objects.filter(event=event)
     for r in results:
-        member = view_shared.get_member(r, membership)
+        member = shared.get_member(r, membership)
         if member:
             member2bib["m{}".format(member.id)] = r.bib
             if member_assumption:

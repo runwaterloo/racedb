@@ -6,8 +6,10 @@ import simplejson
 from django.http import HttpResponse
 from django.shortcuts import render
 
+from .shared.endurrun import get_member_endurrace
+
 from .models import Endurraceresult, Event, Prime, Result, Teamresult
-from .view_shared import get_member_endurrace, get_membership
+from .shared.shared import get_membership
 
 namediresult = namedtuple(
     "ni",

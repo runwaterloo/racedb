@@ -7,10 +7,9 @@ from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import redirect, render
 
-from .models import Config, Event, Result, Rwmember, Rwmembertag
+from racedbapp.shared.types import Choice, Filter
 
-named_filter = namedtuple("nf", ["current", "choices"])
-named_choice = namedtuple("nc", ["name", "url"])
+from .models import Config, Event, Result, Rwmember, Rwmembertag
 
 
 def index(request, year, leaderboard_only=False, standings_only=False):
@@ -190,28 +189,28 @@ def get_standings_filter(qs_filter, qs_date, year):
     append_date = ""
     if qs_date != "":
         append_date = "?date={}".format(qs_date)
-    choices.append(named_choice("", "/boost/{}/{}".format(year, append_date)))
+    choices.append(Choice("", "/boost/{}/{}".format(year, append_date)))
     if qs_date != "":
         append_date = "&date={}".format(qs_date)
     choices.append(
-        named_choice("Female", "/boost/{}/?filter=F{}".format(year, append_date))
+        Choice("Female", "/boost/{}/?filter=F{}".format(year, append_date))
     )
     choices.append(
-        named_choice("Male", "/boost/{}/?filter=M{}".format(year, append_date))
+        Choice("Male", "/boost/{}/?filter=M{}".format(year, append_date))
     )
     choices.append(
-        named_choice("F40-", "/boost/{}/?filter=F40-{}".format(year, append_date))
+        Choice("F40-", "/boost/{}/?filter=F40-{}".format(year, append_date))
     )
     choices.append(
-        named_choice("M40-", "/boost/{}/?filter=M40-{}".format(year, append_date))
+        Choice("M40-", "/boost/{}/?filter=M40-{}".format(year, append_date))
     )
     choices.append(
-        named_choice("F40+", "/boost/{}/?filter=F40%2B{}".format(year, append_date))
+        Choice("F40+", "/boost/{}/?filter=F40+{}".format(year, append_date))
     )
     choices.append(
-        named_choice("M40+", "/boost/{}/?filter=M40%2B{}".format(year, append_date))
+        Choice("M40+", "/boost/{}/?filter=M40+{}".format(year, append_date))
     )
-    choices = [x for x in choices if x[0] != qs_filter]
+    choices = [x for x in choices if x.name != qs_filter]
     if qs_filter == "F":
         current_choice = "Female"
     elif qs_filter == "M":
@@ -220,7 +219,7 @@ def get_standings_filter(qs_filter, qs_date, year):
         current_choice = ""
     else:
         current_choice = qs_filter
-    standings_filter = named_filter(current_choice, choices)
+    standings_filter = Filter(current_choice, choices)
     return standings_filter
 
 
@@ -256,30 +255,30 @@ def get_date_filter(qs_date, year):
         if e.date in dates_seen:
             continue
         if len(racedates[e.race]) > 1:
-            choice = named_choice(
+            choice = Choice(
                 "{} {}".format(e.race.shortname, e.distance.name),
                 "/boost/{}/?date={}".format(year, e.date),
             )
         else:
-            choice = named_choice(
+            choice = Choice(
                 e.race.name, "/boost/{}/?date={}".format(year, e.date)
             )
         if e.date != qs_date:
             choices.append(choice)
         else:
-            current_choice = choice[0]
+            current_choice = choice.name
         dates_seen.append(e.date)
-    first_choice = choices[0][0]
+    first_choice = choices[0].name
     if final:
         first_choice += " (Final)"
     else:
         first_choice += " (Current)"
     del choices[0]
     if current_choice:
-        choices.insert(0, named_choice(first_choice, "/boost/{}/".format(year)))
+        choices.insert(0, Choice(first_choice, "/boost/{}/".format(year)))
     if not current_choice:
         current_choice = first_choice
-    date_filter = named_filter(current_choice, choices)
+    date_filter = Filter(current_choice, choices)
     return date_filter
 
 

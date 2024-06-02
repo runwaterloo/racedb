@@ -4,20 +4,22 @@ from urllib import parse
 from django.db.models import Q
 from django.shortcuts import render
 
-from . import view_shared
+from racedbapp.shared.types import Choice, Filter
+
+from .shared import shared
 from .models import *
 
 named_distance_record = namedtuple("ndr", ["place", "result", "member"])
 
 
 def index(request, distance_slug):
-    membership = view_shared.get_membership()
+    membership = shared.get_membership()
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
-    topx = int(view_shared.get_config_value_or_false("distance_topx"))
+    topx = int(shared.get_config_value_or_false("distance_topx"))
     topx_filter = False
     if "filter" in qstring:
         topx_filter = qstring["filter"][0]
-    distance = view_shared.get_distance_by_slug_or_false(distance_slug)
+    distance = shared.get_distance_by_slug_or_false(distance_slug)
     distances = Distance.objects.filter(showrecord=True).order_by("km")
     named_distance_record = namedtuple(
         "ndr", ["female", "male", "masters_female", "masters_male"]
@@ -58,7 +60,7 @@ def get_dist_records(place, distance_results, gender, masters, membership):
     record_time = filtered_results.aggregate(min_time=Min("guntime"))["min_time"]
     dbdistance_records = filtered_results.filter(guntime=record_time)
     for d in dbdistance_records:
-        member = view_shared.get_member(d, membership)
+        member = shared.get_member(d, membership)
         distance_records.append(named_distance_record(place, d, member))
     return distance_records
 
@@ -76,7 +78,7 @@ def get_topxresults(distance, topx, topx_filter, membership):
             dbresults = dbresults.filter(Q(category__ismasters=True) | Q(age__gte=40))
     dbresults = dbresults.order_by("guntime")[:topx]
     for r in dbresults:
-        member = view_shared.get_member(r, membership)
+        member = shared.get_member(r, membership)
         topxresults.append(named_result(r, member))
     return topxresults
 
@@ -86,15 +88,13 @@ def get_resultfilter(distance_slug, topx_filter):
         current = topx_filter
     else:
         current = ""
-    namedfilter = namedtuple("nf", ["current", "choices"])
-    namedchoice = namedtuple("nc", ["name", "url"])
     choices = []
     if topx_filter:
-        choices.append(namedchoice("", "/distance/{}/".format(distance_slug)))
+        choices.append(Choice("", "/distance/{}/".format(distance_slug)))
     for f in ["Female", "Male", "Masters", "F-Masters", "M-Masters"]:
         if f != topx_filter:
             choices.append(
-                namedchoice(f, "/distance/{}/?filter={}".format(distance_slug, f))
+                Choice(f, "/distance/{}/?filter={}".format(distance_slug, f))
             )
-    resultfilter = namedfilter(current, choices)
+    resultfilter = Filter(current, choices)
     return resultfilter

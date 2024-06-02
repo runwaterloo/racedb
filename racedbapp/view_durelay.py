@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.shortcuts import render
 
-from . import view_shared
+from .shared import shared
 from .models import Durelay, Event
 
 

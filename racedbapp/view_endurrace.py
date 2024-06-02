@@ -9,7 +9,10 @@ from django.db.models import Count, Min
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from . import view_shared
+import racedbapp.shared.endurrun
+from racedbapp.shared.types import Choice, Filter
+
+from .shared import shared
 from .models import *
 
 
@@ -70,7 +73,7 @@ def index(request, year):
     # results1 = sorted(results1, key=attrgetter('combined_time'))
     results2 = []
     results1 = Endurraceresult.objects.filter(year=year).order_by("guntime")
-    membership = view_shared.get_membership()
+    membership = shared.get_membership()
     place = 0
     for result in results1:
         gender_place = ""
@@ -107,7 +110,7 @@ def index(request, year):
         elif filter_choice != "":
             if result.category.name != filter_choice:
                 continue
-        member = view_shared.get_member_endurrace(result, membership)
+        member = racedbapp.shared.endurrun.get_member_endurrace(result, membership)
         results2.append(
             namedresult(
                 place,
@@ -158,29 +161,25 @@ def index(request, year):
 
 
 def getresultfilter(filter_choice, categorydict, year, hasmasters):
-    namedfilter = namedtuple("nf", ["current", "choices"])
-    namedchoice = namedtuple("nc", ["name", "url"])
     choices = [
-        namedchoice("", "/endurrace/{}".format(year)),
-        namedchoice("Female", "/endurrace/{}/?filter=Female".format(year)),
-        namedchoice("Male", "/endurrace/{}/?filter=Male".format(year)),
+        Choice("", "/endurrace/{}".format(year)),
+        Choice("Female", "/endurrace/{}/?filter=Female".format(year)),
+        Choice("Male", "/endurrace/{}/?filter=Male".format(year)),
     ]
     if hasmasters:
         choices.append(
-            namedchoice("Masters", "/endurrace/{}/?filter=Masters".format(year))
+            Choice("Masters", "/endurrace/{}/?filter=Masters".format(year))
         )
         choices.append(
-            namedchoice("F-Masters", "/endurrace/{}/?filter=F-Masters".format(year))
+            Choice("F-Masters", "/endurrace/{}/?filter=F-Masters".format(year))
         )
         choices.append(
-            namedchoice("M-Masters", "/endurrace/{}/?filter=M-Masters".format(year))
+            Choice("M-Masters", "/endurrace/{}/?filter=M-Masters".format(year))
         )
     for k, v in sorted(categorydict.items()):
-        cleanchoice = k.replace("+", "%2B")
-        if cleanchoice != "":
-            choices.append(
-                namedchoice(k, "/endurrace/{}/?filter={}".format(year, cleanchoice))
-            )
+        choices.append(
+            Choice(k, "/endurrace/{}/?filter={}".format(year, k))
+        )
     choices = [x for x in choices if x.name != filter_choice]
-    resultfilter = namedfilter(filter_choice, choices)
+    resultfilter = Filter(filter_choice, choices)
     return resultfilter

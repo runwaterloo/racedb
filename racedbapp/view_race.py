@@ -6,7 +6,10 @@ from django.db.models import Count, Min, Q
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from . import view_shared
+import racedbapp.shared.endurrun
+from racedbapp.shared.types import Choice, Filter
+
+from .shared import shared
 from .models import *
 
 
@@ -37,8 +40,8 @@ def index(request, race_slug, distance_slug):
     else:
         division_choice = "Ultimate"
     divisions = ["Ultimate", "Sport", "Relay", "Guest", "All"]
-    race = view_shared.get_race_by_slug_or_false(race_slug)
-    races = view_shared.create_samerace_list(race)
+    race = shared.get_race_by_slug_or_false(race_slug)
+    races = shared.create_samerace_list(race)
     distance_ids = (
         Event.objects.filter(race=race).values_list("distance", flat=True).distinct()
     )
@@ -69,7 +72,7 @@ def index(request, race_slug, distance_slug):
         for y in numyears:
             years.append(namedyear(y, "endurrace"))
     else:
-        distance = view_shared.get_distance_by_slug_or_false(distance_slug)
+        distance = shared.get_distance_by_slug_or_false(distance_slug)
         rawresults = Result.objects.select_related().filter(
             event__race__in=races, event__distance=distance
         )
@@ -83,7 +86,7 @@ def index(request, race_slug, distance_slug):
         # dates = rawresults.order_by('-event__date').values_list('event__date', flat=True).distinct()
         # years = sorted([ x.year for x in dates ], reverse=True)
 
-    records, team_records, hill_records = view_shared.get_race_records(
+    records, team_records, hill_records = shared.get_race_records(
         race, distance, division_choice
     )
     record_divs = [x.place for x in records]
@@ -104,7 +107,7 @@ def index(request, race_slug, distance_slug):
     results = results[:50]
     final_results = []
     count = 1
-    membership = view_shared.get_membership()
+    membership = shared.get_membership()
     for result in results:
         guntime = result.guntime
         if guntime.total_seconds() >= 35600:
@@ -125,9 +128,9 @@ def index(request, race_slug, distance_slug):
         else:
             result_race_slug = result.event.race.slug
         if distance_slug == "combined":
-            member = view_shared.get_member_endurrace(result, membership)
+            member = racedbapp.shared.endurrun.get_member_endurrace(result, membership)
         else:
-            member = view_shared.get_member(result, membership)
+            member = shared.get_member(result, membership)
         final_results.append(
             namedresult(
                 count,
@@ -143,23 +146,21 @@ def index(request, race_slug, distance_slug):
             )
         )
         count += 1
-    namedfilter = namedtuple("nf", ["current", "choices"])
-    namedchoice = namedtuple("nc", ["name", "url"])
     if race and race.slug == "endurrun" and division_choice != "Ultimate":
         choices = [
-            namedchoice(
+            Choice(
                 "",
                 "/race/{}/{}/?division={}".format(
                     race_slug, distance_slug, division_choice
                 ),
             ),
-            namedchoice(
+            Choice(
                 "Female",
                 "/race/{}/{}/?division={}&filter=Female".format(
                     race_slug, distance_slug, division_choice
                 ),
             ),
-            namedchoice(
+            Choice(
                 "Male",
                 "/race/{}/{}/?division={}&filter=Male".format(
                     race_slug, distance_slug, division_choice
@@ -168,7 +169,7 @@ def index(request, race_slug, distance_slug):
         ]
         if "Masters Female" in record_divs and "Masters Male" in record_divs:
             choices.append(
-                namedchoice(
+                Choice(
                     "Masters",
                     "/race/{}/{}/?division={}&filter=Masters".format(
                         race_slug, distance_slug, division_choice
@@ -177,7 +178,7 @@ def index(request, race_slug, distance_slug):
             )
         if "Masters Female" in record_divs:
             choices.append(
-                namedchoice(
+                Choice(
                     "F-Masters",
                     "/race/{}/{}/?division={}&filter=F-Masters".format(
                         race_slug, distance_slug, division_choice
@@ -186,7 +187,7 @@ def index(request, race_slug, distance_slug):
             )
         if "Masters Male" in record_divs:
             choices.append(
-                namedchoice(
+                Choice(
                     "M-Masters",
                     "/race/{}/{}/?division={}&filter=M-Masters".format(
                         race_slug, distance_slug, division_choice
@@ -195,37 +196,37 @@ def index(request, race_slug, distance_slug):
             )
     else:
         choices = [
-            namedchoice("", "/race/{}/{}".format(race_slug, distance_slug)),
-            namedchoice(
+            Choice("", "/race/{}/{}".format(race_slug, distance_slug)),
+            Choice(
                 "Female", "/race/{}/{}/?filter=Female".format(race_slug, distance_slug)
             ),
-            namedchoice(
+            Choice(
                 "Male", "/race/{}/{}/?filter=Male".format(race_slug, distance_slug)
             ),
         ]
         if "Masters Female" in record_divs and "Masters Male" in record_divs:
             choices.append(
-                namedchoice(
+                Choice(
                     "Masters",
                     "/race/{}/{}/?filter=Masters".format(race_slug, distance_slug),
                 )
             )
         if "Masters Female" in record_divs:
             choices.append(
-                namedchoice(
+                Choice(
                     "F-Masters",
                     "/race/{}/{}/?filter=F-Masters".format(race_slug, distance_slug),
                 )
             )
         if "Masters Male" in record_divs:
             choices.append(
-                namedchoice(
+                Choice(
                     "M-Masters",
                     "/race/{}/{}/?filter=M-Masters".format(race_slug, distance_slug),
                 )
             )
     choices = [x for x in choices if x.name != filter_choice]
-    resultfilter = namedfilter(filter_choice, choices)
+    resultfilter = Filter(filter_choice, choices)
     if race_slug == "baden-road-races" and distance_slug == "7-mi":
         hill_results = get_hill_results()
     else:

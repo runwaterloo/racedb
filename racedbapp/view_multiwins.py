@@ -7,7 +7,8 @@ from django.db.models import Count, Min
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from . import view_shared
+from racedbapp.shared.types import Choice, Filter
+from .shared import shared
 from .models import *
 
 
@@ -17,7 +18,7 @@ def index(request):
     if "gender" in qstring:
         gender = qstring["gender"][0]
     namedwinner = namedtuple("nw", ["rank", "wins", "gender", "athlete", "member"])
-    malewinnersdict, femalewinnersdict = view_shared.getwinnersdict()
+    malewinnersdict, femalewinnersdict = shared.getwinnersdict()
     femalewinnerscount = {}
     femalewinners = []
     for k, v in femalewinnersdict.items():
@@ -38,7 +39,7 @@ def index(request):
         malewinners.append(namedwinner(0, v, "M", k.title(), False))
     combinedwinners = malewinners + femalewinners
     winners = []
-    member_dict = view_shared.get_member_dict()
+    member_dict = shared.get_member_dict()
     seen_members = {}
     for i in combinedwinners:
         if gender:
@@ -73,11 +74,9 @@ def index(request):
 
 
 def get_genderfilter(gender):
-    namedfilter = namedtuple("nf", ["current", "choices"])
-    namedchoice = namedtuple("nc", ["name", "url"])
     choices = []
     if gender:
-        choices.append(namedchoice("", "/multiwins"))
+        choices.append(Choice("", "/multiwins"))
         if gender == "m":
             current = "Male"
         else:
@@ -85,8 +84,8 @@ def get_genderfilter(gender):
     else:
         current = ""
     if gender != "f":
-        choices.append(namedchoice("Female", "/multiwins?gender=f"))
+        choices.append(Choice("Female", "/multiwins?gender=f"))
     if gender != "m":
-        choices.append(namedchoice("Male", "/multiwins?gender=m"))
-    genderfilter = namedfilter(current, choices)
+        choices.append(Choice("Male", "/multiwins?gender=m"))
+    genderfilter = Filter(current, choices)
     return genderfilter

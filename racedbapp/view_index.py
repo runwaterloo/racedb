@@ -11,7 +11,9 @@ from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from . import config,view_endurrun, view_member, view_recap, view_shared
+from .shared import shared
+
+from . import config,view_endurrun, view_member, view_recap
 from .models import Config, Endurraceresult, Event, Relay, Result, Rwmember
 
 EventContext = namedtuple("EventContext", ["date", "city"],defaults=(None,None))
@@ -121,7 +123,7 @@ def get_recap_results(recap_event, recap_type):
 
 def get_recap_results_relay(recap_event):
     # TODO calling other view functions and indices has code smell refactor 
-    relay_records = view_shared.get_relay_records(year=recap_event.date.year)
+    relay_records = shared.get_relay_records(year=recap_event.date.year)
     categories = config.ValidRelayCategories().categories.values()
     recap_results = {}
     for i in categories:
@@ -255,7 +257,7 @@ def get_event_data(event):
         .first()
     )
     previous_event_recap = get_recap_results_standard(previous_event)
-    featured_event_records = view_shared.get_race_records(
+    featured_event_records = shared.get_race_records(
         event.race, event.distance, individual_only=True
     )
     event_data = []

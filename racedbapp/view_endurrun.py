@@ -8,11 +8,13 @@ from django.http import Http404
 from django.shortcuts import render
 from django.utils.text import slugify
 
-from . import view_shared
+import racedbapp.shared.endurrun
+from racedbapp.shared.types import Choice, Filter
+
+from .shared import shared
 from .models import Endurathlete, Endurteam, Event, Result
 
-namedfilter = namedtuple("nf", ["current", "choices"])
-namedchoice = namedtuple("nc", ["name", "url"])
+
 namedstagetime = namedtuple("ns", ["name", "time"])
 namedresult = namedtuple(
     "na",
@@ -57,11 +59,11 @@ def index(request, division, results_only=False):
     if "contest" in qstring:
         contest_slug = qstring["contest"][0]
         if year:
-            ultimate_finished_all_events = view_shared.get_ultimate_finished_all_events(
+            ultimate_finished_all_events = racedbapp.shared.endurrun.get_ultimate_finished_all_events(
                 (year,)
             )
         else:
-            ultimate_finished_all_events = view_shared.get_ultimate_finished_all_events(
+            ultimate_finished_all_events = racedbapp.shared.endurrun.get_ultimate_finished_all_events(
                 years
             )
     events = Event.objects.filter(race__slug="endurrun").order_by("date")
@@ -153,7 +155,7 @@ def index(request, division, results_only=False):
             events_results_count = (1, 1, 1, 1, 1, 1, 1)
         if division == "sport":
             events_results_count = (1, 1, 1)
-    membership = view_shared.get_membership()
+    membership = shared.get_membership()
     for athlete in athletes:
         if contest_slug:  # exclude athletes who haven't completed most recent event
             if not ultimate_finished_all_events[athlete.year].get(athlete, False):
@@ -291,7 +293,7 @@ def index(request, division, results_only=False):
     prev_stage_ranked_athletes = [x.athlete for x in prev_stage_results]
     results = addchange(results, results_ranked_athletes, prev_stage_ranked_athletes)
     if results and not year and phase_choice == "Final Results":
-        ultimate_gp = view_shared.get_ultimate_gp()
+        ultimate_gp = racedbapp.shared.endurrun.get_ultimate_gp()
         results = addgp(results, ultimate_gp)
     maxstages = 0
     if results and len(results) > 0:
@@ -306,7 +308,7 @@ def index(request, division, results_only=False):
         phase_choice, filter_choice, events_results_count, division, year
     )
     athletes = [x.athlete.name for x in results] if results else None
-    ultimate_winners, ultimate_gold_jerseys, = view_shared.get_ultimate_winners_and_gold_jerseys(years, athletes)
+    ultimate_winners, ultimate_gold_jerseys, = racedbapp.shared.endurrun.get_ultimate_winners_and_gold_jerseys(years, athletes)
     context = {
         "events": events,
         "events_results_count": events_results_count,
@@ -345,18 +347,18 @@ def getdivisionfilter(division, year, contest_slug):
     sprint_append_string = "?" + "&".join(sorted(sprint_append_list))
     trail_append_string = "?" + "&".join(sorted(trail_append_list))
     choices = [
-        namedchoice("Ultimate", "/endurrun/ultimate/{}".format(append_string)),
-        namedchoice("Relay", "/endurrun/relay/{}".format(append_string)),
-        namedchoice(
+        Choice("Ultimate", "/endurrun/ultimate/{}".format(append_string)),
+        Choice("Relay", "/endurrun/relay/{}".format(append_string)),
+        Choice(
             "Ultimate-Sprint", "/endurrun/ultimate/{}".format(sprint_append_string)
         ),
-        namedchoice(
+        Choice(
             "Ultimate-Trail", "/endurrun/ultimate/{}".format(trail_append_string)
         ),
-        namedchoice("Sport", "/endurrun/sport/{}".format(append_string)),
+        Choice("Sport", "/endurrun/sport/{}".format(append_string)),
     ]
     choices = [x for x in choices if x.name != filter_choice]
-    divisionfilter = namedfilter(filter_choice, choices)
+    divisionfilter = Filter(filter_choice, choices)
     return divisionfilter
 
 
@@ -370,16 +372,16 @@ def getresultfilter(
     if year:
         if phase_choice == "Final Results":
             choices = [
-                namedchoice(
+                Choice(
                     "", "/endurrun/{}/?year={}{}".format(division, year, contest_qs2)
                 ),
-                namedchoice(
+                Choice(
                     "Female",
                     "/endurrun/{}/?year={}&filter=Female{}".format(
                         division, year, contest_qs2
                     ),
                 ),
-                namedchoice(
+                Choice(
                     "Male",
                     "/endurrun/{}/?year={}&filter=Male{}".format(
                         division, year, contest_qs2
@@ -388,14 +390,14 @@ def getresultfilter(
             ]
             if division == "relay":
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "Mixed",
                         "/endurrun/{}/?year={}&filter=Mixed".format(division, year),
                     )
                 )
             if hasmasters:
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "Masters",
                         "/endurrun/{}/?year={}&filter=Masters{}".format(
                             division, year, contest_qs2
@@ -403,7 +405,7 @@ def getresultfilter(
                     )
                 )
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "F-Masters",
                         "/endurrun/{}/?year={}&filter=F-Masters{}".format(
                             division, year, contest_qs2
@@ -411,7 +413,7 @@ def getresultfilter(
                     )
                 )
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "M-Masters",
                         "/endurrun/{}/?year={}&filter=M-Masters{}".format(
                             division, year, contest_qs2
@@ -420,19 +422,19 @@ def getresultfilter(
                 )
         else:
             choices = [
-                namedchoice(
+                Choice(
                     "",
                     "/endurrun/{}/?year={}&phase={}".format(
                         division, year, phase_choice
                     ),
                 ),
-                namedchoice(
+                Choice(
                     "Female",
                     "/endurrun/{}/?year={}&filter=Female&phase={}".format(
                         division, year, phase_choice
                     ),
                 ),
-                namedchoice(
+                Choice(
                     "Male",
                     "/endurrun/{}/?year={}&filter=Male&phase={}".format(
                         division, year, phase_choice
@@ -441,7 +443,7 @@ def getresultfilter(
             ]
             if division == "relay":
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "Mixed",
                         "/endurrun/{}/?year={}&filter=Mixed&phase={}".format(
                             division, year, phase_choice
@@ -450,7 +452,7 @@ def getresultfilter(
                 )
             if hasmasters:
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "Masters",
                         "/endurrun/{}/?year={}&filter=Masters&phase={}".format(
                             division, year, phase_choice
@@ -458,7 +460,7 @@ def getresultfilter(
                     )
                 )
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "F-Masters",
                         "/endurrun/{}/?year={}&filter=F-Masters&phase={}".format(
                             division, year, phase_choice
@@ -466,7 +468,7 @@ def getresultfilter(
                     )
                 )
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "M-Masters",
                         "/endurrun/{}/?year={}&filter=M-Masters&phase={}".format(
                             division, year, phase_choice
@@ -476,28 +478,28 @@ def getresultfilter(
     else:
         if phase_choice == "Final Results":
             choices = [
-                namedchoice("", "/endurrun/{}/{}".format(division, contest_qs1)),
-                namedchoice(
+                Choice("", "/endurrun/{}/{}".format(division, contest_qs1)),
+                Choice(
                     "Female",
                     "/endurrun/{}/?filter=Female{}".format(division, contest_qs2),
                 ),
-                namedchoice(
+                Choice(
                     "Male", "/endurrun/{}/?filter=Male{}".format(division, contest_qs2)
                 ),
             ]
             if division == "relay":
                 choices.append(
-                    namedchoice("Mixed", "/endurrun/{}/?filter=Mixed".format(division))
+                    Choice("Mixed", "/endurrun/{}/?filter=Mixed".format(division))
                 )
             if hasmasters:
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "Masters",
                         "/endurrun/{}/?filter=Masters{}".format(division, contest_qs2),
                     )
                 )
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "F-Masters",
                         "/endurrun/{}/?filter=F-Masters{}".format(
                             division, contest_qs2
@@ -505,7 +507,7 @@ def getresultfilter(
                     )
                 )
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "M-Masters",
                         "/endurrun/{}/?filter=M-Masters{}".format(
                             division, contest_qs2
@@ -514,23 +516,23 @@ def getresultfilter(
                 )
         else:
             choices = [
-                namedchoice(
+                Choice(
                     "", "/endurrun/{}/?phase={}".format(division, phase_choice)
                 ),
-                namedchoice(
+                Choice(
                     "Female",
                     "/endurrun/{}/?filter=Female&phase={}".format(
                         division, phase_choice
                     ),
                 ),
-                namedchoice(
+                Choice(
                     "Male",
                     "/endurrun/{}/?filter=Male&phase={}".format(division, phase_choice),
                 ),
             ]
             if division == "relay":
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "Mixed",
                         "/endurrun/{}/?filter=Mixed&phase={}".format(
                             division, phase_choice
@@ -539,7 +541,7 @@ def getresultfilter(
                 )
             if hasmasters:
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "Masters",
                         "/endurrun/{}/?filter=Masters&phase={}".format(
                             division, phase_choice
@@ -547,7 +549,7 @@ def getresultfilter(
                     )
                 )
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "F-Masters",
                         "/endurrun/{}/?filter=F-Masters&phase={}".format(
                             division, phase_choice
@@ -555,7 +557,7 @@ def getresultfilter(
                     )
                 )
                 choices.append(
-                    namedchoice(
+                    Choice(
                         "M-Masters",
                         "/endurrun/{}/?filter=M-Masters&phase={}".format(
                             division, phase_choice
@@ -566,7 +568,7 @@ def getresultfilter(
     if division == "relay":  # omit filters that Jordan doesn't want
         choices = [x for x in choices if x.name != "M-Masters"]
         choices = [x for x in choices if x.name != "F-Masters"]
-    resultfilter = namedfilter(filter_choice, choices)
+    resultfilter = Filter(filter_choice, choices)
     return resultfilter
 
 
@@ -596,14 +598,14 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, division, 
                         if phase_choice != "Final Results":
                             if filter_choice == "":
                                 choices.append(
-                                    namedchoice(
+                                    Choice(
                                         "Final Results",
                                         "/endurrun/{}/?year={}".format(division, year),
                                     )
                                 )
                             else:
                                 choices.append(
-                                    namedchoice(
+                                    Choice(
                                         "Final Results",
                                         "/endurrun/{}/?year={}&filter={}".format(
                                             division, year, filter_choice
@@ -614,7 +616,7 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, division, 
                         if phase_choice != "after-stage-{}".format(loopcount):
                             if filter_choice == "":
                                 choices.append(
-                                    namedchoice(
+                                    Choice(
                                         "After Stage {}".format(loopcount),
                                         "/endurrun/{}/?year={}&phase=after-stage-{}".format(
                                             division, year, loopcount
@@ -623,7 +625,7 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, division, 
                                 )
                             else:
                                 choices.append(
-                                    namedchoice(
+                                    Choice(
                                         "After Stage {}".format(loopcount),
                                         "/endurrun/{}/?year={}&filter={}&phase=after-stage-{}".format(
                                             division, year, filter_choice, loopcount
@@ -637,14 +639,14 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, division, 
                         if phase_choice != "Final Results":
                             if filter_choice == "":
                                 choices.append(
-                                    namedchoice(
+                                    Choice(
                                         "Final Results",
                                         "/endurrun/{}/".format(division),
                                     )
                                 )
                             else:
                                 choices.append(
-                                    namedchoice(
+                                    Choice(
                                         "Final Results",
                                         "/endurrun/{}/?filter={}".format(
                                             division, filter_choice
@@ -655,7 +657,7 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, division, 
                         if phase_choice != "after-stage-{}".format(loopcount):
                             if filter_choice == "":
                                 choices.append(
-                                    namedchoice(
+                                    Choice(
                                         "After Stage {}".format(loopcount),
                                         "/endurrun/{}/?phase=after-stage-{}".format(
                                             division, loopcount
@@ -664,7 +666,7 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, division, 
                                 )
                             else:
                                 choices.append(
-                                    namedchoice(
+                                    Choice(
                                         "After Stage {}".format(loopcount),
                                         "/endurrun/{}/?filter={}&phase=after-stage-{}".format(
                                             division, filter_choice, loopcount
@@ -674,7 +676,7 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, division, 
                         else:
                             phase_choice = "After Stage {}".format(loopcount)
             loopcount += 1
-    phasefilter = namedfilter(phase_choice, choices)
+    phasefilter = Filter(phase_choice, choices)
     return phasefilter
 
 

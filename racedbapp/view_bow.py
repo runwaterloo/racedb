@@ -9,11 +9,9 @@ from django.db.models import Count, Min
 from django.http import HttpResponse
 from django.shortcuts import render
 
+from racedbapp.shared.types import Choice, Filter
+
 from .models import *
-
-namedfilter = namedtuple("nf", ["current", "choices"])
-namedchoice = namedtuple("nc", ["name", "url"])
-
 
 def index(request, bow_slug):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
@@ -110,71 +108,69 @@ def index(request, bow_slug):
 def getresultfilter(filter_choice, phase_choice, categories, bow_slug, hasmasters):
     if phase_choice == "Final Results":
         choices = [
-            namedchoice("", "/bow/{}/".format(bow_slug)),
-            namedchoice("Female", "/bow/{}/?filter=Female".format(bow_slug)),
-            namedchoice("Male", "/bow/{}/?filter=Male".format(bow_slug)),
+            Choice("", "/bow/{}/".format(bow_slug)),
+            Choice("Female", "/bow/{}/?filter=Female".format(bow_slug)),
+            Choice("Male", "/bow/{}/?filter=Male".format(bow_slug)),
         ]
         if hasmasters:
             choices.append(
-                namedchoice("Masters", "/bow/{}/?filter=Masters".format(bow_slug))
+                Choice("Masters", "/bow/{}/?filter=Masters".format(bow_slug))
             )
             choices.append(
-                namedchoice("F-Masters", "/bow/{}/?filter=F-Masters".format(bow_slug))
+                Choice("F-Masters", "/bow/{}/?filter=F-Masters".format(bow_slug))
             )
             choices.append(
-                namedchoice("M-Masters", "/bow/{}/?filter=M-Masters".format(bow_slug))
+                Choice("M-Masters", "/bow/{}/?filter=M-Masters".format(bow_slug))
             )
     else:
         choices = [
-            namedchoice("", "/bow/{}/?phase={}".format(bow_slug, phase_choice)),
-            namedchoice(
+            Choice("", "/bow/{}/?phase={}".format(bow_slug, phase_choice)),
+            Choice(
                 "Female",
                 "/bow/{}/?filter=Female&phase={}".format(bow_slug, phase_choice),
             ),
-            namedchoice(
+            Choice(
                 "Male", "/bow/{}/?filter=Male&phase={}".format(bow_slug, phase_choice)
             ),
         ]
         if hasmasters:
             choices.append(
-                namedchoice(
+                Choice(
                     "Masters",
                     "/bow/{}/?filter=Masters&phase={}".format(bow_slug, phase_choice),
                 )
             )
             choices.append(
-                namedchoice(
+                Choice(
                     "F-Masters",
                     "/bow/{}/?filter=F-Masters&phase={}".format(bow_slug, phase_choice),
                 )
             )
             choices.append(
-                namedchoice(
+                Choice(
                     "M-Masters",
                     "/bow/{}/?filter=M-Masters&phase={}".format(bow_slug, phase_choice),
                 )
             )
 
     for k in categories:
-        cleanchoice = k.name.replace("+", "%2B")
-        if cleanchoice != "":
-            if phase_choice == "Final Results":
-                choices.append(
-                    namedchoice(
-                        k.name, "/bow/{}/?filter={}".format(bow_slug, cleanchoice)
-                    )
+        if phase_choice == "Final Results":
+            choices.append(
+                Choice(
+                    k.name, "/bow/{}/?filter={}".format(bow_slug, k.name)
                 )
-            else:
-                choices.append(
-                    namedchoice(
-                        k.name,
-                        "/bow/{}/?filter={}&phase={}".format(
-                            bow_slug, cleanchoice, phase_choice
-                        ),
-                    )
+            )
+        else:
+            choices.append(
+                Choice(
+                    k.name,
+                    "/bow/{}/?filter={}&phase={}".format(
+                        bow_slug, k.name, phase_choice
+                    ),
                 )
+            )
     choices = [x for x in choices if x.name != filter_choice]
-    resultfilter = namedfilter(filter_choice, choices)
+    resultfilter = Filter(filter_choice, choices)
     return resultfilter
 
 
@@ -197,13 +193,13 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, bow_slug):
                     if phase_choice != "Final Results":
                         if filter_choice == "":
                             choices.append(
-                                namedchoice(
+                                Choice(
                                     "Final Results", "/bow/{}/".format(bow_slug)
                                 )
                             )
                         else:
                             choices.append(
-                                namedchoice(
+                                Choice(
                                     "Final Results",
                                     "/bow/{}/?filter={}".format(
                                         bow_slug, filter_choice
@@ -214,7 +210,7 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, bow_slug):
                     if phase_choice != "after-event-{}".format(loopcount):
                         if filter_choice == "":
                             choices.append(
-                                namedchoice(
+                                Choice(
                                     "After Event {}".format(loopcount),
                                     "/bow/{}/?phase=after-event-{}".format(
                                         bow_slug, loopcount
@@ -223,7 +219,7 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, bow_slug):
                             )
                         else:
                             choices.append(
-                                namedchoice(
+                                Choice(
                                     "After Event {}".format(loopcount),
                                     "/bow/{}/?filter={}&phase=after-event-{}".format(
                                         bow_slug, filter_choice, loopcount
@@ -233,5 +229,5 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, bow_slug):
                     else:
                         phase_choice = "After Event {}".format(loopcount)
             loopcount += 1
-    phasefilter = namedfilter(phase_choice, choices)
+    phasefilter = Filter(phase_choice, choices)
     return phasefilter

@@ -4,7 +4,7 @@ from datetime import datetime
 from django.db import models
 from django.db.models import Avg, Count, Min, Q, Sum
 
-import racedbapp.utils as utils
+import racedbapp.shared.utils as utils
 
 #########################################
 # Query Sets                            #

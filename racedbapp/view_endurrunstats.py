@@ -3,7 +3,9 @@ from operator import attrgetter
 from django.db.models import Count
 from django.shortcuts import render
 
-from . import view_shared
+import racedbapp.shared.endurrun
+
+from .shared import shared
 from .models import Result
 
 
@@ -15,7 +17,7 @@ def index(request):
     endurrun_finishes_by_athlete = get_endurrun_finishes_by_athlete(
         endurrun_finishers_by_year
     )
-    member_dict = view_shared.get_member_dict()
+    member_dict = shared.get_member_dict()
     endurrun_finishers_by_count = get_endurrun_finishers_by_count(
         endurrun_finishes_by_athlete, member_dict, years, min_finishes
     )
@@ -27,7 +29,7 @@ def index(request):
 
 
 def get_min_finishes():
-    min_finishes = view_shared.get_config_value_or_false("endurrun_stats_min_finishes")
+    min_finishes = shared.get_config_value_or_false("endurrun_stats_min_finishes")
     if min_finishes:
         min_finishes = int(min_finishes)
     return min_finishes
@@ -67,7 +69,7 @@ def get_endurrun_finishers_by_year(ultimate_results, years):
 
 def get_endurrun_finishes_by_athlete(endurrun_finishers_by_year):
     endurrun_finishes_by_athlete = {}
-    same_name_dict = view_shared.get_endurrun_same_name_dict()
+    same_name_dict = racedbapp.shared.endurrun.get_endurrun_same_name_dict()
     for year, finishers in endurrun_finishers_by_year.items():
         for athlete in finishers:
             if athlete in endurrun_finishes_by_athlete:
@@ -109,7 +111,7 @@ def get_endurrun_finishers_by_count(
     (
         ultimate_winners,
         ultimate_gold_jerseys,
-    ) = view_shared.get_ultimate_winners_and_gold_jerseys(years, set(all_athletes))
+    ) = racedbapp.shared.endurrun.get_ultimate_winners_and_gold_jerseys(years, set(all_athletes))
     for count in endurrun_finishers_by_count:
         for athlete in count.athletes:
             if athlete.athlete in ultimate_winners:

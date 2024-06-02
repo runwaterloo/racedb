@@ -9,3 +9,4 @@ def truncate_time(time):
         ustime = timedelta(microseconds=time)
         trunc_time = ustime - timedelta(microseconds=ustime.microseconds)
     return trunc_time
+

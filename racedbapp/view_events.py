@@ -7,7 +7,8 @@ from django.db.models import Count, Min
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 
-from . import view_shared
+from .shared import shared
+from racedbapp.shared.types import Choice, Filter
 from .models import *
 
 
@@ -33,8 +34,8 @@ def index(request):
         yearfilter = ""
     if "race" in qstring:
         race_slug = qstring["race"][0]
-        race_name = view_shared.get_race_by_slug_or_false(race_slug)
-        races = view_shared.create_samerace_list(race_name)
+        race_name = shared.get_race_by_slug_or_false(race_slug)
+        races = shared.create_samerace_list(race_name)
         events = events.filter(race__in=races)
         yearfilter_events = yearfilter_events.filter(race__in=races)
         distancefilter_events = distancefilter_events.filter(race__in=races)
@@ -65,7 +66,7 @@ def index(request):
     distancefilters = getfilter(
         "distance", yearfilter, racefilter, distancefilter_events, distance_name
     )
-    malewinnersdict, femalewinnersdict = view_shared.getwinnersdict()
+    malewinnersdict, femalewinnersdict = shared.getwinnersdict()
     namedevent = namedtuple(
         "ne",
         [
@@ -83,7 +84,7 @@ def index(request):
             "flickrsetid",
         ],
     )
-    member_dict = view_shared.get_member_dict()
+    member_dict = shared.get_member_dict()
     namedevents = []
     for e in events:
         femalewinner = femalewinnersdict[e.id]
@@ -125,18 +126,16 @@ def index(request):
 
 
 def getfilter(filtername, filter1, filter2, filter_events, current):
-    namedfilter = namedtuple("nf", ["current", "choices"])
-    namedchoice = namedtuple("nc", ["name", "url"])
     curfilters = filter1 + filter2
     if len(curfilters) > 0:
         if curfilters[0] == "&":
             curfilters = "?{}".format(curfilters[1:])
     choices = [
-        namedchoice("All", "/events/{}".format(curfilters)),
+        Choice("All", "/events/{}".format(curfilters)),
     ]
     if filtername == "year":
         for e in filter_events:
-            thisfilter = namedchoice(
+            thisfilter = Choice(
                 e.date.year,
                 "/events/?year={}{}{}".format(e.date.year, filter1, filter2),
             )
@@ -163,9 +162,9 @@ def getfilter(filtername, filter1, filter2, filter_events, current):
                 if not isinstance(current, str):
                     if thisrace.name == current.name:
                         current = display
-                thisfilter = namedchoice(display, "/events/{}".format(newqs))
+                thisfilter = Choice(display, "/events/{}".format(newqs))
             else:
-                thisfilter = namedchoice(thisrace.name, "/events/{}".format(newqs))
+                thisfilter = Choice(thisrace.name, "/events/{}".format(newqs))
             # end append old names
             if thisfilter not in choices:
                 choices.append(thisfilter)
@@ -174,9 +173,9 @@ def getfilter(filtername, filter1, filter2, filter_events, current):
             newqs = "{}{}&distance={}".format(filter1, filter2, e.distance.slug)
             if newqs[0] == "&":
                 newqs = "?{}".format(newqs[1:])
-            thisfilter = namedchoice(e.distance.name, "/events/{}".format(newqs))
+            thisfilter = Choice(e.distance.name, "/events/{}".format(newqs))
             if thisfilter not in choices:
                 choices.append(thisfilter)
     choices = [x for x in choices if x.name != current]
-    afilter = namedfilter(current, choices)
+    afilter = Filter(current, choices)
     return afilter

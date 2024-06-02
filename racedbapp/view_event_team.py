@@ -8,7 +8,7 @@ from django.db.models import Avg, Count, Min, Sum
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 
-import racedbapp.utils as utils
+import racedbapp.shared.utils as utils
 from .models import *
 
 

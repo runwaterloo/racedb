@@ -1,14 +1,12 @@
-from collections import namedtuple
 from operator import attrgetter
 from urllib import parse
 
 from django.shortcuts import render
 
+
+from racedbapp.shared.types import Choice, Filter
+
 from .models import Event, Result, Series
-
-named_filter = namedtuple("nf", ["current", "choices"])
-named_choice = namedtuple("nc", ["name", "url"])
-
 
 def index(request, series_slug):
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
@@ -55,17 +53,10 @@ def index(request, series_slug):
                     result.times.append(False)
                     series_results.append(result)
         results += series_results
-
-    # create filters
-    year_filter = get_year_filter(series_slug, year, years, show_records)
-    category_filter = get_category_filter(
-        series_slug, category, year, event1_all_results, results
-    )
     filters = {
-        "category_filter": category_filter,
-        "year_filter": year_filter,
+        "category_filter": get_category_filter(series_slug, category, year, event1_all_results, results),
+        "year_filter": get_year_filter(series_slug, year, years, show_records),
     }
-
     # Apply filters
     if category in ("Female", "Male", "Masters", "F-Masters", "M-Masters"):
         if category in ("Female", "F-Masters"):
@@ -92,14 +83,14 @@ def get_year_filter(series_slug, year, years, show_records):
     for y in years:
         if y == year:
             continue
-        choices.append(named_choice(y, "/series/{}/?year={}".format(series_slug, y)))
+        choices.append(Choice(y, "/series/{}/?year={}".format(series_slug, y)))
     choices = sorted(choices, reverse=True)
     if year and show_records:
         current_choice = year
-        choices.insert(0, named_choice("All", "/series/{}/".format(series_slug)))
+        choices.insert(0, Choice("All", "/series/{}/".format(series_slug)))
     else:
         current_choice = "All"
-    year_filter = named_filter(current_choice, choices)
+    year_filter = Filter(current_choice, choices)
     return year_filter
 
 # TODO refactor with event version and have both call same. 
@@ -123,28 +114,26 @@ def get_category_filter(series_slug, category, year, event1_all_results, results
         event_categories
     )
     for cat in all_categories:
-        # TODO remove hack and use url encoding properly. 
-        clean_category = cat.replace("+", "%2B") 
         if category != cat:
             if year:
                 choices.append(
-                    named_choice(
+                    Choice(
                         cat,
-                        "/series/{}/?year={}&filter={}".format(series_slug, year, clean_category),
+                        "/series/{}/?year={}&filter={}".format(series_slug, year, cat),
                     )
                 )
             else:
                 choices.append(
-                    named_choice(cat, "/series/{}/?filter={}".format(series_slug, clean_category))
+                    Choice(cat, "/series/{}/?filter={}".format(series_slug, cat))
                 )
     if category != "All":
         if year:
             choices.insert(
-                0, named_choice("All", "/series/{}/?year={}".format(series_slug, year))
+                0, Choice("All", "/series/{}/?year={}".format(series_slug, year))
             )
         else:
-            choices.insert(0, named_choice("All", "/series/{}/".format(series_slug)))
-    category_filter = named_filter(current_choice, choices)
+            choices.insert(0, Choice("All", "/series/{}/".format(series_slug)))
+    category_filter = Filter(current_choice, choices)
     return category_filter
 
 
