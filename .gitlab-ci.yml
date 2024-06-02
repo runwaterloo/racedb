@@ -8,22 +8,11 @@
 # NOTIFYKEY             (RRW key to accept notifications)
 
 stages:
-  - build-test-push
-  - deploy-to-dev # only triggered on non-main when [push dev] in commit message
-  - tag
-  - deploy
+  - default
   - update-dependencies
 
-update-dependencies:
-  stage: update-dependencies
-  image: python:latest
-  rules:
-    - if: '$UPDATE_DEPENDENCIES == "true"'
-  script:
-    - ./update-dependencies.sh
-
-build-test-push:
-  stage: build-test-push
+default:
+  stage: default
   rules:
     - if: '$UPDATE_DEPENDENCIES == "true"'
       when: never
@@ -40,56 +29,21 @@ build-test-push:
     MYSQL_PASSWORD: CHANGEME
     MYSQL_ROOT_PASSWORD: CHANGEME
   script:
-    - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
-    - docker pull $CI_REGISTRY_IMAGE:latest || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
-    - export MARIADB_IP=$(getent ahostsv4 mariadb | awk 'NR==1 { print $1 }')
-    - /bin/ash deploy/minimal/deploy.sh
-    - docker exec racedb_gunicorn ./manage.py test --settings=racedb.settings.min
-    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-  retry: 2
-
-deploy-to-dev:
-  stage: deploy-to-dev
-  rules:
-    - if: '$UPDATE_DEPENDENCIES == "true"'
-      when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_COMMIT_TAG !~ /^v.*/ && $CI_COMMIT_MESSAGE =~ /.*\[push dev\].*/'
-  script:
-    - cd deploy/helm
-    - sh ./install_helm.sh
-    - echo "$KUBECONFIG" > /kubeconfig
-    - export KUBECONFIG=/kubeconfig
-    - /usr/local/bin/helm upgrade racedbdev . --values values-racedb.yaml --set image.tag="${CI_COMMIT_SHORT_SHA}" --wait
-    - curl --retry 6 "https://racedb.runwaterloo.com/cache_clear/?notifykey=${NOTIFYKEY}"
-
-tag:
-  stage: tag
-  rules:
-    - if: '$UPDATE_DEPENDENCIES == "true"'
-      when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_TAG !~ /^v.*/'
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
+    - sh deploy/gitlab/build.sh
+    - sh deploy/gitlab/test.sh
+    # exit here if not main, and [push dev] not present
+    - if [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ] && ! echo "$CI_COMMIT_MESSAGE" | grep -q '\[push dev\]'; then exit 0; fi
+    - sh deploy/gitlab/push.sh
+    - apk add curl git tzdata -f
+    - export VERSION=$(TZ=America/Toronto date +'%y.%-m.%-d%H%M%S')
     - sh deploy/gitlab/tag.sh
+    - sh deploy/gitlab/deploy.sh
+  retry: 1
 
-deploy:
-  stage: deploy
+update-dependencies:
+  stage: update-dependencies
+  image: python:latest
   rules:
-    - if: $CI_COMMIT_TAG
+    - if: '$UPDATE_DEPENDENCIES == "true"'
   script:
-    - cd deploy/helm
-    - sh ./install_helm.sh
-    - echo "$KUBECONFIG" > /kubeconfig
-    - export KUBECONFIG=/kubeconfig
-    - /usr/local/bin/helm upgrade racedb . --values values-rrw.yaml --set image.tag="${CI_COMMIT_TAG:1}" --wait
-    - curl --retry 6 "https://results.runwaterloo.com/cache_clear/?notifykey=${NOTIFYKEY}"
-    - /usr/local/bin/helm upgrade racedbdev . --values values-racedb.yaml --set image.tag="${CI_COMMIT_TAG:1}" --wait
-    - curl --retry 6 "https://racedb.runwaterloo.com/cache_clear/?notifykey=${NOTIFYKEY}"
+    - ./update-dependencies.sh
