@@ -122,7 +122,7 @@ def get_recap_results(recap_event, recap_type):
     return recap_results
 
 def get_recap_results_relay(recap_event):
-    # TODO calling other view functions and indices has code smell refactor 
+    # TODO calling other view functions and indices has code smell refactor
     relay_records = shared.get_relay_records(year=recap_event.date.year)
     categories = config.ValidRelayCategories().categories.values()
     recap_results = {}
@@ -295,11 +295,17 @@ def get_future_events(event):
     dbfuture_events = Event.objects.filter(date__gte=today).order_by(
         "date", "-distance__km"
     )
-    upcoming_races_count = int(
-        Config.objects.get(name="homepage_upcoming_races_count").value
-    )
+    upcoming_races_count_object = Config.objects.filter(name="homepage_upcoming_races_count").first()
+    upcoming_races_count = int(upcoming_races_count_object.value) if upcoming_races_count_object else 5
+
+    exclude_events_objects = Config.objects.filter(name="homepage_upcoming_exclude_events").first()
+    exclude_events_str = exclude_events_objects.value.split(",") if exclude_events_objects else []
+    exclude_events = [int(x) for x in exclude_events_str]
+
     races_seen = []
     for i in dbfuture_events:
+        if i.id in exclude_events:
+            continue
         if len(races_seen) == upcoming_races_count:
             if i.race not in races_seen:
                 break

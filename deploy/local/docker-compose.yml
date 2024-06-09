@@ -20,10 +20,23 @@ services:
       interval: 3s
       retries: 10
 
+  redis:
+    image: redis:latest
+    container_name: racedb_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   racedb-web:
     depends_on:
       mariadb:
         condition: service_healthy
+      redis:
+        condition: service_started
     build:
       context: ../..
       dockerfile: Dockerfile

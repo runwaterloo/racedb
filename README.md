@@ -52,6 +52,8 @@ endurrun_same_name: Bob Smith;Bobby Smith;Robert Smith
 
 **featured_member_tag**: Restrict featured member to ones with this tag.
 
+**homepage_upcoming_exclude_events**: Comma-separated list of events to exclude from homepage Upcoming Events if they would have appeared.
+
 
 ## Misc Developer Info
 
