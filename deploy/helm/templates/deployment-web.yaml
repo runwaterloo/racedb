@@ -89,16 +89,16 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
-          {{- if eq .Values.racedb.settings "prod" }}
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: http
-          {{- end }}
+          # {{- if eq .Values.racedb.settings "prod" }}
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: http
+          # {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
