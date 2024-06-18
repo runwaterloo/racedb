@@ -17,3 +17,9 @@
     name: Re-Fridgee-Eighter
     shortname: Re-Fridgee-Eighter
     slug: re-fridgee-eighter
+- model: racedbapp.race
+  pk: 4
+  fields:
+    name: No Logo Race
+    shortname: No Logo
+    slug: no-logo-race

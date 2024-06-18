@@ -9,7 +9,7 @@ from django.shortcuts import render
 
 from racedbapp.shared.types import Choice, Filter
 
-from .shared import shared
+from .shared import shared, utils
 from .config import ValidRelayCategories
 from .models import Event, Relay, Result, Teamcategory, Teamresult
 
@@ -41,8 +41,10 @@ def index(request, year, race_slug, distance_slug):
         pages = shared.get_pages(
             events[0], "Relay", team_categories, relay_dict=True
         )
+    race_logo_slug = utils.get_race_logo_slug(events[0].race.slug)
     context = {
         "event": EventV(events[0], max_leg),
+        "race_logo_slug": race_logo_slug,
         "pages": pages,
         "filters": filters,
         "team_results": team_results,

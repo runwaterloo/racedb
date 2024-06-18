@@ -1,5 +1,5 @@
 import random
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 from faker import Faker
 from racedbapp.models import Result, Event, Category, Rwmember
@@ -10,9 +10,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
 
-        min_num_results = 50
-        max_num_results = 300
-        num_random_people = 500  # pool of non-members
+        min_num_results = 25
+        max_num_results = 150
+        num_random_people = 250  # pool of non-members
 
         faker = Faker()
 
@@ -48,8 +48,9 @@ class Command(BaseCommand):
                 return country[:50]
             return country
 
-        # Generate fake data for each event
-        events = Event.objects.all()
+        # Generate fake data for past events
+        today = datetime.today().date()
+        events = Event.objects.filter(date__lte=today)
         for event in events:
             num_results = random.randint(min_num_results, max_num_results)
             # generate chip times

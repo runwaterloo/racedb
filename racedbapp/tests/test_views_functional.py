@@ -32,11 +32,3 @@ class SimpleTest(TestCase):
             response = self.client.get(u)
             self.assertEqual(response.status_code, 200)
         print("{} URLs tested!".format(len(urls_to_test.test_urls)))
-
-    def test_logos(self):
-        """ Test that a race logo file exists for all races """
-        races = Race.objects.all()
-        slugs = [x.slug for x in races]
-        files = os.listdir("racedbapp/static/race_logos")
-        for slug in slugs:
-            assert "{}.png".format(slug) in files

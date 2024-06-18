@@ -4,6 +4,7 @@ from django.shortcuts import render
 # from urllib import parse
 # from collections import defaultdict, namedtuple
 from .models import Event, Result
+from .shared import utils
 
 # from racedbapp.tasks import send_email_task
 # from . import view_shared, utils
@@ -28,8 +29,11 @@ def index(request, year, race_slug, distance_slug):
     )
     medals_type = event.medals
     medal_results = get_medal_results(medals_type, event_results)
+    race_logo_slug = utils.get_race_logo_slug(event.race.slug)
+
     context = {
         "event": event,
+        "race_logo_slug": race_logo_slug,
         "guntimes_have_microseconds": guntimes_have_microseconds,
         "medal_results": medal_results,
     }

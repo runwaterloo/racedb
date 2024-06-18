@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from .shared import shared
+from .shared import shared, utils
 
 from . import config,view_endurrun, view_member, view_recap
 from .models import Config, Endurraceresult, Event, Relay, Result, Rwmember
@@ -20,8 +20,8 @@ EventContext = namedtuple("EventContext", ["date", "city"],defaults=(None,None))
 RaceContext = namedtuple("RaceContext", ["name", "shortname", "slug"],defaults=(None,None,None))
 DistanceContext = namedtuple("DistanceContext", ["name", "slug", "km"],defaults=(None,None,None))
 MemberInfoContext = namedtuple("MemberInfoContext", ["member", "racing_since", "km", "fivek_pb", "tenk_pb"],defaults=(None,None,None,None,None))
-RecapContext = namedtuple("RecapContext",["results","event","type","distances"],defaults=(None,None,None,None))
-FeaturedEventContext = namedtuple("FeaturedEventContext",["event", "data","future_events"],defaults=(None,None,None))
+RecapContext = namedtuple("RecapContext",["results","event","type","distances","race_logo_slug"],defaults=(None,None,None,None))
+FeaturedEventContext = namedtuple("FeaturedEventContext",["event", "data","future_events","race_logo_slug"],defaults=(None,None,None))
 
 def index(request):
     cache_key = "index.{}".format(request.META["QUERY_STRING"])
@@ -41,9 +41,11 @@ def index(request):
         "distances": recap_context.distances,
         "recap_type": recap_context.type,
         "recap_event": recap_context.event,
+        "recap_race_logo_slug": recap_context.race_logo_slug,
         "recap_results": recap_context.results,
         "memberinfo": member_info_context,
         "featured_event": featured_event_context.event,
+        "featured_race_logo_slug": featured_event_context.race_logo_slug,
         "featured_event_data": featured_event_context.data,
         "future_events": featured_event_context.future_events,
         "notification": notification,
@@ -74,8 +76,9 @@ def get_recap_context(asofdate):
     recap_type = get_recap_type(last_race_day_events)
     distances = get_distances(last_race_day_events)
     recap_event = get_recap_event(last_race_day_events, recap_type, distances)
+    race_logo_slug = utils.get_race_logo_slug(recap_event.race.slug)
     recap_results = get_recap_results(recap_event, recap_type)
-    return RecapContext(recap_results,recap_event, recap_type,distances)
+    return RecapContext(recap_results,recap_event, recap_type,distances, race_logo_slug)
 
 def get_last_race_day_events(allResults, asofdate):
     if  not allResults.exists():
@@ -226,7 +229,10 @@ def get_featured_event_context():
     if not events.exists():
         return FeaturedEventContext()
     event = get_featured_event()
-    return FeaturedEventContext(event,get_event_data(event),get_future_events(event))
+    race_logo_slug = ""
+    if event:
+        race_logo_slug = utils.get_race_logo_slug(event.race.slug)
+    return FeaturedEventContext(event,get_event_data(event),get_future_events(event), race_logo_slug)
 
 def get_featured_event():
     featured_event = None
@@ -320,7 +326,8 @@ def get_future_events(event):
         event_data = False
         if numresults > 0:
             event_data = get_event_data(i)
-        future_events.append((i, event_data))
+        race_logo_slug = utils.get_race_logo_slug(i.race.slug)
+        future_events.append((i, event_data, race_logo_slug))
         if i.race not in races_seen:
             races_seen.append(i.race)
     return future_events

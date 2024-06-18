@@ -9,6 +9,9 @@ class Command(BaseCommand):
     help = 'Generate fake data for Rwmember model'
 
     def handle(self, *args, **kwargs):
+
+        num_members = 50
+
         faker = Faker()
 
         # Clear existing data
@@ -19,7 +22,7 @@ class Command(BaseCommand):
         gender_weights = [0.45, 0.45, 0.10]
 
         # Generate fake data
-        for _ in range(100):  # Adjust the number of entries as needed
+        for _ in range(num_members):  # Adjust the number of entries as needed
             gender = random.choices(gender_choices, weights=gender_weights, k=1)[0]
             if gender == 'M':
                 name = faker.name_male()
@@ -49,4 +52,4 @@ class Command(BaseCommand):
                 hasphotos=hasphotos,
             )
 
-        self.stdout.write(self.style.SUCCESS('Successfully generated 100 fake Rwmember entries'))
+        self.stdout.write(self.style.SUCCESS(f'Successfully generated {num_members} fake Rwmember entries'))

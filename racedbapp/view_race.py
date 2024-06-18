@@ -9,7 +9,7 @@ from django.shortcuts import render
 import racedbapp.shared.endurrun
 from racedbapp.shared.types import Choice, Filter
 
-from .shared import shared
+from .shared import shared, utils
 from .models import *
 
 
@@ -231,8 +231,10 @@ def index(request, race_slug, distance_slug):
         hill_results = get_hill_results()
     else:
         hill_results = False
+    race_logo_slug = utils.get_race_logo_slug(race.slug)
     context = {
         "race": race,
+        "race_logo_slug": race_logo_slug,
         "distance": distance,
         "distances": distances,
         "years": years,

@@ -143,3 +143,27 @@
     date: 2023-02-12
     city: Waterloo
     medals: none
+- model: racedbapp.event
+  pk: 19
+  fields:
+    race: 3
+    distance: 8
+    date: 2124-02-12
+    city: Waterloo
+    medals: none
+- model: racedbapp.event
+  pk: 20
+  fields:
+    race: 4
+    distance: 1
+    date: 2023-01-01
+    city: Kitchener
+    medals: none
+- model: racedbapp.event
+  pk: 21
+  fields:
+    race: 4
+    distance: 1
+    date: 2124-01-01
+    city: Kitchener
+    medals: none

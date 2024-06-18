@@ -11,7 +11,7 @@ import racedbapp.shared.endurrun
 from racedbapp.tasks import send_email_task
 from racedbapp.shared.types import Choice, Filter
 
-from .shared import shared
+from .shared import shared, utils
 from .models import *
 
 named_split = namedtuple("ns", ["split_num", "split_time"])
@@ -94,6 +94,7 @@ def index(request, year, race_slug, distance_slug):
         if event.id in [int(x.strip()) for x in s.event_ids.split(",")]:
             series.append(s)
     process_post(request)
+    race_logo_slug = utils.get_race_logo_slug(event.race.slug)
     context = {
         "event": event_json,
         "filters": filters,
@@ -110,6 +111,7 @@ def index(request, year, race_slug, distance_slug):
         "splits_have_microseconds": splits_have_microseconds,
         "ad": ad,
         "series": series,
+        "race_logo_slug": race_logo_slug,
     }
     # Determine the format to return based on the query string
     if "format" in qstring:
