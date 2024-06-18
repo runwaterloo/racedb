@@ -11,8 +11,8 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
 
         min_num_results = 25
-        max_num_results = 150
-        num_random_people = 250  # pool of non-members
+        max_num_results = 150 # should <= num_random_people (below) and num_members from generate_fake_rwmembers
+        num_random_people = 250  # pool of non-members, should be >= max_num_results (above)
 
         faker = Faker()
 
@@ -78,10 +78,10 @@ class Command(BaseCommand):
                 1, num_results + 1
             ):  # Generate 100 results for each event
                 rwmember = None  # Placeholder variable for rwmember
-                if (
-                    random.random() < 0.5
-                ):  # Randomly choose between member and non-member
+                if random.random() < 0.5:
                     rwmember = random.choice(rwmembers)
+                    while rwmember in used_members:
+                        rwmember = random.choice(rwmembers)
                     used_members.add(rwmember)  # Add the used member to the set
                     athlete = rwmember.name
                     gender = rwmember.gender
@@ -89,13 +89,9 @@ class Command(BaseCommand):
                     city = rwmember.city if rwmember.city else faker.city()
                 else:
                     name = random.choice(random_people)
-                    while (
-                        name in used_random_people
-                    ):  # Check if the random person is already used
+                    while name in used_random_people:
                         name = random.choice(random_people)
-                    used_random_people.add(
-                        name
-                    )  # Add the used random person to the set
+                    used_random_people.add(name)
                     athlete = name
                     gender = random.choice(
                         ["F", "M", "NB"]

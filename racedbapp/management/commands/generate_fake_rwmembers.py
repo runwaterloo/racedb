@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
 
-        num_members = 50
+        num_members = 150 # should be >= max_num_results from generate_fake_rwmembers
 
         faker = Faker()
 
