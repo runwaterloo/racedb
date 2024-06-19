@@ -7,6 +7,7 @@ from django.db.models import Min
 from django.shortcuts import redirect, render
 
 from . import view_boost
+from .shared import utils
 from .models import Bow, Bowathlete, Config, Event, Race, Result, Rwmember, Samerace
 
 named_result = namedtuple(
@@ -182,7 +183,7 @@ def get_inaugural_finishes_badges(results):
                 if race.id in old_race_ids:
                     race = Samerace.objects.get(old_race_id=race.id).current_race
                 if r.result.event.race not in already_have:
-                    image = "inaugural-{}.png".format(race.slug)
+                    image = utils.get_achievement_image(race.slug, "inaugural")
                     inaugural_finishes_badges.append(
                         named_badge(
                             "Finished inaugural {}".format(race.name),
@@ -330,7 +331,7 @@ def get_race_win_badges(results):
             new_race_id = Samerace.objects.get(old_race_id=thisrace.id).current_race_id
             thisrace = Race.objects.get(id=new_race_id)
         if thisrace not in races_won:
-            image = "event-winner-{}.png".format(thisrace.slug)
+            image = utils.get_achievement_image(thisrace.slug, "event-winner")
             race_win_badges.append(
                 named_badge(
                     "Won an overall event at {}".format(thisrace.name),

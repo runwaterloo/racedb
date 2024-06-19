@@ -16,3 +16,11 @@ def get_race_logo_slug(slug):
     if not file_path.is_file():
         slug = "rw-race-logo"
     return slug
+
+def get_achievement_image(slug, badge):
+    file_path = Path(f"racedbapp/static/achievements/{badge}-{slug}.png")
+    if file_path.is_file():
+        image = f"{badge}-{slug}.png"
+    else:
+        image = "generic_100x100.png"
+    return image
