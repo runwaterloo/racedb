@@ -7,8 +7,8 @@ from . import urls_to_test
 
 
 def setUpModule():
-    """ Import the actual database """
-    print("Copying production database...")
+    """ Import the database """
+    print("Copying database...")
     with open("racedb/secrets.py", "r") as f:
         lines = f.readlines()
     DB_HOST = [x for x in lines if "DB_HOST" in x][0].split("'")[1]

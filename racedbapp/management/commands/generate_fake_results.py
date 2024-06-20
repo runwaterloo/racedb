@@ -1,3 +1,4 @@
+import json
 import random
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
@@ -10,9 +11,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
 
-        min_num_results = 25
-        max_num_results = 150 # should <= num_random_people (below) and num_members from generate_fake_rwmembers
-        num_random_people = 250  # pool of non-members, should be >= max_num_results (above)
+        with open("racedbapp/management/commands/fake_config.json") as f:
+            fake_config = json.load(f)
+        min_num_results = fake_config["min_results_per_event"]
+        max_num_results = fake_config["max_results_per_event"]
+        num_random_people = int(
+            fake_config["max_results_per_event"] * 1.5
+        )  # pool of non-members
 
         faker = Faker()
 
@@ -28,12 +33,33 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("No Rwmembers found."))
             return
 
+        # Gender choices with weights
+        gender_choices = [choice[0] for choice in Rwmember.GENDER_CHOICES]
+        gender_weights = [
+            fake_config["male_probability"],
+            fake_config["female_probability"],
+            fake_config["nonbinary_probability"],
+        ]
+
         # Generate a pool of random people who are not in Rwmember
-        random_people = []
+        used_names = []
+        random_people = {}
         while len(random_people) < num_random_people:
+            gender = random.choices(gender_choices, weights=gender_weights, k=1)[0]
+            if gender == "M":
+                name = faker.name_male()
+            elif gender == "F":
+                name = faker.name_female()
+            else:
+                name = faker.name()
             name = faker.name()
-            if not Rwmember.objects.filter(name=name).exists():
-                random_people.append(name)
+            if Rwmember.objects.filter(name=name).exists():
+                continue
+            if name in used_names:
+                continue
+            used_names.append(name)
+            city = faker.city()
+            random_people[name] = {"gender": gender, "city": city}
 
         # Helper function to create category based on gender and age
         def get_or_create_category(gender, age):
@@ -68,15 +94,10 @@ class Command(BaseCommand):
             # Dictionary to keep track of counts for each gender and category
             gender_counts = {"F": 0, "M": 0, "NB": 0}
             category_counts = {}
-            used_members = (
-                set()
-            )  # Set to keep track of members already used in this event
-            used_random_people = (
-                set()
-            )  # Set to keep track of random people already used in this event
-            for place in range(
-                1, num_results + 1
-            ):  # Generate 100 results for each event
+            used_members = set()
+            used_random_people = set()
+            used_bibs = set()
+            for place in range(1, num_results + 1):
                 rwmember = None  # Placeholder variable for rwmember
                 if random.random() < 0.5:
                     rwmember = random.choice(rwmembers)
@@ -85,28 +106,28 @@ class Command(BaseCommand):
                     used_members.add(rwmember)  # Add the used member to the set
                     athlete = rwmember.name
                     gender = rwmember.gender
-                    # Use member's city if available, else use a fake city
-                    city = rwmember.city if rwmember.city else faker.city()
+                    city = rwmember.city
                 else:
-                    name = random.choice(random_people)
+                    name = random.choice(list(random_people.keys()))
                     while name in used_random_people:
-                        name = random.choice(random_people)
+                        name = random.choice(list(random_people.keys()))
                     used_random_people.add(name)
                     athlete = name
-                    gender = random.choice(
-                        ["F", "M", "NB"]
-                    )  # Randomly select gender for non-member
-                    city = faker.city()  # Use a fake city for non-member
-                bib = faker.bothify(text="??####")
+                    gender = random_people[name]["gender"]
+                    city = random_people[name]["city"]
+                bib = random.randint(1, num_results * 5)
+                while bib in used_bibs:
+                    bib = random.randint(1, num_results * 5)
+                used_bibs.add(bib)
                 guntime = guntimes[place - 1]
                 chiptime = guntime - timedelta(seconds=random.randint(0, 15))
                 # Calculate age based on event date and member's year of birth if rwmember is not None
                 age = (
                     event.date.year - rwmember.year_of_birth
                     if rwmember
-                    else random.randint(18, 65)
+                    else random.randint(5, 85)
                 )
-                division = faker.word()
+                division = ""
                 province = faker.state()
                 country = truncate_country_name(
                     faker.country()
