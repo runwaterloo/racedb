@@ -54,7 +54,7 @@
     distance: 1
     date: 2023-06-18
     city: Waterloo
-    medals: none
+    medals: classic-5oa
 - model: racedbapp.event
   pk: 8
   fields:
@@ -94,7 +94,7 @@
     distance: 2
     date: 2023-10-22
     city: Waterloo
-    medals: none
+    medals: standard
 - model: racedbapp.event
   pk: 13
   fields:

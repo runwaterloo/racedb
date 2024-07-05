@@ -7,6 +7,8 @@ test_urls = (
     "/endurrun/ultimate/",
     "/event/2023/fall-classic/5-km/",
     "/events/",
+    "/medals/2023/fall-classic/5-km/",  # standard
+    "/medals/2023/waterloo-classic/10-km/",  # classic-5oa
     "/members/",
     "/multiwins/",
     "/race/fall-classic/5-km/",

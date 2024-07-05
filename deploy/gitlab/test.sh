@@ -12,6 +12,9 @@ export MARIADB_IP=$(getent ahostsv4 mariadb | awk 'NR==1 { print $1 }')
 # Run the deploy script
 /bin/ash deploy/minimal/deploy.sh
 
+# Collect static
+docker exec racedb-web ./manage.py collectstatic --noinput --settings=racedb.settings.min;
+
 # Create tables
 docker exec racedb-web ./manage.py migrate --noinput --settings=racedb.settings.min;
 

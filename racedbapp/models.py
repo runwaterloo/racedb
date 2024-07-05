@@ -206,7 +206,7 @@ class Timer(models.Model):
 
 
 class Event(models.Model):
-    MEDALS_CHOICES = (("none", "none"), ("standard", "standard"))
+    MEDALS_CHOICES = (("none", "none"), ("standard", "standard"), ("classic-5oa", "classic-5oa"))
     race = models.ForeignKey(Race, on_delete=models.CASCADE)
     distance = models.ForeignKey(Distance, on_delete=models.CASCADE)
     date = models.DateField(db_index=True)

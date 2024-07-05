@@ -1,6 +1,6 @@
 services:
   gunicorn:
-    command: /bin/sh -c './manage.py collectstatic --noinput --settings=racedb.settings.min; gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.min racedb.wsgi -b 0.0.0.0:8000'
+    command: /bin/sh -c 'gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.min racedb.wsgi -b 0.0.0.0:8000'
     container_name: racedb-web
     environment:
       - WEBHOST

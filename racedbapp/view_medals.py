@@ -105,6 +105,72 @@ def get_medal_results(medals_type, event_results):
                 elif award_counts[er.category.name] == 2:
                     mr.award = "3rd {}".format(er.category.name)
                     award_counts[er.category.name] += 1
+        elif medals_type == "classic-5oa":
+            if er.gender == "F":
+                if award_counts["F"] == 0:
+                    mr.award = "1st Overall Female"
+                    award_counts["F"] += 1
+                elif award_counts["F"] == 1:
+                    mr.award = "2nd Overall Female"
+                    award_counts["F"] += 1
+                elif award_counts["F"] == 2:
+                    mr.award = "3rd Overall Female"
+                    award_counts["F"] += 1
+                elif award_counts["F"] == 3:
+                    mr.award = "4th Overall Female"
+                    award_counts["F"] += 1
+                elif award_counts["F"] == 4:
+                    mr.award = "5th Overall Female"
+                    award_counts["F"] += 1
+                if mr.award == "" and er.category.ismasters:
+                    if award_counts["FM"] == 0:
+                        mr.award = "1st Masters Female"
+                        award_counts["FM"] += 1
+                    elif award_counts["FM"] == 1:
+                        mr.award = "2nd Masters Female"
+                        award_counts["FM"] += 1
+                    elif award_counts["FM"] == 2:
+                        mr.award = "3rd Masters Female"
+                        award_counts["FM"] += 1
+            if er.gender == "M":
+                if award_counts["M"] == 0:
+                    mr.award = "1st Overall Male"
+                    award_counts["M"] += 1
+                elif award_counts["M"] == 1:
+                    mr.award = "2nd Overall Male"
+                    award_counts["M"] += 1
+                elif award_counts["M"] == 2:
+                    mr.award = "3rd Overall Male"
+                    award_counts["M"] += 1
+                elif award_counts["M"] == 3:
+                    mr.award = "4th Overall Male"
+                    award_counts["M"] += 1
+                elif award_counts["M"] == 4:
+                    mr.award = "5th Overall Male"
+                    award_counts["M"] += 1
+                if mr.award == "" and er.category.ismasters:
+                    if award_counts["MM"] == 0:
+                        mr.award = "1st Masters Male"
+                        award_counts["MM"] += 1
+                    elif award_counts["MM"] == 1:
+                        mr.award = "2nd Masters Male"
+                        award_counts["MM"] += 1
+                    elif award_counts["MM"] == 2:
+                        mr.award = "3rd Masters Male"
+                        award_counts["MM"] += 1
+                    elif award_counts["MM"] == 2:
+                        mr.award = "3rd Masters Male"
+                        award_counts["MM"] += 1
+            if mr.award == "":
+                if er.category.name not in award_counts:
+                    mr.award = "1st {}".format(er.category.name)
+                    award_counts[er.category.name] = 1
+                elif award_counts[er.category.name] == 1:
+                    mr.award = "2nd {}".format(er.category.name)
+                    award_counts[er.category.name] += 1
+                elif award_counts[er.category.name] == 2:
+                    mr.award = "3rd {}".format(er.category.name)
+                    award_counts[er.category.name] += 1
         else:
             mr.award = "none"
     return medal_results
