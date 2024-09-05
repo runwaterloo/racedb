@@ -10,7 +10,7 @@ set -e
 
 # Update requirements.txt
 pip install pur
-pur
+pur --skip Django
 
 # Check for changes
 if git diff --exit-code --quiet -- requirements.txt; then
