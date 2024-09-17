@@ -9,6 +9,6 @@ gunicorn==23.0.0
 gspread==6.1.2
 mysqlclient==2.2.4
 PyYAML==6.0.2
-pytz==2024.1
+pytz==2024.2
 requests==2.32.3
 simplejson==3.19.3
