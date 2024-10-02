@@ -22,7 +22,7 @@ default:
   image: docker:latest
   services:
     - docker:dind
-    - mariadb:10.11.6
+    - mariadb:10.11.9
   variables:
     MYSQL_DATABASE: racedb
     MYSQL_USER: racedb
