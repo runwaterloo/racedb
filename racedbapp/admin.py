@@ -69,7 +69,7 @@ class RwmemberAdmin(admin.ModelAdmin):
     )
     search_fields = ("name",)
     ordering = ("-id",)
-    list_max_show_all = 1000
+    list_max_show_all = 5000
     readonly_fields = ("hasphotos",)
 
     def member_tags(self, obj):
