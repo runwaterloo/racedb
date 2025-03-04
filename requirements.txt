@@ -6,7 +6,7 @@ django-slack==5.19.0
 faker==36.1.1
 flickrapi==2.4.0
 gunicorn==23.0.0
-gspread==6.1.4
+gspread==6.2.0
 mysqlclient==2.2.7
 PyYAML==6.0.2
 pytz==2025.1
