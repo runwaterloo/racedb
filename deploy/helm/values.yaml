@@ -80,4 +80,4 @@ affinity: {}
 redis:
   image:
     name: redis
-    tag: 7.4.1-alpine3.20
+    tag: 7.4.2-alpine3.21
