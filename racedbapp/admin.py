@@ -203,3 +203,13 @@ class TimerAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Timer, TimerAdmin)
+
+
+class TeamcategoryAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "slug",
+    )
+
+
+admin.site.register(Teamcategory, TeamcategoryAdmin)
