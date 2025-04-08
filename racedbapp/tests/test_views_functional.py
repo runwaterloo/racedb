@@ -14,7 +14,7 @@ def setUpModule():
     DB_HOST = [x for x in lines if "DB_HOST" in x][0].split("'")[1]
     DB_PASSWORD = [x for x in lines if "DB_PASSWORD" in x][0].split("'")[1]
     os.system(
-        "mysqldump -h {0} -u racedb -p{1} racedb | mysql -h {0} -u racedb -p{1} test_racedb".format(
+        "mysqldump --skip-ssl -h {0} -u racedb -p{1} racedb | mysql -h {0} -u racedb -p{1} test_racedb --ssl=0".format(
             DB_HOST, DB_PASSWORD
         )
     )
