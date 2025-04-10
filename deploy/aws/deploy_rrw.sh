@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 # setup swap
 fallocate -l 1025M /swapfile
 chmod 600 /swapfile
@@ -71,3 +73,5 @@ echo 'PATH=$PATH:/srv/racedb/deploy/misc/' >> /home/ubuntu/.profile
 REGION="us-east-1"
 INSTANCE_ID=`curl http://169.254.169.254/latest/meta-data/instance-id`
 aws --region $REGION cloudwatch put-metric-alarm --alarm-name autorecovery --metric-name StatusCheckFailed_System --namespace AWS/EC2 --statistic Maximum --dimensions Name=InstanceId,Value=${INSTANCE_ID} --unit Count --period 60 --evaluation-periods 3 --threshold 1 --comparison-operator GreaterThanOrEqualToThreshold --alarm-actions arn:aws:automate:${REGION}:ec2:recover
+
+echo "SUCCESS: deploy_rrw.sh completed"
