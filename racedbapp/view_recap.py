@@ -155,7 +155,7 @@ def get_individual_results(event, results, hasmasters, distance_slug, year=False
                 female_member_slug = female_member.slug
             male_member = get_member_endurrace(top_masters.male_result, membership)
             if male_member:
-                male_member_slug = female_member.slug
+                male_member_slug = male_member.slug
             new_top_masters = namediresult(
                 top_masters.place,
                 top_masters.female_athlete,
