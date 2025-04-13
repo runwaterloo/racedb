@@ -177,10 +177,11 @@ def get_recap_type(last_race_day_events):
         if len(relay_event) == 1:
             if Relay.objects.filter(event=relay_event[0]).count() > 0:
                 recap_type = "relay"
-    if last_race_day_events[0].race.slug == "endurrace":
-        year = last_race_day_events[0].date.year
-        if Endurraceresult.objects.filter(year=year).count() > 0:
-            recap_type = "combined"
+    # Comment out until better fix available
+    # if last_race_day_events[0].race.slug == "endurrace":
+    #     year = last_race_day_events[0].date.year
+    #     if Endurraceresult.objects.filter(year=year).count() > 0:
+    #         recap_type = "combined"
     if last_race_day_events[0].race.slug == "endurrun":
         recap_type = "endurrun"
     return recap_type
