@@ -9,6 +9,9 @@ env:
         name: cloudflare-secrets
         key: apiToken
 installCRDs: true
+logs:
+  access:
+    enabled: true
 persistence:
   existingClaim: traefik-pvc
   enabled: true
