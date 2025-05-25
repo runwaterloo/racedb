@@ -2,6 +2,8 @@ additionalArguments:
   - --certificatesresolvers.le.acme.dnschallenge.provider=cloudflare
   - --certificatesresolvers.le.acme.email=sl70176@gmail.com
   - --certificatesresolvers.le.acme.storage=/data/acme.json
+  - --entryPoints.web.forwardedHeaders.insecure=true
+  - --entryPoints.websecure.forwardedHeaders.insecure=true
 env:
   - name: CF_DNS_API_TOKEN
     valueFrom:
