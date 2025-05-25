@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def index(request):
-    if "HTTP_X_GITLAB_TOKEN" in request.META:
-        gitlabtoken = request.META["HTTP_X_GITLAB_TOKEN"]
+    if "x-gitlab-token" in request.headers:
+        gitlabtoken = request.headers["x-gitlab-token"]
     else:
         gitlabtoken = None
     notifykey = Config.objects.get(name="notifykey").value

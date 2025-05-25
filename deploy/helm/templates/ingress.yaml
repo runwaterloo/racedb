@@ -24,7 +24,7 @@ spec:
   entryPoints:
     - web
   routes:
-    - match: "Host(`{{ .Values.ingress.host}}`)"
+    - match: "Host(`{{ .Values.ingress.host}}`) && !PathPrefix(`/v1`)"
       kind: Rule
       services:
         - name: "{{ include "racedb.fullname" . }}"
@@ -40,7 +40,23 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: "Host(`{{ .Values.ingress.host}}`)"
+    - match: "Host(`{{ .Values.ingress.host}}`) && !PathPrefix(`/v1`)"
+      kind: Rule
+      services:
+        - name: "{{ include "racedb.fullname" . }}"
+          port: {{ .Values.service.port}}
+  tls:
+    certResolver: le
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: "{{ include "racedb.fullname" . }}-secure-api"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: "Host(`{{ .Values.ingress.apiHost}}`) && (PathPrefix(`/v1`) || PathPrefix(`/admin`) || PathPrefix(`/static`))"
       kind: Rule
       services:
         - name: "{{ include "racedb.fullname" . }}"

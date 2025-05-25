@@ -1,12 +1,11 @@
 #!/usr/bin/env python
-""" parseresults.py - Race result parsing utility. """
+"""parseresults.py - Race result parsing utility."""
+
 import datetime
 import logging
 
 import gspread
-import requests
 from django.core.management.base import BaseCommand
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from racedbapp import tasks
 from racedbapp.models import (
@@ -25,8 +24,6 @@ from racedbapp.models import (
     Teamresult,
 )
 from racedbapp.shared import shared
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 logger = logging.getLogger(__name__)
 
@@ -102,9 +99,7 @@ class Command(BaseCommand):
             results = []
             gun_equal_chip = True
             if "docs.google.com" not in event.resultsurl:
-                self.stdout.write(
-                    "ERROR: Resuts URL for {} is not a google sheet".format(e)
-                )
+                self.stdout.write("ERROR: Resuts URL for {} is not a google sheet".format(e))
                 return
             google_results = get_results_from_google(event.resultsurl)
             for result in google_results["individual"]:
@@ -126,7 +121,7 @@ class Command(BaseCommand):
                     category.save()
                 try:
                     place = int(result["place"])
-                except:
+                except Exception:
                     if result["place"] == "DQ":
                         place = dqplace
                         dqplace += 1
@@ -220,9 +215,7 @@ class Command(BaseCommand):
                                 place=result["place"],
                                 relay_team=extra_dict["relay_team"],
                                 relay_team_place=extra_dict["relay_team_place"],
-                                relay_team_time=maketimedelta(
-                                    extra_dict["relay_team_time"]
-                                ),
+                                relay_team_time=maketimedelta(extra_dict["relay_team_time"]),
                                 relay_leg=extra_dict["relay_leg"],
                             )
                             relays.append(newrelayresult)
@@ -290,9 +283,7 @@ class Command(BaseCommand):
             if google_results["team"]:
                 teamresults = []
                 for result in google_results["team"]:
-                    team_category_id = Teamcategory.objects.get(
-                        name=result["team_category"]
-                    ).id
+                    team_category_id = Teamcategory.objects.get(name=result["team_category"]).id
                     athlete_time = maketimedelta(result["athlete_time"])
                     if result["counts"] == "TRUE":
                         result_counts = True
@@ -425,9 +416,7 @@ def process_endurrace(years, slack_results):
                 results.append(this_result)
         Endurraceresult.objects.filter(year=year).delete()
         Endurraceresult.objects.bulk_create(results)
-        info = "{} ENDURrace combined results processed for {}".format(
-            len(results), year
-        )
+        info = "{} ENDURrace combined results processed for {}".format(len(results), year)
         logger.info(info)
         slack_results.append(info)
         return slack_results
@@ -607,10 +596,7 @@ def process_rwpbs(event):
     ).order_by("event__date")
     for i in future_results:
         i.isrwpb = False
-        if (
-            i.event.distance.slug != "roughly-five"
-            and i.event.id not in pb_exclude_events
-        ):
+        if i.event.distance.slug != "roughly-five" and i.event.id not in pb_exclude_events:
             if i.rwmember_id in rwpbs:
                 if i.guntime < rwpbs[i.rwmember_id]:
                     rwpbs[i.rwmember_id] = i.guntime

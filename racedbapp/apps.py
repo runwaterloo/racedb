@@ -6,4 +6,4 @@ class RacedbappConfig(AppConfig):
     verbose_name = "Racedb Application"
 
     def ready(self):
-        import racedbapp.signals
+        import racedbapp.signals  # noqa: F401

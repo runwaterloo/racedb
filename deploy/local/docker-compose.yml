@@ -22,7 +22,7 @@ services:
 
   redis:
     image: redis:latest
-    container_name: racedb_redis
+    container_name: racedb-redis
     ports:
       - "6379:6379"
     healthcheck:
@@ -40,17 +40,27 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile
+      args:
+        - INSTALL_DEV=1
     command: >
       /bin/sh -c '
-      python ./manage.py collectstatic --noinput --settings=racedb.settings.min;
-      python ./manage.py migrate --noinput --settings=racedb.settings.min;
+      python ./manage.py collectstatic --noinput;
+      python ./manage.py migrate --noinput;
       export DJANGO_SUPERUSER_PASSWORD=admin;
-      python ./manage.py createsuperuser --noinput --username admin --email admin@example.com --settings=racedb.settings.min;
-      python ./manage.py runserver 0.0.0.0:8000 --settings=racedb.settings.min'
+      python ./manage.py createsuperuser --noinput --username admin --email admin@example.com;
+      python ./manage.py runserver 0.0.0.0:8000'
     container_name: racedb-web
     environment:
       WEBHOST: 127.0.0.1
+      DEBUG: "true"
+      ENABLE_DEBUG_TOOLBAR: "true"
+      STORAGE: "local"
+      CACHES: "dummy"
+      DATABASE: "mysql"
+      SETTINGS: "min"
+      DJANGO_SETTINGS_MODULE: "racedb.settings.settings"
     ports:
       - "8000:8000"
     volumes:
+      - ../..:/srv/racedb
       - ../../racedb/secrets.py.sample:/srv/racedb/racedb/secrets.py

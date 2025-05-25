@@ -1,41 +1,33 @@
-import datetime
 import urllib
 from collections import namedtuple
-from datetime import timedelta
-from operator import attrgetter
 
-from django import db
-from django.db.models import Count, Min
-from django.http import HttpResponse
+from django.http import Http404
 from django.shortcuts import render
 
 import racedbapp.shared.endurrun
 from racedbapp.shared.types import Choice, Filter
 
+from .models import Endurraceresult, Event, Result
 from .shared import shared
-from .models import *
 
 
 def index(request, year):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
-    allresults = Result.objects.filter(
-        event__race__slug="endurrace", event__distance__slug="8-km"
-    )
-    dates = (
-        allresults.order_by("-event__date")
-        .values_list("event__date", flat=True)
-        .distinct()
-    )
+    allresults = Result.objects.filter(event__race__slug="endurrace", event__distance__slug="8-km")
+    if not allresults:
+        raise Http404("No results found for Endurrace.")
+    dates = allresults.order_by("-event__date").values_list("event__date", flat=True).distinct()
     years = sorted([x.year for x in dates], reverse=True)
+    if not year.isdigit() and year != "latest":
+        raise Http404("Invalid year specified for Endurrace.")
     if year == "latest":
         year = max(years)
     else:
         year = int(year)
+    if year not in years:
+        raise Http404("No results found for Endurrace in the year {}.".format(year))
     years.pop(years.index(year))
     events = Event.objects.filter(race__slug="endurrace", date__icontains=year)
-    # present_team_categories = Teamresult.objects.filter(event_id=event.id).values_list('team_category__name', flat=True)
-    # present_team_categories = set(sorted(present_team_categories))
-    # team_categories = Teamcategory.objects.filter(name__in=present_team_categories)
     filter_choice = ""
     if "filter" in qstring:
         filter_choice = qstring["filter"][0]
@@ -63,14 +55,6 @@ def index(request, year):
             "member",
         ],
     )
-    # results1 = []
-    # namedpart1 = namedtuple('nr', ['fivek', 'eightk', 'combined_time'])
-    # for i in Result.objects.filter(event=events[0]):
-    #    for j in Result.objects.filter(event=events[1]):
-    #        if i.athlete == j.athlete:
-    #            combined_time = i.guntime + j.guntime
-    #            results1.append(namedpart1(i, j, combined_time))
-    # results1 = sorted(results1, key=attrgetter('combined_time'))
     results2 = []
     results1 = Endurraceresult.objects.filter(year=year).order_by("guntime")
     membership = shared.get_membership()
@@ -150,11 +134,8 @@ def index(request, year):
         "events": events,
         "year": year,
         "years": years,
-        #'event_parameters': event_parameters,
-        #'team_categories': team_categories,
         "categorydict": categorydict,
         "resultfilter": resultfilter,
-        #'haschiptime': haschiptime,
         "results": results3,
     }
     return render(request, "racedbapp/endurrace.html", context)
@@ -167,19 +148,11 @@ def getresultfilter(filter_choice, categorydict, year, hasmasters):
         Choice("Male", "/endurrace/{}/?filter=Male".format(year)),
     ]
     if hasmasters:
-        choices.append(
-            Choice("Masters", "/endurrace/{}/?filter=Masters".format(year))
-        )
-        choices.append(
-            Choice("F-Masters", "/endurrace/{}/?filter=F-Masters".format(year))
-        )
-        choices.append(
-            Choice("M-Masters", "/endurrace/{}/?filter=M-Masters".format(year))
-        )
+        choices.append(Choice("Masters", "/endurrace/{}/?filter=Masters".format(year)))
+        choices.append(Choice("F-Masters", "/endurrace/{}/?filter=F-Masters".format(year)))
+        choices.append(Choice("M-Masters", "/endurrace/{}/?filter=M-Masters".format(year)))
     for k, v in sorted(categorydict.items()):
-        choices.append(
-            Choice(k, "/endurrace/{}/?filter={}".format(year, k))
-        )
+        choices.append(Choice(k, "/endurrace/{}/?filter={}".format(year, k)))
     choices = [x for x in choices if x.name != filter_choice]
     resultfilter = Filter(filter_choice, choices)
     return resultfilter

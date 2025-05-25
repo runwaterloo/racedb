@@ -35,6 +35,8 @@ def index(request):
     if "race" in qstring:
         race_slug = qstring["race"][0]
         race_name = shared.get_race_by_slug_or_false(race_slug)
+        if not race_name:
+            raise Http404(f"No race found for slug '{race_slug}'")
         races = shared.create_samerace_list(race_name)
         events = events.filter(race__in=races)
         yearfilter_events = yearfilter_events.filter(race__in=races)

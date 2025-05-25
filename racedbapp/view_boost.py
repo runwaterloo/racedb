@@ -1,4 +1,4 @@
-from collections import OrderedDict, defaultdict, namedtuple
+from collections import OrderedDict, defaultdict
 from datetime import datetime
 from operator import attrgetter
 from urllib import parse
@@ -24,13 +24,11 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         "boost_pb_points",
         "nophoto_url",
     )
-    config_dict = dict(
-        Config.objects.values_list("name", "value").filter(name__in=config_values)
-    )
-    max_events = int(config_dict.get("boost_max_events",0))
-    max_endurrun = int(config_dict.get("boost_max_endurrun",0))
-    leaderboard_size = int(config_dict.get("boost_leaderboard_size",0))
-    nophoto_url = config_dict.get("nophoto_url", "") 
+    config_dict = dict(Config.objects.values_list("name", "value").filter(name__in=config_values))
+    max_events = int(config_dict.get("boost_max_events", 0))
+    max_endurrun = int(config_dict.get("boost_max_endurrun", 0))
+    leaderboard_size = int(config_dict.get("boost_leaderboard_size", 0))
+    nophoto_url = config_dict.get("nophoto_url", "")
     boost_years = get_boost_years()
     if not boost_years:
         return render(request, "racedbapp/boost.html")
@@ -145,10 +143,9 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         }
         return render(request, "racedbapp/boost.html", context)
 
+
 def get_boost_years():
-    boost_tags = Rwmembertag.objects.values_list("name", flat=True).filter(
-        name__icontains="boost-"
-    )
+    boost_tags = Rwmembertag.objects.values_list("name", flat=True).filter(name__icontains="boost-")
     boost_tag_years = [x.split("-")[1] for x in boost_tags]
     found_year_results = False
     boost_years = []
@@ -157,13 +154,12 @@ def get_boost_years():
             if found_year_results:
                 boost_years.append(int(i))
             else:
-                year_result_count = Result.objects.filter(
-                    event__date__icontains=i
-                ).count()
+                year_result_count = Result.objects.filter(event__date__icontains=i).count()
                 if year_result_count > 0:
                     boost_years.append(int(i))
                     found_year_results = True
     return boost_years
+
 
 def get_boost_tag(year):
     try:
@@ -171,6 +167,7 @@ def get_boost_tag(year):
     except Exception:
         raise Http404("No results found")
     return boost_tag
+
 
 def get_qs_filter(qstring):
     valid_filters = ("F", "M", "F40-", "F40+", "M40-", "M40+")
@@ -192,24 +189,12 @@ def get_standings_filter(qs_filter, qs_date, year):
     choices.append(Choice("", "/boost/{}/{}".format(year, append_date)))
     if qs_date != "":
         append_date = "&date={}".format(qs_date)
-    choices.append(
-        Choice("Female", "/boost/{}/?filter=F{}".format(year, append_date))
-    )
-    choices.append(
-        Choice("Male", "/boost/{}/?filter=M{}".format(year, append_date))
-    )
-    choices.append(
-        Choice("F40-", "/boost/{}/?filter=F40-{}".format(year, append_date))
-    )
-    choices.append(
-        Choice("M40-", "/boost/{}/?filter=M40-{}".format(year, append_date))
-    )
-    choices.append(
-        Choice("F40+", "/boost/{}/?filter=F40+{}".format(year, append_date))
-    )
-    choices.append(
-        Choice("M40+", "/boost/{}/?filter=M40+{}".format(year, append_date))
-    )
+    choices.append(Choice("Female", "/boost/{}/?filter=F{}".format(year, append_date)))
+    choices.append(Choice("Male", "/boost/{}/?filter=M{}".format(year, append_date)))
+    choices.append(Choice("F40-", "/boost/{}/?filter=F40-{}".format(year, append_date)))
+    choices.append(Choice("M40-", "/boost/{}/?filter=M40-{}".format(year, append_date)))
+    choices.append(Choice("F40+", "/boost/{}/?filter=F40+{}".format(year, append_date)))
+    choices.append(Choice("M40+", "/boost/{}/?filter=M40+{}".format(year, append_date)))
     choices = [x for x in choices if x.name != qs_filter]
     if qs_filter == "F":
         current_choice = "Female"
@@ -228,9 +213,7 @@ def get_date_filter(qs_date, year):
     start_date = datetime(year, 1, 1)
     end_date = datetime(year, 12, 31)
     last_event_date = (
-        Event.objects.filter(date__range=(start_date, end_date))
-        .order_by("-date")[0]
-        .date
+        Event.objects.filter(date__range=(start_date, end_date)).order_by("-date")[0].date
     )
     if (datetime.now().date() - last_event_date).days > 7:
         final = True
@@ -260,9 +243,7 @@ def get_date_filter(qs_date, year):
                 "/boost/{}/?date={}".format(year, e.date),
             )
         else:
-            choice = Choice(
-                e.race.name, "/boost/{}/?date={}".format(year, e.date)
-            )
+            choice = Choice(e.race.name, "/boost/{}/?date={}".format(year, e.date))
         if e.date != qs_date:
             choices.append(choice)
         else:
@@ -368,9 +349,7 @@ class Battler:
                 events_count += 1
                 i.counts = True
                 self.total_points += i.ep
-        self.results = sorted(
-            self.results, key=attrgetter("counts", "ep"), reverse=True
-        )
+        self.results = sorted(self.results, key=attrgetter("counts", "ep"), reverse=True)
 
 
 class BResult:

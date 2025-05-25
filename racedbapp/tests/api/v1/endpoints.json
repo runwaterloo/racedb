@@ -1,0 +1,98 @@
+[
+  {
+    "url": "/v1/categories/",
+    "factory": "create_category",
+    "fields": ["id", "name", "ismasters"]
+  },
+  {
+    "url": "/v1/distances/",
+    "factory": "create_distance",
+    "fields": ["id", "slug", "name", "km", "showrecord", "results_url"]
+  },
+  {
+    "url": "/v1/distances/1/results/",
+    "factory": "create_result"
+  },
+  {
+    "url": "/v1/events/",
+    "factory": "create_event",
+    "fields": [
+      "id",
+      "date",
+      "race",
+      "race_name",
+      "race_shortname",
+      "race_slug",
+      "distance",
+      "distance_km",
+      "distance_name",
+      "distance_slug",
+      "city",
+      "flickrsetid",
+      "youtube_id",
+      "youtube_offset_seconds",
+      "youtube_duration_seconds",
+      "medals",
+      "timer",
+      "results_exist",
+      "results_url"
+    ]
+  },
+  {
+    "url": "/v1/events/1/results/",
+    "factory": "create_result"
+  },
+  {
+    "url": "/v1/rwmembers/",
+    "factory": "create_rwmember",
+    "fields": [
+      "id",
+      "name",
+      "slug",
+      "gender",
+      "year_of_birth",
+      "city",
+      "joindate",
+      "photourl",
+      "altname",
+      "hasphotos",
+      "tags"
+    ]
+  },
+  {
+    "url": "/v1/races/",
+    "factory": "create_race",
+    "fields": ["id", "name", "shortname", "slug"]
+  },
+  {
+    "url": "/v1/results/",
+    "factory": "create_result",
+    "fields": [
+      "id",
+      "event",
+      "place",
+      "bib",
+      "athlete",
+      "rwmember",
+      "rwmember_slug",
+      "gender",
+      "gender_place",
+      "category",
+      "category_place",
+      "category_ismasters",
+      "age",
+      "chiptime",
+      "guntime",
+      "city",
+      "province",
+      "country",
+      "division",
+      "isrwpb"
+    ]
+  },
+  {
+    "url": "/v1/series/",
+    "factory": "create_series",
+    "fields": ["id", "year", "name", "slug", "event_ids", "show_records"]
+  }
+]

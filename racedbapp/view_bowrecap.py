@@ -1,15 +1,10 @@
-import datetime
-import urllib
 from collections import namedtuple
 from datetime import timedelta
 from operator import attrgetter
 
-from django import db
-from django.db.models import Avg, Count, Min, Sum
-from django.http import HttpResponse
 from django.shortcuts import render
 
-from .models import *
+from .models import Bow, Bowathlete, Category, Event, Result
 
 
 def index(request, bow_slug, phase):
@@ -23,12 +18,9 @@ def index(request, bow_slug, phase):
         heading = "Results After {} Event".format(phase)
     else:
         heading = "Results After {} Events".format(phase)
-    category_ids = (
-        Bowathlete.objects.filter(bow=bow).values_list("category", flat=True).distinct()
-    )
+    category_ids = Bowathlete.objects.filter(bow=bow).values_list("category", flat=True).distinct()
     categories = Category.objects.filter(id__in=(category_ids)).order_by("name")
     all_event_results = []
-    events_results_count = []
     for event in events:
         event_results = Result.objects.filter(event=event)
         event_dict = dict(event_results.values_list("athlete", "guntime"))
@@ -46,7 +38,7 @@ def index(request, bow_slug, phase):
         for er in all_event_results:
             try:
                 stage_time = er[athlete.name]
-            except:
+            except Exception:
                 stage_time = timedelta(seconds=0)
             else:
                 stages += 1
@@ -59,9 +51,7 @@ def index(request, bow_slug, phase):
             total_seconds = total_time.total_seconds()
         if stages == int(phase):
             full_results.append(
-                namedfullresult(
-                    athlete, category, stages, total_time, total_seconds, stage_times
-                )
+                namedfullresult(athlete, category, stages, total_time, total_seconds, stage_times)
             )
     full_results = sorted(full_results, key=attrgetter("total_seconds"))
     full_results = sorted(full_results, key=attrgetter("stages"), reverse=True)
@@ -104,18 +94,14 @@ def index(request, bow_slug, phase):
         )
     )
     for category in sorted(recap_categories):
-        female_cat_results = [
-            x for x in female_results if category in x.athlete.category.name
-        ]
+        female_cat_results = [x for x in female_results if category in x.athlete.category.name]
         if len(female_cat_results) == 0:
             female_leader = ""
             female_time = ""
         else:
             female_leader = female_cat_results[0].athlete.name
             female_time = female_cat_results[0].total_time
-        male_cat_results = [
-            x for x in male_results if category in x.athlete.category.name
-        ]
+        male_cat_results = [x for x in male_results if category in x.athlete.category.name]
         if len(male_cat_results) == 0:
             male_leader = ""
             male_time = ""
@@ -124,8 +110,6 @@ def index(request, bow_slug, phase):
             male_time = male_cat_results[0].total_time
         if male_leader == "" and female_leader == "":
             continue
-        results.append(
-            namedresult(category, female_leader, female_time, male_leader, male_time)
-        )
+        results.append(namedresult(category, female_leader, female_time, male_leader, male_time))
     context = {"bow": bow, "heading": heading, "results": results, "nomenu": True}
     return render(request, "racedbapp/bowrecap.html", context)

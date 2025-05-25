@@ -1,0 +1,58 @@
+name: Unit Tests
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit_tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.13
+
+      - name: Prepare secrets file
+        run: cp racedb/secrets.py.sample racedb/secrets.py
+
+      - name: Remove mysqlclient from requirements.txt
+        run: sed -i '/^mysqlclient/d' requirements/requirements.txt
+
+      - name: Install test requirements
+        run: pip install --root-user-action=ignore -r requirements/requirements-test.txt
+
+      - name: Run tests with coverage
+        run: pytest --junitxml=junit.xml -o junit_family=legacy --cov=racedbapp --cov-report=term --cov-report=xml --cov-branch
+
+      - name: Upload test results (JUnit)
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report
+          path: junit.xml
+
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: junit.xml
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

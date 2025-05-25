@@ -4,6 +4,8 @@ additionalArguments:
   - --certificatesresolvers.le.acme.storage=/data/acme.json
   - --entryPoints.web.forwardedHeaders.insecure=true
   - --entryPoints.websecure.forwardedHeaders.insecure=true
+  - --metrics.prometheus=true
+  - --metrics.prometheus.entryPoint=metrics
 env:
   - name: CF_DNS_API_TOKEN
     valueFrom:
@@ -14,7 +16,19 @@ installCRDs: true
 logs:
   access:
     enabled: true
+    format: json
+    fields:
+      headers:
+        names:
+          Referer: keep
 persistence:
   existingClaim: traefik-pvc
   enabled: true
   path: /data
+service:
+  spec:
+    externalTrafficPolicy: Local
+ports:
+  metrics:
+    expose:
+      default: true

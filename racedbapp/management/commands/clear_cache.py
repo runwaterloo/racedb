@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 from racedbapp.tasks import clear_cache
 

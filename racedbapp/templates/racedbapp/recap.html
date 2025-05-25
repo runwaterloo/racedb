@@ -5,7 +5,7 @@
 {% if distance_slug == 'combined' %}
   <a href="/endurrace/{{ year }}/" target="_blank">Combined Results -  {{ year }} ENDURrace</a>
 {% else %}
-  <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}" target="_blank">{{ event.distance }} Results - {{ event.date.year }} {{ event.race.name }}</a>
+  <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/" target="_blank">{{ event.distance }} Results - {{ event.date.year }} {{ event.race.name }}</a>
 {% endif %}
 </h4>
 <table class="table table-condensed">

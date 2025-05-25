@@ -10,14 +10,15 @@ set -e
 
 # Update requirements.txt
 pip install pur
-pur --skip Django
+pur --skip Django -r requirements/requirements-dev.txt
+pur --only Django --patch Django -r requirements/requirements-dev.txt # do not want automatic minor version updates for Django
 
 # Check for changes
-if git diff --exit-code --quiet -- requirements.txt; then
-    echo "No changes to requirements.txt"
+if git diff --exit-code --quiet -- requirements/*.txt; then
+    echo "No changes to requirements files"
     exit
 else
-    echo "requirements.txt updated, creating Merge Request"
+    echo "requirements updated, creating Merge Request"
 
     # Git configuration (replace with your username and email)
     git config --global user.name "$DEPUP_NAME"
@@ -26,7 +27,7 @@ else
     # Create a new branch and commit changes
     BRANCH="update-dependencies-`date +%s`"
     git checkout -b $BRANCH
-    git add requirements.txt
+    git add requirements/*.txt
     git commit -m "Update Python package dependencies"
 
     # Push the branch to the remote repository

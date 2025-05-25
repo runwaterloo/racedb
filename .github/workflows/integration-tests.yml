@@ -1,0 +1,45 @@
+name: Integration Tests
+
+on:
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - 'Dockerfile'
+      - 'requirements/**'
+  workflow_dispatch:
+
+jobs:
+  Execute:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.13
+
+      - name: Copy Django secrets file
+        run: cp racedb/secrets.py.sample racedb/secrets.py
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            docker-compose \
+            default-libmysqlclient-dev \
+            pkg-config \
+            python3-dev
+
+      - name: Install Python development dependencies
+        run: pip install -r requirements/requirements-dev.txt
+
+      - name: Start local environment
+        run: ./deploy/local/start.sh
+        shell: bash
+
+      - name: Run tests inside container
+        run: docker exec racedb-web pytest

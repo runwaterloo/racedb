@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/task: web
 spec:
 {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.webReplicaCount }}
 {{- end }}
   selector:
     matchLabels:
@@ -30,28 +30,6 @@ spec:
       serviceAccountName: {{ include "racedb.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if eq .Values.racedb.settings "prod" }}
-      initContainers:
-        - name: "{{ .Chart.Name }}-collectstatic"
-          command: [
-            "/bin/sh",
-            "-c",
-            "./manage.py collectstatic --noinput",
-            ]
-          env:
-            - name: CHART
-              value: {{ .Chart.Version }}
-            - name: BUILD
-              value: {{ .Values.image.tag }}
-            - name: DJANGO_SETTINGS_MODULE
-              value: racedb.settings.{{ .Values.racedb.settings }}
-            - name: WEBHOST
-              value: {{ .Values.ingress.host }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          volumeMounts:
-            - mountPath: /srv/racedb/racedb/secrets.py
-              name: racedb-secrets
-      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -62,7 +40,7 @@ spec:
             "/bin/sh",
             "-c",
             {{- if eq .Values.racedb.settings "prod" }}
-            "gunicorn racedb.wsgi -b 0.0.0.0:8000",
+            "gunicorn racedb.wsgi --worker-class {{ .Values.racedb.workerClass }} --workers {{ .Values.racedb.workers}} --threads {{ .Values.racedb.threads }} -b 0.0.0.0:8000",
             {{- else }}
             "./manage.py runserver 0.0.0.0:8000",
             {{- end }}
@@ -73,9 +51,19 @@ spec:
             - name: BUILD
               value: {{ .Values.image.tag }}
             - name: DJANGO_SETTINGS_MODULE
-              value: racedb.settings.{{ .Values.racedb.settings }}
+              value: "racedb.settings.settings"
             - name: WEBHOST
               value: {{ .Values.ingress.host }}
+            - name: STORAGE
+              value: {{ .Values.racedb.storage }}
+            - name: SETTINGS
+              value: {{ .Values.racedb.settings }}
+            - name: DATABASE
+              value: "mysql"
+            {{- if eq .Values.racedb.settings "dev" }}
+            - name: DEBUG
+              value: "true"
+            {{- end }}
           volumeMounts:
             {{- if .Values.racedb.mountLocal }}
             - mountPath: /srv/racedb

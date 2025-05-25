@@ -1,0 +1,15 @@
+---
+- model: racedbapp.series
+  pk: 1
+  fields:
+    year: 2022
+    name: Test Series 1
+    slug: test-series-1
+    event_ids: "1,4"
+- model: racedbapp.series
+  pk: 2
+  fields:
+    year: 2021
+    name: Test Series 2
+    slug: test-series-2
+    event_ids: "1,2,3"

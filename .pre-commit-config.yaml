@@ -1,23 +1,25 @@
 repos:
-  -   repo: https://github.com/asottile/pyupgrade
-      rev: v3.19.1
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.20.0
+    hooks:
+      - id: pyupgrade
+        exclude: ^migrations/
+  -   repo: https://github.com/adamchainz/django-upgrade
+      rev: "1.25.0"
       hooks:
-      -   id: pyupgrade
-          exclude: ^migrations/
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.2.0
+      -   id: django-upgrade
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.11.12
     hooks:
-      - id: flake8
-  - repo: https://github.com/ambv/black
-    rev: 25.1.0
+      - id: ruff
+        args: [--fix]  # Optional: automatically fix problems on commit
+  - repo: https://github.com/Riverside-Healthcare/djlint
+    rev: v1.36.4
     hooks:
-      - id: black
-        exclude: ^migrations/
-  - repo: https://github.com/pycqa/isort
-    rev: 6.0.1
-    hooks:
-      - id: isort
-        exclude: ^migrations/
+      - id: djlint
+        name: djlint lint
+        args: ["--profile=django", "--reformat", "--indent=2", "--max-line-length=100"]
+        types: [html]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:

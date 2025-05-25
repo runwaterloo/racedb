@@ -44,7 +44,7 @@
     <tr>
       <td class="text-center">{{ series.year }}</td>
       {% for event in series.events %}
-      <td class="text-center"><a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}">{{ event }}</a></td>
+      <td class="text-center"><a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/">{{ event }}</a></td>
       {% endfor %}
     </tr>
     {% endfor %}
@@ -106,7 +106,7 @@
       <td class="text-center">{{ result.year }}</td>
       {% endif %}
       {% if result.member_slug %}
-      <td><a href="/member/{{ result.member_slug}}">{{ result.athlete }}</a></td>
+      <td><a href="/member/{{ result.member_slug}}/">{{ result.athlete }}</a></td>
       {% else %}
       <td>{{ result.athlete }}</td>
       {% endif %}

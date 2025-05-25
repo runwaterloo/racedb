@@ -9,8 +9,8 @@ import flickrapi  # https://github.com/sybrenstuvel/flickrapi
 
 from racedb import secrets
 
-from .shared import shared
 from .models import Event, Phototag, Result, Rwmember
+from .shared import shared
 
 flickrapi.set_log_level(logging.WARNING)
 logger = logging.getLogger(__name__)

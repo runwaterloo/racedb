@@ -1,13 +1,7 @@
-from collections import namedtuple
-from operator import attrgetter
-from urllib import parse
-
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django.shortcuts import render
 
-from .shared import shared
-from .models import Durelay, Event
+from .models import Durelay
 
 
 def index(request, year):

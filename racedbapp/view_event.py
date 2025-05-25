@@ -1,18 +1,30 @@
 from collections import defaultdict, namedtuple
-from datetime import timedelta
 from operator import attrgetter
 from urllib import parse
-import simplejson
+
 from django.db.models import Count, Max, Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 
 import racedbapp.shared.endurrun
-from racedbapp.tasks import send_email_task
 from racedbapp.shared.types import Choice, Filter
+from racedbapp.tasks import send_email_task
 
+from .models import (
+    Config,
+    Distance,
+    Durelay,
+    Endurteam,
+    Event,
+    Phototag,
+    Prime,
+    Relay,
+    Result,
+    Series,
+    Split,
+    Wheelchairresult,
+)
 from .shared import shared, utils
-from .models import *
 
 named_split = namedtuple("ns", ["split_num", "split_time"])
 
@@ -26,21 +38,14 @@ def index(request, year, race_slug, distance_slug):
         event = Event.objects.select_related().get(
             race__slug=race_slug, distance__slug=distance_slug, date__icontains=year
         )
-    except:
-        raise Http404("Matching event not found".format(division))
+    except Exception:
+        raise Http404("Matching event not found")
     races = shared.create_samerace_list(event.race)
     team_categories = shared.get_team_categories(event)
     hill_dict = get_hill_dict(event)
     relay_dict = get_relay_dict(event)
-    dbphototags = list(
-        Phototag.objects.filter(event=event).values_list("tag", flat=True)
-    )
+    dbphototags = list(Phototag.objects.filter(event=event).values_list("tag", flat=True))
     phototags = [x for x in dbphototags if x.isdigit()]
-    event_flickr_str = (
-        "{}-{}-{}".format(event.date.year, event.race.slug, event.distance.slug)
-        .replace("-", "")
-        .replace("_", "")
-    )
     wheelchair_results = Wheelchairresult.objects.filter(event=event)
     pages = shared.get_pages(
         event,
@@ -57,9 +62,7 @@ def index(request, year, race_slug, distance_slug):
         all_results = Result.objects.select_related().filter(event=event)
         hasage = all_results.hasage(event)
     event_splits = Split.objects.filter(event=event)
-    all_split_microseconds = {
-        x.split_time.microseconds for x in event_splits if x.split_time
-    }
+    all_split_microseconds = {x.split_time.microseconds for x in event_splits if x.split_time}
     splits_have_microseconds = [x for x in all_split_microseconds if x != 0]
     results, max_splits = get_results(
         event,
@@ -113,20 +116,8 @@ def index(request, year, race_slug, distance_slug):
         "series": series,
         "race_logo_slug": race_logo_slug,
     }
-    # Determine the format to return based on the query string
-    if "format" in qstring:
-        if qstring["format"][0] == "json":
-            data = simplejson.dumps(context, default=str, indent=2, sort_keys=True)
-            if "callback" in qstring:
-                callback = qstring["callback"][0]
-                data = "{}({});".format(callback, data)
-                return HttpResponse(data, "text/javascript")
-            else:
-                return HttpResponse(data, "application/json")
-        else:
-            return HttpResponse("Unknown format in URL", "text/html")
-    else:
-        return render(request, "racedbapp/event.html", context)
+    html = render(request, "racedbapp/event.html", context).content.decode("utf-8")
+    return HttpResponse(html)
 
 
 def get_event_json(event):
@@ -155,9 +146,7 @@ def get_event_json(event):
         .replace("_", "")
     )
     this_race = named_race(event.race.name, event.race.shortname, event.race.slug)
-    this_distance = named_distance(
-        event.distance.name, event.distance.km, event.distance.slug
-    )
+    this_distance = named_distance(event.distance.name, event.distance.km, event.distance.slug)
     event_json = named_event(
         event.id,
         event.city,
@@ -187,17 +176,13 @@ def get_masters(event, division):
         masters.append({"category__name": "Masters", "count": masters_count})
         female_masters_count = all_masters.filter(gender="F").count()
         if female_masters_count > 0:
-            masters.append(
-                {"category__name": "F-Masters", "count": female_masters_count}
-            )
+            masters.append({"category__name": "F-Masters", "count": female_masters_count})
         male_masters_count = all_masters.filter(gender="M").count()
         if male_masters_count > 0:
             masters.append({"category__name": "M-Masters", "count": male_masters_count})
         nonbinary_masters_count = all_masters.filter(gender="NB").count()
         if nonbinary_masters_count > 0:
-            masters.append(
-                {"category__name": "NB-Masters", "count": nonbinary_masters_count}
-            )
+            masters.append({"category__name": "NB-Masters", "count": nonbinary_masters_count})
     return masters
 
 
@@ -243,9 +228,7 @@ def get_divisions(event, category):
         if category in ("Female", "Male"):
             all_results = all_results.filter(gender=category[0])
         elif category == "Masters":
-            all_results = all_results.filter(
-                Q(category__ismasters=True) | Q(age__gte=40)
-            )
+            all_results = all_results.filter(Q(category__ismasters=True) | Q(age__gte=40))
         elif category == "F-Masters":
             all_results = all_results.filter(gender="F").filter(
                 Q(category__ismasters=True) | Q(age__gte=40)
@@ -326,11 +309,7 @@ def get_distance_filter(event, races):
     if event.race.slug == "baden-road-races":
         durelaycount = Durelay.objects.filter(year=event.date.year).count()
         if durelaycount > 0:
-            choices.append(
-                Choice(
-                    "Sprint Duathlon Relay", "/durelay/{}/".format(event.date.year)
-                )
-            )
+            choices.append(Choice("Sprint Duathlon Relay", "/durelay/{}/".format(event.date.year)))
     distance_filter = Filter(event.distance.name, choices)
     return distance_filter
 
@@ -349,11 +328,7 @@ def get_year_filter(event, races):
         year = d[0].year
         if year == event.date.year:
             continue
-        choices.append(
-            Choice(
-                year, "/event/{}/{}/{}/".format(year, d[1], event.distance.slug)
-            )
-        )
+        choices.append(Choice(year, "/event/{}/{}/{}/".format(year, d[1], event.distance.slug)))
     year_filter = Filter(event.date.year, choices)
     return year_filter
 
@@ -375,14 +350,14 @@ def get_category_filter(event, category, division):
             category_count = [
                 x["count"] for x in all_categories if x["category__name"] == category
             ][0]
-        except:
+        except Exception:
             category_count = 0
         current = "{} ({})".format(category, category_count)
         if division == "All":
             choices.append(
                 Choice(
                     "All ({})".format(total_count),
-                   "/event/{}/{}/{}/".format(
+                    "/event/{}/{}/{}/".format(
                         event.date.year, event.race.slug, event.distance.slug
                     ),
                 )
@@ -438,9 +413,7 @@ def get_division_filter(event, division, category):
             if category in ("Female", "Male"):
                 all_results = all_results.filter(gender=category[0])
             elif category == "Masters":
-                all_results = all_results.filter(
-                    Q(category__ismasters=True) | Q(age__gte=40)
-                )
+                all_results = all_results.filter(Q(category__ismasters=True) | Q(age__gte=40))
             elif category == "F-Masters":
                 all_results = all_results.filter(gender="F").filter(
                     Q(category__ismasters=True) | Q(age__gte=40)
@@ -461,10 +434,8 @@ def get_division_filter(event, division, category):
             current = "All ({})".format(total_count)
         else:
             try:
-                division_count = [
-                    x["count"] for x in divisions if x["division"] == division
-                ][0]
-            except:
+                division_count = [x["count"] for x in divisions if x["division"] == division][0]
+            except Exception:
                 division_count = 0
             current = "{} ({})".format(division, division_count)
             if category == "All":
@@ -562,7 +533,6 @@ def get_results(
     gender_place_dict = defaultdict(int)
     masters_place_dict = defaultdict(int)
     category_place_dict = {}
-    haschiptime = False
     splits_list = event_splits.values_list("place", "split_num", "split_time")
     splits_dict = {(a, b): c for a, b, c in splits_list}
     max_splits = False
@@ -616,7 +586,7 @@ def get_results(
                 chiptime = r.chiptime
         try:
             prime = hill_dict[r.place]
-        except:
+        except Exception:
             prime = ""
         else:
             prime = get_short_time(prime)
@@ -628,18 +598,14 @@ def get_results(
         if event_splits:
             for i in range(1, max_splits + 1):
                 try:
-                    splits.append(
-                        named_split(i, get_short_time(splits_dict[(r.place, i)]))
-                    )
-                except:
+                    splits.append(named_split(i, get_short_time(splits_dict[(r.place, i)])))
+                except Exception:
                     splits.append(named_split(i, ""))
         member = shared.get_member(r, membership)
         hasphotos = False
         youtube_url = False
         if has_youtube and r.place < 990000:
-            video_position_seconds = (
-                guntime.total_seconds() - event.youtube_offset_seconds
-            )
+            video_position_seconds = guntime.total_seconds() - event.youtube_offset_seconds
             if video_position_seconds >= 0:
                 if video_position_seconds > LEAD_TIME_SECONDS:
                     video_position_seconds -= LEAD_TIME_SECONDS
@@ -648,9 +614,7 @@ def get_results(
                 minutes = int(video_position_seconds // 60)
                 seconds = int(video_position_seconds % 60)
                 video_position = "{}m{}s".format(minutes, seconds)
-                youtube_url = "https://youtu.be/{}?t={}".format(
-                    event.youtube_id, video_position
-                )
+                youtube_url = "https://youtu.be/{}?t={}".format(event.youtube_id, video_position)
                 # set youtube_url back to false if past end of video
                 if youtube_duration_seconds:
                     if video_position_seconds >= youtube_duration_seconds:
@@ -659,7 +623,7 @@ def get_results(
             hasphotos = True
         try:
             isrwpb = r.isrwpb
-        except:
+        except Exception:
             isrwpb = False
         results.append(
             named_result(
@@ -697,45 +661,31 @@ def get_endurrun_relay_dict(event):
     if event.race.slug == "endurrun":
         if event.distance.slug == "half-marathon":
             endurrun_relay_dict = dict(
-                Endurteam.objects.filter(year=event.date.year).values_list(
-                    "st1", "name"
-                )
+                Endurteam.objects.filter(year=event.date.year).values_list("st1", "name")
             )
         if event.distance.slug == "15-km":
             endurrun_relay_dict = dict(
-                Endurteam.objects.filter(year=event.date.year).values_list(
-                    "st2", "name"
-                )
+                Endurteam.objects.filter(year=event.date.year).values_list("st2", "name")
             )
         if event.distance.slug == "30-km":
             endurrun_relay_dict = dict(
-                Endurteam.objects.filter(year=event.date.year).values_list(
-                    "st3", "name"
-                )
+                Endurteam.objects.filter(year=event.date.year).values_list("st3", "name")
             )
         if event.distance.slug == "10-mi":
             endurrun_relay_dict = dict(
-                Endurteam.objects.filter(year=event.date.year).values_list(
-                    "st4", "name"
-                )
+                Endurteam.objects.filter(year=event.date.year).values_list("st4", "name")
             )
         if event.distance.slug == "25_6-km":
             endurrun_relay_dict = dict(
-                Endurteam.objects.filter(year=event.date.year).values_list(
-                    "st5", "name"
-                )
+                Endurteam.objects.filter(year=event.date.year).values_list("st5", "name")
             )
         if event.distance.slug == "10-km":
             endurrun_relay_dict = dict(
-                Endurteam.objects.filter(year=event.date.year).values_list(
-                    "st6", "name"
-                )
+                Endurteam.objects.filter(year=event.date.year).values_list("st6", "name")
             )
         if event.distance.slug == "marathon":
             endurrun_relay_dict = dict(
-                Endurteam.objects.filter(year=event.date.year).values_list(
-                    "st7", "name"
-                )
+                Endurteam.objects.filter(year=event.date.year).values_list("st7", "name")
             )
     return endurrun_relay_dict
 

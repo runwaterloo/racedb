@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "charliermarsh.ruff",        // Ruff linter/formatter
+    "ms-python.python",          // Official Python extension
+    "ms-python.vscode-pylance",  // Python language server (type checking, IntelliSense)
+    "ryanluker.vscode-coverage-gutters", // Coverage Gutters for code coverage visualization
+    "esbenp.prettier-vscode",    // Prettier for code and JSON formatting
+    "monosans.djlint",           // Djlint for Django/Jinja template linting/formatting
+    "batisteo.vscode-django"     // Django template language support (syntax, snippets, etc.)
+  ]
+}
