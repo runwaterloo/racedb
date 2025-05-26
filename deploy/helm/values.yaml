@@ -12,6 +12,7 @@ racedb:
   workerClass: gthread
 
 replicaCount: 1
+webReplicaCount: 1
 
 image:
   repository: registry.gitlab.com/sl70176/racedb
