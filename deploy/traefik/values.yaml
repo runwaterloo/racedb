@@ -4,6 +4,8 @@ additionalArguments:
   - --certificatesresolvers.le.acme.storage=/data/acme.json
   - --entryPoints.web.forwardedHeaders.insecure=true
   - --entryPoints.websecure.forwardedHeaders.insecure=true
+  - --metrics.prometheus=true
+  - --metrics.prometheus.entryPoint=metrics
 env:
   - name: CF_DNS_API_TOKEN
     valueFrom:
@@ -22,3 +24,7 @@ persistence:
 service:
   spec:
     externalTrafficPolicy: Local
+ports:
+  metrics:
+    expose:
+      default: true
