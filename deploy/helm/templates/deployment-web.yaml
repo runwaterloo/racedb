@@ -62,7 +62,7 @@ spec:
             "/bin/sh",
             "-c",
             {{- if eq .Values.racedb.settings "prod" }}
-            "gunicorn racedb.wsgi -b 0.0.0.0:8000",
+            "gunicorn racedb.wsgi --worker-class {{ .Values.racedb.workerClass }} --workers {{ .Values.racedb.workers}} --threads {{ .Values.racedb.threads }} -b 0.0.0.0:8000",
             {{- else }}
             "./manage.py runserver 0.0.0.0:8000",
             {{- end }}

@@ -7,6 +7,9 @@ racedb:
   celeryWorkers: 1
   # mount local filesytem into container
   mountLocal: false
+  threads: 1
+  workers: 1
+  workerClass: gthread
 
 replicaCount: 1
 
