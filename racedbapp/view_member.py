@@ -4,7 +4,7 @@ from operator import attrgetter
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from . import view_boost
 from .shared import utils
@@ -18,10 +18,7 @@ named_badge = namedtuple("nb", ["name", "date", "image", "url"])
 
 
 def index(request, member_slug):
-    try:
-        member = Rwmember.objects.get(slug=member_slug, active=True)
-    except:
-        return redirect("/members/")
+    member = get_object_or_404(Rwmember, slug=member_slug, active=True)
     results, total_distance = get_memberresults(member)
     fivek_pb = get_pb(results, "5-km")
     tenk_pb = get_pb(results, "10-km")
