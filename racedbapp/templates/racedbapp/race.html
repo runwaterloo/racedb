@@ -42,7 +42,7 @@
           </li>
         {% else %}
           <li>
-            <a href="/race/{{ race.slug }}/{{ d.slug }}">{{ d.name }}</a>
+            <a href="/race/{{ race.slug }}/{{ d.slug }}/">{{ d.name }}</a>
           </li>
         {% endif %}
       {% endfor %}
@@ -56,7 +56,7 @@
           {% if distance.slug == 'combined' %}
             <option value="/endurrace/{{ year.year }}/">{{ year.year }}</option>
           {% else %}
-            <option value="/event/{{ year.year }}/{{ year.race_slug }}/{{ distance.slug }}">{{ year.year }}</option>
+            <option value="/event/{{ year.year }}/{{ year.race_slug }}/{{ distance.slug }}/">{{ year.year }}</option>
           {% endif %}
         {% endfor %}
       </select>
@@ -135,7 +135,7 @@
             </td>
           {% else %}
             <td>
-              <a href="/event/{{ record.year }}/{{ record.race_slug }}/{{ distance.slug }}">{{ record.year }}
+              <a href="/event/{{ record.year }}/{{ record.race_slug }}/{{ distance.slug }}/">{{ record.year }}
               </td>
             {% endif %}
             {% if race.slug == 'endurrun' %}
@@ -245,7 +245,7 @@
           {% else %}
             <td>
               <a target="_blank"
-                 href="/event/{{ result.year }}/{{ result.race_slug }}/{{ distance.slug }}">{{ result.year }}</a>
+                 href="/event/{{ result.year }}/{{ result.race_slug }}/{{ distance.slug }}/">{{ result.year }}</a>
             </td>
           {% endif %}
           {% if race.slug == 'endurrun' %}

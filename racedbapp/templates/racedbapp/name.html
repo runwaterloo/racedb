@@ -32,7 +32,7 @@
    </tr>
   {% for result in results %}
    <tr>
-    <td><a href="/event/{{ result.event.date.year }}/{{ result.event.race.slug }}/{{ result.event.distance.slug }}">{{ result.event.date.year }} {{ result.event.race.shortname }} {{result.event.distance.name }}</a></td>
+    <td><a href="/event/{{ result.event.date.year }}/{{ result.event.race.slug }}/{{ result.event.distance.slug }}/">{{ result.event.date.year }} {{ result.event.race.shortname }} {{result.event.distance.name }}</a></td>
     {% if result.member %}
       <td><a href="/member/{{ result.member.slug }}/">{{ result.athlete }}</a></td>
     {% else %}

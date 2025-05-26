@@ -61,7 +61,7 @@
           <td>{{ r.result.athlete }}</td>
         {% endif %}
         <td><a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.date.year }}</a></td>
-        <td><a href="/race/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}">{{ r.result.event.race.name }}</a></td>
+        <td><a href="/race/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.race.name }}</a></td>
         {% if r.result.age %}
         <td class="text-center">{{ r.result.age }}</td>
         {% else %}
@@ -111,12 +111,12 @@
         <td class="text-center">{{ forloop.counter }}</td>
         <td class="text-center">{{ r.result.guntime|round_up }}</td>
         {% if r.member %}
-          <td><a href="/member/{{ r.member.slug }}">{{ r.result.athlete }}</a></td>
+          <td><a href="/member/{{ r.member.slug }}/">{{ r.result.athlete }}</a></td>
         {% else %}
           <td>{{ r.result.athlete }}</td>
         {% endif %}
         <td><a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.date.year }}</a></td>
-        <td><a href="/race/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}">{{ r.result.event.race.name }}</a></td>
+        <td><a href="/race/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.race.name }}</a></td>
         {% if r.result.age %}
         <td class="text-center">{{ r.result.age }}</td>
         {% else %}

@@ -3,7 +3,7 @@
 {% load racedbapp_extras %}
 {% block content %}
 <h4>
-  <a href="/race/{{ race.slug }}/{{ distance.slug }}" target="_blank">{{ distance.name }} Records - {{ race.name }}</a>
+  <a href="/race/{{ race.slug }}/{{ distance.slug }}/" target="_blank">{{ distance.name }} Records - {{ race.name }}</a>
 </h4>
 <table class="table table-condensed">
   <tr class="info">
@@ -27,7 +27,7 @@
     {% if distance.slug == 'combined' %}
         <td><a target="_blank" href="/endurrace/{{ record.year }}/">{{ record.year }}</a></td>
     {% else %}
-        <td><a target="_blank" href="/event/{{ record.year }}/{{ record.race_slug }}/{{ distance.slug }}">{{ record.year }}</a></td>
+        <td><a target="_blank" href="/event/{{ record.year }}/{{ record.race_slug }}/{{ distance.slug }}/">{{ record.year }}</a></td>
     {% endif %}
     <td>{{ record.category }}</td>
     <td>{{ record.guntime|get_pace:distance.km }}</td>

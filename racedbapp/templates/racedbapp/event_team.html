@@ -27,7 +27,7 @@
     {% if category|stringformat:"s" == team_category|stringformat:"s" %}
       <a href="#" class="btn btn-primary btn-sm disabled">{{ category }}</a>
     {% else %}
-      <a href="/event/{{ event_parameters }}/team/{{ category.slug }}" class="btn btn-primary btn-sm">{{ category }}</a>
+      <a href="/event/{{ event_parameters }}/team/{{ category.slug }}/" class="btn btn-primary btn-sm">{{ category }}</a>
     {% endif %}
    {% endfor %}
    </p>
