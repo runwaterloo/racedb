@@ -33,6 +33,14 @@ alloy:
         }
       }
 
+      prometheus.scrape "traefik" {
+        targets = [
+          {"__address__" = "traefik:9100", "instance" = "traefik"},
+        ]
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+        scrape_interval = "60s"
+      }
+
       // discovery.kubernetes allows you to find scrape targets from Kubernetes resources.
       // It watches cluster state and ensures targets are continually synced with what is currently running in your cluster.
       discovery.kubernetes "pod" {
