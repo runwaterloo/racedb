@@ -12,7 +12,8 @@ export PERSONAL_ACCESS_TOKEN=<gitlab_personal_access_token>
 export GIT_USER=<git_user>
 export GIT_EMAIL=<git_password>
 export GRAFANA_API_TOKEN=<grafana_api_token>
-export GRAFANA_USERNAME=<grafana_username>
+export LOKI_USERNAME=<loki_username>
+export PROM_USERNAME=<prom_username>
 set -x
 apt-get update
 apt-get -y install awscli git jq
