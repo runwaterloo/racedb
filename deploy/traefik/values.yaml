@@ -17,6 +17,10 @@ logs:
   access:
     enabled: true
     format: json
+    fields:
+      headers:
+        names:
+          Referer: keep
 persistence:
   existingClaim: traefik-pvc
   enabled: true
