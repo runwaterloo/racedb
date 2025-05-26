@@ -14,6 +14,7 @@ installCRDs: true
 logs:
   access:
     enabled: true
+    format: json
 persistence:
   existingClaim: traefik-pvc
   enabled: true
