@@ -19,7 +19,21 @@ alloy:
 
       prometheus.scrape "unix" {
         targets = prometheus.exporter.unix.localhost.targets
+        forward_to = [prometheus.relabel.set_labels.receiver]
+      }
+
+      prometheus.relabel "set_labels" {
         forward_to = [prometheus.remote_write.grafanacloud.receiver]
+        rule {
+          action = "replace"
+          target_label = "instance"
+          replacement = "rrw"
+        }
+        rule {
+          action = "replace"
+          target_label = "nodename"
+          replacement = "rrw"
+        }
       }
 
       loki.write "grafanacloud" {
