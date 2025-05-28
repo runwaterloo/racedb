@@ -12,8 +12,11 @@ def truncate_time(time):
     return trunc_time
 
 def get_race_logo_slug(slug):
-    file_path = Path(f"racedbapp/static/race_logos/{slug}.png")
-    if not file_path.is_file():
+    if isinstance(slug, str):
+        file_path = Path(f"racedbapp/static/race_logos/{slug}.png")
+        if not file_path.is_file():
+            slug = "rw-race-logo"
+    else:
         slug = "rw-race-logo"
     return slug
 
