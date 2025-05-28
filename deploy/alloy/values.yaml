@@ -34,6 +34,15 @@ alloy:
         }
       }
 
+      prometheus.exporter.mysql "rds" {
+        data_source_name = "MYSQL_DATA_SOURCE_NAME"
+      }
+
+      prometheus.scrape "mysql" {
+        targets    = prometheus.exporter.mysql.rds.targets
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+      }
+
       loki.write "grafanacloud" {
         endpoint {
           url = "https://logs-prod-018.grafana.net/loki/api/v1/push"

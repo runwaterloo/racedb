@@ -14,6 +14,7 @@ export GIT_EMAIL=<git_password>
 export GRAFANA_API_TOKEN=<grafana_api_token>
 export LOKI_USERNAME=<loki_username>
 export PROM_USERNAME=<prom_username>
+export MYSQL_DATA_SOURCE_NAME=<mysql_data_source_name>
 set -x
 apt-get update
 apt-get -y install awscli git jq
