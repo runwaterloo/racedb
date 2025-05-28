@@ -34,6 +34,18 @@ alloy:
         }
       }
 
+      prometheus.exporter.process "processes" {
+        procfs_path = "/host/proc"
+        matcher {
+          comm = ["alloy", "celery", "containerd", "containerd-shim", "coredns", "gunicorn", "k3s-server", "metrics-server", "node_exporter", "prometheus-conf", "python", "redis-server", "traefik"]
+        }
+       }
+
+      prometheus.scrape "processes" {
+        targets    = prometheus.exporter.process.processes.targets
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+      }
+
       prometheus.exporter.mysql "rds" {
         data_source_name = "MYSQL_DATA_SOURCE_NAME"
       }
