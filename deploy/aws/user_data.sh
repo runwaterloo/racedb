@@ -21,7 +21,7 @@ echo $PERSONAL_ACCESS_TOKEN > /root/PERSONAL_ACCESS_TOKEN
 
 set -x
 apt-get update
-apt-get -y install awscli cron git jq
+apt-get -y install awscli cron git jq vim
 aws s3 cp --recursive s3://${BUCKET}/ubuntu-ssh/ /home/ubuntu/.ssh/
 chown -R ubuntu:ubuntu /home/ubuntu/.ssh
 chmod 600 /home/ubuntu/.ssh/authorized_keys /home/ubuntu/.ssh/id_rsa

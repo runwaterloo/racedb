@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# log output to systemd journal
+exec > >(systemd-cat -t racedb-upgrade) 2>&1
+
 # prevent concurrent execution
 exec 200>/var/lock/racedb-deploy.lock
 flock -n 200 || { echo "Another deployment is already running. Exiting."; exit 1; }
