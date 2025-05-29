@@ -68,7 +68,6 @@ sed -i "s|MYSQL_DATA_SOURCE_NAME|${MYSQL_DATA_SOURCE_NAME}|g" values.yaml
 ./deploy.sh
 
 # add upgrade cron job
-CRON_CMD="* * * * * /srv/racedb/deploy/helm/upgrade.sh"
-(crontab -l 2>/dev/null | grep -F -q "$CRON_CMD") || (crontab -l 2>/dev/null; echo "$CRON_CMD") | crontab -
+echo '* * * * * /srv/racedb/deploy/helm/upgrade.sh' | crontab -
 
 echo "SUCCESS: deploy_rrw.sh completed"
