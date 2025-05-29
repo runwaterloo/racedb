@@ -37,7 +37,6 @@ default:
     - apk add curl git tzdata -f
     - export VERSION=$(TZ=America/Toronto date +'%y.%-m.%-d%H%M%S')
     - sh deploy/gitlab/tag.sh
-    - sh deploy/gitlab/deploy.sh
   retry: 1
 
 update-dependencies:

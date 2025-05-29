@@ -16,9 +16,12 @@ export LOKI_USERNAME=<loki_username>
 export PROM_USERNAME=<prom_username>
 export MYSQL_DATA_SOURCE_NAME=<mysql_data_source_name>
 echo "<slack_gitlab_webhook>" > /root/SLACK_GITLAB_WEBHOOK
+echo $PROJECT_ID > /root/PROJECT_ID
+echo $PERSONAL_ACCESS_TOKEN > /root/PERSONAL_ACCESS_TOKEN
+
 set -x
 apt-get update
-apt-get -y install awscli git jq
+apt-get -y install awscli cron git jq
 aws s3 cp --recursive s3://${BUCKET}/ubuntu-ssh/ /home/ubuntu/.ssh/
 chown -R ubuntu:ubuntu /home/ubuntu/.ssh
 chmod 600 /home/ubuntu/.ssh/authorized_keys /home/ubuntu/.ssh/id_rsa
