@@ -19,7 +19,6 @@ from django.contrib import admin
 from django.urls import re_path
 
 urlpatterns = [
-    path('', include('django_prometheus.urls')),
     re_path(r"^admin/", admin.site.urls),
     re_path(r"^", include("racedbapp.urls")),
 ]
