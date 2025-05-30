@@ -76,8 +76,6 @@ spec:
               value: racedb.settings.{{ .Values.racedb.settings }}
             - name: WEBHOST
               value: {{ .Values.ingress.host }}
-            - name: PROMETHEUS_METRICS_EXPORT_PORT
-              value: "8001"
           volumeMounts:
             {{- if .Values.racedb.mountLocal }}
             - mountPath: /srv/racedb
