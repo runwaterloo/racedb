@@ -195,7 +195,7 @@ alloy:
           action        = "replace"
           source_labels = ["__meta_kubernetes_pod_ip"]
           target_label  = "__address__" 
-          replacement   = "$1:8000"
+          replacement   = "$1:8001"
         }
       }
       prometheus.scrape "racedb_web" {
