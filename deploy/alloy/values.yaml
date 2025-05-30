@@ -2,27 +2,74 @@ alloy:
   configMap:
     create: true
     content: |
+    
+      ///////////////////////////////////////////////////////////////////////////////////
+      // Prometheus writer
       prometheus.remote_write "grafanacloud" {
         endpoint {
           url = "https://prometheus-prod-32-prod-ca-east-0.grafana.net/api/prom/push"
 
           basic_auth {
-            username = "PROM_USERNAME"
-            password = "GRAFANA_API_TOKEN"
+            username = sys.env("PROM_USERNAME")
+            password = sys.env("GRAFANA_API_TOKEN")
           }
         } 
       }
+      ///////////////////////////////////////////////////////////////////////////////////
 
+      ///////////////////////////////////////////////////////////////////////////////////
+      // Loki writer
+      loki.write "grafanacloud" {
+        endpoint {
+          url = "https://logs-prod-018.grafana.net/loki/api/v1/push"
+
+          basic_auth {
+            username = sys.env("LOKI_USERNAME")
+            password = sys.env("GRAFANA_API_TOKEN")
+          }
+        }
+      }
+      ///////////////////////////////////////////////////////////////////////////////////
+
+      ///////////////////////////////////////////////////////////////////////////////////
+      // Node exporter scraper
+      prometheus.scrape "unix" {
+        targets = prometheus.exporter.unix.localhost.targets
+        forward_to = [prometheus.relabel.set_labels.receiver]
+      }
+      ///////////////////////////////////////////////////////////////////////////////////
+      
+      ///////////////////////////////////////////////////////////////////////////////////
+      // Process scraper
+      prometheus.scrape "processes" {
+        targets    = prometheus.exporter.process.processes.targets
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+      }  
+      ///////////////////////////////////////////////////////////////////////////////////
+      
+      ///////////////////////////////////////////////////////////////////////////////////
+      // Traefik scraper
+      prometheus.scrape "traefik" {
+        targets = [
+          {"__address__" = "traefik:9100", "instance" = "traefik"},
+        ]
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+      }
+      ///////////////////////////////////////////////////////////////////////////////////
+      
+      ///////////////////////////////////////////////////////////////////////////////////
+      // MySQL scraper
+      prometheus.scrape "mysql" {
+        targets    = prometheus.exporter.mysql.rds.targets
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+      }
+      ///////////////////////////////////////////////////////////////////////////////////
+      
       prometheus.exporter.unix "localhost" {
         procfs_path = "/host/proc"
         sysfs_path  = "/host/sys"
         rootfs_path = "/rootfs"
         include_exporter_metrics = true
-      }
-
-      prometheus.scrape "unix" {
-        targets = prometheus.exporter.unix.localhost.targets
-        forward_to = [prometheus.relabel.set_labels.receiver]
       }
 
       prometheus.relabel "set_labels" {
@@ -41,38 +88,10 @@ alloy:
         }
        }
 
-      prometheus.scrape "processes" {
-        targets    = prometheus.exporter.process.processes.targets
-        forward_to = [prometheus.remote_write.grafanacloud.receiver]
-      }
-
       prometheus.exporter.mysql "rds" {
-        data_source_name = "MYSQL_DATA_SOURCE_NAME"
+        data_source_name = sys.env("MYSQL_DATA_SOURCE_NAME")
       }
 
-      prometheus.scrape "mysql" {
-        targets    = prometheus.exporter.mysql.rds.targets
-        forward_to = [prometheus.remote_write.grafanacloud.receiver]
-      }
-
-      loki.write "grafanacloud" {
-        endpoint {
-          url = "https://logs-prod-018.grafana.net/loki/api/v1/push"
-
-          basic_auth {
-            username = "LOKI_USERNAME"
-            password = "GRAFANA_API_TOKEN"
-          }
-        }
-      }
-
-      prometheus.scrape "traefik" {
-        targets = [
-          {"__address__" = "traefik:9100", "instance" = "traefik"},
-        ]
-        forward_to = [prometheus.remote_write.grafanacloud.receiver]
-        scrape_interval = "60s"
-      }
 
       // discovery.kubernetes allows you to find scrape targets from Kubernetes resources.
       // It watches cluster state and ensures targets are continually synced with what is currently running in your cluster.
@@ -161,6 +180,35 @@ alloy:
         forward_to = [loki.write.grafanacloud.receiver]
       }
 
+      ///////////////////////////////////////////////////////////////////////////////////
+      // Discover and scrape django metrics from rrw web pods
+      discovery.relabel "rrw_web_pods" {
+      targets = discovery.kubernetes.pod.targets
+        // Keep only pods with correct labels
+        rule {
+          action        = "keep"
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance", "__meta_kubernetes_pod_label_app_kubernetes_io_task"]
+          regex         = "racedb;web"
+        }
+        // Set instance label to pod IP
+        rule {
+          action        = "replace"
+          source_labels = ["__meta_kubernetes_pod_ip"]
+          target_label  = "__address__" 
+          replacement   = "$1:8000"
+        }
+      }
+      prometheus.scrape "racedb_web" {
+        targets    = discovery.relabel.rrw_web_pods.output
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+        job_name = "django-prometheus"
+      }
+      ////////////////////////////////////////////////////////////////////////////////////
+
+
+  envFrom:
+    - secretRef:
+        name: alloy-secrets
   mounts:
     extra:
       - name: proc

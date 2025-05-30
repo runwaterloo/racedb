@@ -69,6 +69,16 @@ if [ "$CURRENT_TAG" != "$LATEST_TAG" ]; then
     exit 1
   fi
 
+  echo "Deploying alloy"
+  cd ../alloy
+  if ! ./deploy.sh ; then
+
+    curl -sS -X POST -H 'Content-type: application/json' \
+      --data "{\"text\":\"❌ Failed to deploy *Alloy*" \
+      "$SLACK_GITLAB_WEBHOOK"
+    exit 1
+  fi
+
 else
   echo "Already running the latest tag: $CURRENT_TAG"
 fi
