@@ -8,7 +8,7 @@ racedb:
   # mount local filesytem into container
   mountLocal: false
   threads: 1
-  workers: 1
+  workers: 1  # prometheus reporting issues with more than 1 worker
   workerClass: gthread
 
 replicaCount: 1

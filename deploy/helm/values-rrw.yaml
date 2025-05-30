@@ -1,7 +1,6 @@
 racedb:
   settings: prod
   threads: 4
-  workers: 2
 ingress:
   catchall:
     enabled: true
