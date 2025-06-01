@@ -15,6 +15,6 @@ docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:${VERSION}
 docker push $CI_REGISTRY_IMAGE:${VERSION}
 
 # tag branch
-git tag v${VERSION}
+git tag ${VERSION}
 git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git
 git push --tags

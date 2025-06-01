@@ -23,7 +23,7 @@ echo "Current tag: $CURRENT_TAG"
 
 # get latest tag from gitlab
 LATEST_TAG=$(curl -sS --header "PRIVATE-TOKEN: ${PERSONAL_ACCESS_TOKEN}" \
-  "https://gitlab.com/api/v4/projects/${PROJECT_ID}/repository/tags/" | jq -r '.[0].name' | awk -F"v" '{print $2}')
+  "https://gitlab.com/api/v4/projects/${PROJECT_ID}/repository/tags/" | jq -r '.[0].name')
 echo "Latest tag: ${LATEST_TAG}"
 
 # upgrade if needed

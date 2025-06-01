@@ -39,13 +39,13 @@ LATEST_TAG=`curl --header "PRIVATE-TOKEN: ${PERSONAL_ACCESS_TOKEN}" "https://git
 
 # deploy rrw with helm
 cd ../helm
-helm upgrade --install racedb . --values values-rrw.yaml --set image.tag="${LATEST_TAG:1}"
+helm upgrade --install racedb . --values values-rrw.yaml --set image.tag="${LATEST_TAG}"
 
 # deploy dev environment
 apt-get -y install python3-pip
 ./restore-secrets-racedb.sh
 rm -rf .kube
-helm upgrade --install racedbdev . --values values-racedb.yaml --set image.tag="${LATEST_TAG:1}"
+helm upgrade --install racedbdev . --values values-racedb.yaml --set image.tag="${LATEST_TAG}"
 
 # setup git
 runuser -l ubuntu -c "git config --global user.name \"${GIT_USER}\""

@@ -31,12 +31,11 @@ default:
   script:
     - sh deploy/gitlab/build.sh
     - sh deploy/gitlab/test.sh
-    - docker cp racedb-web:/tmp/report.xml report.xml
     # exit here if not main, and [push dev] not present
     - if [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ] && ! echo "$CI_COMMIT_MESSAGE" | grep -q '\[push dev\]'; then exit 0; fi
     - sh deploy/gitlab/push.sh
     - apk add curl git tzdata -f
-    - export VERSION=$(TZ=America/Toronto date +'%y.%-m.%-d%H%M%S')
+    - export VERSION="1.$(TZ=America/Toronto date +'%y%m%d').$CI_PIPELINE_IID"
     - sh deploy/gitlab/tag.sh
   retry: 1
   artifacts:
