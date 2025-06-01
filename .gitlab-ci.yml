@@ -18,7 +18,9 @@ default:
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
-    - if: '$CI_COMMIT_TAG !~ /^v.*/'
+    - if: '$CI_COMMIT_TAG'    # tag exists (non-empty)
+      when: never
+    - when: always
   image: docker:latest
   services:
     - docker:dind
