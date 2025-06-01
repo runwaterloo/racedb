@@ -205,6 +205,17 @@ alloy:
       }
       ////////////////////////////////////////////////////////////////////////////////////
 
+      ///////////////////////////////////////////////////////////////////////////////////
+      // Send the underlying host journal logs to Loki
+      loki.source.journal "host_journal" {
+        path        = "/host/journal"
+        format_as_json = true
+        labels = {
+          job      = "systemd-journal",
+        }
+        forward_to = [loki.write.grafanacloud.receiver]
+      }
+      ///////////////////////////////////////////////////////////////////////////////////
 
   envFrom:
     - secretRef:
@@ -220,6 +231,9 @@ alloy:
       - name: root
         mountPath: /rootfs
         readOnly: true
+      - name: journal
+        mountPath: /host/journal
+        readOnly: true
 
 controller:
   volumes:
@@ -233,3 +247,6 @@ controller:
       - name: root
         hostPath:
           path: /
+      - name: journal
+        hostPath:
+          path: /var/log/journal
