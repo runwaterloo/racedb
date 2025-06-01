@@ -24,12 +24,8 @@ urlpatterns = [
     re_path(r"^", include("racedbapp.urls")),
 ]
 
-# workaround for eror:
-# 'djdt' is not a registered namespace
-# introduced in debug_toolbar 1.6
-if "debug_toolbar" in settings.INSTALLED_APPS:
+if settings.DEBUG:
     import debug_toolbar
-
     urlpatterns += [
-        re_path(r"^__debug__/", include(debug_toolbar.urls)),
+        path('__debug__/', include(debug_toolbar.urls)),
     ]

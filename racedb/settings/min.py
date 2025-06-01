@@ -1,6 +1,24 @@
 from .base import *
+import os
 
 DEBUG = True
+ENABLE_DEBUG_TOOLBAR = True
+
+if os.getenv("DISABLE_DEBUG_TOOLBAR", "false") == "true":
+    ENABLE_DEBUG_TOOLBAR = False
+
+if ENABLE_DEBUG_TOOLBAR:
+    INSTALLED_APPS += (
+        "debug_toolbar",
+    )
+    MIDDLEWARE = [
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+    ] + MIDDLEWARE
+    DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK": lambda request: True,
+    }
+    INTERNAL_IPS = ["127.0.0.1", "::1"]
+
 
 STATIC_URL = "/static/"
 STATIC_ROOT = "/static/"

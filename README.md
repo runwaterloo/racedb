@@ -3,6 +3,33 @@
 
 ## Quick Start
 
+These instructions are based on Docker Desktop in WSL/Ubuntu. Adapt as needed.
+
+### Install dependencies
+
+```
+sudo apt update;
+sudo apt install \
+  build-essential \
+  default-libmysqlclient-dev \
+  pkg-config \
+  python3-dev
+```
+
+### Create venv
+
+```
+python3 -m venv .venv;
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Run unit tests
+
+```
+pytest
+```
+
 ### Start application
 
 ```
@@ -26,10 +53,13 @@ docker-compose -f deploy/local/docker-compose-mount-local.yml up --build
 deploy/local/loaddata.sh
 ```
 
-### Run tests
+### Run integration tests
 
 ```
-docker exec racedb-web ./manage.py test --settings=racedb.settings.min
+docker exec racedb-web sh -c \
+ 'DJANGO_SETTINGS_MODULE=racedb.settings.min \
+  DISABLE_DEBUG_TOOLBAR=true \
+  pytest racedbapp/tests/integration_tests.py -v'
 ```
 
 ## Configurable Options
@@ -59,7 +89,7 @@ endurrun_same_name: Bob Smith;Bobby Smith;Robert Smith
 
 ### Pipelines
 
-Add `[push dev]` to a commit message to trigger a pipeline job that pushes the build to https://racedb.runwaterloo.com
+Add `[push dev]` to a commit message to trigger a pipeline job that pushes the build to https://racedb.runwaterloo.com (this functionality not currently working)
 
 Add `[skip ci]` to a commit message to prevent CI from running at all
 
