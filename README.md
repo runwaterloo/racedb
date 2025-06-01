@@ -5,6 +5,12 @@
 
 These instructions are based on Docker Desktop in WSL/Ubuntu. Adapt as needed.
 
+### Copy sample secrets
+
+```
+cp racedb/secrets.py.sample racedb/secrets.py
+```
+
 ### Install dependencies
 
 ```

@@ -17,7 +17,7 @@ from .models import Config, Endurathlete, Event, Rwmember, Rwmembertag
 
 logger = logging.getLogger(__name__)
 
-WEBHOST = os.environ["WEBHOST"]
+WEBHOST = os.getenv("WEBHOST", "http://localhost")
 
 
 @shared_task
@@ -68,9 +68,7 @@ def update_featured_member_id():
         .exclude(photourl="")
         .order_by("?")
     )
-    featured_member_tag_config = Config.objects.filter(
-        name="featured_member_tag"
-    ).first()
+    featured_member_tag_config = Config.objects.filter(name="featured_member_tag").first()
     if featured_member_tag_config is not None:
         featured_member_tag = Rwmembertag.objects.filter(
             name=featured_member_tag_config.value
@@ -78,9 +76,7 @@ def update_featured_member_id():
         if featured_member_tag is not None:
             members = members.filter(tags=featured_member_tag)
     member = False
-    featured_member_id_next = Config.objects.filter(
-        name="featured_member_id_next"
-    ).first()
+    featured_member_id_next = Config.objects.filter(name="featured_member_id_next").first()
     if featured_member_id_next is not None:
         if featured_member_id_next.value.isdigit():
             if int(featured_member_id_next.value) in [x.id for x in members]:
@@ -108,16 +104,12 @@ def update_featured_member_id():
     current_featured_member.value = member.id
     current_featured_member.save()
     featured_member_history.append(member.id)
-    trim_featured_member_history = featured_member_history[
-        -featured_member_no_repeat_days:
-    ]
+    trim_featured_member_history = featured_member_history[-featured_member_no_repeat_days:]
     str_featured_member_history = ",".join(str(v) for v in trim_featured_member_history)
     db_featured_member_history.value = str_featured_member_history
     db_featured_member_history.save()
     logger.info(
-        "Changed featured member from {} to {}".format(
-            current_featured_member_id, member.id
-        )
+        "Changed featured member from {} to {}".format(current_featured_member_id, member.id)
     )
 
 
@@ -126,12 +118,8 @@ def slack_featured_member():
     if WEBHOST == "results.runwaterloo.com":
         featured_member_id = int(Config.objects.get(name="featured_member_id").value)
         featured_member = Rwmember.objects.get(id=featured_member_id)
-        logger.info(
-            "Sending featured member ({}) to Slack".format(featured_member.name)
-        )
-        slack_message(
-            "racedbapp/featured_member.slack", {"featured_member": featured_member}
-        )
+        logger.info("Sending featured member ({}) to Slack".format(featured_member.name))
+        slack_message("racedbapp/featured_member.slack", {"featured_member": featured_member})
     else:
         logger.info("Not production host, skipping slack_featured_member")
 
@@ -154,9 +142,7 @@ def slack_missing_urls():
         today = date.today()
         endday = today + timedelta(days=days)
         upcoming_events = (
-            Event.objects.filter(date__gt=today)
-            .filter(date__lte=endday)
-            .order_by("date")
+            Event.objects.filter(date__gt=today).filter(date__lte=endday).order_by("date")
         )
         for event in upcoming_events:
             if "http" not in event.resultsurl:
