@@ -19,7 +19,8 @@ docker exec racedb-web ./manage.py migrate --noinput --settings=racedb.settings.
 docker exec racedb-web sh -c \
  'DJANGO_SETTINGS_MODULE=racedb.settings.min \
   DISABLE_DEBUG_TOOLBAR=true \
-  pytest -v -m "integration or not integration"'
+  pytest -v -m "integration or not integration" \
+  --junitxml=/tmp/report.xml'
 
 # Copy the test report to the host machine
 docker cp racedb-web:/tmp/report.xml report.xml
