@@ -15,12 +15,11 @@ docker exec racedb-web ./manage.py migrate --noinput --settings=racedb.settings.
 # Load data
 /bin/ash deploy/local/loaddata.sh
 
-# Execute unit and integration tests inside the Docker container
-docker exec racedb-web sh -c '
-  export DJANGO_SETTINGS_MODULE=racedb.settings.min &&
-  export DISABLE_DEBUG_TOOLBAR=true &&
-  pytest racedbapp/tests/test_*.py racedbapp/tests/integration_tests.py -v --junitxml=/tmp/report.xml
-'
+# Execute all tests (unit and integration) inside the Docker container
+docker exec racedb-web sh -c \
+ 'DJANGO_SETTINGS_MODULE=racedb.settings.min \
+  DISABLE_DEBUG_TOOLBAR=true \
+  pytest -v -m "integration or not integration"'
 
 # Copy the test report to the host machine
 docker cp racedb-web:/tmp/report.xml report.xml

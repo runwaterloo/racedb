@@ -1,4 +1,4 @@
-test_urls = (
+[
     "/",
     "/admin/login/",
     "/boost/2024/",
@@ -7,9 +7,9 @@ test_urls = (
     "/endurrun/ultimate/",
     "/event/2023/fall-classic/5-km/",
     "/events/",
-    "/medals/2023/fall-classic/5-km/",  # standard
-    "/medals/2023/waterloo-classic/10-km/",  # classic-5oa
+    "/medals/2023/fall-classic/5-km/",
+    "/medals/2023/waterloo-classic/10-km/",
     "/members/",
     "/multiwins/",
-    "/race/fall-classic/5-km/",
-)
+    "/race/fall-classic/5-km/"
+]

@@ -59,13 +59,13 @@ docker-compose -f deploy/local/docker-compose-mount-local.yml up --build
 deploy/local/loaddata.sh
 ```
 
-### Run integration tests
+### Run all tests (unit and integration)
 
 ```
 docker exec racedb-web sh -c \
  'DJANGO_SETTINGS_MODULE=racedb.settings.min \
   DISABLE_DEBUG_TOOLBAR=true \
-  pytest racedbapp/tests/integration_tests.py -v'
+  pytest -v -m "integration or not integration"'
 ```
 
 ## Configurable Options
