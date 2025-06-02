@@ -19,12 +19,19 @@ cd /srv/racedb/deploy/helm
 
 # pre-flight check
 SHA_FILE="/tmp/latest_pipeline_sha.txt"
+
 read latest_pipeline_status latest_pipeline_sha < <(curl -s --header "PRIVATE-TOKEN: ${PERSONAL_ACCESS_TOKEN}" \
   "https://gitlab.com/api/v4/projects/${PROJECT_ID}/pipelines?per_page=1" | jq -r '.[0] | "\(.status) \(.sha[0:8])"')
+
 if [ -f "$SHA_FILE" ] && grep -q "$latest_pipeline_sha" "$SHA_FILE"; then
-  echo "INFO: SHA hasn't changed since last run ($latest_pipeline_sha), exiting."
-  exit 0
-elif [ "$latest_pipeline_status" = "success" ]; then
+  # Check if SHA_FILE is older than 5 minutes (300 seconds)
+  if [ "$(find "$SHA_FILE" -mmin +5)" ]; then
+    echo "INFO: SHA hasn't changed and file is older than 5 minutes ($latest_pipeline_sha), exiting."
+    exit 0
+  fi
+fi
+
+if [ "$latest_pipeline_status" = "success" ]; then
   echo "$latest_pipeline_sha" > "$SHA_FILE"
 fi
 
@@ -55,7 +62,7 @@ if [ "$CURRENT_TAG" != "$LATEST_TAG" ]; then
   if helm upgrade --install racedb . \
     --values values-rrw.yaml \
     --set image.tag="${LATEST_TAG}" \
-    --wait --timeout 5m; then
+    --wait --timeout 10m; then
 
     curl -sS -X POST -H 'Content-type: application/json' \
       --data "{\"text\":\"✅ Successfully upgraded *RRW* to *${LATEST_TAG}*\"}" \
@@ -74,7 +81,7 @@ if [ "$CURRENT_TAG" != "$LATEST_TAG" ]; then
   if ! helm upgrade --install racedbdev . \
     --values values-racedb.yaml \
     --set image.tag="${LATEST_TAG}" \
-    --wait --timeout 5m; then
+    --wait --timeout 10m; then
 
     curl -sS -X POST -H 'Content-type: application/json' \
       --data "{\"text\":\"❌ Failed to upgrade *racedbdev* to *${LATEST_TAG}*\"}" \
@@ -118,7 +125,7 @@ else
       if ! helm upgrade --install racedbdev . \
         --values values-racedb.yaml \
         --set image.tag="${latest_pipeline_sha}" \
-        --wait --timeout 5m; then
+        --wait --timeout 10m; then
 
         curl -sS -X POST -H 'Content-type: application/json' \
           --data "{\"text\":\"❌ Failed to upgrade *racedbdev* to *${latest_pipeline_sha}*\"}" \
