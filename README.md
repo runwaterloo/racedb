@@ -1,19 +1,25 @@
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![Python](https://img.shields.io/badge/python-3.13+-blue?logo=python&logoColor=white)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-blueviolet)](https://docs.astral.sh/ruff/)
+[![CI](https://gitlab.com/sl70176/racedb/badges/main/pipeline.svg)](https://gitlab.com/sl70176/racedb/-/pipelines)
 # RaceDB
 
-## Quick Start
+## Getting started
 
 These instructions are based on Docker Desktop in WSL/Ubuntu. Adapt as needed.
 
-### Copy sample secrets
+### Clone the repo
+   ```bash
+   git clone git@gitlab.com:sl70176/racedb.git;
+   cd racedb
+   ```
 
-```
+### Copy sample secrets
+```bash
 cp racedb/secrets.py.sample racedb/secrets.py
 ```
 
 ### Install dependencies
-
-```
+```bash
 sudo apt update;
 sudo apt install \
   build-essential \
@@ -22,17 +28,20 @@ sudo apt install \
   python3-dev
 ```
 
-### Create venv
-
-```
+###  Setup virtual environmenet
+```bash
 python3 -m venv .venv;
-source .venv/bin/activate
+source .venv/bin/activate;
 pip install -r requirements.txt
 ```
 
-### Run unit tests
-
+### Setup pre-commit hooks
+```bash
+pre-commit install
 ```
+
+### Run unit tests
+```bash
 pytest
 ```
 
@@ -68,6 +77,14 @@ docker exec racedb-web sh -c \
   pytest -v -m "integration or not integration"'
 ```
 
+## Developer Info
+
+### Pipelines
+
+Add `[push dev]` to a commit message to trigger a pipeline job that pushes the build to https://racedb.runwaterloo.com
+
+Add `[skip ci]` to a commit message to prevent CI from running at all
+
 ## Configurable Options
 The following options can be configured in Configs in the Django admin site.
 
@@ -89,17 +106,3 @@ endurrun_same_name: Bob Smith;Bobby Smith;Robert Smith
 **featured_member_tag**: Restrict featured member to ones with this tag.
 
 **homepage_upcoming_exclude_events**: Comma-separated list of events to exclude from homepage Upcoming Events if they would have appeared.
-
-
-## Misc Developer Info
-
-### Pipelines
-
-Add `[push dev]` to a commit message to trigger a pipeline job that pushes the build to https://racedb.runwaterloo.com (this functionality not currently working)
-
-Add `[skip ci]` to a commit message to prevent CI from running at all
-
-### Formatting and linting
-
-- black
-- flake8

@@ -1,4 +1,7 @@
 [tool.ruff]
+exclude = [
+    "racedbapp/migrations",
+]
 extend-select = ["I"]
-line-length = 100
 fix = true
+line-length = 100
