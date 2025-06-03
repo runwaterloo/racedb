@@ -1,4 +1,4 @@
-celery==5.5.2
+celery==5.5.3
 Django==5.0.7
 djangorestframework==3.16.0
 django-debug-toolbar==5.2.0
@@ -12,7 +12,7 @@ gunicorn==23.0.0
 gspread==6.2.1
 mysqlclient==2.2.7
 pre-commit==4.2.0
-pytest==8.3.5
+pytest==8.4.0
 pytest-django==4.11.1
 PyYAML==6.0.2
 pytz==2025.2
