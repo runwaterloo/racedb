@@ -13,19 +13,21 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
+
 from django.conf import settings
 from django.conf.urls import include
 from django.contrib import admin
-from django.urls import re_path, path
+from django.urls import path, re_path
 
 urlpatterns = [
-    path('', include('django_prometheus.urls')),
+    path("", include("django_prometheus.urls")),
     re_path(r"^admin/", admin.site.urls),
     re_path(r"^", include("racedbapp.urls")),
 ]
 
 if settings.DEBUG:
     import debug_toolbar
+
     urlpatterns += [
-        path('__debug__/', include(debug_toolbar.urls)),
+        path("__debug__/", include(debug_toolbar.urls)),
     ]
