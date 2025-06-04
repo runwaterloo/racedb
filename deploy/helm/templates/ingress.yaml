@@ -56,7 +56,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: "Host(`{{ .Values.ingress.apiHost}}`) && (PathPrefix(`/v1`) || PathPrefix(`/admin`))"
+    - match: "Host(`{{ .Values.ingress.apiHost}}`) && (PathPrefix(`/v1`) || PathPrefix(`/admin`) || PathPrefix(`/static`))"
       kind: Rule
       services:
         - name: "{{ include "racedb.fullname" . }}"
