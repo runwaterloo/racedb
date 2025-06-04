@@ -7,7 +7,7 @@ https://simpleisbetterthancomplex.com/tips/2017/07/03/django-tip-20-working-with
 
 import os
 
-from racedb import celery_beats, secrets
+from racedb import secrets
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = secrets.SECRET_KEY
@@ -25,6 +25,7 @@ INSTALLED_APPS = (
     "racedbapp",
     "django_slack",
     "django_s3_storage",
+    "rest_framework",
 )
 
 MIDDLEWARE = [
@@ -35,7 +36,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    'django_prometheus.middleware.PrometheusAfterMiddleware',
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "racedb.urls"
@@ -80,8 +81,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "[%(asctime)s] %(levelname)s "
-            "[%(name)s:%(lineno)s] %(message)s",
+            "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
         "simple": {"format": "%(levelname)s %(message)s"},
@@ -106,3 +106,10 @@ SLACK_USERNAME = "giskard"
 SLACK_ICON_EMOJI = ":robot_face:"
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ]
+}

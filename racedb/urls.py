@@ -22,6 +22,7 @@ from django.urls import path, re_path
 urlpatterns = [
     path("", include("django_prometheus.urls")),
     re_path(r"^admin/", admin.site.urls),
+    path("v1/", include("racedbapp.api_urls")),
     re_path(r"^", include("racedbapp.urls")),
 ]
 

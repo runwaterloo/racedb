@@ -1,4 +1,6 @@
-from .base import *
+from racedb import celery_beats
+
+from .base import *  # noqa
 
 DEBUG = True
 

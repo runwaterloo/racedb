@@ -1,5 +1,8 @@
-from .base import *
 import os
+
+from racedb import celery_beats
+
+from .base import *  # noqa
 
 DEBUG = True
 ENABLE_DEBUG_TOOLBAR = True
@@ -8,14 +11,12 @@ if os.getenv("DISABLE_DEBUG_TOOLBAR", "false") == "true":
     ENABLE_DEBUG_TOOLBAR = False
 
 if ENABLE_DEBUG_TOOLBAR:
-    INSTALLED_APPS += (
-        "debug_toolbar",
-    )
+    INSTALLED_APPS += ("debug_toolbar",)  # noqa
     MIDDLEWARE = [
         "debug_toolbar.middleware.DebugToolbarMiddleware",
-    ] + MIDDLEWARE
+    ] + MIDDLEWARE  # noqa
     DEBUG_TOOLBAR_CONFIG = {
-    "SHOW_TOOLBAR_CALLBACK": lambda request: True,
+        "SHOW_TOOLBAR_CALLBACK": lambda request: True,
     }
     INTERNAL_IPS = ["127.0.0.1", "::1"]
 
