@@ -24,4 +24,4 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_BEAT_SCHEDULE = celery_beats.CELERY_BEAT_SCHEDULE
 
-CSRF_TRUSTED_ORIGINS = ["https://racedb.runwaterloo.com"]
+CSRF_TRUSTED_ORIGINS = ["https://racedb.runwaterloo.com", "https://racedb-api.runwaterloo.com"]

@@ -5,4 +5,5 @@ ingress:
   catchall:
     enabled: true
   host: results.runwaterloo.com
+  apiHost: api.runwaterloo.com
 webReplicaCount: 2

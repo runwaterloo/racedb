@@ -6,3 +6,4 @@ ingress:
   catchall:
     enabled: false
   host: racedb.runwaterloo.com
+  apiHost: racedb-api.runwaterloo.com
