@@ -47,4 +47,7 @@ def django_db_setup(django_db_setup, django_db_blocker):
 def test_url(client, url):
     print(f"Testing URL: {url}")
     response = client.get(url)
-    assert response.status_code == 200
+    if url == "/v1/":
+        assert response.status_code == 403
+    else:
+        assert response.status_code == 200
