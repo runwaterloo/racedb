@@ -108,7 +108,7 @@ tag-commit:
       when: never
     - when: always
   script:
-    - source version.env
+    - . version.env
     - git tag ${VERSION}
     - git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git
     - git push --tags
