@@ -94,8 +94,7 @@ integration-test:
 
 tag-commit:
   stage: tag-commit
-  image: alpine/git:2.49.0
-  entrypoint: ["/bin/sh", "-c"]
+  image: alpine:3.22.0
   dependencies:
     - image-build-push-tag
   rules:
