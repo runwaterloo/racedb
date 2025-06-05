@@ -1,5 +1,8 @@
 from collections import namedtuple
 
+import pytest
+from rest_framework.test import APIClient
+
 from racedbapp.view_records import render_json_context
 
 
@@ -18,6 +21,16 @@ class DummyDistance:
         self.name = name
         self.slug = slug
         self.km = km
+
+
+@pytest.mark.django_db
+def test_records_endpoint(create_f_m_results):
+    client = APIClient()
+    race_slug = create_f_m_results["race"].slug
+    distance_slug = create_f_m_results["distance"].slug
+    url = f"/records/{race_slug}/{distance_slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
 
 
 def test_resolve_race(monkeypatch):

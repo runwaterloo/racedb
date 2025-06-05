@@ -34,6 +34,8 @@ LOGGING = {
     },
 }
 
+STATIC_URL = "/static/"
+
 # Copy all attributes from base except those overridden above
 for attr in dir(base):
     if not attr.startswith("_") and attr not in globals():

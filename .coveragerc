@@ -1,4 +1,6 @@
 [run]
 omit =
+    manage.py
+    racedb/*
     racedbapp/migrations/*
     racedbapp/tests/*

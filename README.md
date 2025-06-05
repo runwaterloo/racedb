@@ -41,7 +41,7 @@ pip install -r requirements.txt
 pre-commit install
 ```
 
-### Run unit tests
+### Run tests
 ```bash
 pytest
 ```
@@ -69,8 +69,9 @@ docker-compose -f deploy/local/docker-compose-mount-local.yml up --build
 deploy/local/loaddata.sh
 ```
 
-### Run all tests (unit and integration)
-
+### Run tests inside container
+This is closer to production, but slower. It uses a running MariaDB database instead of the
+in memory SQLite that is normally used for tests.
 ```
 docker exec racedb-web sh -c \
  'DJANGO_SETTINGS_MODULE=racedb.settings.min \

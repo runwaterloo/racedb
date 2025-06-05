@@ -8,11 +8,13 @@
 # NOTIFYKEY             (RRW key to accept notifications)
 
 stages:
-  - default
+  - parallel
+  - manual
   - update-dependencies
 
-default:
-  stage: default
+test:
+  stage: parallel
+  image: python:3.13.2-alpine3.21
   rules:
     - if: '$UPDATE_DEPENDENCIES == "true"'
       when: never
@@ -21,7 +23,43 @@ default:
     - if: '$CI_COMMIT_TAG'    # tag exists (non-empty)
       when: never
     - when: always
-  image: docker:latest
+  script:
+    - cp racedb/secrets.py.sample racedb/secrets.py
+    - grep -v '^mysqlclient' requirements.txt > requirements-test.txt
+    - pip install --root-user-action=ignore -r requirements-test.txt
+    - pytest --junitxml=report.xml --cov=racedbapp --cov-report=term --cov-report=xml
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
+  artifacts:
+    reports:
+      junit: report.xml
+    expire_in: 1 week
+
+build-push-tag:
+  stage: parallel
+  image: docker:28.2.2
+  rules:
+    - if: '$UPDATE_DEPENDENCIES == "true"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_TAG'    # tag exists (non-empty)
+      when: never
+    - when: always
+  services:
+    - docker:dind
+  script:
+    - sh deploy/gitlab/build.sh
+    # exit here if not main, and [push dev] not present
+    - if [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ] && ! echo "$CI_COMMIT_MESSAGE" | grep -q '\[push dev\]'; then exit 0; fi
+    - sh deploy/gitlab/push.sh
+    - apk add curl git tzdata -f
+    - export VERSION="1.$(TZ=America/Toronto date +'%y%m%d').$CI_PIPELINE_IID"
+    - sh deploy/gitlab/tag.sh
+
+integration-test:
+  stage: manual
+  when: manual
+  image: docker:28.2.2
   services:
     - docker:dind
     - mariadb:10.11.9
@@ -32,19 +70,13 @@ default:
     MYSQL_ROOT_PASSWORD: CHANGEME
   script:
     - sh deploy/gitlab/build.sh
-    - sh deploy/gitlab/test.sh
-    # exit here if not main, and [push dev] not present
-    - if [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ] && ! echo "$CI_COMMIT_MESSAGE" | grep -q '\[push dev\]'; then exit 0; fi
-    - sh deploy/gitlab/push.sh
-    - apk add curl git tzdata -f
-    - export VERSION="1.$(TZ=America/Toronto date +'%y%m%d').$CI_PIPELINE_IID"
-    - sh deploy/gitlab/tag.sh
-  retry: 1
+    - sh deploy/gitlab/integration-test.sh
   coverage: '/^TOTAL.*\s+(\d+\%)$/'
   artifacts:
     reports:
       junit: report.xml
     expire_in: 1 week
+
 
 update-dependencies:
   stage: update-dependencies
