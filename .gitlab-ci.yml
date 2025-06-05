@@ -8,16 +8,15 @@
 # NOTIFYKEY             (RRW key to accept notifications)
 
 stages:
-  - parallel
-  - integration
+  - default
+  - integration-test
+  - tag-commit
   - update-dependencies
 
 test:
-  stage: parallel
+  stage: default
   image: python:3.13.2-alpine3.21
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: never
     - if: '$UPDATE_DEPENDENCIES == "true"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -36,8 +35,8 @@ test:
       junit: report.xml
     expire_in: 1 week
 
-build-push-tag:
-  stage: parallel
+image-build-push-tag:
+  stage: default
   image: docker:28.2.2
   rules:
     - if: '$UPDATE_DEPENDENCIES == "true"'
@@ -50,19 +49,23 @@ build-push-tag:
   services:
     - docker:dind
   script:
-    - sh deploy/gitlab/build.sh
+    - export VERSION="1.$(TZ=America/Toronto date +'%y%m%d').$CI_PIPELINE_IID"
+    - echo "VERSION=$VERSION" >> version.env
+    - sh deploy/gitlab/build-image.sh
     # exit here if not main, and [push dev] not present
     - if [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ] && ! echo "$CI_COMMIT_MESSAGE" | grep -q '\[push dev\]'; then exit 0; fi
-    - sh deploy/gitlab/push.sh
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    # exit here if not main
+    - if [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then exit 0; fi
     - apk add curl git tzdata -f
-    - export VERSION="1.$(TZ=America/Toronto date +'%y%m%d').$CI_PIPELINE_IID"
-    - sh deploy/gitlab/tag.sh
+    - sh deploy/gitlab/tag-image.sh
+  artifacts:
+    paths:
+      - version.env
 
 integration-test:
-  stage: integration
+  stage: integration-test
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: never
     - if: '$UPDATE_DEPENDENCIES == "true"'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -89,6 +92,26 @@ integration-test:
       junit: report.xml
     expire_in: 1 week
 
+tag-commit:
+  stage: tag-commit
+  image: alpine/git:2.49.0
+  dependencies:
+    - image-build-push-tag
+  rules:
+    - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
+      when: never
+    - if: '$UPDATE_DEPENDENCIES == "true"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - when: always
+  script:
+    - source version.env
+    - git tag ${VERSION}
+    - git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git
+    - git push --tags
 
 update-dependencies:
   stage: update-dependencies
