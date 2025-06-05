@@ -1,5 +1,7 @@
 import importlib
 
+from django.db.backends.signals import connection_created
+
 base = importlib.import_module("racedb.settings.base")
 
 DEBUG = True
@@ -36,3 +38,13 @@ LOGGING = {
 for attr in dir(base):
     if not attr.startswith("_") and attr not in globals():
         globals()[attr] = getattr(base, attr)
+
+
+# Enable foreign key enforcement in SQLite during tests
+def activate_foreign_keys(sender, connection, **kwargs):
+    if connection.vendor == "sqlite":
+        cursor = connection.cursor()
+        cursor.execute("PRAGMA foreign_keys = ON;")
+
+
+connection_created.connect(activate_foreign_keys)
