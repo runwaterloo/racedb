@@ -16,7 +16,7 @@ test:
   stage: parallel
   image: python:3.13.2-alpine3.21
   rules:
-    - if: '$CI_COMMIT_BRANCH == "$CI_DEFAULT_BRANCH"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: never
     - if: '$UPDATE_DEPENDENCIES == "true"'
       when: never
@@ -61,7 +61,7 @@ build-push-tag:
 integration-test:
   stage: integration
   rules:
-    - if: '$CI_COMMIT_BRANCH == "$CI_DEFAULT_BRANCH"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: never
     - if: '$UPDATE_DEPENDENCIES == "true"'
       when: never
