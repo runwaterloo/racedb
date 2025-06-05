@@ -1,6 +1,18 @@
 from rest_framework import serializers
 
-from ...models import Result
+from ...models import Distance, Result
+
+
+class V1DistanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Distance
+        fields = [
+            "id",
+            "slug",
+            "name",
+            "km",
+            "showrecord",
+        ]
 
 
 class V1ResultSerializer(serializers.ModelSerializer):

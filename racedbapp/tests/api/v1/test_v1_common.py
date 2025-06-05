@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 
-ENDPOINTS = ["/v1/", "/v1/results/"]
+ENDPOINTS = ["/v1/", "/v1/results/", "/v1/distances/"]
 
 
 @pytest.mark.parametrize("endpoint", ENDPOINTS)

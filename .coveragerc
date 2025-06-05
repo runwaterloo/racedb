@@ -1,0 +1,4 @@
+[run]
+omit =
+    racedbapp/migrations/*
+    racedbapp/tests/*
