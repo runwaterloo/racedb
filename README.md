@@ -87,6 +87,8 @@ Add `[push dev]` to a commit message to trigger a pipeline job that pushes the b
 
 Add `[skip ci]` to a commit message to prevent CI from running at all
 
+Add `[full ci]` to a commit message to run the integration tests (in addition to usual testing)
+
 ## Configurable Options
 The following options can be configured in Configs in the Django admin site.
 
