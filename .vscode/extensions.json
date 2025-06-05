@@ -2,6 +2,7 @@
   "recommendations": [
     "charliermarsh.ruff",        // Ruff linter/formatter
     "ms-python.python",          // Official Python extension
-    "ms-python.vscode-pylance"   // Python language server (type checking, IntelliSense)
+    "ms-python.vscode-pylance",  // Python language server (type checking, IntelliSense)
+    "ryanluker.vscode-coverage-gutters" // Coverage Gutters for code coverage visualization
   ]
 }

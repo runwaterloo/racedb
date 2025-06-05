@@ -20,7 +20,11 @@ docker exec racedb-web sh -c \
  'DJANGO_SETTINGS_MODULE=racedb.settings.min \
   DISABLE_DEBUG_TOOLBAR=true \
   pytest -v -m "integration or not integration" \
-  --junitxml=/tmp/report.xml'
+  --junitxml=/tmp/report.xml \
+  --cov=racedbapp \
+  --cov-report=term \
+  --cov-report=xml'
 
-# Copy the test report to the host machine
+# Copy the test reports to the host machine
 docker cp racedb-web:/tmp/report.xml report.xml
+docker cp racedb-web:/srv/racedb/coverage.xml coverage.xml

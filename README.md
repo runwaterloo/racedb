@@ -1,6 +1,7 @@
 ![Python](https://img.shields.io/badge/python-3.13+-blue?logo=python&logoColor=white)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-blueviolet)](https://docs.astral.sh/ruff/)
 [![CI](https://gitlab.com/sl70176/racedb/badges/main/pipeline.svg)](https://gitlab.com/sl70176/racedb/-/pipelines)
+![coverage](https://gitlab.com/sl70176/racedb/badges/main/coverage.svg)
 # RaceDB
 
 ## Getting started
