@@ -50,7 +50,7 @@ image-build-push-tag:
     - docker:dind
   script:
     - export VERSION="1.$(TZ=America/Toronto date +'%y%m%d').$CI_PIPELINE_IID"
-    - echo "VERSION=$VERSION" >> version.env
+    - echo "export VERSION=$VERSION" >> version.env
     - sh deploy/gitlab/build-image.sh
     # exit here if not main, and [push dev] not present
     - if [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ] && ! echo "$CI_COMMIT_MESSAGE" | grep -q '\[push dev\]'; then exit 0; fi
@@ -95,6 +95,7 @@ integration-test:
 tag-commit:
   stage: tag-commit
   image: alpine/git:2.49.0
+  entrypoint: ["/bin/sh", "-c"]
   dependencies:
     - image-build-push-tag
   rules:
@@ -108,7 +109,7 @@ tag-commit:
       when: never
     - when: always
   script:
-    - . version.env
+    - source version.env
     - git tag ${VERSION}
     - git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git
     - git push --tags
