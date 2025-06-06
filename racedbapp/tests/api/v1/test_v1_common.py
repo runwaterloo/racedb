@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.test import APIClient
 
-ENDPOINTS = ["/v1/", "/v1/results/", "/v1/distances/"]
+ENDPOINTS = ["/v1/", "/v1/results/", "/v1/distances/", "/v1/races/"]
 
 
 @pytest.mark.parametrize("endpoint", ENDPOINTS)

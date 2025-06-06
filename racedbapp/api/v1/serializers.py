@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ...models import Distance, Result
+from ...models import Distance, Race, Result
 
 
 class V1DistanceSerializer(serializers.ModelSerializer):
@@ -12,6 +12,17 @@ class V1DistanceSerializer(serializers.ModelSerializer):
             "name",
             "km",
             "showrecord",
+        ]
+
+
+class V1RaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Race
+        fields = [
+            "id",
+            "name",
+            "shortname",
+            "slug",
         ]
 
 
