@@ -3,8 +3,6 @@ from collections import namedtuple
 import pytest
 from rest_framework.test import APIClient
 
-from racedbapp.view_records import render_json_context
-
 
 # Mocks for Django ORM objects and shared.get_race_records
 class DummyRace:
@@ -24,7 +22,25 @@ class DummyDistance:
 
 
 @pytest.mark.django_db
-def test_records_endpoint(create_f_m_results):
+def test_records_endpoint_race_not_found(create_f_m_results):
+    client = APIClient()
+    distance_slug = create_f_m_results["distance"].slug
+    url = f"/records/fake-race/{distance_slug}/"
+    response = client.get(url)
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_records_endpoint_distance_not_found(create_f_m_results):
+    client = APIClient()
+    race_slug = create_f_m_results["race"].slug
+    url = f"/records/{race_slug}/fake-distance/"
+    response = client.get(url)
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_records_endpoint_success(create_f_m_results):
     client = APIClient()
     race_slug = create_f_m_results["race"].slug
     distance_slug = create_f_m_results["distance"].slug
@@ -93,15 +109,3 @@ def test_build_context(monkeypatch):
     assert ctx["team_records"] == ["team"]
     assert ctx["hill_records"] == ["hill"]
     assert ctx["nomenu"] is True
-
-
-def test_render_json_context():
-    ctx = {"a": 1}
-    data, ctype = render_json_context(ctx)
-    assert ctype == "application/json"
-    assert '"a": 1' in data
-    # Test JSONP
-    data, ctype = render_json_context(ctx, callback="cb")
-    assert ctype == "text/javascript"
-    assert data.startswith("cb(")
-    assert data.endswith(");")

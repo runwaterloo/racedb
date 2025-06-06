@@ -1,8 +1,6 @@
-import urllib
 from collections import namedtuple
 
-import simplejson
-from django.http import HttpResponse
+from django.http import Http404
 from django.shortcuts import render
 
 from .models import Distance, Race
@@ -15,8 +13,6 @@ def index(request, race_slug, distance_slug):
     Determines the race and distance, builds the context, and returns either
     an HTML page or JSON/JSONP response depending on the query string.
     """
-    # Parse query string parameters from the request
-    qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
 
     # Resolve the race and distance objects from slugs
     race = resolve_race(race_slug)
@@ -25,39 +21,37 @@ def index(request, race_slug, distance_slug):
     # Build the context dictionary for the template or JSON
     context = build_context(race, distance)
 
-    # Return JSON/JSONP if requested, otherwise render the HTML template
-    if "format" in qstring:
-        if qstring["format"][0] == "json":
-            # Support JSONP if 'callback' is present
-            callback = qstring.get("callback", [None])[0]
-            data, content_type = render_json_context(context, callback)
-            return HttpResponse(data, content_type)
-        else:
-            return HttpResponse("Unknown format in URL", "text/html")
-    else:
-        return render(request, "racedbapp/records.html", context)
+    # Return the response
+    return render(request, "racedbapp/records.html", context)
 
 
 def resolve_race(race_slug):
     """
-    Look up a Race by slug and return a namedtuple with its key fields.
+    Look up a Race by slug and return a namedtuple with its key fields. Return 404
+    if not found.
     """
-    rawrace = Race.objects.get(slug=race_slug)
+    try:
+        rawrace = Race.objects.get(slug=race_slug)
+    except Race.DoesNotExist:
+        raise Http404(f"Race with slug '{race_slug}' not found.")
     namedrace = namedtuple("nr", ["id", "name", "shortname", "slug"])
     return namedrace(rawrace.id, rawrace.name, rawrace.shortname, rawrace.slug)
 
 
 def resolve_distance(distance_slug):
     """
-    Look up a Distance by slug and return a namedtuple with its key fields.
-    Special case: if slug is 'combined', return a hardcoded Combined distance.
+    Look up a Distance by slug and return a namedtuple with its key fields. Return 404
+    if not found. Special case: if slug is 'combined', return a hardcoded Combined distance.
     """
     nameddistance = namedtuple("nd", ["id", "name", "slug", "km"])
     if distance_slug == "combined":
         # Combined is a special pseudo-distance
         return nameddistance(0, "Combined", distance_slug, 13)
     else:
-        rawdistance = Distance.objects.get(slug=distance_slug)
+        try:
+            rawdistance = Distance.objects.get(slug=distance_slug)
+        except Distance.DoesNotExist:
+            raise Http404(f"Distance with slug '{distance_slug}' not found.")
         return nameddistance(rawdistance.id, rawdistance.name, rawdistance.slug, rawdistance.km)
 
 
@@ -75,16 +69,3 @@ def build_context(race, distance):
         "hill_records": hill_records,
         "nomenu": True,  # Used by the template to hide the menu
     }
-
-
-def render_json_context(context, callback=None):
-    """
-    Serialize the context dictionary to JSON or JSONP if a callback is provided.
-    Returns a tuple of (data, content_type).
-    """
-    data = simplejson.dumps(context, default=str, indent=4, sort_keys=True)
-    if callback:
-        # JSONP support: wrap in callback function
-        return "{}({});".format(callback, data), "text/javascript"
-    else:
-        return data, "application/json"
