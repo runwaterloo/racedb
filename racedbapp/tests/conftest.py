@@ -1,8 +1,30 @@
 import datetime
 
 import pytest
+from django.contrib.auth.models import User
+from rest_framework.test import APIClient
 
 from racedbapp.models import Category, Distance, Event, Race, Result
+
+
+@pytest.fixture
+def test_user(db):
+    username = "apitestuser"
+    password = "testpass123"
+    user = User.objects.create_user(username=username, password=password)
+    return user, username, password
+
+
+@pytest.fixture
+def authenticated_client(db, test_user):
+    _user, username, password = test_user
+    client = APIClient()
+    client.login(username=username, password=password)
+    csrf_token = client.cookies.get("csrftoken")
+    headers = {}
+    if csrf_token:
+        headers["HTTP_X_CSRFTOKEN"] = csrf_token.value
+    return client, headers
 
 
 @pytest.fixture

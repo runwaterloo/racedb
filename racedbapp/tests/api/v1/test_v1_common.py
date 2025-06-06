@@ -1,5 +1,4 @@
 import pytest
-from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 
 ENDPOINTS = ["/v1/", "/v1/results/", "/v1/distances/"]
@@ -24,10 +23,8 @@ def test_endpoint_requires_authentication(endpoint):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("endpoint", ENDPOINTS)
-def test_endpoint_authenticated_session(endpoint):
-    username = "apitestuser"
-    password = "testpass123"
-    User.objects.create_user(username=username, password=password)
+def test_endpoint_authenticated_session(endpoint, test_user):
+    _user, username, password = test_user
     client = APIClient()
     client.login(username=username, password=password)
     csrf_token = client.cookies.get("csrftoken")
@@ -43,8 +40,8 @@ def test_endpoint_authenticated_session(endpoint):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("endpoint", ENDPOINTS)
-def test_endpoint_authenticated_token(endpoint):
-    user = User.objects.create_user(username="apitokenuser", password="testpass123")
+def test_endpoint_authenticated_token(endpoint, test_user):
+    user, _username, _password = test_user
     try:
         from rest_framework.authtoken.models import Token
     except ImportError:

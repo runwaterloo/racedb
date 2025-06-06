@@ -1,40 +1,6 @@
-import pytest
-from django.contrib.auth.models import User
-from rest_framework.test import APIClient
-
-from racedbapp.models import Category, Distance, Event, Race, Result
-
-
-@pytest.fixture
-def results_test_setup(db):
-    race = Race.objects.create(name="Test Race")
-    distance = Distance.objects.create(name="5K", km=5, slug="5k")
-    event = Event.objects.create(
-        race_id=race.id, distance_id=distance.id, date="2025-01-01", city="TestCity"
-    )
-    category = Category.objects.create(name="TestCat")
-    Result.objects.create(
-        event=event,
-        category=category,
-        athlete="Test Athlete",
-        gender="M",
-        city="TestCity",
-        place=1,
-    )
-    username = "apitestuser"
-    password = "testpass123"
-    User.objects.create_user(username=username, password=password)
-    client = APIClient()
-    client.login(username=username, password=password)
-    csrf_token = client.cookies.get("csrftoken")
-    headers = {}
-    if csrf_token:
-        headers["HTTP_X_CSRFTOKEN"] = csrf_token.value
-    return client, headers
-
-
-def test_results_list_returns_results(results_test_setup):
-    client, headers = results_test_setup
+def test_results_list_returns_results(authenticated_client, create_result):
+    client, headers = authenticated_client
+    create_result()
     response = client.get("/v1/results/", **headers)
     assert response.status_code == 200
     data = response.json()
@@ -43,8 +9,9 @@ def test_results_list_returns_results(results_test_setup):
     assert len(data["results"]) > 0, "Expected at least one result in the response"
 
 
-def test_results_list_fields(results_test_setup):
-    client, headers = results_test_setup
+def test_results_list_fields(authenticated_client, create_result):
+    client, headers = authenticated_client
+    create_result()
     response = client.get("/v1/results/", **headers)
     assert response.status_code == 200
     data = response.json()
@@ -78,48 +45,37 @@ def test_results_list_fields(results_test_setup):
     assert set(result.keys()) == expected_fields
 
 
-def test_results_filter_by_event(results_test_setup):
-    client, headers = results_test_setup
-    # Create a second event and result
-    race = Race.objects.create(name="Other Race", slug="other-race")
-    distance = Distance.objects.create(name="10K", km=10, slug="10k")
-    event2 = Event.objects.create(
-        race_id=race.id, distance_id=distance.id, date="2025-01-02", city="OtherCity"
-    )
-    category = Category.objects.create(name="OtherCat")
-    Result.objects.create(
-        event=event2,
-        category=category,
-        athlete="Other Athlete",
-        gender="F",
-        city="OtherCity",
-        place=2,
-    )
-    # Filter by the first event (should only return results for event_id=1)
-    response = client.get("/v1/results/?event=1", **headers)
+def test_results_filter_by_event(
+    authenticated_client, create_distance, create_race, create_event, create_category, create_result
+):
+    client, headers = authenticated_client
+    race = create_race()
+    distance1 = create_distance(name_suffix="first", km=1)
+    distance2 = create_distance(name_suffix="second", km=2)
+    event1 = create_event(distance=distance1, race=race, name_suffix="first")
+    event2 = create_event(distance=distance2, race=race, name_suffix="second")
+    category = create_category()
+    create_result(event=event1, category=category, place=1)
+    create_result(event=event2, category=category, place=2)
+    # Filter by the first event (should only return results for event1.id)
+    response = client.get(f"/v1/results/?event={event1.id}", **headers)
     data = response.json()
-    assert all(result["event"] == 1 for result in data["results"])
-    # Filter by the second event (should only return results for event_id=event2.id)
+    assert all(r["event"] == event1.id for r in data["results"])
+    # Filter by the second event (should only return results for event2.id)
     response = client.get(f"/v1/results/?event={event2.id}", **headers)
     data = response.json()
-    assert all(result["event"] == event2.id for result in data["results"])
+    assert all(r["event"] == event2.id for r in data["results"])
 
 
-def test_results_are_sorted_by_place_within_event(results_test_setup):
-    client, headers = results_test_setup
-    event = Result.objects.first().event
-    category = Category.objects.get(name="TestCat")
-    # Add multiple results with different places
-    Result.objects.create(
-        event=event, category=category, athlete="A", gender="M", city="TestCity", place=4
-    )
-    Result.objects.create(
-        event=event, category=category, athlete="B", gender="M", city="TestCity", place=3
-    )
-    Result.objects.create(
-        event=event, category=category, athlete="C", gender="M", city="TestCity", place=2
-    )
-    response = client.get("/v1/results/?event=1", **headers)
+def test_results_are_sorted_by_place_within_event(
+    authenticated_client, create_event, create_result
+):
+    client, headers = authenticated_client
+    event = create_event()
+    create_result(event=event, name_suffix="a", place=3)
+    create_result(event=event, name_suffix="b", place=2)
+    create_result(event=event, name_suffix="c", place=1)
+    response = client.get(f"/v1/results/?event={event.id}", **headers)
     data = response.json()
     places = [result["place"] for result in data["results"]]
     assert places == sorted(places), "Results are not sorted by place"
