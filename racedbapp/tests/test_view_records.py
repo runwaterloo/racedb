@@ -22,19 +22,19 @@ class DummyDistance:
 
 
 @pytest.mark.django_db
-def test_records_endpoint_race_not_found(create_f_m_results):
+def test_records_endpoint_race_not_found(create_distance):
     client = APIClient()
-    distance_slug = create_f_m_results["distance"].slug
-    url = f"/records/fake-race/{distance_slug}/"
+    distance = create_distance()
+    url = f"/records/fake-race/{distance.slug}/"
     response = client.get(url)
     assert response.status_code == 404
 
 
 @pytest.mark.django_db
-def test_records_endpoint_distance_not_found(create_f_m_results):
+def test_records_endpoint_distance_not_found(create_race):
     client = APIClient()
-    race_slug = create_f_m_results["race"].slug
-    url = f"/records/{race_slug}/fake-distance/"
+    race = create_race()
+    url = f"/records/{race.slug}/fake-distance/"
     response = client.get(url)
     assert response.status_code == 404
 
