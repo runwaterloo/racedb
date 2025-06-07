@@ -49,7 +49,10 @@ image-build-push-tag:
   services:
     - docker:dind
   script:
-    - export VERSION="1.$(TZ=America/Toronto date +'%y%m%d').$CI_PIPELINE_IID"
+    - export MAJOR=$((CI_PIPELINE_IID / 1000))
+    - export MINOR=$(TZ=America/Toronto date +'%y%m%d')
+    - export PATCH=$((CI_PIPELINE_IID % 1000))
+    - export VERSION="${MAJOR}.${MINOR}.${PATCH}"
     - echo "export VERSION=$VERSION" >> version.env
     - sh deploy/gitlab/build-image.sh
     # exit here if not main, and [push dev] not present
