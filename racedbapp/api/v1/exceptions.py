@@ -12,7 +12,7 @@ def custom_exception_handler(exc, context):
         else:
             login_url = "/admin/login/?next=/v1/"
         response.data = {
-            "detail": "You are not authorized to access this resource.",
+            "detail": "Unauthorized. Login or provide a valid token.",
             "login_url": login_url,
         }
     return response
