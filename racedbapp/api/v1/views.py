@@ -38,7 +38,10 @@ class V1ResultsViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         queryset = Result.objects.all()
-        event_id = self.request.query_params.get("event")
-        if event_id is not None:
-            queryset = queryset.filter(event_id=event_id).order_by("place")
-        return queryset
+        distance_id = self.kwargs.get("distance_pk") or self.kwargs.get("distance_id")
+        if distance_id is not None:
+            queryset = queryset.filter(event__distance_id=distance_id)
+        event_id = self.request.query_params.get("event")  # TODO: remove this
+        if event_id is not None:  # TODO: remove this
+            queryset = queryset.filter(event_id=event_id)  # TODO: remove this
+        return queryset.order_by("place")

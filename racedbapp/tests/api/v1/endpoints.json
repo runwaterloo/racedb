@@ -7,7 +7,11 @@
   {
     "url": "/v1/distances/",
     "factory": "create_distance",
-    "fields": ["id", "slug", "name", "km", "showrecord"]
+    "fields": ["id", "slug", "name", "km", "showrecord", "results_url"]
+  },
+  {
+    "url": "/v1/distances/1/results/",
+    "factory": "create_result"
   },
   {
     "url": "/v1/races/",

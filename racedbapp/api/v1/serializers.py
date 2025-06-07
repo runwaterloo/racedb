@@ -14,6 +14,8 @@ class V1CategorySerializer(serializers.ModelSerializer):
 
 
 class V1DistanceSerializer(serializers.ModelSerializer):
+    results_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Distance
         fields = [
@@ -22,7 +24,15 @@ class V1DistanceSerializer(serializers.ModelSerializer):
             "name",
             "km",
             "showrecord",
+            "results_url",
         ]
+
+    def get_results_url(self, obj):
+        request = self.context.get("request")
+        url = f"/v1/distances/{obj.id}/results/"
+        if request:
+            return request.build_absolute_uri(url)
+        return url
 
 
 class V1RaceSerializer(serializers.ModelSerializer):

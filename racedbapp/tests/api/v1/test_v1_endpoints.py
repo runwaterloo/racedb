@@ -5,7 +5,7 @@ import pytest
 from rest_framework.test import APIClient
 
 # Load endpoint definitions from JSON file
-with open(os.path.join(os.path.dirname(__file__), "test_endpoints.json")) as f:
+with open(os.path.join(os.path.dirname(__file__), "endpoints.json")) as f:
     ENDPOINTS = json.load(f)
 
 
@@ -100,21 +100,3 @@ def test_endpoint_is_readonly(endpoint):
     assert response.status_code in (403, 405), (
         f"Expected 403 Forbidden or 405 Method Not Allowed for DELETE on {url}, got {response.status_code}"
     )
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize("endpoint", ENDPOINTS, ids=[e["url"] for e in ENDPOINTS])
-def test_api_list_and_fields(authenticated_client, request, endpoint):
-    if not endpoint.get("factory") or not endpoint.get("fields"):
-        pytest.skip("No factory/fields for this endpoint.")
-    factory = request.getfixturevalue(endpoint["factory"])
-    factory()
-    client, headers = authenticated_client
-    response = client.get(endpoint["url"], **headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert "results" in data
-    assert isinstance(data["results"], list)
-    assert len(data["results"]) > 0
-    result = data["results"][0]
-    assert set(result.keys()) == set(endpoint["fields"])
