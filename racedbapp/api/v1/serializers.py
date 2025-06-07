@@ -1,6 +1,16 @@
 from rest_framework import serializers
 
-from ...models import Distance, Race, Result
+from ...models import Category, Distance, Race, Result
+
+
+class V1CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = [
+            "id",
+            "name",
+            "ismasters",
+        ]
 
 
 class V1DistanceSerializer(serializers.ModelSerializer):

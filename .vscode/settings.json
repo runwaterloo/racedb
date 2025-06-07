@@ -9,6 +9,12 @@
     }
   },
 
+  // JSON editor configuration
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+
   // Linting and formatting rules
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,

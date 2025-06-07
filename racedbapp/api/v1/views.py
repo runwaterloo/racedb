@@ -1,7 +1,20 @@
 from rest_framework import viewsets
 
-from ...models import Distance, Race, Result
-from .serializers import V1DistanceSerializer, V1RaceSerializer, V1ResultSerializer
+from ...models import Category, Distance, Race, Result
+from .serializers import (
+    V1CategorySerializer,
+    V1DistanceSerializer,
+    V1RaceSerializer,
+    V1ResultSerializer,
+)
+
+
+class V1CategoriesViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = V1CategorySerializer
+
+    def get_queryset(self):
+        queryset = Category.objects.all().order_by("id")
+        return queryset
 
 
 class V1DistancesViewSet(viewsets.ReadOnlyModelViewSet):

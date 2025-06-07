@@ -1,0 +1,41 @@
+[
+  {
+    "url": "/v1/categories/",
+    "factory": "create_category",
+    "fields": ["id", "name", "ismasters"]
+  },
+  {
+    "url": "/v1/distances/",
+    "factory": "create_distance",
+    "fields": ["id", "slug", "name", "km", "showrecord"]
+  },
+  {
+    "url": "/v1/races/",
+    "factory": "create_race",
+    "fields": ["id", "name", "shortname", "slug"]
+  },
+  {
+    "url": "/v1/results/",
+    "factory": "create_result",
+    "fields": [
+      "id",
+      "event",
+      "place",
+      "bib",
+      "athlete",
+      "rwmember",
+      "gender",
+      "gender_place",
+      "category",
+      "category_place",
+      "age",
+      "chiptime",
+      "guntime",
+      "city",
+      "province",
+      "country",
+      "division",
+      "isrwpb"
+    ]
+  }
+]

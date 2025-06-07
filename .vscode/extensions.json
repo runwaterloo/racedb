@@ -3,6 +3,7 @@
     "charliermarsh.ruff",        // Ruff linter/formatter
     "ms-python.python",          // Official Python extension
     "ms-python.vscode-pylance",  // Python language server (type checking, IntelliSense)
-    "ryanluker.vscode-coverage-gutters" // Coverage Gutters for code coverage visualization
+    "ryanluker.vscode-coverage-gutters", // Coverage Gutters for code coverage visualization
+    "esbenp.prettier-vscode"     // Prettier for code and JSON formatting
   ]
 }
