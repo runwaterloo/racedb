@@ -62,10 +62,7 @@ def test_endpoint_invalid_token():
         f"Expected 401 Unauthorized or 403 Forbidden for invalid token on {url}, got {response.status_code}"
     )
     assert "detail" in response.json()
-    assert (
-        "Invalid token" in response.json()["detail"]
-        or "credentials" in response.json()["detail"].lower()
-    )
+    assert "login_url" in response.json()
 
 
 @pytest.mark.django_db

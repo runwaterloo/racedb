@@ -12,7 +12,7 @@ def custom_exception_handler(exc, context):
         else:
             login_url = "/admin/login/?next=/v1/"
         response.data = {
-            "message": "You are not authorized to access this resource.",
+            "detail": "You are not authorized to access this resource.",
             "login_url": login_url,
         }
     return response
