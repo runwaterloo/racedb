@@ -31,7 +31,6 @@ from . import (
     view_records,
     view_relay,
     view_series,
-    view_stats,
     view_webhook,
 )
 
@@ -70,9 +69,7 @@ urlpatterns = [
     re_path(r"^events", view_events.index, name="events"),
     re_path(r"^health", view_health.index, name="health"),
     re_path(r"^race_slugs", view_race_slugs.index, name="race_slugs"),
-    re_path(
-        r"^race/(?P<race_slug>.*)/(?P<distance_slug>.*)/$", view_race.index, name="race"
-    ),
+    re_path(r"^race/(?P<race_slug>.*)/(?P<distance_slug>.*)/$", view_race.index, name="race"),
     re_path(
         r"^medals/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/$",
         view_medals.index,
@@ -106,6 +103,5 @@ urlpatterns = [
         name="records",
     ),
     re_path(r"^series/(?P<series_slug>.*)/$", view_series.index, name="series"),
-    re_path(r"^stats", view_stats.index, name="stats"),
     re_path(r"^webhook", view_webhook.index, name="webhook"),
 ]
