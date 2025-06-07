@@ -6,6 +6,7 @@ django-prometheus==2.3.1
 django-redis==5.4.0
 django-s3-storage==0.15.0
 django-slack==5.19.0
+drf-nested-routers==0.94.2
 faker==37.3.0
 flickrapi==2.4.0
 gunicorn==23.0.0
