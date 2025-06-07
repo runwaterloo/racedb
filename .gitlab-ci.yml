@@ -106,7 +106,6 @@ tag-commit:
       when: never
     - if: '$CI_COMMIT_TAG'
       when: never
-    - when: always
   script:
     - apk add git
     - source version.env
