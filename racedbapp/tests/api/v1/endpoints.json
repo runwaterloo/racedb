@@ -41,5 +41,10 @@
       "division",
       "isrwpb"
     ]
+  },
+  {
+    "url": "/v1/series/",
+    "factory": "create_series",
+    "fields": ["id", "year", "name", "slug", "event_ids", "show_records"]
   }
 ]

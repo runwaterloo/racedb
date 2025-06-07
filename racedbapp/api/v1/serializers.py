@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ...models import Category, Distance, Race, Result
+from ...models import Category, Distance, Race, Result, Series
 
 
 class V1CategorySerializer(serializers.ModelSerializer):
@@ -68,4 +68,17 @@ class V1ResultSerializer(serializers.ModelSerializer):
             "country",
             "division",
             "isrwpb",
+        ]
+
+
+class V1SeriesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Series
+        fields = [
+            "id",
+            "year",
+            "name",
+            "slug",
+            "event_ids",
+            "show_records",
         ]

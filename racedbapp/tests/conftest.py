@@ -4,7 +4,7 @@ import pytest
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 
-from racedbapp.models import Category, Distance, Event, Race, Result
+from racedbapp.models import Category, Distance, Event, Race, Result, Series
 
 
 @pytest.fixture
@@ -122,3 +122,26 @@ def create_f_m_results(
         "result_m": result_m,
         "result_f": result_f,
     }
+
+
+@pytest.fixture
+def create_series(db, create_distance, create_race, create_category, create_event, create_result):
+    def _create_series(**kwargs):
+        race = create_race()
+        distance1 = create_distance(name_suffix="first", km=5)
+        distance2 = create_distance(name_suffix="second", km=10)
+        event1 = create_event(race=race, distance=distance1, name_suffix="first")
+        event2 = create_event(race=race, distance=distance2, name_suffix="second")
+        category = create_category()
+        create_result(event=event1, category=category)
+        create_result(event=event2, category=category)
+        series_defaults = dict(
+            year=2025,
+            name="Test Series",
+            slug="test-series",
+            event_ids=f"{event1.id},{event2.id}",
+        )
+        series_defaults.update(kwargs)
+        return Series.objects.create(**series_defaults)
+
+    return _create_series

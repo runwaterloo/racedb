@@ -1,11 +1,12 @@
 from rest_framework import viewsets
 
-from ...models import Category, Distance, Race, Result
+from ...models import Category, Distance, Race, Result, Series
 from .serializers import (
     V1CategorySerializer,
     V1DistanceSerializer,
     V1RaceSerializer,
     V1ResultSerializer,
+    V1SeriesSerializer,
 )
 
 
@@ -45,3 +46,11 @@ class V1ResultsViewSet(viewsets.ReadOnlyModelViewSet):
         if event_id is not None:  # TODO: remove this
             queryset = queryset.filter(event_id=event_id)  # TODO: remove this
         return queryset.order_by("place")
+
+
+class V1SeriesViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = V1SeriesSerializer
+
+    def get_queryset(self):
+        queryset = Series.objects.all().order_by("id")
+        return queryset
