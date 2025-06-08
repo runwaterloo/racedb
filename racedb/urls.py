@@ -15,15 +15,14 @@ Including another URLconf
 """
 
 from django.conf import settings
-from django.conf.urls import include
 from django.contrib import admin
-from django.urls import path, re_path
+from django.urls import include, path, re_path
 
 urlpatterns = [
     path("", include("django_prometheus.urls")),
     re_path(r"^admin/", admin.site.urls),
     path("v1/", include("racedbapp.api.v1.urls")),
-    re_path(r"^", include("racedbapp.urls")),
+    path("", include("racedbapp.urls")),
 ]
 
 if settings.DEBUG:

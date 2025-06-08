@@ -1,4 +1,4 @@
-from django.urls import re_path
+from django.urls import path, re_path
 from django.views.generic.base import RedirectView
 
 from . import (
@@ -35,7 +35,7 @@ from . import (
 )
 
 urlpatterns = [
-    re_path(r"^$", view_index.index, name="index"),
+    path("", view_index.index, name="index"),
     re_path(r"^adminphotos", view_adminphotos.index, name="adminphotos"),
     re_path(
         r"^bowrecap/(?P<bow_slug>.*)/after/(?P<phase>.*)$",
@@ -80,8 +80,8 @@ urlpatterns = [
     re_path(r"^multiwins", view_multiwins.index, name="multiwins"),
     re_path(r"^name", view_name.index, name="name"),
     re_path(r"^boost/(?P<year>.*)/$", view_boost.index, name="boost"),
-    re_path(
-        r"^boost/$",
+    path(
+        "boost/",
         RedirectView.as_view(url="/boost/latest/", permanent=False),
         name="index",
     ),

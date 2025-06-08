@@ -1,35 +1,50 @@
 from django.contrib import admin
 
-from .models import *
+from .models import (
+    Bow,
+    Bowathlete,
+    Category,
+    Config,
+    Distance,
+    Durelay,
+    Endurathlete,
+    Endurteam,
+    Event,
+    Race,
+    Relay,
+    Result,
+    Rwmember,
+    Rwmembercorrection,
+    Rwmembertag,
+    Series,
+    Teamcategory,
+    Timer,
+)
 
 
+@admin.register(Config)
 class ConfigAdmin(admin.ModelAdmin):
     list_display = ("name", "value")
     search_fields = ("name", "value")
     ordering = ("name",)
 
 
-admin.site.register(Config, ConfigAdmin)
-
-
+@admin.register(Distance)
 class DistanceAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "km", "showrecord")
 
 
-admin.site.register(Distance, DistanceAdmin)
-
 admin.site.register(Race)
 
 
+@admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = ("id", "date", "race", "distance", "city", "flickrsetid")
     search_fields = ("date", "race__name", "distance__name")
     ordering = ("-date",)
 
 
-admin.site.register(Event, EventAdmin)
-
-
+@admin.register(Result)
 class ResultAdmin(admin.ModelAdmin):
     list_display = (
         "event",
@@ -44,17 +59,13 @@ class ResultAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Result, ResultAdmin)
-
-
+@admin.register(Rwmembertag)
 class RwmembertagAdmin(admin.ModelAdmin):
     list_display = ("name", "auto_select")
     ordering = ("-id",)
 
 
-admin.site.register(Rwmembertag, RwmembertagAdmin)
-
-
+@admin.register(Rwmember)
 class RwmemberAdmin(admin.ModelAdmin):
     filter_horizontal = ("tags",)
     list_display = (
@@ -76,18 +87,14 @@ class RwmemberAdmin(admin.ModelAdmin):
         return " ".join([t.name for t in obj.tags.all()])
 
 
-admin.site.register(Rwmember, RwmemberAdmin)
-
-
+@admin.register(Rwmembercorrection)
 class RwmembercorrectionAdmin(admin.ModelAdmin):
     list_display = ("rwmember", "correction_type", "event", "place")
     search_fields = ("rwmember",)
     ordering = ("rwmember__id",)
 
 
-admin.site.register(Rwmembercorrection, RwmembercorrectionAdmin)
-
-
+@admin.register(Endurathlete)
 class EndurathleteAdmin(admin.ModelAdmin):
     list_display = (
         "year",
@@ -108,9 +115,7 @@ class EndurathleteAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Endurathlete, EndurathleteAdmin)
-
-
+@admin.register(Endurteam)
 class EndurteamAdmin(admin.ModelAdmin):
     list_display = ("year", "name", "gender", "ismasters")
     list_filter = ("year",)
@@ -131,42 +136,32 @@ class EndurteamAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Endurteam, EndurteamAdmin)
-
-
+@admin.register(Bow)
 class BowAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "year", "events")
     ordering = ("id",)
 
 
-admin.site.register(Bow, BowAdmin)
-
-
+@admin.register(Bowathlete)
 class BowathleteAdmin(admin.ModelAdmin):
     list_display = ("bow", "category", "name", "gender")
     list_filter = ("bow",)
     ordering = ("bow__id", "id")
 
 
-admin.site.register(Bowathlete, BowathleteAdmin)
-
-
+@admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ("name", "ismasters")
     ordering = ("name",)
 
 
-admin.site.register(Category, CategoryAdmin)
-
-
+@admin.register(Durelay)
 class DurelayAdmin(admin.ModelAdmin):
     list_display = ("year", "team_place", "team_name", "team_time")
     ordering = ("-year", "team_place")
 
 
-admin.site.register(Durelay, DurelayAdmin)
-
-
+@admin.register(Relay)
 class RelayAdmin(admin.ModelAdmin):
     list_display = (
         "event",
@@ -178,9 +173,7 @@ class RelayAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Relay, RelayAdmin)
-
-
+@admin.register(Series)
 class SeriesAdmin(admin.ModelAdmin):
     list_display = (
         "year",
@@ -191,9 +184,7 @@ class SeriesAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Series, SeriesAdmin)
-
-
+@admin.register(Timer)
 class TimerAdmin(admin.ModelAdmin):
     list_display = (
         "name",
@@ -202,14 +193,9 @@ class TimerAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Timer, TimerAdmin)
-
-
+@admin.register(Teamcategory)
 class TeamcategoryAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "slug",
     )
-
-
-admin.site.register(Teamcategory, TeamcategoryAdmin)
