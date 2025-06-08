@@ -8,7 +8,6 @@ AWS_ACCESS_KEY_ID = secrets.RACEDB_STATIC_AWS_ACCESS_KEY_ID  # noqa
 AWS_SECRET_ACCESS_KEY = secrets.RACEDB_STATIC_AWS_SECRET_ACCESS_KEY  # noqa
 AWS_S3_BUCKET_NAME_STATIC = "racedb-static"
 AWS_S3_MAX_AGE_SECONDS = "315360000"
-STATICFILES_STORAGE = "django_s3_storage.storage.ManifestStaticS3Storage"
 
 CACHES = {
     "default": {
@@ -27,3 +26,12 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_BEAT_SCHEDULE = celery_beats.CELERY_BEAT_SCHEDULE
 
 CSRF_TRUSTED_ORIGINS = ["https://results.runwaterloo.com", "https://api.runwaterloo.com"]
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django_s3_storage.storage.ManifestStaticS3Storage",
+    },
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+}

@@ -23,7 +23,14 @@ if ENABLE_DEBUG_TOOLBAR:
 
 STATIC_URL = "/static/"
 STATIC_ROOT = "/static/"
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+    },
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+}
 
 CACHES = {
     "default": {
