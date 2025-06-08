@@ -4,7 +4,7 @@ import pytest
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 
-from racedbapp.models import Category, Distance, Event, Race, Result, Series
+from racedbapp.models import Category, Distance, Event, Race, Result, Rwmember, Series
 
 
 @pytest.fixture
@@ -145,3 +145,17 @@ def create_series(db, create_distance, create_race, create_category, create_even
         return Series.objects.create(**series_defaults)
 
     return _create_series
+
+
+@pytest.fixture
+def create_rwmember(db):
+    def _create_rwmember(name_suffix="a", active=True):
+        return Rwmember.objects.create(
+            name=f"RW Member {name_suffix}",
+            slug=f"rw-member-{name_suffix.lower()}",
+            city=f"City {name_suffix}",
+            joindate=datetime.date(2025, 1, 1),
+            active=active,
+        )
+
+    return _create_rwmember

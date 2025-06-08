@@ -1,11 +1,12 @@
 from rest_framework import viewsets
 
-from ...models import Category, Distance, Race, Result, Series
+from ...models import Category, Distance, Race, Result, Rwmember, Series
 from .serializers import (
     V1CategorySerializer,
     V1DistanceSerializer,
     V1RaceSerializer,
     V1ResultSerializer,
+    V1RwmemberSerializer,
     V1SeriesSerializer,
 )
 
@@ -23,6 +24,14 @@ class V1DistancesViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         queryset = Distance.objects.all().order_by("id")
+        return queryset
+
+
+class V1RwmembersViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = V1RwmemberSerializer
+
+    def get_queryset(self):
+        queryset = Rwmember.objects.filter(active=True).order_by("id")
         return queryset
 
 

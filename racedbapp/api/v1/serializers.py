@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ...models import Category, Distance, Race, Result, Series
+from ...models import Category, Distance, Race, Result, Rwmember, Series
 
 
 class V1CategorySerializer(serializers.ModelSerializer):
@@ -33,6 +33,24 @@ class V1DistanceSerializer(serializers.ModelSerializer):
         if request:
             return request.build_absolute_uri(url)
         return url
+
+
+class V1RwmemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rwmember
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "gender",
+            "year_of_birth",
+            "city",
+            "joindate",
+            "photourl",
+            "altname",
+            "hasphotos",
+            "tags",
+        ]
 
 
 class V1RaceSerializer(serializers.ModelSerializer):
