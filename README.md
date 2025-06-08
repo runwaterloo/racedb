@@ -63,10 +63,15 @@ docker-compose -f deploy/local/docker-compose-mount-local.yml up --build
 - Racedb: http://localhost:8000/
 - Admin interface: http://localhost:8000/admin (admin/admin)
 
-### Generate fake data
-
-```
+### Add data to database
+Option 1: Generate fake data
+```bash
 deploy/local/loaddata.sh
+```
+
+Option 2: Load a dump file
+```bash
+deploy/local/importdb.sh $DUMP_FILE_PATH
 ```
 
 ### Run tests inside container
