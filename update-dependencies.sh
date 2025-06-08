@@ -12,6 +12,9 @@ set -e
 pip install pur
 pur --skip Django
 
+# only do patch versions of Django
+pur --only Django --patch Django
+
 # Check for changes
 if git diff --exit-code --quiet -- requirements.txt; then
     echo "No changes to requirements.txt"
