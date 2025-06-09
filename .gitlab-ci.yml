@@ -17,11 +17,7 @@ test:
   stage: default
   image: python:3.13.2-alpine3.21
   rules:
-    - if: '$UPDATE_DEPENDENCIES == "true"'
-      when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_TAG'    # tag exists (non-empty)
+    - if: '$UPDATE_DEPENDENCIES == "true" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_TAG'
       when: never
     - when: always
   script:
@@ -40,13 +36,16 @@ image-build-push-tag:
   stage: default
   image: docker:28.2.2
   rules:
-    - if: '$UPDATE_DEPENDENCIES == "true"'
+    - if: '$UPDATE_DEPENDENCIES == "true" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_TAG'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_TAG'    # tag exists (non-empty)
-      when: never
-    - when: always
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - if: '$CI_COMMIT_MESSAGE =~ /\[push dev\]/i'
+      when: always
+    - changes:
+        - Dockerfile
+        - requirements/requirements.txt
+      when: always
   services:
     - docker:dind
   script:
@@ -73,13 +72,11 @@ image-build-push-tag:
 integration-test:
   stage: integration-test
   rules:
-    - if: '$UPDATE_DEPENDENCIES == "true"'
-      when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_TAG'
-      when: never
     - if: '$CI_COMMIT_MESSAGE =~ /\[full ci\]/i'
+      when: on_success
+    - changes:
+        - Dockerfile
+        - requirements/requirements.txt
       when: on_success
   image: docker:28.2.2
   services:
@@ -107,13 +104,9 @@ tag-commit:
   dependencies:
     - image-build-push-tag
   rules:
+    - if: '$UPDATE_DEPENDENCIES == "true" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_TAG'
+      when: never
     - if: '$CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
-      when: never
-    - if: '$UPDATE_DEPENDENCIES == "true"'
-      when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
-    - if: '$CI_COMMIT_TAG'
       when: never
     - when: on_success
   script:
