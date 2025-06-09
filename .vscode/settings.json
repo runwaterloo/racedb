@@ -15,6 +15,20 @@
     "editor.formatOnSave": true
   },
 
+  // Template files
+  "[html]": {
+    "editor.defaultFormatter": "monosans.djlint",
+    "editor.formatOnSave": true
+  },
+  "[django-html]": {
+    "editor.defaultFormatter": "monosans.djlint",
+    "editor.formatOnSave": true
+  },
+  "[jinja-html]": {
+    "editor.defaultFormatter": "monosans.djlint",
+    "editor.formatOnSave": true
+  },
+
   // Linting and formatting rules
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
