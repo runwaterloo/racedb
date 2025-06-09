@@ -25,6 +25,7 @@ test:
       when: never
     - when: always
   script:
+    - set -e
     - cp racedb/secrets.py.sample racedb/secrets.py
     - sed -i '/^mysqlclient/d' requirements/requirements.txt
     - pip install --root-user-action=ignore -r requirements/requirements-test.txt
@@ -49,6 +50,7 @@ image-build-push-tag:
   services:
     - docker:dind
   script:
+    - set -e
     - export MAJOR=$((CI_PIPELINE_IID / 1000))
     - export MINOR=$(TZ=America/Toronto date +'%y%m%d')
     - export PATCH=$((CI_PIPELINE_IID % 1000))
@@ -89,6 +91,7 @@ integration-test:
     MYSQL_PASSWORD: CHANGEME
     MYSQL_ROOT_PASSWORD: CHANGEME
   script:
+    - set -e
     - docker login -u $GITLAB_CI_USER -p $GITLAB_CI_TOKEN $CI_REGISTRY
     - docker build --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --build-arg INSTALL_TEST=1 .
     - sh deploy/gitlab/integration-test.sh
@@ -114,6 +117,7 @@ tag-commit:
       when: never
     - when: on_success
   script:
+    - set -e
     - apk add git
     - source version.env
     - git tag ${VERSION}
