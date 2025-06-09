@@ -1,11 +1,62 @@
-.dockerignore
-.flake8
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Test and coverage output
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+*.cover
+*.py,cover
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Pip cache
+pip-log.txt
+pip-wheel-metadata/
+
+# Ruff cache
+.ruff_cache
+
+# Pytest cache
+.pytest_cache/
+
+# Local scripts not needed in image
+pytest-in-container.sh
+update-dependencies.sh
+
+# Git and CI/CD files
 .git
 .gitignore
 .gitlab-ci.yml
-.heartbeat
-.isort.cfg
+
+# pre-commit
 .pre-commit-config.yaml
+
+# VS Code
 .vscode
-deploy
+
+# Helm charts and deployment files
+deploy/
+
+# Docker build file
 Dockerfile
+
+# Direnv and environment activation
+.envrc

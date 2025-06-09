@@ -10,27 +10,40 @@ set -e
 
 # Update requirements.txt
 pip install pur
-pur --skip Django
+pur --skip Django -r requirements/requirements.txt
 
 # only do patch versions of Django
-pur --only Django --patch Django
+pur --only Django --patch Django -r requirements/requirements.txt
+
+# do test
+pur -r requirements/requirements-test.txt
+
+# do dev
+pur -r requirements/requirements-dev.txt
 
 # Check for changes
-if git diff --exit-code --quiet -- requirements.txt; then
-    echo "No changes to requirements.txt"
+if git diff --exit-code --quiet -- requirements/*.txt; then
+    echo "No changes to requirements files"
     exit
 else
-    echo "requirements.txt updated, creating Merge Request"
+    echo "requirements updated, creating Merge Request"
 
     # Git configuration (replace with your username and email)
     git config --global user.name "$DEPUP_NAME"
     git config --global user.email "$DEPUP_EMAIL"
 
+    # Check if mysqlclient changed in requirements.txt
+    if git diff requirements/requirements.txt | grep -q '^+' | grep -q 'mysqlclient'; then
+        FULL_CI=" [full ci]"
+    else
+        FULL_CI=""
+    fi
+
     # Create a new branch and commit changes
     BRANCH="update-dependencies-`date +%s`"
     git checkout -b $BRANCH
-    git add requirements.txt
-    git commit -m "Update Python package dependencies"
+    git add requirements/*.txt
+    git commit -m "Update Python package dependencies${FULL_CI}"
 
     # Push the branch to the remote repository
     git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git

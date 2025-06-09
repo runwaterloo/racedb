@@ -40,6 +40,8 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile
+      args:
+        - INSTALL_DEV=1
     command: >
       /bin/sh -c '
       python ./manage.py collectstatic --noinput --settings=racedb.settings.min;
