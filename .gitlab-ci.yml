@@ -72,12 +72,13 @@ image-build-push-tag:
 integration-test:
   stage: integration-test
   rules:
-    - if: '$CI_COMMIT_MESSAGE =~ /\[full ci\]/i'
-      when: on_success
     - changes:
         - Dockerfile
         - requirements/requirements.txt
       when: on_success
+    - if: '$CI_COMMIT_MESSAGE =~ /\[full ci\]/i'
+      when: on_success
+    - when: never
   image: docker:28.2.2
   services:
     - docker:dind
