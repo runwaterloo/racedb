@@ -32,18 +32,11 @@ else
     git config --global user.name "$DEPUP_NAME"
     git config --global user.email "$DEPUP_EMAIL"
 
-    # Check if mysqlclient changed in requirements.txt
-    if git diff requirements/requirements.txt | grep -q '^+' | grep -q 'mysqlclient'; then
-        FULL_CI=" [full ci]"
-    else
-        FULL_CI=""
-    fi
-
     # Create a new branch and commit changes
     BRANCH="update-dependencies-`date +%s`"
     git checkout -b $BRANCH
     git add requirements/*.txt
-    git commit -m "Update Python package dependencies${FULL_CI}"
+    git commit -m "Update Python package dependencies"
 
     # Push the branch to the remote repository
     git remote set-url origin ${CI_PROJECT_URL/gitlab.com/oauth2:${DEPUP_TOKEN}@gitlab.com}.git
