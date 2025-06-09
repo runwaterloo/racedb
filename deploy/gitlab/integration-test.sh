@@ -3,6 +3,9 @@
 # Export the MariaDB IP address
 export MARIADB_IP=$(getent ahostsv4 mariadb | awk 'NR==1 { print $1 }')
 
+# Disable debug toolbar
+export DISABLE_DEBUG_TOOLBAR="true"
+
 # Run the deploy script
 /bin/ash deploy/minimal/deploy.sh
 
