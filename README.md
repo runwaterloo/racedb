@@ -41,37 +41,21 @@ pip install -r requirements/requirements-dev.txt
 pre-commit install
 ```
 
-### Run tests
-```bash
-pytest
-```
-
 ### Start application
-
 ```
-docker-compose -f deploy/local/docker-compose.yml up --build
+./deploy/local/start.sh
 ```
-
-or to mount local directory into container:
-
-```
-docker-compose -f deploy/local/docker-compose-mount-local.yml up --build
-```
+You can add a --rebuild option to rebuild from scatch if needed
 
 ### Access application
 
 - Racedb: http://localhost:8000/
 - Admin interface: http://localhost:8000/admin (admin/admin)
 
-### Add data to database
-Option 1: Generate fake data
-```bash
-deploy/local/loaddata.sh
-```
 
-Option 2: Load a dump file
+### Run tests
 ```bash
-deploy/local/importdb.sh $DUMP_FILE_PATH
+pytest
 ```
 
 ### Run tests inside container
@@ -82,6 +66,10 @@ docker exec racedb-web sh -c \
  'DJANGO_SETTINGS_MODULE=racedb.settings.min \
   DISABLE_DEBUG_TOOLBAR=true \
   pytest -v -m "integration or not integration"'
+```
+### Import a database
+```bash
+deploy/local/importdb.sh $DUMP_FILE_PATH
 ```
 
 ## Developer Info
