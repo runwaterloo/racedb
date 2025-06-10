@@ -2,6 +2,7 @@ fullnameOverride: racedbdev
 racedb:
   settings: dev
   secretsVolumePath: /srv/racedb_secrets_dev
+  storage: local
 ingress:
   catchall:
     enabled: false

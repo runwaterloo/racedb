@@ -18,7 +18,7 @@ if [[ "$1" == "--rebuild" ]] || ! docker ps -a --format '{{.Names}}' | grep -q '
 
   echo "Waiting for Django to be ready..."
   until
-    docker exec -it racedb-web sh -c 'DJANGO_SETTINGS_MODULE=racedb.settings.min ./manage.py showmigrations' | tail -n 1 | grep -q "\\[X\\]"; do
+    docker exec -it racedb-web sh -c './manage.py showmigrations' | tail -n 1 | grep -q "\\[X\\]"; do
     sleep 2
   done
 

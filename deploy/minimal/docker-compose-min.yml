@@ -1,9 +1,16 @@
 services:
   gunicorn:
-    command: /bin/sh -c 'gunicorn --env DJANGO_SETTINGS_MODULE=racedb.settings.min racedb.wsgi -b 0.0.0.0:8000'
+    command: /bin/sh -c 'gunicorn racedb.wsgi -b 0.0.0.0:8000'
     container_name: racedb-web
     environment:
       - WEBHOST
+      - DEBUG=true
+      - ENABLE_DEBUG_TOOLBAR=false
+      - STORAGE=local
+      - CACHES=dummy
+      - DATABASE=mysql
+      - SETTINGS=min
+      - DJANGO_SETTINGS_MODULE=racedb.settings.settings
     extra_hosts:
       - "mariadb=${MARIADB_IP}"
     image: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}

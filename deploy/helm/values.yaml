@@ -10,6 +10,7 @@ racedb:
   threads: 1
   workers: 1  # prometheus reporting issues with more than 1 worker
   workerClass: gthread
+  storage: s3
 
 replicaCount: 1
 webReplicaCount: 1

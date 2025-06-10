@@ -61,11 +61,8 @@ pytest
 ### Run tests inside container
 This is closer to production, but slower. It uses a running MariaDB database instead of the
 in memory SQLite that is normally used for tests.
-```
-docker exec racedb-web sh -c \
- 'DJANGO_SETTINGS_MODULE=racedb.settings.min \
-  DISABLE_DEBUG_TOOLBAR=true \
-  pytest -v -m "integration or not integration"'
+```bash
+docker exec racedb-web pytest
 ```
 ### Import a database
 ```bash
