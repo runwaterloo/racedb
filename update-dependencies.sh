@@ -10,16 +10,8 @@ set -e
 
 # Update requirements.txt
 pip install pur
-pur --skip Django -r requirements/requirements.txt
-
-# only do patch versions of Django
-pur --only Django --patch Django -r requirements/requirements.txt
-
-# do test
-pur -r requirements/requirements-test.txt
-
-# do dev
-pur -r requirements/requirements-dev.txt
+pur --skip Django -r requirements/requirements-dev.txt
+pur --only Django --patch Django -r requirements/requirements-dev.txt # do not want automatic minor version updates for Django
 
 # Check for changes
 if git diff --exit-code --quiet -- requirements/*.txt; then
