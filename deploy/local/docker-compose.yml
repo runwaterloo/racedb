@@ -52,7 +52,9 @@ services:
     container_name: racedb-web
     environment:
       WEBHOST: 127.0.0.1
+      ENABLE_DEBUG_TOOLBAR: "true"
     ports:
       - "8000:8000"
     volumes:
+      - ../..:/srv/racedb
       - ../../racedb/secrets.py.sample:/srv/racedb/racedb/secrets.py

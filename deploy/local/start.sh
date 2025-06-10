@@ -7,14 +7,14 @@ if [[ "$1" == "--rebuild" ]] || ! docker ps -a --format '{{.Names}}' | grep -q '
   # Stop/remove if containers exist
   if docker ps -a --format '{{.Names}}' | grep -q '^racedb-web$'; then
     echo "Stopping and removing existing containers..."
-    docker-compose -f deploy/local/docker-compose-mount-local.yml down || true
+    docker-compose -f deploy/local/docker-compose.yml down || true
   fi
 
   echo "Installing Python dev requirements..."
   pip install -r requirements/requirements-dev.txt
 
   echo "Starting containers in detached mode..."
-  docker-compose -f deploy/local/docker-compose-mount-local.yml up --build -d
+  docker-compose -f deploy/local/docker-compose.yml up --build -d
 
   echo "Waiting for Django to be ready..."
   until
@@ -27,7 +27,7 @@ if [[ "$1" == "--rebuild" ]] || ! docker ps -a --format '{{.Names}}' | grep -q '
 
 else
   echo "Starting containers..."
-  docker-compose -f deploy/local/docker-compose-mount-local.yml up -d
+  docker-compose -f deploy/local/docker-compose.yml up -d
 
 fi
   echo
@@ -37,4 +37,4 @@ fi
   echo
   echo "To follow logs, run:"
   echo
-  echo "docker-compose -f deploy/local/docker-compose-mount-local.yml logs -f"
+  echo "docker-compose -f deploy/local/docker-compose.yml logs -f"
