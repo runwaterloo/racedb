@@ -14,7 +14,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 
-from django.conf import settings
+import os
+
 from django.contrib import admin
 from django.urls import include, path, re_path
 
@@ -25,7 +26,7 @@ urlpatterns = [
     path("", include("racedbapp.urls")),
 ]
 
-if settings.DEBUG:
+if os.environ.get("ENABLE_DEBUG_TOOLBAR", "false") == "true":
     import debug_toolbar
 
     urlpatterns += [

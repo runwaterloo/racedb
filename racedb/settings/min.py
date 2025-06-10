@@ -5,10 +5,8 @@ from racedb import celery_beats
 from .base import *  # noqa
 
 DEBUG = True
-ENABLE_DEBUG_TOOLBAR = True
-
-if os.getenv("DISABLE_DEBUG_TOOLBAR", "false") == "true":
-    ENABLE_DEBUG_TOOLBAR = False
+# Default: debug toolbar is disabled unless explicitly enabled
+ENABLE_DEBUG_TOOLBAR = os.getenv("ENABLE_DEBUG_TOOLBAR", "false") == "true"
 
 if ENABLE_DEBUG_TOOLBAR:
     INSTALLED_APPS += ("debug_toolbar",)  # noqa
