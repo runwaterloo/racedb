@@ -141,11 +141,6 @@ The main entry point is the events endpoint:
 
 Returns a list of events, sorted by date (most recent first). Each event includes denormalized fields for easy frontend use, and a link to the results for that event.
 
-Example Response
-```
-coming soon
-```
-
 ##### Filtering Events
 
 You can filter events using the following query parameters:
@@ -169,20 +164,12 @@ Responses are paginated with a page size of 50 items. Each response includes `co
 - `next`: URL to fetch the next page of results (or `null` if there are no more pages).
 - `previous`: URL to fetch the previous page (or `null` if you are on the first page).
 
-##### Example Response
-
 ### Results Link
 
 Each event includes a `results_url` field. You can use this to fetch results for that event:
 
 ```
 GET /v1/events/<event_id>/results/
-```
-
-#### Example Response
-
-```
-coming soon
 ```
 
 ### Notes
