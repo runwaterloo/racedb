@@ -1,0 +1,53 @@
+{{- if eq .Values.racedb.settings "prod" }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "racedb.fullname" . }}-collectstatic"
+  labels:
+    {{- include "racedb.labels" . | nindent 4 }}
+    app.kubernetes.io/task: collectstatic
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "racedb.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/task: collectstatic
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "racedb.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: collectstatic
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command: [
+            "/bin/sh",
+            "-c",
+            "./manage.py collectstatic --noinput",
+          ]
+          env:
+            - name: CHART
+              value: {{ .Chart.Version }}
+            - name: BUILD
+              value: {{ .Values.image.tag }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: "racedb.settings.settings"
+            - name: WEBHOST
+              value: {{ .Values.ingress.host }}
+            - name: STORAGE
+              value: {{ .Values.racedb.storage }}
+            - name: SETTINGS
+              value: {{ .Values.racedb.settings }}
+            - name: DATABASE
+              value: "mysql"
+          volumeMounts:
+            - mountPath: /srv/racedb/racedb/secrets.py
+              name: racedb-secrets
+      volumes:
+        - name: racedb-secrets
+          hostPath:
+            path: "{{ .Values.racedb.secretsVolumePath }}/secrets.py"
+{{- end }}
