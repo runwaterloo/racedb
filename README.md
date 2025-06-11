@@ -117,7 +117,7 @@ endurrun_same_name: Bob Smith;Bobby Smith;Robert Smith
 
 The REST API provides programmatic access to results. The API is available at:
 
-    https://api.runwaterloo.com/v1/
+[https://api.runwaterloo.com/v1/](https://api.runwaterloo.com/v1/)
 
 ### Authentication
 
@@ -161,7 +161,7 @@ GET /v1/events/<event_id>/results/
 ```
 ### Pagination
 
-Responses from all endpoints are paginated with a page size of 50 items. Each response includes `count`, `next`, and `previous` fields:
+Responses from all endpointsare paginated with a page size of 50 items. Each response includes `count`, `next`, and `previous` fields:
 
 - `count`: Total number of items matching your query.
 - `next`: URL to fetch the next page of results (or `null` if there are no more pages).
