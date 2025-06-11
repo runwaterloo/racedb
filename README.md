@@ -129,11 +129,7 @@ Authorization: Token <your_token>
 
 Hit someone up for an account and API token if needed.
 
-### Available Endpoints
-
-The API is under active development. Some endpoints (such as teams and splits) are not yet implemented, but the core event and result data is available.
-
-#### Events Endpoint
+### Events Endpoint
 
 The main entry point is the events endpoint:
 
@@ -156,21 +152,21 @@ You can combine filters as needed. Example:
 GET /v1/events/?year=2024&race_slug=endurrun&results_exist=true
 ```
 
-##### Pagination
-
-Responses are paginated with a page size of 50 items. Each response includes `count`, `next`, and `previous` fields:
-
-- `count`: Total number of items matching your query.
-- `next`: URL to fetch the next page of results (or `null` if there are no more pages).
-- `previous`: URL to fetch the previous page (or `null` if you are on the first page).
-
-### Results Link
+#### Results Link
 
 Each event includes a `results_url` field. You can use this to fetch results for that event:
 
 ```
 GET /v1/events/<event_id>/results/
 ```
+### Pagination
+
+Responses from all endpoints are paginated with a page size of 50 items. Each response includes `count`, `next`, and `previous` fields:
+
+- `count`: Total number of items matching your query.
+- `next`: URL to fetch the next page of results (or `null` if there are no more pages).
+- `previous`: URL to fetch the previous page (or `null` if you are on the first page).
+
 
 ### Notes
 
