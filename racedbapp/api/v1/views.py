@@ -1,9 +1,11 @@
+from django.db.models import Exists, OuterRef
 from rest_framework import viewsets
 
-from ...models import Category, Distance, Race, Result, Rwmember, Series
+from ...models import Category, Distance, Event, Race, Result, Rwmember, Series
 from .serializers import (
     V1CategorySerializer,
     V1DistanceSerializer,
+    V1EventSerializer,
     V1RaceSerializer,
     V1ResultSerializer,
     V1RwmemberSerializer,
@@ -27,6 +29,41 @@ class V1DistancesViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
+class V1EventsViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = V1EventSerializer
+
+    def get_queryset(self):
+        queryset = Event.objects.select_related("race", "distance")
+        queryset = queryset.annotate(
+            results_exist=Exists(Result.objects.filter(event=OuterRef("pk")))
+        )
+
+        # filter by year
+        year = self.request.query_params.get("year")
+        if year:
+            queryset = queryset.filter(date__year=year)
+
+        # filter by distance
+        distance_slug = self.request.query_params.get("distance_slug")
+        if distance_slug:
+            queryset = queryset.filter(distance__slug=distance_slug)
+
+        # filter by race
+        race_slug = self.request.query_params.get("race_slug")
+        if race_slug:
+            queryset = queryset.filter(race__slug=race_slug)
+
+        # filter by results_exist
+        results_exist = self.request.query_params.get("results_exist")
+        if results_exist is not None:
+            if results_exist.lower() == "true":
+                queryset = queryset.filter(results_exist=True)
+            elif results_exist.lower() == "false":
+                queryset = queryset.filter(results_exist=False)
+
+        return queryset.order_by("-date")
+
+
 class V1RwmembersViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = V1RwmemberSerializer
 
@@ -47,13 +84,13 @@ class V1ResultsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = V1ResultSerializer
 
     def get_queryset(self):
-        queryset = Result.objects.all()
+        queryset = Result.objects.select_related("rwmember", "category")
         distance_id = self.kwargs.get("distance_pk") or self.kwargs.get("distance_id")
         if distance_id is not None:
             queryset = queryset.filter(event__distance_id=distance_id)
-        event_id = self.request.query_params.get("event")  # TODO: remove this
-        if event_id is not None:  # TODO: remove this
-            queryset = queryset.filter(event_id=event_id)  # TODO: remove this
+        event_id = self.kwargs.get("event_pk") or self.kwargs.get("event_id")
+        if event_id is not None:
+            queryset = queryset.filter(event_id=event_id)
         return queryset.order_by("place")
 
 

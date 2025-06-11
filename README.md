@@ -112,3 +112,81 @@ endurrun_same_name: Bob Smith;Bobby Smith;Robert Smith
 **featured_member_tag**: Restrict featured member to ones with this tag.
 
 **homepage_upcoming_exclude_events**: Comma-separated list of events to exclude from homepage Upcoming Events if they would have appeared.
+
+## REST API
+
+The REST API provides programmatic access to results. The API is available at:
+
+    https://api.runwaterloo.com/v1/
+
+### Authentication
+
+All API endpoints require authentication. If you access the API in a browser and are not authenticated, the response will include a `login_url` field to direct you to the login page. For programmatic access, you must include your authentication token in the `Authorization` header:
+
+```
+Authorization: Token <your_token>
+```
+
+Hit someone up for an account and API token if needed.
+
+### Available Endpoints
+
+The API is under active development. Some endpoints (such as teams and splits) are not yet implemented, but the core event and result data is available.
+
+#### Events Endpoint
+
+The main entry point is the events endpoint:
+
+    GET /v1/events/
+
+Returns a list of events, sorted by date (most recent first). Each event includes denormalized fields for easy frontend use, and a link to the results for that event.
+
+Example Response
+```
+coming soon
+```
+
+##### Filtering Events
+
+You can filter events using the following query parameters:
+
+- `year`: Filter by event year (e.g., `?year=2024`)
+- `race_slug`: Filter by race slug (e.g., `?race_slug=endurrun`)
+- `distance_slug`: Filter by distance slug (e.g., `?distance_slug=marathon`)
+- `results_exist`: Filter by whether results exist for the event (`true` or `false`)
+
+You can combine filters as needed. Example:
+
+```
+GET /v1/events/?year=2024&race_slug=endurrun&results_exist=true
+```
+
+##### Pagination
+
+Responses are paginated with a page size of 50 items. Each response includes `count`, `next`, and `previous` fields:
+
+- `count`: Total number of items matching your query.
+- `next`: URL to fetch the next page of results (or `null` if there are no more pages).
+- `previous`: URL to fetch the previous page (or `null` if you are on the first page).
+
+##### Example Response
+
+### Results Link
+
+Each event includes a `results_url` field. You can use this to fetch results for that event:
+
+```
+GET /v1/events/<event_id>/results/
+```
+
+#### Example Response
+
+```
+coming soon
+```
+
+### Notes
+
+- The API is evolving. Some endpoints (e.g., teams, splits) are not yet available.
+- All date and time fields are in ISO 8601 format (UTC).
+- If you have questions or need additional endpoints, please contact the maintainers.

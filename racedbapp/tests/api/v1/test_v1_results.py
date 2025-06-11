@@ -1,25 +1,3 @@
-def test_results_filter_by_event(
-    authenticated_client, create_distance, create_race, create_event, create_category, create_result
-):
-    client, headers = authenticated_client
-    race = create_race()
-    distance1 = create_distance(name_suffix="first", km=1)
-    distance2 = create_distance(name_suffix="second", km=2)
-    event1 = create_event(distance=distance1, race=race, name_suffix="first")
-    event2 = create_event(distance=distance2, race=race, name_suffix="second")
-    category = create_category()
-    create_result(event=event1, category=category, place=1)
-    create_result(event=event2, category=category, place=2)
-    # Filter by the first event (should only return results for event1.id)
-    response = client.get(f"/v1/results/?event={event1.id}", **headers)
-    data = response.json()
-    assert all(r["event"] == event1.id for r in data["results"])
-    # Filter by the second event (should only return results for event2.id)
-    response = client.get(f"/v1/results/?event={event2.id}", **headers)
-    data = response.json()
-    assert all(r["event"] == event2.id for r in data["results"])
-
-
 def test_results_are_sorted_by_place_within_event(
     authenticated_client, create_event, create_result
 ):

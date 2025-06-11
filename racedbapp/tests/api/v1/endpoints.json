@@ -14,6 +14,35 @@
     "factory": "create_result"
   },
   {
+    "url": "/v1/events/",
+    "factory": "create_event",
+    "fields": [
+      "id",
+      "date",
+      "race",
+      "race_name",
+      "race_shortname",
+      "race_slug",
+      "distance",
+      "distance_km",
+      "distance_name",
+      "distance_slug",
+      "city",
+      "flickrsetid",
+      "youtube_id",
+      "youtube_offset_seconds",
+      "youtube_duration_seconds",
+      "medals",
+      "timer",
+      "results_exist",
+      "results_url"
+    ]
+  },
+  {
+    "url": "/v1/events/1/results/",
+    "factory": "create_result"
+  },
+  {
     "url": "/v1/rwmembers/",
     "factory": "create_rwmember",
     "fields": [
@@ -45,10 +74,12 @@
       "bib",
       "athlete",
       "rwmember",
+      "rwmember_slug",
       "gender",
       "gender_place",
       "category",
       "category_place",
+      "category_ismasters",
       "age",
       "chiptime",
       "guntime",

@@ -53,6 +53,8 @@ def create_race(db):
 @pytest.fixture
 def create_event(db, create_race, create_distance):
     def _create_event(name_suffix="a", date=datetime.date(2025, 1, 1), race=None, distance=None):
+        if isinstance(date, str):
+            date = datetime.date.fromisoformat(date)
         if race is None:
             race = create_race(name_suffix)
         if distance is None:
