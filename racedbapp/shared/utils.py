@@ -1,15 +1,17 @@
 from datetime import timedelta
 from pathlib import Path
 
+
 def truncate_time(time):
     try:
         int(time)
-    except:
+    except Exception:
         trunc_time = time - timedelta(microseconds=time.microseconds)
     else:
         ustime = timedelta(microseconds=time)
         trunc_time = ustime - timedelta(microseconds=ustime.microseconds)
     return trunc_time
+
 
 def get_race_logo_slug(slug):
     if isinstance(slug, str):
@@ -19,6 +21,7 @@ def get_race_logo_slug(slug):
     else:
         slug = "rw-race-logo"
     return slug
+
 
 def get_achievement_image(slug, badge):
     file_path = Path(f"racedbapp/static/achievements/{badge}-{slug}.png")

@@ -1,17 +1,14 @@
-import datetime
 import urllib
 from collections import namedtuple
 from datetime import timedelta
 from operator import attrgetter
 
-from django import db
-from django.db.models import Count, Min
-from django.http import HttpResponse
 from django.shortcuts import render
 
 from racedbapp.shared.types import Choice, Filter
 
-from .models import *
+from .models import Bow, Bowathlete, Category, Event, Result
+
 
 def index(request, bow_slug):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
@@ -45,9 +42,7 @@ def index(request, bow_slug):
     elif filter_choice != "":
         athletes = athletes.filter(category__name=filter_choice)
     hasmasters = True
-    category_ids = (
-        Bowathlete.objects.filter(bow=bow).values_list("category", flat=True).distinct()
-    )
+    category_ids = Bowathlete.objects.filter(bow=bow).values_list("category", flat=True).distinct()
     categories = Category.objects.filter(id__in=(category_ids)).order_by("name")
     all_event_results = []
     events_results_count = []
@@ -67,7 +62,7 @@ def index(request, bow_slug):
         for er in all_event_results:
             try:
                 stage_time = er[athlete.name.lower()]
-            except:
+            except Exception:
                 stage_time = ""
             else:
                 if count <= stop_event:
@@ -82,17 +77,11 @@ def index(request, bow_slug):
             total_time = ""
         else:
             total_seconds = total_time.total_seconds()
-        results.append(
-            namedresult(athlete, stages, total_time, total_seconds, stage_times)
-        )
+        results.append(namedresult(athlete, stages, total_time, total_seconds, stage_times))
     results = sorted(results, key=attrgetter("total_seconds"))
     results = sorted(results, key=attrgetter("stages"), reverse=True)
-    resultfilter = getresultfilter(
-        filter_choice, phase_choice, categories, bow_slug, hasmasters
-    )
-    phasefilter = getphasefilter(
-        phase_choice, filter_choice, events_results_count, bow_slug
-    )
+    resultfilter = getresultfilter(filter_choice, phase_choice, categories, bow_slug, hasmasters)
+    phasefilter = getphasefilter(phase_choice, filter_choice, events_results_count, bow_slug)
     context = {
         "events": events,
         "events_results_count": events_results_count,
@@ -113,15 +102,9 @@ def getresultfilter(filter_choice, phase_choice, categories, bow_slug, hasmaster
             Choice("Male", "/bow/{}/?filter=Male".format(bow_slug)),
         ]
         if hasmasters:
-            choices.append(
-                Choice("Masters", "/bow/{}/?filter=Masters".format(bow_slug))
-            )
-            choices.append(
-                Choice("F-Masters", "/bow/{}/?filter=F-Masters".format(bow_slug))
-            )
-            choices.append(
-                Choice("M-Masters", "/bow/{}/?filter=M-Masters".format(bow_slug))
-            )
+            choices.append(Choice("Masters", "/bow/{}/?filter=Masters".format(bow_slug)))
+            choices.append(Choice("F-Masters", "/bow/{}/?filter=F-Masters".format(bow_slug)))
+            choices.append(Choice("M-Masters", "/bow/{}/?filter=M-Masters".format(bow_slug)))
     else:
         choices = [
             Choice("", "/bow/{}/?phase={}".format(bow_slug, phase_choice)),
@@ -129,9 +112,7 @@ def getresultfilter(filter_choice, phase_choice, categories, bow_slug, hasmaster
                 "Female",
                 "/bow/{}/?filter=Female&phase={}".format(bow_slug, phase_choice),
             ),
-            Choice(
-                "Male", "/bow/{}/?filter=Male&phase={}".format(bow_slug, phase_choice)
-            ),
+            Choice("Male", "/bow/{}/?filter=Male&phase={}".format(bow_slug, phase_choice)),
         ]
         if hasmasters:
             choices.append(
@@ -155,18 +136,12 @@ def getresultfilter(filter_choice, phase_choice, categories, bow_slug, hasmaster
 
     for k in categories:
         if phase_choice == "Final Results":
-            choices.append(
-                Choice(
-                    k.name, "/bow/{}/?filter={}".format(bow_slug, k.name)
-                )
-            )
+            choices.append(Choice(k.name, "/bow/{}/?filter={}".format(bow_slug, k.name)))
         else:
             choices.append(
                 Choice(
                     k.name,
-                    "/bow/{}/?filter={}&phase={}".format(
-                        bow_slug, k.name, phase_choice
-                    ),
+                    "/bow/{}/?filter={}&phase={}".format(bow_slug, k.name, phase_choice),
                 )
             )
     choices = [x for x in choices if x.name != filter_choice]
@@ -192,18 +167,12 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, bow_slug):
                 if loopcount == len(events_results_count):
                     if phase_choice != "Final Results":
                         if filter_choice == "":
-                            choices.append(
-                                Choice(
-                                    "Final Results", "/bow/{}/".format(bow_slug)
-                                )
-                            )
+                            choices.append(Choice("Final Results", "/bow/{}/".format(bow_slug)))
                         else:
                             choices.append(
                                 Choice(
                                     "Final Results",
-                                    "/bow/{}/?filter={}".format(
-                                        bow_slug, filter_choice
-                                    ),
+                                    "/bow/{}/?filter={}".format(bow_slug, filter_choice),
                                 )
                             )
                 else:
@@ -212,9 +181,7 @@ def getphasefilter(phase_choice, filter_choice, events_results_count, bow_slug):
                             choices.append(
                                 Choice(
                                     "After Event {}".format(loopcount),
-                                    "/bow/{}/?phase=after-event-{}".format(
-                                        bow_slug, loopcount
-                                    ),
+                                    "/bow/{}/?phase=after-event-{}".format(bow_slug, loopcount),
                                 )
                             )
                         else:

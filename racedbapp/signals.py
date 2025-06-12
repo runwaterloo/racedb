@@ -1,9 +1,8 @@
-from django.conf import settings
-from django.db.models.signals import post_delete, post_save, pre_delete, pre_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from racedbapp import membership, tasks
-from racedbapp.models import *
+from racedbapp.models import Config, Rwmember, Rwmembercorrection
 
 
 @receiver(post_save, sender=Rwmember)

@@ -3,10 +3,10 @@ from urllib import parse
 
 from django.shortcuts import render
 
-
 from racedbapp.shared.types import Choice, Filter
 
 from .models import Event, Result, Series
+
 
 def index(request, series_slug):
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
@@ -93,7 +93,7 @@ def get_year_filter(series_slug, year, years, show_records):
     year_filter = Filter(current_choice, choices)
     return year_filter
 
-# TODO refactor with event version and have both call same. 
+# TODO refactor with event version and have both call same.
 def get_category_filter(series_slug, category, year, event1_all_results, results):
     choices = []
     if category == "All":

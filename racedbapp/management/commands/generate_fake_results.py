@@ -1,9 +1,11 @@
 import json
 import random
 from datetime import datetime, timedelta
+
 from django.core.management.base import BaseCommand
 from faker import Faker
-from racedbapp.models import Result, Event, Category, Rwmember
+
+from racedbapp.models import Category, Event, Result, Rwmember
 
 
 class Command(BaseCommand):

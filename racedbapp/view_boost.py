@@ -1,4 +1,4 @@
-from collections import OrderedDict, defaultdict, namedtuple
+from collections import OrderedDict, defaultdict
 from datetime import datetime
 from operator import attrgetter
 from urllib import parse
@@ -30,7 +30,7 @@ def index(request, year, leaderboard_only=False, standings_only=False):
     max_events = int(config_dict.get("boost_max_events",0))
     max_endurrun = int(config_dict.get("boost_max_endurrun",0))
     leaderboard_size = int(config_dict.get("boost_leaderboard_size",0))
-    nophoto_url = config_dict.get("nophoto_url", "") 
+    nophoto_url = config_dict.get("nophoto_url", "")
     boost_years = get_boost_years()
     if not boost_years:
         return render(request, "racedbapp/boost.html")

@@ -1,15 +1,12 @@
 import urllib
 from collections import namedtuple
-from operator import attrgetter, itemgetter
+from operator import attrgetter
 
-from django import db
-from django.db.models import Count, Min
-from django.http import HttpResponse
 from django.shortcuts import render
 
 from racedbapp.shared.types import Choice, Filter
+
 from .shared import shared
-from .models import *
 
 
 def index(request):

@@ -1,17 +1,17 @@
+import json
 import random
-from datetime import datetime
+
 from django.core.management.base import BaseCommand
 from django.utils.text import slugify
 from faker import Faker
+
 from racedbapp.models import Rwmember
-import json
 
 
 class Command(BaseCommand):
     help = "Generate fake data for Rwmember model"
 
     def handle(self, *args, **kwargs):
-
         with open("racedbapp/management/commands/fake_config.json") as f:
             fake_config = json.load(f)
         num_members = int(fake_config["max_results_per_event"] * 1.1)
@@ -51,7 +51,7 @@ class Command(BaseCommand):
             active = random.choices([True, False], weights=[0.9, 0.1], k=1)[0]
             hasphotos = faker.boolean()
 
-            member = Rwmember.objects.create(
+            Rwmember.objects.create(
                 name=name,
                 slug=slug,
                 gender=gender,
@@ -65,7 +65,5 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"Successfully generated {num_members} fake Rwmember entries"
-            )
+            self.style.SUCCESS(f"Successfully generated {num_members} fake Rwmember entries")
         )
