@@ -2,7 +2,7 @@ alloy:
   configMap:
     create: true
     content: |
-    
+
       ///////////////////////////////////////////////////////////////////////////////////
       // Prometheus writer
       prometheus.remote_write "grafanacloud" {
@@ -13,7 +13,7 @@ alloy:
             username = sys.env("PROM_USERNAME")
             password = sys.env("GRAFANA_API_TOKEN")
           }
-        } 
+        }
       }
       ///////////////////////////////////////////////////////////////////////////////////
 
@@ -38,15 +38,15 @@ alloy:
         forward_to = [prometheus.relabel.set_labels.receiver]
       }
       ///////////////////////////////////////////////////////////////////////////////////
-      
+
       ///////////////////////////////////////////////////////////////////////////////////
       // Process scraper
       prometheus.scrape "processes" {
         targets    = prometheus.exporter.process.processes.targets
         forward_to = [prometheus.remote_write.grafanacloud.receiver]
-      }  
+      }
       ///////////////////////////////////////////////////////////////////////////////////
-      
+
       ///////////////////////////////////////////////////////////////////////////////////
       // Traefik scraper
       prometheus.scrape "traefik" {
@@ -56,7 +56,7 @@ alloy:
         forward_to = [prometheus.remote_write.grafanacloud.receiver]
       }
       ///////////////////////////////////////////////////////////////////////////////////
-      
+
       ///////////////////////////////////////////////////////////////////////////////////
       // MySQL scraper
       prometheus.scrape "mysql" {
@@ -64,7 +64,7 @@ alloy:
         forward_to = [prometheus.remote_write.grafanacloud.receiver]
       }
       ///////////////////////////////////////////////////////////////////////////////////
-      
+
       prometheus.exporter.unix "localhost" {
         procfs_path = "/host/proc"
         sysfs_path  = "/host/sys"
@@ -132,6 +132,13 @@ alloy:
           target_label = "app"
         }
 
+        // Label creation -  "service_name" field from "__meta_kubernetes_pod_label_app_kubernetes_io_instance"
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+          action = "replace"
+          target_label = "service_name"
+        }
+
         // Label creation -  "job" field from "__meta_kubernetes_namespace" and "__meta_kubernetes_pod_container_name"
         // Concatenate values __meta_kubernetes_namespace/__meta_kubernetes_pod_container_name
         rule {
@@ -194,7 +201,7 @@ alloy:
         rule {
           action        = "replace"
           source_labels = ["__meta_kubernetes_pod_ip"]
-          target_label  = "__address__" 
+          target_label  = "__address__"
           replacement   = "$1:8000"
         }
       }
