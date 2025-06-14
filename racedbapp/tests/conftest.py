@@ -161,3 +161,13 @@ def create_rwmember(db):
         )
 
     return _create_rwmember
+
+
+@pytest.fixture
+def create_tag(db):
+    def _create_tag(name="TestTag", auto_select=True):
+        from racedbapp.models import Rwmembertag
+
+        return Rwmembertag.objects.create(name=name, auto_select=auto_select)
+
+    return _create_tag
