@@ -12,5 +12,4 @@ gunicorn==23.0.0
 mysqlclient==2.2.7
 pytz==2025.2
 PyYAML==6.0.2
-requests==2.32.3
 simplejson==3.20.1
