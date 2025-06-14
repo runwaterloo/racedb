@@ -60,6 +60,10 @@ spec:
               value: {{ .Values.racedb.settings }}
             - name: DATABASE
               value: "mysql"
+            {{- if eq .Values.racedb.settings "dev" }}
+            - name: DEBUG
+              value: "true"
+            {{- end }}
           volumeMounts:
             {{- if .Values.racedb.mountLocal }}
             - mountPath: /srv/racedb
