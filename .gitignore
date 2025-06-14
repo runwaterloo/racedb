@@ -12,5 +12,6 @@ __pycache__
 *.retry
 coverage.xml
 htmlcov
+report.xml
 secrets.py
 secrets.yml
