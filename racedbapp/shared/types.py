@@ -28,7 +28,8 @@ namedteamrecord = namedtuple(
     ],
 )
 
-class Choice():
+
+class Choice:
     def __init__(self, name, url):
         self.name = name
         self.url = parse.quote_plus(url, safe="/&?=")
@@ -39,7 +40,8 @@ class Choice():
     def __lt__(self, other):
         return self.name < other.name
 
-class Filter():
+
+class Filter:
     def __init__(self, current, choices):
         self.current = current
         self.choices = choices
