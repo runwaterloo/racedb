@@ -99,6 +99,7 @@ def create_result(db, create_event, create_category):
             gender=gender,
             city=f"Test City {name_suffix}",
             place=place,
+            guntime=datetime.timedelta(seconds=300),
         )
 
     return _create_result
