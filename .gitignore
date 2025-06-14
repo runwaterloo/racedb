@@ -3,6 +3,7 @@ __pycache__
 .config
 .coverage
 .DS_Store
+.envrc
 .heartbeat
 .kube
 .ruff_cache
