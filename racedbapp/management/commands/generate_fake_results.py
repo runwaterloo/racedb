@@ -12,14 +12,11 @@ class Command(BaseCommand):
     help = "Generate fake data for Result model"
 
     def handle(self, *args, **kwargs):
-
         with open("racedbapp/management/commands/fake_config.json") as f:
             fake_config = json.load(f)
         min_num_results = fake_config["min_results_per_event"]
         max_num_results = fake_config["max_results_per_event"]
-        num_random_people = int(
-            fake_config["max_results_per_event"] * 1.5
-        )  # pool of non-members
+        num_random_people = int(fake_config["max_results_per_event"] * 1.5)  # pool of non-members
 
         faker = Faker()
 
@@ -85,11 +82,7 @@ class Command(BaseCommand):
             guntimes = []
             for i in range(0, num_results):
                 guntimes.append(
-                    timedelta(
-                        seconds=random.randint(1800, 6600)
-                        * float(event.distance.km)
-                        / 10
-                    )
+                    timedelta(seconds=random.randint(1800, 6600) * float(event.distance.km) / 10)
                 )
             guntimes = sorted(guntimes)
 
@@ -125,9 +118,7 @@ class Command(BaseCommand):
                 chiptime = guntime - timedelta(seconds=random.randint(0, 15))
                 # Calculate age based on event date and member's year of birth if rwmember is not None
                 age = (
-                    event.date.year - rwmember.year_of_birth
-                    if rwmember
-                    else random.randint(5, 85)
+                    event.date.year - rwmember.year_of_birth if rwmember else random.randint(5, 85)
                 )
                 division = ""
                 province = faker.state()
@@ -144,9 +135,7 @@ class Command(BaseCommand):
                 category = get_or_create_category(gender, age)
 
                 # Increment category count and assign category place
-                category_key = (
-                    f"{gender}{age // 10}"  # Key for category count dictionary
-                )
+                category_key = f"{gender}{age // 10}"  # Key for category count dictionary
                 if category_key not in category_counts:
                     category_counts[category_key] = 0
                 category_counts[category_key] += 1
@@ -172,6 +161,4 @@ class Command(BaseCommand):
                     isrwpb=isrwpb,
                 )
 
-        self.stdout.write(
-            self.style.SUCCESS("Successfully generated results for all events")
-        )
+        self.stdout.write(self.style.SUCCESS("Successfully generated results for all events"))
