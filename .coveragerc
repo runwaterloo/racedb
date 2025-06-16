@@ -1,3 +1,5 @@
+[report]
+precision = 2
 [run]
 omit =
     manage.py

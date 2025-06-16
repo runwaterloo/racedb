@@ -1,16 +1,15 @@
 import urllib
 from collections import namedtuple
 
-from django import db
-from django.db.models import Count, Min, Q
-from django.http import HttpResponse
+from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import render
 
 import racedbapp.shared.endurrun
 from racedbapp.shared.types import Choice, Filter
 
+from .models import Distance, Endurraceresult, Event, Prime, Result
 from .shared import shared, utils
-from .models import *
 
 
 def index(request, race_slug, distance_slug):
@@ -41,10 +40,10 @@ def index(request, race_slug, distance_slug):
         division_choice = "Ultimate"
     divisions = ["Ultimate", "Sport", "Relay", "Guest", "All"]
     race = shared.get_race_by_slug_or_false(race_slug)
+    if not race:
+        raise Http404()
     races = shared.create_samerace_list(race)
-    distance_ids = (
-        Event.objects.filter(race=race).values_list("distance", flat=True).distinct()
-    )
+    distance_ids = Event.objects.filter(race=race).values_list("distance", flat=True).distinct()
     distances = Distance.objects.filter(pk__in=set(distance_ids)).order_by("-km")
     distances = list(distances)
     if distances and race_slug == "endurrun":  # order by stages if endurrun
@@ -66,13 +65,13 @@ def index(request, race_slug, distance_slug):
     if race and distance_slug == "combined":
         distance = combined_distance
         rawresults = Endurraceresult.objects.all()
-        numyears = (
-            rawresults.order_by("-year").values_list("year", flat=True).distinct()
-        )
+        numyears = rawresults.order_by("-year").values_list("year", flat=True).distinct()
         for y in numyears:
             years.append(namedyear(y, "endurrace"))
     else:
         distance = shared.get_distance_by_slug_or_false(distance_slug)
+        if not distance:
+            raise Http404()
         rawresults = Result.objects.select_related().filter(
             event__race__in=races, event__distance=distance
         )
@@ -86,9 +85,7 @@ def index(request, race_slug, distance_slug):
         # dates = rawresults.order_by('-event__date').values_list('event__date', flat=True).distinct()
         # years = sorted([ x.year for x in dates ], reverse=True)
 
-    records, team_records, hill_records = shared.get_race_records(
-        race, distance, division_choice
-    )
+    records, team_records, hill_records = shared.get_race_records(race, distance, division_choice)
     record_divs = [x.place for x in records]
     results = rawresults.order_by("guntime")
     if race and race.slug == "endurrun" and division_choice != "All":
@@ -150,9 +147,7 @@ def index(request, race_slug, distance_slug):
         choices = [
             Choice(
                 "",
-                "/race/{}/{}/?division={}".format(
-                    race_slug, distance_slug, division_choice
-                ),
+                "/race/{}/{}/?division={}".format(race_slug, distance_slug, division_choice),
             ),
             Choice(
                 "Female",
@@ -197,12 +192,8 @@ def index(request, race_slug, distance_slug):
     else:
         choices = [
             Choice("", "/race/{}/{}".format(race_slug, distance_slug)),
-            Choice(
-                "Female", "/race/{}/{}/?filter=Female".format(race_slug, distance_slug)
-            ),
-            Choice(
-                "Male", "/race/{}/{}/?filter=Male".format(race_slug, distance_slug)
-            ),
+            Choice("Female", "/race/{}/{}/?filter=Female".format(race_slug, distance_slug)),
+            Choice("Male", "/race/{}/{}/?filter=Male".format(race_slug, distance_slug)),
         ]
         if "Masters Female" in record_divs and "Masters Male" in record_divs:
             choices.append(

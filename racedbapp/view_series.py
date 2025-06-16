@@ -1,6 +1,7 @@
 from operator import attrgetter
 from urllib import parse
 
+from django.http import Http404
 from django.shortcuts import render
 
 from racedbapp.shared.types import Choice, Filter
@@ -12,6 +13,8 @@ def index(request, series_slug):
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
     year = False
     all_series = Series.objects.filter(slug=series_slug).order_by("-year")
+    if not all_series:
+        raise Http404("Series not found")
     show_records = all_series.reverse()[0].show_records
     years = [x.year for x in all_series]
     if "year" in qstring:
@@ -54,7 +57,9 @@ def index(request, series_slug):
                     series_results.append(result)
         results += series_results
     filters = {
-        "category_filter": get_category_filter(series_slug, category, year, event1_all_results, results),
+        "category_filter": get_category_filter(
+            series_slug, category, year, event1_all_results, results
+        ),
         "year_filter": get_year_filter(series_slug, year, years, show_records),
     }
     # Apply filters
@@ -93,6 +98,7 @@ def get_year_filter(series_slug, year, years, show_records):
     year_filter = Filter(current_choice, choices)
     return year_filter
 
+
 # TODO refactor with event version and have both call same.
 def get_category_filter(series_slug, category, year, event1_all_results, results):
     choices = []
@@ -123,14 +129,10 @@ def get_category_filter(series_slug, category, year, event1_all_results, results
                     )
                 )
             else:
-                choices.append(
-                    Choice(cat, "/series/{}/?filter={}".format(series_slug, cat))
-                )
+                choices.append(Choice(cat, "/series/{}/?filter={}".format(series_slug, cat)))
     if category != "All":
         if year:
-            choices.insert(
-                0, Choice("All", "/series/{}/?year={}".format(series_slug, year))
-            )
+            choices.insert(0, Choice("All", "/series/{}/?year={}".format(series_slug, year)))
         else:
             choices.insert(0, Choice("All", "/series/{}/".format(series_slug)))
     category_filter = Filter(current_choice, choices)
@@ -141,9 +143,7 @@ class SeriesOccurence:
     def __init__(self, series):
         self.year = series.year
         self.name = series.name
-        self.events = Event.objects.filter(id__in=series.event_ids.split(",")).order_by(
-            "date"
-        )
+        self.events = Event.objects.filter(id__in=series.event_ids.split(",")).order_by("date")
 
     def __repr__(self):
         return "SeriesOccurence(year={}, name={}, events={})".format(
