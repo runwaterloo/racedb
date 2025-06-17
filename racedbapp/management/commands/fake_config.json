@@ -1,8 +1,8 @@
 {
-    "min_results_per_event": 50,
-    "max_results_per_event": 150,
-    "male_probability": 0.48,
-    "female_probability": 0.48,
-    "nonbinary_probability": 0.04,
-    "member_photo_url": "https://farm5.staticflickr.com/4756/39431555954_fb82cb1a35_o.png"
+  "min_results_per_event": 50,
+  "max_results_per_event": 150,
+  "male_probability": 0.48,
+  "female_probability": 0.48,
+  "nonbinary_probability": 0.04,
+  "member_photo_url": "https://farm5.staticflickr.com/4756/39431555954_fb82cb1a35_o.png"
 }

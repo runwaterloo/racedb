@@ -1,12 +1,53 @@
 import types
 from unittest import mock
 
+from django.core.management import call_command
+
 # Import the functions directly from the command module
 from racedbapp.management.commands.addraces import (
     get_extra_dict,
     get_member,
     get_results_from_google,
 )
+from racedbapp.models import Result
+
+
+def test_addraces_add_results_from_fake_google_sheet(db, create_event):
+    event = create_event()
+    event.resultsurl = "https://docs.google.com/spreadsheets/d/fake_sheet_id/edit"
+    event.save()
+    fake_results = {
+        "individual": [
+            {
+                "place": 1,
+                "bib": "123",
+                "athlete": "Fake Person",
+                "guntime": "0:20:00",
+                "gender": "F",
+                "age": 25,
+                "category": "F25-29",
+                "chiptime": "0:19:19",
+                "city": "Anytown",
+            }
+        ],
+        "team": [],
+    }
+    with (
+        mock.patch(
+            "racedbapp.management.commands.addraces.get_results_from_google",
+            return_value=fake_results,
+        ),
+        mock.patch("racedbapp.management.commands.addraces.tasks.clear_cache.delay"),
+    ):
+        # ...rest of your test...
+        call_command("addraces", event_id=event.id)
+    result = Result.objects.filter(event=event).first()
+    assert result is not None
+    assert result.athlete == "Fake Person"
+    assert result.place == 1
+    assert result.bib == "123"
+    assert result.city == "Anytown"
+    assert result.gender == "F"
 
 
 def test_get_member_logic():
