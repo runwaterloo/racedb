@@ -38,5 +38,6 @@
     "racedbapp"
   ],
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": true,
+  "djlint.useEditorIndentation": false
 }

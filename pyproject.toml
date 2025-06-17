@@ -1,5 +1,7 @@
 [tool.django-upgrade]
 target-version = "5.0"
+[tool.djlint]
+indent = 2
 [tool.ruff]
 exclude = [
     "racedbapp/migrations",
