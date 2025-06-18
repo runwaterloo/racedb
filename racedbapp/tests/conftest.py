@@ -172,3 +172,15 @@ def create_tag(db):
         return Rwmembertag.objects.create(name=name, auto_select=auto_select)
 
     return _create_tag
+
+
+@pytest.fixture
+def create_prime(db, create_event):
+    def _create_prime(event=None):
+        from racedbapp.models import Prime
+
+        if not event:
+            event = create_event()
+        return Prime.objects.create(event=event, place=1, gender="F")
+
+    return _create_prime
