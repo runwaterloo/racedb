@@ -32,7 +32,6 @@ named_split = namedtuple("ns", ["split_num", "split_time"])
 
 def index(request, year, race_slug, distance_slug):
     cache_key = "event.{}".format(request.META["QUERY_STRING"])
-    print(cache_key)
     cached_html = cache.get(cache_key)
     if cached_html:
         return HttpResponse(cached_html)
