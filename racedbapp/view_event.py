@@ -31,12 +31,6 @@ named_split = namedtuple("ns", ["split_num", "split_time"])
 
 
 def index(request, year, race_slug, distance_slug):
-    cache_key = "event.{}-{}-{}-{}".format(
-        year, race_slug, distance_slug, request.META["QUERY_STRING"]
-    )
-    cached_html = cache.get(cache_key)
-    if cached_html:
-        return HttpResponse(cached_html)
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
     page = get_page(qstring)
     category = get_category(qstring)
@@ -47,6 +41,12 @@ def index(request, year, race_slug, distance_slug):
         )
     except Exception:
         raise Http404("Matching event not found")
+    cache_key = "event.{}-{}-{}-{}".format(
+        year, race_slug, distance_slug, request.META["QUERY_STRING"]
+    )
+    cached_html = cache.get(cache_key)
+    if cached_html:
+        return HttpResponse(cached_html)
     races = shared.create_samerace_list(event.race)
     team_categories = shared.get_team_categories(event)
     hill_dict = get_hill_dict(event)
@@ -124,7 +124,7 @@ def index(request, year, race_slug, distance_slug):
         "race_logo_slug": race_logo_slug,
     }
     html = render(request, "racedbapp/event.html", context).content.decode("utf-8")
-    cache.set(cache_key, html, timeout=604800)
+    cache.set(cache_key, html, timeout=86400)
     return HttpResponse(html)
 
 
