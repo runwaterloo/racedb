@@ -125,6 +125,7 @@ if os.getenv("SETTINGS", "none") == "prod":
         "https://results.runwaterloo.com",
         "https://api.runwaterloo.com",
     ]
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 elif os.getenv("SETTINGS", "none") == "dev":
     STORAGES = {
         "staticfiles": {
@@ -148,6 +149,7 @@ elif os.getenv("SETTINGS", "none") == "dev":
         "https://racedb.runwaterloo.com",
         "https://racedb-api.runwaterloo.com",
     ]
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 else:
     STORAGES = {
         "staticfiles": {

@@ -2,7 +2,6 @@ from collections import defaultdict, namedtuple
 from operator import attrgetter
 from urllib import parse
 
-from django.core.cache import cache
 from django.db.models import Count, Max, Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
@@ -41,12 +40,6 @@ def index(request, year, race_slug, distance_slug):
         )
     except Exception:
         raise Http404("Matching event not found")
-    cache_key = "event.{}-{}-{}-{}".format(
-        year, race_slug, distance_slug, request.META["QUERY_STRING"]
-    )
-    cached_html = cache.get(cache_key)
-    if cached_html:
-        return HttpResponse(cached_html)
     races = shared.create_samerace_list(event.race)
     team_categories = shared.get_team_categories(event)
     hill_dict = get_hill_dict(event)
@@ -124,7 +117,6 @@ def index(request, year, race_slug, distance_slug):
         "race_logo_slug": race_logo_slug,
     }
     html = render(request, "racedbapp/event.html", context).content.decode("utf-8")
-    cache.set(cache_key, html, timeout=86400)
     return HttpResponse(html)
 
 
