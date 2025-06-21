@@ -38,3 +38,6 @@ jobs:
       - name: Start local environment
         run: ./deploy/local/start.sh
         shell: bash
+
+      - name: Run tests inside container
+        run: docker exec racedb-web pytest
