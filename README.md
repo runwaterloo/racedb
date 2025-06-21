@@ -76,9 +76,16 @@ deploy/local/importdb.sh $DUMP_FILE_PATH
 
 There are different workflows that may execute depending on the situation.
 
-**Unit Tests**: On every push, any branch
+**Unit Tests**:
 
-**Build and Push Docker Image**: On merges to main only, or can be [triggered manually](https://github.com/runwaterloo/racedb/actions/workflows/docker-build-push.yml) to push to dev
+- every push
+- every branch
+
+**Build and Push Docker Image**:
+
+- main branch only
+- can be [triggered manually](https://github.com/runwaterloo/racedb/actions/workflows/docker-build-push.yml) to push to dev
+- can be skipped with `[skip build]` in commit message
 
 **integration-test**: coming soon
 
