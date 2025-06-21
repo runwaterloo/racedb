@@ -14,8 +14,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install git for test reporter
-        run: apk add --no-cache git
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.13
 
       - name: Prepare secrets file
         run: cp racedb/secrets.py.sample racedb/secrets.py
