@@ -2,9 +2,9 @@ name: Integration Tests
 
 on:
   push:
-    # paths:
-    #   - 'Dockerfile'
-    #   - 'requirements/**'
+    paths:
+      - 'Dockerfile'
+      - 'requirements/**'
   workflow_dispatch:
 
 jobs:
