@@ -36,7 +36,7 @@ services:
       redis:
         condition: service_started
     build:
-      context: .
+      context: ../..
       dockerfile: Dockerfile
       args:
         INSTALL_DEV: "1"
