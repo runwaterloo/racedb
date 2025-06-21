@@ -2,6 +2,7 @@ name: Unit Tests
 
 on:
   push:
+  pull_request:
 
 jobs:
   test:
@@ -31,3 +32,11 @@ jobs:
         with:
           name: junit-report
           path: report.xml
+
+      - name: Publish test results to PR
+        if: github.event_name == 'pull_request'
+        uses: dorny/test-reporter@v1
+        with:
+          name: Unit Tests
+          path: report.xml
+          reporter: java-junit
