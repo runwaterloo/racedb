@@ -8,7 +8,7 @@ on:
   push:
 
 jobs:
-  Test:
+  Execute:
     runs-on: ubuntu-latest
 
     steps:
