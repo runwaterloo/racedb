@@ -27,4 +27,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/racedb:${{ github.sha.substring(0, 7) }}
+          tags: ghcr.io/${{ github.repository_owner }}/racedb:${{ github.sha.slice(0, 7) }}
