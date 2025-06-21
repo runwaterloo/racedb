@@ -7,9 +7,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    container:
-      image: python:3.13.2-alpine3.21
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
