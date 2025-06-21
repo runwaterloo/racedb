@@ -31,3 +31,7 @@ jobs:
         run: |
           cd deploy/integration-tests
           docker-compose up -d
+
+      - name: Show MariaDB logs
+        if: failure()
+        run: docker logs integration-tests-mariadb-1 || true
