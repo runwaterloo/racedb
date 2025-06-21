@@ -1,5 +1,8 @@
 name: Build and Push Docker Image
 
+permissions:
+  packages: write
+
 on:
   push:
     branches:
@@ -11,6 +14,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+
+      - name: Set short SHA variable
+        id: vars
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Log in to GHCR
         uses: docker/login-action@v2
@@ -24,4 +31,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/racedb:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository_owner }}/racedb:${{ env.SHORT_SHA }}
