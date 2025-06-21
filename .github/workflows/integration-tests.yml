@@ -2,6 +2,8 @@ name: Integration Tests
 
 on:
   push:
+    branches-ignore:
+      - main
     paths:
       - 'Dockerfile'
       - 'requirements/**'
@@ -9,7 +11,6 @@ on:
 
 jobs:
   Execute:
-    name: Integration tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
