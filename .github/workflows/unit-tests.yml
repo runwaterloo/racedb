@@ -14,6 +14,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Install git for test reporter
+        run: apk add --no-cache git
+
       - name: Prepare secrets file
         run: cp racedb/secrets.py.sample racedb/secrets.py
 
@@ -31,3 +34,10 @@ jobs:
         with:
           name: junit-report
           path: report.xml
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        with:
+          name: Unit Tests
+          path: report.xml
+          reporter: java-junit
