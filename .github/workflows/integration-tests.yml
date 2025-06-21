@@ -30,3 +30,10 @@ jobs:
             default-libmysqlclient-dev \
             pkg-config \
             python3-dev
+
+      - name: Install Python development dependencies
+        run: pip install -r requirements/requirements-dev.txt
+
+      - name: Start local environment
+        run: ./deploy/local/start.sh
+        shell: bash
