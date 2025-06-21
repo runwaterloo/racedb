@@ -6,6 +6,7 @@ permissions:
 
 on:
   push:
+  pull_request:
 
 jobs:
   Test:
@@ -44,4 +45,3 @@ jobs:
           name: Test report
           path: report.xml
           reporter: java-junit
-          check_run_annotations: all tests
