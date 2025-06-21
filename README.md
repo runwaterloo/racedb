@@ -87,7 +87,10 @@ There are different workflows that may execute depending on the situation.
 - can be [triggered manually](https://github.com/runwaterloo/racedb/actions/workflows/docker-build-push.yml) to push to dev
 - can be skipped with `[skip build]` in commit message
 
-**integration-test**: coming soon
+**Integration Tests**:
+
+- any commit where Dockefile or requirements/* have changed
+- can be [triggered manually](https://github.com/runwaterloo/racedb/actions/workflows/integration-tests.yml)
 
 **tag-commit**: coming soon
 
