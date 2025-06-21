@@ -16,7 +16,7 @@ replicaCount: 1
 webReplicaCount: 1
 
 image:
-  repository: registry.gitlab.com/sl70176/racedb
+  repository: ghcr.io/runwaterloo/racedb
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
