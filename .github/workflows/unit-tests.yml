@@ -27,7 +27,7 @@ jobs:
         run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=term --cov-branch
 
       - name: Upload test results (JUnit)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: junit-report
           path: report.xml
