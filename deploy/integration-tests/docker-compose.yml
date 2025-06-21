@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+  mariadb:
+    image: mariadb:latest
+    environment:
+      MARIADB_ROOT_PASSWORD: ROOTCHANGEME
+      MARIADB_DATABASE: racedb
+      MARIADB_USER: racedb
+      MARIADB_PASSWORD: CHANGEME
+    ports:
+      - "3306:3306"
+    command: ["--init-file", "/docker-entrypoint-initdb.d/init-script.sql"]
+    volumes:
+      - ./init-script.sql:/docker-entrypoint-initdb.d/init-script.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "racedb", "--password=CHANGEME"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  racedb-web:
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        INSTALL_DEV: "1"
+    command: >
+      /bin/sh -c '
+      python ./manage.py collectstatic --noinput &&
+      python ./manage.py migrate --noinput &&
+      export DJANGO_SUPERUSER_PASSWORD=admin &&
+      python ./manage.py createsuperuser --noinput --username admin --email admin@example.com &&
+      python ./manage.py runserver 0.0.0.0:8000'
+    environment:
+      WEBHOST: 127.0.0.1
+      DEBUG: "true"
+      ENABLE_DEBUG_TOOLBAR: "true"
+      STORAGE: "local"
+      CACHES: "dummy"
+      DATABASE: "mysql"
+      SETTINGS: "min"
+      DJANGO_SETTINGS_MODULE: "racedb.settings.settings"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/srv/racedb
+      - ./racedb/secrets.py.sample:/srv/racedb/racedb/secrets.py
