@@ -14,9 +14,19 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          context: .
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/racedb:localbuild
+          python-version: 3.13
+
+      - name: Copy Django secrets file
+        run: cp racedb/secrets.py.sample racedb/secrets.py
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            default-libmysqlclient-dev \
+            pkg-config \
+            python3-dev
