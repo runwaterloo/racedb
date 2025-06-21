@@ -44,3 +44,4 @@ jobs:
           name: Test report
           path: report.xml
           reporter: java-junit
+          check_run_annotations: all tests
