@@ -72,25 +72,19 @@ deploy/local/importdb.sh $DUMP_FILE_PATH
 
 ## Developer Info
 
-### CI Pipelines
+### GitHub Actions
 
-There are 5 different pipeline steps that may execute depending on the situation.
+There are different workflows that may execute depending on the situation.
 
-**test**: always executes
+**Unit Tests**: On every push, any branch
 
-**build-test-push**: executes when the branch is main, or the commit message contains `[push dev]`
+**Build and Push Docker Image**: On merges to main only, or can be [triggered manually](https://github.com/runwaterloo/racedb/actions/workflows/docker-build-push.yml) to push to dev
 
-**integration-test**: executes when `Dockerfile` or `requirements/requirements.txt` have changes, or the commit message contains `[full ci]`
+**integration-test**: coming soon
 
-**tag-commit**: executes on the main branch only, when previous steps were successful
-
-**update-dependencies**: executes when the `UPDATE_DEPENDENCIES` variable is set to `true`
-
-Add `[push dev]` to a commit message to pushes the build to https://racedb.runwaterloo.com
+**tag-commit**: coming soon
 
 Add `[skip ci]` to a commit message to prevent CI from running at all
-
-Add `[full ci]` to a commit message to run the integration tests (in addition to usual testing)
 
 ## Configurable Options
 The following options can be configured in Configs in the Django admin site.
