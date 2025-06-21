@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  integration_tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -18,20 +18,5 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: false
+          push: true
           tags: ghcr.io/${{ github.repository_owner }}/racedb:localbuild
-
-      - name: Install docker-compose
-        run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose version
-
-      - name: Start services with docker-compose
-        run: |
-          cd deploy/integration-tests
-          docker-compose up -d
-
-      - name: Show MariaDB logs
-        if: failure()
-        run: docker logs integration-tests-mariadb-1 || true
