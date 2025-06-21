@@ -1,18 +1,24 @@
 name: Unit Tests
 
+permissions:
+  checks: write
+  contents: read
+
 on:
   push:
 
 jobs:
-  test:
+  Test:
     runs-on: ubuntu-latest
-
-    container:
-      image: python:3.13.2-alpine3.21
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.13
 
       - name: Prepare secrets file
         run: cp racedb/secrets.py.sample racedb/secrets.py
@@ -31,3 +37,10 @@ jobs:
         with:
           name: junit-report
           path: report.xml
+
+      - name: Publish report
+        uses: dorny/test-reporter@v1
+        with:
+          name: Publish report
+          path: report.xml
+          reporter: java-junit
