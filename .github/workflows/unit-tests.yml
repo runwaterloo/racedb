@@ -1,0 +1,33 @@
+name: Unit Tests
+
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    container:
+      image: python:3.13.2-alpine3.21
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Prepare secrets file
+        run: cp racedb/secrets.py.sample racedb/secrets.py
+
+      - name: Remove mysqlclient from requirements.txt
+        run: sed -i '/^mysqlclient/d' requirements/requirements.txt
+
+      - name: Install test requirements
+        run: pip install --root-user-action=ignore -r requirements/requirements-test.txt
+
+      - name: Run tests with coverage
+        run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=term --cov-branch
+
+      - name: Upload test results (JUnit)
+        uses: actions/upload-artifact@v3
+        with:
+          name: junit-report
+          path: report.xml
