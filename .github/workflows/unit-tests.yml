@@ -8,7 +8,7 @@ on:
   push:
 
 jobs:
-  Run tests:
+  Test:
     runs-on: ubuntu-latest
 
     steps:
@@ -38,9 +38,9 @@ jobs:
           name: junit-report
           path: report.xml
 
-      - name: Publish test results
+      - name: Publish report
         uses: dorny/test-reporter@v1
         with:
-          name: Publish test report
+          name: Publish report
           path: report.xml
           reporter: java-junit
