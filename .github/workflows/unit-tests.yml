@@ -1,5 +1,9 @@
 name: Unit Tests
 
+permissions:
+  checks: write
+  contents: read
+
 on:
   push:
 
