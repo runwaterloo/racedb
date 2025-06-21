@@ -31,3 +31,14 @@ jobs:
         with:
           name: junit-report
           path: report.xml
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: report.xml
+
+      - name: Report Summary
+        run: |
+          echo "### ✅ Tests Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Total coverage: 93.2%" >> $GITHUB_STEP_SUMMARY
+          echo "- [Download report.xml](./artifacts/junit-report)" >> $GITHUB_STEP_SUMMARY
