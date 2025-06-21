@@ -1,7 +1,7 @@
 ![Python](https://img.shields.io/badge/python-3.13+-blue?logo=python&logoColor=white)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-blueviolet)](https://docs.astral.sh/ruff/)
 [![Template style: djlint](https://img.shields.io/badge/template%20style-djlint-yellowgreen)](https://djlint.com/)
-[![CI](https://gitlab.com/sl70176/racedb/badges/main/pipeline.svg)](https://gitlab.com/sl70176/racedb/-/pipelines)
+[![Unit Tests](https://github.com/runwaterloo/racedb/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/runwaterloo/racedb/actions/workflows/unit-tests.yml)
 ![coverage](https://gitlab.com/sl70176/racedb/badges/main/coverage.svg)
 # RaceDB
 
