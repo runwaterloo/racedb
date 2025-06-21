@@ -16,9 +16,15 @@ if [[ "$1" == "--rebuild" ]] || ! docker ps -a --format '{{.Names}}' | grep -q '
   echo "Starting containers in detached mode..."
   docker-compose -f deploy/local/docker-compose.yml up --build -d
 
+  if [ -t 1 ]; then
+    DOCKER_EXEC="docker exec -it"
+  else
+    DOCKER_EXEC="docker exec"
+  fi
+
   echo "Waiting for Django to be ready..."
   until
-    docker exec -it racedb-web sh -c './manage.py showmigrations' | tail -n 1 | grep -q "\\[X\\]"; do
+    $DOCKER_EXEC racedb-web sh -c './manage.py showmigrations' | tail -n 1 | grep -q "\\[X\\]"; do
     sleep 2
   done
 
