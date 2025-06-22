@@ -148,6 +148,6 @@ jobs:
         with:
           tag_name: ${{ needs.tag_commit.outputs.VERSION }}
           name: ${{ needs.tag_commit.outputs.VERSION }}
-          body: ${{ github.event.head_commit.message }}
+          body: x ${{ github.event.head_commit.message }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
