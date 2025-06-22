@@ -4,14 +4,10 @@ permissions:
   packages: write
 
 on:
-  push:
-    branches:
-      - releases
   workflow_dispatch:
 
 jobs:
   build_and_push:
-    if: "!contains(github.event.head_commit.message, '[skip build]')"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -34,31 +30,3 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/racedb:${{ env.SHORT_SHA }}
-
-      - name: Set and show version number
-        if: github.ref_name == 'releases'
-        run: |
-          RUN_NUMBER=${{ github.run_number }}
-          MAJOR=$(((RUN_NUMBER / 1000) + 3))
-          MINOR=$(TZ=America/Toronto date +'%y%m%d')
-          PATCH=$((RUN_NUMBER % 1000))
-          VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          echo "Calculated VERSION: $VERSION"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-
-      - name: Tag and push Docker image with VERSION
-        if: env.VERSION
-        run: |
-          docker tag ghcr.io/${{ github.repository_owner }}/racedb:${{ env.SHORT_SHA }} ghcr.io/${{ github.repository_owner }}/racedb:${{ env.VERSION }}
-          docker push ghcr.io/${{ github.repository_owner }}/racedb:${{ env.VERSION }}
-
-      - name: Save VERSION as artifact
-        if: env.VERSION
-        run: echo "${VERSION}" > version.txt
-
-      - name: Upload VERSION artifact
-        if: env.VERSION
-        uses: actions/upload-artifact@v4
-        with:
-          name: version
-          path: version.txt
