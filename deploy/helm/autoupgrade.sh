@@ -21,7 +21,10 @@ LATEST_TAG=$(curl -s https://api.github.com/repos/$OWNER/$REPO/tags | jq -r '.[0
 if [ -z "$LATEST_TAG" ]; then
   echo "[ERROR] Failed to fetch latest tag from GitHub"
   exit 1
- else
+elif ! [[ "$LATEST_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "[ERROR] Latest tag '$LATEST_TAG' is not a valid semver (x.y.z)"
+  exit 1
+else
   echo "[INFO] Latest tag: $LATEST_TAG"
 fi
 
