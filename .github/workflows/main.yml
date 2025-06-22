@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Main Pipeline
 
 permissions:
   checks: write
@@ -7,6 +7,8 @@ permissions:
 
 on:
   push:
+    branches:
+      - main
 
 jobs:
   unit_tests:
@@ -54,7 +56,7 @@ jobs:
 
   build_and_push:
     name: Build and Push Docker Image
-    if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip build]')
+    if: "!contains(github.event.head_commit.message, '[skip build]')"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -79,7 +81,6 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/racedb:${{ env.SHORT_SHA }}
 
       - name: Set and show version number
-        if: github.ref_name == 'main'
         run: |
           RUN_NUMBER=${{ github.run_number }}
           MAJOR=$(((RUN_NUMBER / 1000) + 3))
@@ -90,17 +91,14 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Tag and push Docker image with VERSION
-        if: env.VERSION
         run: |
           docker tag ghcr.io/${{ github.repository_owner }}/racedb:${{ env.SHORT_SHA }} ghcr.io/${{ github.repository_owner }}/racedb:${{ env.VERSION }}
           docker push ghcr.io/${{ github.repository_owner }}/racedb:${{ env.VERSION }}
 
       - name: Save VERSION as artifact
-        if: env.VERSION
         run: echo "${VERSION}" > version.txt
 
       - name: Upload VERSION artifact
-        if: env.VERSION
         uses: actions/upload-artifact@v4
         with:
           name: version
