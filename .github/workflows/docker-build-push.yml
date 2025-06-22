@@ -45,3 +45,9 @@ jobs:
           VERSION="${MAJOR}.${MINOR}.${PATCH}"
           echo "Calculated VERSION: $VERSION"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Tag and push Docker image with VERSION
+        if: env.VERSION
+        run: |
+          docker tag ghcr.io/${{ github.repository_owner }}/racedb:${{ env.SHORT_SHA }} ghcr.io/${{ github.repository_owner }}/racedb:${{ env.VERSION }}
+          docker push ghcr.io/${{ github.repository_owner }}/racedb:${{ env.VERSION }}
