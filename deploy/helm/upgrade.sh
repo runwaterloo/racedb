@@ -7,11 +7,11 @@ if [ "$#" -ne 3 ]; then
     exit 1
 fi
 
-DEPLOYMENT="$1"
-VALUES_FILE="$2"
-TAG="$3"
+export DEPLOYMENT="$1"
+export VALUES_FILE="$2"
+export TAG="$3"
 
-KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 helm upgrade --install "$DEPLOYMENT" . \
     --values "$VALUES_FILE" \

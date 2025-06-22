@@ -3,18 +3,18 @@
 set -euo pipefail
 
 # log output to systemd journal
-#exec > >(systemd-cat -t racedb-upgrade) 2>&1
+exec > >(systemd-cat -t racedb-autoupgrade) 2>&1
 
 # prevent concurrent execution
-#exec 200>/var/lock/racedb-deploy.lock
-#flock -n 200 || { echo "WARNING: Another deployment is already running. Exiting."; exit 1; }
+exec 200>/var/lock/racedb-deploy.lock
+flock -n 200 || { echo "WARNING: Another deployment is already running. Exiting."; exit 1; }
 
 OWNER=runwaterloo
 REPO=racedb
 KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-#SLACK_GITLAB_WEBHOOK=$(cat /root/SLACK_GITLAB_WEBHOOK)
+SLACK_GITLAB_WEBHOOK=$(cat /root/SLACK_GITLAB_WEBHOOK)
 # move to directory
-#cd /srv/racedb/deploy/helm
+cd /srv/racedb/deploy/helm
 
 
 LATEST_TAG=$(curl -s https://api.github.com/repos/$OWNER/$REPO/tags | jq -r '.[0].name')
@@ -34,9 +34,10 @@ if [ "$CURRENT_TAG" != "$LATEST_TAG" ]; then
 
   echo "[INFO] Pulling repo"
   if ! runuser -l ubuntu -c "cd /srv/racedb && git reset --hard && git clean -fd && git pull"; then
-    curl -sS -X POST -H 'Content-type: application/json' \
-      --data "{\"text\":\"❌ Failed to update helm chart repo before deployment\"}" \
-      "$SLACK_GITLAB_WEBHOOK"
+    # curl -sS -X POST -H 'Content-type: application/json' \
+    #   --data "{\"text\":\"❌ Failed to update helm chart repo before deployment\"}" \
+    #   "$SLACK_GITLAB_WEBHOOK"
+    echo "[ERROR] Failed to pull repo"
     exit 1
   fi
 
