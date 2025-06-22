@@ -36,7 +36,7 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/racedb:${{ env.SHORT_SHA }}
 
       - name: Set and show version number
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'releases'
         run: |
           RUN_NUMBER=${{ github.run_number }}
           MAJOR=$(((RUN_NUMBER / 1000) + 3))
