@@ -78,23 +78,24 @@ There are different workflows that may execute depending on the situation.
 
 **Unit Tests**:
 
-- every push
-- every branch
+- always
 
-**Build and Push Docker Image**:
+**Main Pipline**:
 
 - main branch only
-- can be [triggered manually](https://github.com/runwaterloo/racedb/actions/workflows/docker-build-push.yml) to push to dev
+- includes Unit Tests
+- also build image, tags image, tags commit, creates GitHub release
 - can be skipped with `[skip build]` in commit message
+
+**Build and Push Docker Image**
+
+- pushes an image without creating a release, useful for pushing to dev
+- must be [triggered manually](https://github.com/runwaterloo/racedb/actions/workflows/docker-build-push.yml)
 
 **Integration Tests**:
 
 - any commit where Dockefile or requirements/* have changed
 - can be [triggered manually](https://github.com/runwaterloo/racedb/actions/workflows/integration-tests.yml)
-
-**tag-commit**: coming soon
-
-Add `[skip ci]` to a commit message to prevent CI from running at all
 
 ## Configurable Options
 The following options can be configured in Configs in the Django admin site.
