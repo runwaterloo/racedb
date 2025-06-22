@@ -30,7 +30,7 @@ jobs:
         run: pip install --root-user-action=ignore -r requirements/requirements-test.txt
 
       - name: Run tests with coverage
-        run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=term --cov-branch
+        run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=term --cov-report=xml --cov-branch
 
       - name: Upload test results (JUnit)
         uses: actions/upload-artifact@v4
@@ -44,3 +44,8 @@ jobs:
           name: Publish report
           path: report.xml
           reporter: java-junit
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

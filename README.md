@@ -2,7 +2,7 @@
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-blueviolet)](https://docs.astral.sh/ruff/)
 [![Template style: djlint](https://img.shields.io/badge/template%20style-djlint-yellowgreen)](https://djlint.com/)
 [![Unit Tests](https://github.com/runwaterloo/racedb/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/runwaterloo/racedb/actions/workflows/unit-tests.yml)
-![coverage](https://gitlab.com/sl70176/racedb/badges/main/coverage.svg)
+[![codecov](https://codecov.io/github/runwaterloo/racedb/graph/badge.svg?token=4NK7NXXBAP)](https://codecov.io/github/runwaterloo/racedb)
 # RaceDB
 
 ## Getting started
