@@ -11,7 +11,7 @@ flock -n 200 || { echo "WARNING: Another deployment is already running. Exiting.
 
 OWNER=runwaterloo
 REPO=racedb
-KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 SLACK_GITLAB_WEBHOOK=$(cat /root/SLACK_GITLAB_WEBHOOK)
 # move to directory
 cd /srv/racedb/deploy/helm
