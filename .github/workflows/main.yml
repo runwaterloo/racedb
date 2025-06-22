@@ -8,7 +8,7 @@ permissions:
 on:
   push:
     branches:
-      - main
+      - create-release
 
 jobs:
   unit_tests:
@@ -109,40 +109,45 @@ jobs:
     needs: [unit_tests, build_and_push]
     if: ${{ needs.unit_tests.result == 'success' && needs.build_and_push.result == 'success' }}
     runs-on: ubuntu-latest
+    outputs:
+      VERSION: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Download version artifact
-        id: download_version
-        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: version
-
-      - name: Check if version exists
-        if: steps.download_version.outcome == 'success'
-        id: check_version
-        run: |
-          if [ ! -f version.txt ] || [ ! -s version.txt ]; then
-            echo "No version found, skipping tag."
-            exit 0
-          fi
+          path: .
 
       - name: Read version
-        if: steps.download_version.outcome == 'success' && steps.check_version.outcome == 'success'
         id: get_version
         run: |
           VERSION=$(cat version.txt)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Checkout code
-        if: steps.download_version.outcome == 'success' && steps.check_version.outcome == 'success'
         uses: actions/checkout@v4
 
       - name: Tag commit
-        if: steps.download_version.outcome == 'success' && steps.check_version.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag $VERSION
           git push origin $VERSION
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create_release:
+    name: Create GitHub Release
+    needs: tag_commit
+    if: ${{ needs.tag_commit.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.tag_commit.outputs.VERSION }}
+          name: Release ${{ needs.tag_commit.outputs.VERSION }}
+          body: Automated release for ${{ needs.tag_commit.outputs.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
