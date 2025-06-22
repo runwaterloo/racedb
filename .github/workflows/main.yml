@@ -128,18 +128,18 @@ jobs:
           fi
 
       - name: Read version
-        if: steps.check_version.outcome == 'success'
+        if: always() && steps.check_version.outcome == 'success'
         id: get_version
         run: |
           VERSION=$(cat version.txt)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Checkout code
-        if: steps.check_version.outcome == 'success'
+        if: always() && steps.check_version.outcome == 'success'
         uses: actions/checkout@v4
 
       - name: Tag commit
-        if: steps.check_version.outcome == 'success'
+        if: always() && steps.check_version.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
