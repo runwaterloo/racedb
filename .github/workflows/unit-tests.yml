@@ -6,9 +6,12 @@ permissions:
 
 on:
   push:
+    branches-ignore:
+      - main
 
 jobs:
-  Execute:
+  unit_tests:
+    name: Unit Tests
     runs-on: ubuntu-latest
 
     steps:
