@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 permissions:
   checks: write
-  contents: read
+  contents: write
   packages: write
 
 on:
@@ -106,7 +106,7 @@ jobs:
           name: version
           path: version.txt
 
-  tag-commit:
+  tag_commit:
     name: Tag Commit
     needs: [unit_tests, build_and_push]
     if: ${{ needs.unit_tests.result == 'success' && needs.build_and_push.result == 'success' }}
