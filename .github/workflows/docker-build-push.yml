@@ -34,3 +34,14 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/racedb:${{ env.SHORT_SHA }}
+
+      - name: Set and show version number
+        if: github.ref_name == 'main'
+        run: |
+          RUN_NUMBER=${{ github.run_number }}
+          MAJOR=$(((RUN_NUMBER / 1000) + 3))
+          MINOR=$(TZ=America/Toronto date +'%y%m%d')
+          PATCH=$((RUN_NUMBER % 1000))
+          VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "Calculated VERSION: $VERSION"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
