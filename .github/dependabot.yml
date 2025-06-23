@@ -1,34 +1,9 @@
 version: 2
 updates:
-  # Production dependencies
   - package-ecosystem: "pip"
     directory: "/requirements"
-    requirements-file: "requirements.txt"
     schedule:
       interval: "daily"
     ignore:
       - dependency-name: "Django"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
-    labels:
-      - "dependencies"
-      - "prod"
-
-  # Development dependencies
-  - package-ecosystem: "pip"
-    directory: "/requirements"
-    requirements-file: "requirements-dev.txt"
-    schedule:
-      interval: "daily"
-    labels:
-      - "dependencies"
-      - "dev"
-
-  # Test/tooling dependencies
-  - package-ecosystem: "pip"
-    directory: "/requirements"
-    requirements-file: "requirements-test.txt"
-    schedule:
-      interval: "daily"
-    labels:
-      - "dependencies"
-      - "test"
