@@ -49,6 +49,11 @@ jobs:
           path: report.xml
           reporter: java-junit
 
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: report.xml
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
