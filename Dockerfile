@@ -21,3 +21,5 @@ RUN apk add --no-cache --virtual .build-deps \
     apk del .build-deps
 COPY . /srv/racedb
 WORKDIR /srv/racedb
+ENV DJANGO_SETTINGS_MODULE=racedb.settings.settings
+RUN python manage.py collectstatic --noinput

@@ -1,10 +1,7 @@
 import logging
 import os
-import time
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
-import boto3
-import pytz
 from celery import shared_task
 from django.core.cache import cache
 from django.core.mail import send_mail
@@ -189,47 +186,3 @@ def dump_database():
         os.system("gzip -f /tmp/racedb.sql")
     else:
         logger.info("Not production host, skipping database dump")
-
-
-@shared_task
-def copy_database_to_s3():
-    """
-    Save:
-    - latest
-    - 24 hourlies (or less by cron)
-    - 7 dailys
-    - 4 weeklies
-    - 4 monthlies
-    """
-    hour = datetime.now(pytz.timezone("America/Toronto")).hour
-    monthday = datetime.now().day
-    month = datetime.now().month
-    weekday = datetime.now().weekday()
-    week = datetime.now().isocalendar()[1]
-    if WEBHOST == "results.runwaterloo.com":
-        app = "racedb"
-        bucket = secrets.S3_PRIVATE_BUCKET
-        s3_prefix = "database_backup/"
-        gzip_file = "/tmp/{}.sql.gz".format(app)
-        s3 = boto3.resource("s3")
-        if hour == 0:
-            if monthday == 1:
-                monthly = month % 4
-                key = "{}{}.monthly{}.sql.gz".format(s3_prefix, app, monthly)
-                s3.meta.client.upload_file(gzip_file, bucket, key)
-            elif weekday == 0:
-                weekly = week % 4
-                key = "{}{}.weekly{}.sql.gz".format(s3_prefix, app, weekly)
-                s3.meta.client.upload_file(gzip_file, bucket, key)
-            else:
-                key = "{}{}.day{}.sql.gz".format(s3_prefix, app, weekday)
-                s3.meta.client.upload_file(gzip_file, bucket, key)
-        else:
-            key = "{}{}.hour{}.sql.gz".format(s3_prefix, app, hour)
-            s3.meta.client.upload_file(gzip_file, bucket, key)
-        # Upload as latest
-        time.sleep(2)
-        key = "{}{}.latest.sql.gz".format(s3_prefix, app)
-        s3.meta.client.upload_file(gzip_file, bucket, key)
-    else:
-        logger.info("Not production host, skipping copy_database_to_s3")
