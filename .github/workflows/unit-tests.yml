@@ -43,13 +43,6 @@ jobs:
           name: junit-report
           path: report.xml
 
-      - name: Publish report
-        uses: dorny/test-reporter@v1
-        with:
-          name: Publish report
-          path: report.xml
-          reporter: java-junit
-
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
