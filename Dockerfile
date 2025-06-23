@@ -22,5 +22,6 @@ RUN apk add --no-cache --virtual .build-deps \
 COPY . /srv/racedb
 WORKDIR /srv/racedb
 ENV DJANGO_SETTINGS_MODULE=racedb.settings.settings
+ENV SETTINGS=prod
 COPY racedb/secrets.py.sample racedb/secrets.py
 RUN python manage.py collectstatic --noinput && rm racedb/secrets.py
