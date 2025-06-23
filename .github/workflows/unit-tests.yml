@@ -3,8 +3,10 @@ name: Unit Tests
 permissions:
   checks: write
   contents: read
+  pull-requests: write
 
 on:
+  pull_request:
   push:
     branches-ignore:
       - main
@@ -41,12 +43,10 @@ jobs:
           name: junit-report
           path: report.xml
 
-      - name: Publish report
-        uses: dorny/test-reporter@v1
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          name: Publish report
-          path: report.xml
-          reporter: java-junit
+          files: report.xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
