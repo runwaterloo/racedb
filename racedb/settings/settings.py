@@ -26,13 +26,13 @@ INSTALLED_APPS = (
     "django.contrib.humanize",
     "racedbapp",
     "django_slack",
-    "django_s3_storage",
     "rest_framework",
     "rest_framework.authtoken",
 )
 
 # --- Middleware ---
 MIDDLEWARE = [
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -94,23 +94,15 @@ USE_TZ = True
 # --- Static files ---
 STATIC_URL = "/static/"
 STATIC_ROOT = "/static/"
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
-# --- AWS S3 info ---
-AWS_ACCESS_KEY_ID = secrets.RACEDB_STATIC_AWS_ACCESS_KEY_ID  # noqa
-AWS_SECRET_ACCESS_KEY = secrets.RACEDB_STATIC_AWS_SECRET_ACCESS_KEY  # noqa
-AWS_S3_BUCKET_NAME_STATIC = "racedb-static"
-AWS_S3_MAX_AGE_SECONDS = "315360000"
 
 # --- Env-specific ---
 if os.getenv("SETTINGS", "none") == "prod":
-    STORAGES = {
-        "staticfiles": {
-            "BACKEND": "django_s3_storage.storage.ManifestStaticS3Storage",
-        },
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-        },
-    }
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
@@ -127,14 +119,6 @@ if os.getenv("SETTINGS", "none") == "prod":
     ]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 elif os.getenv("SETTINGS", "none") == "dev":
-    STORAGES = {
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
-        },
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-        },
-    }
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
@@ -151,12 +135,10 @@ elif os.getenv("SETTINGS", "none") == "dev":
     ]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 else:
+    MIDDLEWARE = [mw for mw in MIDDLEWARE if mw != "whitenoise.middleware.WhiteNoiseMiddleware"]
     STORAGES = {
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
     }
     CACHES = {
