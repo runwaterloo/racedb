@@ -26,8 +26,4 @@ CELERY_BEAT_SCHEDULE = {
         "task": "racedbapp.tasks.dump_database",
         "schedule": crontab(minute="10"),
     },
-    "copy_database_to_s3": {
-        "task": "racedbapp.tasks.copy_database_to_s3",
-        "schedule": crontab(hour="0", minute="15"),
-    },
 }
