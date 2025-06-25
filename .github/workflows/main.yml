@@ -90,7 +90,7 @@ jobs:
           MAJOR=$(((RUN_NUMBER / 1000) + 3))
           MINOR=$(TZ=America/Toronto date +'%y%m%d')
           PATCH=$((RUN_NUMBER % 1000))
-          VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          VERSION="v${MAJOR}.${MINOR}.${PATCH}"
           echo "Calculated VERSION: $VERSION"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
@@ -147,11 +147,28 @@ jobs:
     if: ${{ needs.tag_commit.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Find the previous tag reachable from HEAD, ignoring the current tag
+          PREV_TAG=$(git describe --tags --abbrev=0 ${{ needs.tag_commit.outputs.VERSION }}^)
+
+          # Get commit messages between previous tag and current tag, one per line
+          NOTES=$(git log $PREV_TAG..${{ needs.tag_commit.outputs.VERSION }} --pretty=format:'- %s')
+
+          # If no previous tag (e.g. first release), just list commits in current tag
+          if [ -z "$NOTES" ]; then
+            NOTES=$(git log -1 --pretty=format:'- %s' ${{ needs.tag_commit.outputs.VERSION }})
+          fi
+
+          echo "release_body<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ needs.tag_commit.outputs.VERSION }}
           name: ${{ needs.tag_commit.outputs.VERSION }}
-          body: ${{ github.event.head_commit.message }}
+          body: ${{ steps.release_notes.outputs.release_body }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
