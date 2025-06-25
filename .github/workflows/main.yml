@@ -142,6 +142,11 @@ jobs:
     if: ${{ needs.tag_commit.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code with tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - name: Generate release notes
         id: release_notes
         run: |
