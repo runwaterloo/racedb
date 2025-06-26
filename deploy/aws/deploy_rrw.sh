@@ -35,7 +35,7 @@ cd ../traefik
 ./deploy.sh
 
 # get latest tag from gitlab
-LATEST_TAG=`curl --header "PRIVATE-TOKEN: ${PERSONAL_ACCESS_TOKEN}" "https://gitlab.com/api/v4/projects/${PROJECT_ID}/repository/tags/" | jq -r '.[0].name'`
+LATEST_TAG=$(curl -s https://api.github.com/repos/$OWNER/$REPO/tags | jq -r '.[0].name')
 
 # deploy rrw with helm
 cd ../helm
