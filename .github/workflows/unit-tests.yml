@@ -35,16 +35,10 @@ jobs:
       - name: Run tests with coverage
         run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=xml --cov-branch
 
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: report.xml
-
-      - name: Publish Test Report (Dorny)
+      - name: Publish Test Report
         uses: dorny/test-reporter@v1
-        if: always()
         with:
-          name: Pytest Unit Tests
+          name: Test results
           path: report.xml
           reporter: java-junit
 
