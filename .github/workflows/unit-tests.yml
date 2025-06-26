@@ -35,17 +35,12 @@ jobs:
       - name: Run tests with coverage
         run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=xml --cov-branch
 
-      - name: Upload test results (JUnit)
-        uses: actions/upload-artifact@v4
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
         with:
-          name: junit-report
+          name: Test results
           path: report.xml
-
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: report.xml
-
+          reporter: java-junit
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

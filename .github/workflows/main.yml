@@ -36,17 +36,12 @@ jobs:
       - name: Run tests with coverage
         run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=xml --cov-branch
 
-      - name: Upload test results (JUnit)
-        uses: actions/upload-artifact@v4
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
         with:
-          name: junit-report
+          name: Test results
           path: report.xml
-
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: report.xml
-
+          reporter: java-junit
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -154,11 +149,11 @@ jobs:
           PREV_TAG=$(git describe --tags --abbrev=0 --match "v*" ${{ needs.tag_commit.outputs.VERSION }}^)
 
           # Get commit messages between previous tag and current tag, one per line
-          NOTES=$(git log $PREV_TAG..${{ needs.tag_commit.outputs.VERSION }} --pretty=format:'- [%h](https://github.com/${{ github.repository_owner }}/racedb/commit/%H) %s')
+          NOTES=$(git log $PREV_TAG..${{ needs.tag_commit.outputs.VERSION }} --pretty=format:'- %h: %s (%an)')
 
           # If no previous tag (e.g. first release), just list commits in current tag
           if [ -z "$NOTES" ]; then
-            NOTES=$(git log -1 --pretty=format:'- %s' ${{ needs.tag_commit.outputs.VERSION }})
+            NOTES=$(git log -1 --pretty=format:'- %h: %s (%an)' ${{ needs.tag_commit.outputs.VERSION }})
           fi
 
           echo "release_body<<EOF" >> $GITHUB_OUTPUT
