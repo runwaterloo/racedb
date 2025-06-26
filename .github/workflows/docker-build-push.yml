@@ -30,3 +30,28 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/racedb:${{ env.SHORT_SHA }}
+
+  tag_commit:
+    name: Tag Commit
+    needs: [build_and_push]
+    if: ${{ needs.build_and_push.result == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      VERSION: ${{ steps.get_version.outputs.version }}
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set short SHA variable
+        id: vars
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Tag commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag dev-${SHORT_SHA}
+          git push origin dev-${SHORT_SHA}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

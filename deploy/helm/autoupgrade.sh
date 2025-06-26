@@ -12,7 +12,6 @@ flock -n 200 || { echo "WARNING: Another deployment is already running. Exiting.
 OWNER=runwaterloo
 REPO=racedb
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-SLACK_GITLAB_WEBHOOK=$(cat /root/SLACK_GITLAB_WEBHOOK)
 # move to directory
 cd /srv/racedb/deploy/helm
 
@@ -29,56 +28,46 @@ fi
 CURRENT_TAG=$(kubectl get deployment racedb-web -o jsonpath="{.spec.template.spec.containers[*].image}" | awk -F":" '{print $2}')
 echo "[INFO] Current tag: $CURRENT_TAG"
 
-# upgrade if needed
-if [ "$CURRENT_TAG" != "$LATEST_TAG" ]; then
-
-  echo "[INFO] Pulling repo"
-  if ! runuser -l ubuntu -c "cd /srv/racedb && git reset --hard && git clean -fd && git pull"; then
-    # curl -sS -X POST -H 'Content-type: application/json' \
-    #   --data "{\"text\":\"❌ Failed to update helm chart repo before deployment\"}" \
-    #   "$SLACK_GITLAB_WEBHOOK"
-    echo "[ERROR] Failed to pull repo"
-    exit 1
-  fi
-
-  echo "[INFO] Deploying new tag: $LATEST_TAG to RRW"
-  if ./upgrade.sh racedb values-rrw.yaml $LATEST_TAG; then
-
-    # curl -sS -X POST -H 'Content-type: application/json' \
-    #   --data "{\"text\":\"✅ Successfully upgraded *RRW* to *${LATEST_TAG}*\"}" \
-    #   "$SLACK_GITLAB_WEBHOOK"
-    echo "[INFO] Successfully upgraded RRW to ${LATEST_TAG}"
-
+if [[ "$LATEST_TAG" == dev* ]]; then
+  echo "[INFO] Latest tag is a dev tag. Only upgrading racedbdev if needed."
+  CURRENT_DEV_TAG=$(kubectl get deployment racedbdev-web -o jsonpath="{.spec.template.spec.containers[*].image}" | awk -F":" '{print $2}')
+  echo "[INFO] racedbdev current tag: $CURRENT_DEV_TAG"
+  if [ "$CURRENT_DEV_TAG" != "$LATEST_TAG" ]; then
+    echo "[INFO] Deploying dev tag: $LATEST_TAG to racedbdev"
+    if ./upgrade.sh racedbdev values-racedb.yaml $LATEST_TAG; then
+      echo "[INFO] Successfully upgraded racedbdev to ${LATEST_TAG}"
+    else
+      echo "[ERROR] Failed to upgrade racedbdev to ${LATEST_TAG}"
+      exit 1
+    fi
   else
-    # curl -sS -X POST -H 'Content-type: application/json' \
-    #   --data "{\"text\":\"❌ Failed to upgrade *RRW* to *${LATEST_TAG}*\"}" \
-    #   "$SLACK_GITLAB_WEBHOOK"
-    echo "[ERROR] Failed to upgrade RRW to ${LATEST_TAG}"
-    exit 1
+    echo "[INFO] racedbdev already running the latest dev tag: $CURRENT_DEV_TAG"
   fi
-
-  echo "[INFO] Deploying new tag: $LATEST_TAG to racedbdev"
-  if ! ./upgrade.sh racedbdev values-racedb.yaml $LATEST_TAG; then
-    # curl -sS -X POST -H 'Content-type: application/json' \
-    #   --data "{\"text\":\"❌ Failed to upgrade *racedbdev* to *${LATEST_TAG}*\"}" \
-    #   "$SLACK_GITLAB_WEBHOOK"
-    echo "[ERROR] Failed to upgrade racedbdev to ${LATEST_TAG}"
-    exit 1
-  fi
-
-  echo "INFO: Deploying alloy"
-  cd ../alloy
-  if ! ./deploy.sh ; then
-
-    # curl -sS -X POST -H 'Content-type: application/json' \
-    #   --data "{\"text\":\"❌ Failed to deploy *Alloy*" \
-    #   "$SLACK_GITLAB_WEBHOOK"
-    # exit 1
-    echo "[ERROR] Failed to deploy Alloy"
-  fi
-
 else
-
-  echo "[INFO] RRW already running the latest tag: $CURRENT_TAG"
-
+  if [ "$CURRENT_TAG" != "$LATEST_TAG" ]; then
+    echo "[INFO] Pulling repo"
+    if ! runuser -l ubuntu -c "cd /srv/racedb && git reset --hard && git clean -fd && git pull"; then
+      echo "[ERROR] Failed to pull repo"
+      exit 1
+    fi
+    echo "[INFO] Deploying new tag: $LATEST_TAG to RRW"
+    if ./upgrade.sh racedb values-rrw.yaml $LATEST_TAG; then
+      echo "[INFO] Successfully upgraded RRW to ${LATEST_TAG}"
+    else
+      echo "[ERROR] Failed to upgrade RRW to ${LATEST_TAG}"
+      exit 1
+    fi
+    echo "[INFO] Deploying new tag: $LATEST_TAG to racedbdev"
+    if ! ./upgrade.sh racedbdev values-racedb.yaml $LATEST_TAG; then
+      echo "[ERROR] Failed to upgrade racedbdev to ${LATEST_TAG}"
+      exit 1
+    fi
+    echo "INFO: Deploying alloy"
+    cd ../alloy
+    if ! ./deploy.sh ; then
+      echo "[ERROR] Failed to deploy Alloy"
+    fi
+  else
+    echo "[INFO] RRW already running the latest tag: $CURRENT_TAG"
+  fi
 fi
