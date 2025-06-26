@@ -9,17 +9,19 @@ exec > >(systemd-cat -t racedb-autoupgrade) 2>&1
 exec 200>/var/lock/racedb-deploy.lock
 flock -n 200 || { echo "WARNING: Another deployment is already running. Exiting."; exit 1; }
 
-OWNER=runwaterloo
-REPO=racedb
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 # move to directory
 cd /srv/racedb/deploy/helm
 
-
-LATEST_TAG=$(curl -s https://api.github.com/repos/$OWNER/$REPO/tags | jq -r '.[0].name')
+git config --global --add safe.directory /srv/racedb
+git fetch --tags
+LATEST_TAG=$(git for-each-ref --sort=-creatordate --format '%(refname:short)' refs/tags | head -n 1)
 if [ -z "$LATEST_TAG" ]; then
   echo "[ERROR] Failed to fetch latest tag from GitHub"
   exit 1
+elif [[ ! "$LATEST_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ && ! "$LATEST_TAG" =~ ^dev-[0-9a-f]{7,}$ ]]; then
+  echo "[INFO] Tag $LATEST_TAG is not a deployable tag. Exiting."
+  exit 0
 else
   echo "[INFO] Latest tag: $LATEST_TAG"
 fi
@@ -30,6 +32,7 @@ echo "[INFO] Current tag: $CURRENT_TAG"
 
 if [[ "$LATEST_TAG" == dev* ]]; then
   echo "[INFO] Latest tag is a dev tag. Only upgrading racedbdev if needed."
+  LATEST_TAG="${LATEST_TAG#dev-}"
   CURRENT_DEV_TAG=$(kubectl get deployment racedbdev-web -o jsonpath="{.spec.template.spec.containers[*].image}" | awk -F":" '{print $2}')
   echo "[INFO] racedbdev current tag: $CURRENT_DEV_TAG"
   if [ "$CURRENT_DEV_TAG" != "$LATEST_TAG" ]; then
