@@ -151,10 +151,10 @@ jobs:
         id: release_notes
         run: |
           # Find the previous tag reachable from HEAD, ignoring the current tag
-          PREV_TAG=$(git describe --tags --abbrev=0 ${{ needs.tag_commit.outputs.VERSION }}^)
+          PREV_TAG=$(git describe --tags --abbrev=0 --match "v*" ${{ needs.tag_commit.outputs.VERSION }}^)
 
           # Get commit messages between previous tag and current tag, one per line
-          NOTES=$(git log $PREV_TAG..${{ needs.tag_commit.outputs.VERSION }} --pretty=format:'- %s')
+          NOTES=$(git log $PREV_TAG..${{ needs.tag_commit.outputs.VERSION }} --pretty=format:'- [%h](https://github.com/${{ github.repository_owner }}/racedb/commit/%H) %s')
 
           # If no previous tag (e.g. first release), just list commits in current tag
           if [ -z "$NOTES" ]; then

@@ -35,7 +35,7 @@ cd ../traefik
 ./deploy.sh
 
 # get latest tag from gitlab
-LATEST_TAG=`curl --header "PRIVATE-TOKEN: ${PERSONAL_ACCESS_TOKEN}" "https://gitlab.com/api/v4/projects/${PROJECT_ID}/repository/tags/" | jq -r '.[0].name'`
+LATEST_TAG=$(curl -s https://api.github.com/repos/runwaterloo/racedb/tags | jq -r '.[0].name')
 
 # deploy rrw with helm
 cd ../helm
@@ -48,8 +48,6 @@ rm -rf .kube
 helm upgrade --install racedbdev . --values values-racedb.yaml --set image.tag="${LATEST_TAG}"
 
 # setup git
-runuser -l ubuntu -c "git config --global user.name \"${GIT_USER}\""
-runuser -l ubuntu -c "git config --global user.email \"${GIT_EMAIL}\""
 runuser -l ubuntu -c 'python3 -m pip install pre-commit'
 runuser -l ubuntu -c 'cd /srv/racedb; /home/ubuntu/.local/bin/pre-commit install'
 echo 'PATH=$PATH:/srv/racedb/deploy/misc/' >> /home/ubuntu/.profile
@@ -61,10 +59,6 @@ aws --region $REGION cloudwatch put-metric-alarm --alarm-name autorecovery --met
 
 # deploy alloy
 cd ../alloy
-sed -i "s/LOKI_USERNAME/${LOKI_USERNAME}/g" values.yaml
-sed -i "s/PROM_USERNAME/${PROM_USERNAME}/g" values.yaml
-sed -i "s/GRAFANA_API_TOKEN/${GRAFANA_API_TOKEN}/g" values.yaml
-sed -i "s|MYSQL_DATA_SOURCE_NAME|${MYSQL_DATA_SOURCE_NAME}|g" values.yaml
 ./create_secret.sh
 ./deploy.sh
 
