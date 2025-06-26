@@ -59,10 +59,6 @@ aws --region $REGION cloudwatch put-metric-alarm --alarm-name autorecovery --met
 
 # deploy alloy
 cd ../alloy
-sed -i "s/LOKI_USERNAME/${LOKI_USERNAME}/g" values.yaml
-sed -i "s/PROM_USERNAME/${PROM_USERNAME}/g" values.yaml
-sed -i "s/GRAFANA_API_TOKEN/${GRAFANA_API_TOKEN}/g" values.yaml
-sed -i "s|MYSQL_DATA_SOURCE_NAME|${MYSQL_DATA_SOURCE_NAME}|g" values.yaml
 ./create_secret.sh
 ./deploy.sh
 
