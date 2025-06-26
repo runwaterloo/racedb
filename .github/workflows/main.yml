@@ -47,8 +47,7 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-        comment:
-          layout: "none"
+          disable_comment: true
 
   build_and_push:
     name: Build and Push Docker Image
