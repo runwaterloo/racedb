@@ -7,8 +7,6 @@
 set -e
 export BRANCH=main
 export BUCKET=<private_bucket>
-export GIT_USER=<git_user>
-export GIT_EMAIL=<git_password>
 export GRAFANA_API_TOKEN=<grafana_api_token>
 export LOKI_USERNAME=<loki_username>
 export PROM_USERNAME=<prom_username>
