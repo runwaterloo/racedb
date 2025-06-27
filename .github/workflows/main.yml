@@ -8,7 +8,7 @@ permissions:
 on:
   push:
     branches:
-      - test-release
+      - main
 
 jobs:
   unit_tests:
