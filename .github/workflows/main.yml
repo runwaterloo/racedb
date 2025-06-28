@@ -158,6 +158,7 @@ jobs:
           fi
 
           # Prepare associative arrays for grouping
+          unset GROUPS
           declare -A GROUPS
           GROUPS[feat]="Features"
           GROUPS[fix]="Bug Fixes"
