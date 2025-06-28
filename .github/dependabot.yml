@@ -10,7 +10,6 @@ updates:
     commit-message:
       prefix: "chore(deps)"
       include: scope
-    auto-merge: true
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
@@ -18,7 +17,6 @@ updates:
     commit-message:
       prefix: "build(docker)"
       include: scope
-    auto-merge: true
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -26,4 +24,3 @@ updates:
     commit-message:
       prefix: "build(ci)"
       include: scope
-    auto-merge: true
