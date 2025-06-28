@@ -157,19 +157,38 @@ jobs:
             COMMITS=$(git log --pretty=format:'%H' $PREV_TAG..${{ needs.tag_commit.outputs.VERSION }})
           fi
 
-          echo "release_body<<EOF" >> $GITHUB_OUTPUT
+          # Prepare associative arrays for grouping
+          declare -A GROUPS
+          GROUPS=(
+            [feat]="Features"
+            [fix]="Bug Fixes"
+            [docs]="Documentation"
+            [revert]="Reverts"
+            [other]="Other"
+          )
+
+          # Collect grouped notes
+          declare -A NOTES
 
           for SHA in $COMMITS; do
             MESSAGE=$(git show -s --format='%s' $SHA)
             SHORT_SHA=$(git rev-parse --short $SHA)
-            AUTHOR_EMAIL=$(git show -s --format='%ae' $SHA)
-
-            # Use the GitHub API to get the commit object (it contains the username if available)
             GH_USER=$(gh api repos/${{ github.repository }}/commits/$SHA --jq '.author.login // .commit.author.name')
 
-            echo "- $SHORT_SHA: $MESSAGE (@$GH_USER)" >> $GITHUB_OUTPUT
+            # Extract type (prefix before colon)
+            TYPE=$(echo "$MESSAGE" | grep -oE '^[a-z]+' || echo "other")
+            GROUP=${GROUPS[$TYPE]:-Other}
+
+            NOTES[$GROUP]+="- $SHORT_SHA: $MESSAGE (@$GH_USER)\n"
           done
 
+          echo "release_body<<EOF" >> $GITHUB_OUTPUT
+          for GROUP in "Features" "Bug Fixes" "Documentation" "Reverts" "Other"; do
+            if [ -n "${NOTES[$GROUP]}" ]; then
+              echo "### $GROUP" >> $GITHUB_OUTPUT
+              echo -e "${NOTES[$GROUP]}" >> $GITHUB_OUTPUT
+            fi
+          done
           echo "EOF" >> $GITHUB_OUTPUT
       - name: Create Release
         uses: softprops/action-gh-release@v2
