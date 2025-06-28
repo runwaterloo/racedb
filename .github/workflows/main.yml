@@ -158,14 +158,13 @@ jobs:
           fi
 
           # Prepare associative arrays for grouping
+          unset GROUPS
           declare -A GROUPS
-          GROUPS=(
-            [feat]="Features"
-            [fix]="Bug Fixes"
-            [docs]="Documentation"
-            [revert]="Reverts"
-            [other]="Other"
-          )
+          GROUPS[feat]="Features"
+          GROUPS[fix]="Bug Fixes"
+          GROUPS[docs]="Documentation"
+          GROUPS[revert]="Reverts"
+          GROUPS[other]="Other"
 
           # Collect grouped notes
           declare -A NOTES
