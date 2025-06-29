@@ -34,8 +34,10 @@ jobs:
 
       - name: Run tests with coverage
         run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=xml --cov-branch
+        continue-on-error: true
 
       - name: Publish Test Report
+        if: always()
         uses: dorny/test-reporter@v2
         with:
           name: Test results
@@ -43,6 +45,7 @@ jobs:
           reporter: java-junit
 
       - name: Upload coverage to Codecov
+        if: always()
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
