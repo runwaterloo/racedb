@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: '0 3 * * 0' # Every Sunday at 03:00 UTC
   workflow_dispatch:
+  push:
 
 jobs:
   cleanup:
