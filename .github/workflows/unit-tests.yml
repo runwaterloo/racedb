@@ -11,7 +11,7 @@ on:
 
 jobs:
   unit_tests:
-    name: Unit Tests
+    name: Execute
     runs-on: ubuntu-latest
 
     steps:
@@ -34,6 +34,14 @@ jobs:
 
       - name: Run tests with coverage
         run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=xml --cov-branch
+        # continue-on-error: true
+
+      - name: Upload test report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report
+          path: report.xml
 
       - name: Publish Test Results
         if: always()
