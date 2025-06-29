@@ -1,0 +1,24 @@
+name: Registry Cleanup
+
+on:
+  schedule:
+    - cron: '0 3 * * 0' # Every Sunday at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    name: Cleanup Old Container Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Delete old images from GitHub Container Registry
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: runwaterloo/racedb
+          package-type: container
+          min-versions-to-keep: 50
+          delete-only-untagged-versions: false
+          filter-age-days: 120
