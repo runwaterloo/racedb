@@ -22,4 +22,3 @@ jobs:
           package-type: container
           min-versions-to-keep: 50
           delete-only-untagged-versions: false
-          filter-age-days: 120
