@@ -50,6 +50,9 @@ jobs:
           path: report.xml
           reporter: java-junit
 
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v5
