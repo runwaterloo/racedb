@@ -34,7 +34,7 @@ jobs:
 
       - name: Run tests with coverage
         run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=xml --cov-branch
-        # continue-on-error: true
+        continue-on-error: true
 
       - name: Upload test report artifact
         if: always()
@@ -49,6 +49,15 @@ jobs:
         with:
           files: report.xml
           comment_mode: off
+
+      - name: Publish Test Report
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Test results
+          path: report.xml
+          reporter: java-junit
+          fail-on-error: false
 
       - name: Upload coverage to Codecov
         if: always()
