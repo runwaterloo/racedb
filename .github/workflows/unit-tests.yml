@@ -55,7 +55,7 @@ jobs:
         with:
           files: report.xml
           reporter: java-junit
-
+          comment_mode: off
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v5
