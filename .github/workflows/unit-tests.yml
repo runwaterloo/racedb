@@ -35,7 +35,7 @@ jobs:
       - name: Run tests with coverage
         id: run-tests-with-coverage
         run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=xml --cov-branch
-        continue-on-error: true
+        # continue-on-error: true
 
       - name: Publish Test Report
         if: always()
@@ -52,6 +52,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Fail if tests failed
-        if: steps.run-tests-with-coverage.outcome == 'failure'
-        run: exit 1
+      # - name: Fail if tests failed
+      #   if: steps.run-tests-with-coverage.outcome == 'failure'
+      #   run: exit 1
