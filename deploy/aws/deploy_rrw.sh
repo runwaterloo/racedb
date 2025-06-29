@@ -65,4 +65,7 @@ cd ../alloy
 # add upgrade cron job
 echo '* * * * * /srv/racedb/deploy/helm/autoupgrade.sh' | crontab -
 
+# add backup cron job (hourly on the 12th minute)
+(crontab -l 2>/dev/null; echo '12 * * * * /srv/racedb/deploy/aws/backup_to_s3.sh') | crontab -
+
 echo "SUCCESS: deploy_rrw.sh completed"
