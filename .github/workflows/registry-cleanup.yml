@@ -20,5 +20,5 @@ jobs:
         with:
           package-name: racedb
           package-type: container
-          min-versions-to-keep: 50
+          min-versions-to-keep: 45
           delete-only-untagged-versions: false
