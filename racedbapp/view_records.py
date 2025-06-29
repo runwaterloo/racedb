@@ -17,7 +17,7 @@ def index(request, race_slug, distance_slug):
     # Resolve the race and distance objects from slugs
     race = resolve_race(race_slug)
     distance = resolve_distance(distance_slug)
-    x
+
     # Build the context dictionary for the template or JSON
     context = build_context(race, distance)
 

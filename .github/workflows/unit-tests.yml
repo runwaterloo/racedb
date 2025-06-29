@@ -11,7 +11,7 @@ on:
 
 jobs:
   unit_tests:
-    name: Execute
+    name: Unit Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -33,9 +33,7 @@ jobs:
         run: pip install --root-user-action=ignore -r requirements/requirements-test.txt
 
       - name: Run tests with coverage
-        id: run-tests-with-coverage
         run: pytest --junitxml=report.xml --cov=racedbapp --cov-report=xml --cov-branch
-        # continue-on-error: true
 
       - name: Publish Test Report
         if: always()
@@ -44,14 +42,9 @@ jobs:
           name: Test results
           path: report.xml
           reporter: java-junit
-          fail-on-error: false
 
       - name: Upload coverage to Codecov
         if: always()
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      # - name: Fail if tests failed
-      #   if: steps.run-tests-with-coverage.outcome == 'failure'
-      #   run: exit 1
