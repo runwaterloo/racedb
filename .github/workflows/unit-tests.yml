@@ -33,7 +33,8 @@ jobs:
         run: pip install --root-user-action=ignore -r requirements/requirements-test.txt
 
       - name: Run tests with coverage
-        run: pytest --cov=racedbapp --cov-report=xml --cov-branch
+        # run: pytest --cov=racedbapp --cov-report=xml --cov-branch
+        run: pytest
 
       # - name: Upload coverage to Codecov
       #   uses: codecov/codecov-action@v5
