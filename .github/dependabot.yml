@@ -15,12 +15,12 @@ updates:
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "build(docker)"
+      prefix: "chore(deps)"
       include: scope
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "build(ci)"
+      prefix: "chore(deps)"
       include: scope
