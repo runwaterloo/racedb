@@ -13,14 +13,8 @@ jobs:
           types: |
             feat
             fix
-            docs
-            style
-            refactor
-            perf
-            test
             chore
-            build
-            ops
-            revert
+            docs
+            test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
