@@ -16,18 +16,11 @@ Thank you for your interest in contributing to RaceDB! We welcome all contributi
 - Valid types:
   - **feat**: New feature
   - **fix**: Bug fix
+  - **chore**: Maintenance tasks (dependencies, build process, tooling, etc)
   - **docs**: Documentation only changes
-  - **style**: Formatting, missing semi colons, etc; no code change
-  - **refactor**: Code change that neither fixes a bug nor adds a feature
-  - **perf**: Code change that improves performance
   - **test**: Adding or correcting tests
-  - **chore**: Maintenance tasks (build process, tooling, etc)
-  - **build**: Changes that affect the build system or CI
-  - **ops**: Operations, deployment, etc
-  - **revert**: Reverts a previous commit
-- The message after the type should:
-  - Start with a lowercase letter
-  - Be written in the imperative mood (e.g., "add", "fix", "update"), as if completing the sentence: "When merged, this commit will ..."
+- Start with a lowercase letter
+- Be written in the imperative mood (e.g., "add", "fix", "update"), as if completing the sentence: "When merged, this commit will ..."
 - Examples:
   - `feat: add a new thing`
   - `fix: correct typo in user model`
