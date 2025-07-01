@@ -82,12 +82,12 @@ class EndurraceresultQuerySet(models.QuerySet):
             return True
 
     def topmasters(self, year):
-        topfemale = self.filter(
-            year=year, category__ismasters=True, gender="F"
-        ).order_by("guntime")[0]
-        topmale = self.filter(year=year, category__ismasters=True, gender="M").order_by(
+        topfemale = self.filter(year=year, category__ismasters=True, gender="F").order_by(
             "guntime"
         )[0]
+        topmale = self.filter(year=year, category__ismasters=True, gender="M").order_by("guntime")[
+            0
+        ]
         femaletime = utils.truncate_time(topfemale.guntime)
         maletime = utils.truncate_time(topmale.guntime)
         return namediresult(
@@ -110,9 +110,7 @@ class TeamcategoryQuerySet(models.QuerySet):
 
 class TeamresultQuerySet(models.QuerySet):
     def winning_team_details(self, team_category):
-        return self.filter(
-            team_category=team_category, team_place=1, counts=True
-        ).aggregate(
+        return self.filter(team_category=team_category, team_place=1, counts=True).aggregate(
             top=Count("athlete_time"),
             total=Sum("athlete_time"),
             avg=Avg("athlete_time"),
@@ -167,12 +165,8 @@ class Race(models.Model):
 
 
 class Samerace(models.Model):
-    old_race = models.ForeignKey(
-        Race, related_name="old_race", on_delete=models.CASCADE
-    )
-    current_race = models.ForeignKey(
-        Race, related_name="current_race", on_delete=models.CASCADE
-    )
+    old_race = models.ForeignKey(Race, related_name="old_race", on_delete=models.CASCADE)
+    current_race = models.ForeignKey(Race, related_name="current_race", on_delete=models.CASCADE)
 
 
 class Category(models.Model):
@@ -232,9 +226,7 @@ class Event(models.Model):
         ),
     )
     medals = models.CharField(max_length=32, choices=MEDALS_CHOICES, default="none")
-    timer = models.ForeignKey(
-        Timer, models.SET_NULL, null=True, blank=True, default=None
-    )
+    timer = models.ForeignKey(Timer, models.SET_NULL, null=True, blank=True, default=None)
 
     class Meta:
         unique_together = ("race", "distance", "date")
@@ -259,22 +251,16 @@ class Rwmember(models.Model):
         return Rwmembertag.objects.filter(auto_select=True)
 
     name = models.CharField(max_length=64)
-    slug = models.SlugField(
-        unique=True, help_text="https://blog.tersmitten.nl/slugify/"
-    )
+    slug = models.SlugField(unique=True, help_text="https://blog.tersmitten.nl/slugify/")
     gender = models.CharField(max_length=2, choices=GENDER_CHOICES, blank=True)
     year_of_birth = models.IntegerField(null=True, blank=True)
     city = models.CharField(max_length=50)
     joindate = models.DateField(default=datetime.now)
     photourl = models.URLField(max_length=500, null=True, blank=True)
-    altname = models.CharField(
-        max_length=64, blank=True, help_text="Optional, e.g. maiden name"
-    )
+    altname = models.CharField(max_length=64, blank=True, help_text="Optional, e.g. maiden name")
     active = models.BooleanField(default=True)
     tags = models.ManyToManyField(Rwmembertag, blank=True, default=membertag_defaults)
-    hasphotos = models.BooleanField(
-        default=False, help_text="Automatically set by system"
-    )
+    hasphotos = models.BooleanField(default=False, help_text="Automatically set by system")
 
     def __str__(self):
         return self.name
@@ -294,9 +280,7 @@ class Result(models.Model):
     division = models.CharField(max_length=32, blank=True)
     province = models.CharField(max_length=50, blank=True)
     country = models.CharField(max_length=50, blank=True)
-    rwmember = models.ForeignKey(
-        Rwmember, null=True, default=None, on_delete=models.CASCADE
-    )
+    rwmember = models.ForeignKey(Rwmember, null=True, default=None, on_delete=models.CASCADE)
     gender_place = models.IntegerField(null=True, blank=True)
     category_place = models.IntegerField(null=True, blank=True)
     isrwpb = models.BooleanField(default=False, blank=True)
@@ -397,12 +381,8 @@ class Relay(models.Model):
     )
     relay_team = models.CharField(max_length=128, help_text="Relay team name")
     relay_team_place = models.IntegerField(help_text="Place the relay team finished")
-    relay_team_time = models.DurationField(
-        null=True, help_text="Total time for the relay team"
-    )
-    relay_leg = models.IntegerField(
-        help_text="Relay leg for this individual (e.g. 1, 2)"
-    )
+    relay_team_time = models.DurationField(null=True, help_text="Total time for the relay team")
+    relay_leg = models.IntegerField(help_text="Relay leg for this individual (e.g. 1, 2)")
 
 
 class Split(models.Model):
@@ -483,9 +463,7 @@ class Series(models.Model):
     year = models.IntegerField()
     name = models.CharField(max_length=256)
     slug = models.SlugField()
-    event_ids = models.CharField(
-        max_length=64, help_text="Comma-separated list of event IDs"
-    )
+    event_ids = models.CharField(max_length=64, help_text="Comma-separated list of event IDs")
     show_records = models.BooleanField(default=True)
 
     class Meta:

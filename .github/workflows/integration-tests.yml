@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'Dockerfile'
+      - 'racedbapp/models.py'
       - 'requirements/**'
   workflow_dispatch:
 
@@ -40,6 +41,17 @@ jobs:
       - name: Start local environment
         run: ./deploy/local/start.sh
         shell: bash
+
+      - name: System check
+        run: docker exec racedb-web ./manage.py check
+
+      - name: Check migrations
+        run: |
+          docker exec racedb-web ./manage.py makemigrations --check --dry-run
+          if [ $? -ne 0 ]; then
+            echo "::error::Migration check failed! Please run 'makemigrations' and commit the changes."
+            exit 1
+          fi
 
       - name: Run tests inside container
         run: docker exec racedb-web pytest
