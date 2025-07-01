@@ -258,7 +258,7 @@ class Rwmember(models.Model):
     joindate = models.DateField(default=datetime.now)
     photourl = models.URLField(max_length=500, null=True, blank=True)
     altname = models.CharField(max_length=64, blank=True, help_text="Optional, e.g. maiden name")
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(default=True, db_index=True)
     tags = models.ManyToManyField(Rwmembertag, blank=True, default=membertag_defaults)
     hasphotos = models.BooleanField(default=False, help_text="Automatically set by system")
 
