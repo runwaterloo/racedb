@@ -2,7 +2,18 @@ from collections import defaultdict, namedtuple
 from operator import attrgetter
 from urllib import parse
 
-from django.db.models import BooleanField, Case, Count, Exists, Max, OuterRef, Q, Value, When
+from django.db.models import (
+    BooleanField,
+    Case,
+    Count,
+    Exists,
+    F,
+    Max,
+    OuterRef,
+    Q,
+    Value,
+    When,
+)
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 
@@ -660,14 +671,19 @@ def get_results(
 
 
 def annotate_isrwfirst(queryset):
-    # Annotate each result with isrwfirst: True if this is the member's first event (by date),
-    # False if there is an earlier event for the same member, or if rwmember is None.
+    # Annotate each result with isrwfirst: True if this is the member's first event (by date)
+    # as a member (event date >= rwmember.joindate). False otherwise.
     earlier_event_exists = queryset.model.objects.filter(
-        rwmember=OuterRef("rwmember"), event__date__lt=OuterRef("event__date")
+        rwmember=OuterRef("rwmember"),
+        event__date__lt=OuterRef("event__date"),
+        event__date__gte=OuterRef("rwmember__joindate"),
     )
+    # Annotate join date for comparison
+    queryset = queryset.annotate(_joindate=F("rwmember__joindate"))
     return queryset.annotate(
         isrwfirst=Case(
             When(rwmember__isnull=True, then=Value(False)),
+            When(event__date__lt=F("_joindate"), then=Value(False)),
             default=~Exists(earlier_event_exists),
             output_field=BooleanField(),
         )

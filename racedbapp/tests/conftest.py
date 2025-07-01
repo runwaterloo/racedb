@@ -154,12 +154,14 @@ def create_series(db, create_distance, create_race, create_category, create_even
 
 @pytest.fixture
 def create_rwmember(db):
-    def _create_rwmember(name_suffix="a", active=True):
+    def _create_rwmember(name_suffix="a", joindate=datetime.date(2025, 1, 1), active=True):
+        if isinstance(joindate, str):
+            joindate = datetime.date.fromisoformat(joindate)
         return Rwmember.objects.create(
             name=f"RW Member {name_suffix}",
             slug=f"rw-member-{name_suffix.lower()}",
             city=f"City {name_suffix}",
-            joindate=datetime.date(2025, 1, 1),
+            joindate=joindate,
             active=active,
         )
 
