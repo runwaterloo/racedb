@@ -5,7 +5,29 @@
 [![codecov](https://codecov.io/github/runwaterloo/racedb/graph/badge.svg?token=4NK7NXXBAP)](https://codecov.io/github/runwaterloo/racedb)
 # RaceDB
 
-## Getting started
+## Getting started on Codespaces
+
+The fastest way to get started is with GitHub Codespaces.
+
+1. Click the green "Code" button on GitHub, click Codespaces, Create codespace on main
+2. **Don't touch anything** until the terminal says "Finsihed configuring codespace. Press any key to exit.", it will take a while
+3. Press any key to get to a prompt, then type `./deploy/local/start.sh`
+4. Wait a few minutes for the build to complete, you'll see "STARTUP COMPLETE!"
+6. Click on PORTS, 8000, 🌐 (Open in Browser)
+
+You now have your own development version of RaceDB running, you can edit code and it will be reflected on your site.
+
+If you need to rebuild the environment run `./deploy/local/start.sh --rebuild` in the terminal
+
+### Codespaces tips & reminders
+
+- **Push your changes:** Always push your branches and commits to GitHub before stopping or deleting a Codespace. Unsaved work will be lost when a Codespace is deleted.
+- **Close unused Codespaces:** Delete or stop Codespaces you are no longer using to free up resources and avoid hitting your usage quota.
+- **Check your usage:** You can view your Codespaces usage and manage active environments at [github.com/codespaces](https://github.com/codespaces) or via the "Codespaces" tab on your GitHub profile.
+
+---
+
+## Getting started locally
 
 These instructions are based on Docker Desktop in WSL/Ubuntu. Adapt as needed.
 
