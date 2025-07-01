@@ -2,7 +2,7 @@ from collections import defaultdict, namedtuple
 from operator import attrgetter
 from urllib import parse
 
-from django.db.models import Count, Max, Q
+from django.db.models import BooleanField, Case, Count, Exists, Max, OuterRef, Q, Value, When
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 
@@ -60,6 +60,7 @@ def index(request, year, race_slug, distance_slug):
         hasage = False
     else:
         all_results = Result.objects.select_related().filter(event=event)
+        all_results = annotate_isrwfirst(all_results)
         hasage = all_results.hasage(event)
     event_splits = Split.objects.filter(event=event)
     all_split_microseconds = {x.split_time.microseconds for x in event_splits if x.split_time}
@@ -526,6 +527,7 @@ def get_results(
             "youtube_url",
             "masters_place",
             "isrwpb",
+            "isrwfirst",
         ],
     )
     results = []
@@ -648,12 +650,28 @@ def get_results(
                 youtube_url,
                 masters_place,
                 isrwpb,
+                r.isrwfirst,
             )
         )
     results = filter_results(results, category, division)
     if page == "Hill Sprint":
         results = get_hill_results(results, named_result)
     return results, max_splits
+
+
+def annotate_isrwfirst(queryset):
+    # Annotate each result with isrwfirst: True if this is the member's first event (by date),
+    # False if there is an earlier event for the same member, or if rwmember is None.
+    earlier_event_exists = queryset.model.objects.filter(
+        rwmember=OuterRef("rwmember"), event__date__lt=OuterRef("event__date")
+    )
+    return queryset.annotate(
+        isrwfirst=Case(
+            When(rwmember__isnull=True, then=Value(False)),
+            default=~Exists(earlier_event_exists),
+            output_field=BooleanField(),
+        )
+    )
 
 
 def get_endurrun_relay_dict(event):
@@ -749,6 +767,7 @@ def get_hill_results(results, named_result):
                 r.youtube_url,
                 r.masters_place,
                 r.isrwpb,
+                r.isrwfirst,
             )
         )
     hill_results = sorted(hill_results, key=attrgetter("prime", "place"))

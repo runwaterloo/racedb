@@ -287,8 +287,11 @@ class Result(models.Model):
     objects = ResultQuerySet.as_manager()
 
     class Meta:
-        unique_together = ("event", "place")
+        indexes = [
+            models.Index(fields=["rwmember", "event"]),
+        ]
         ordering = ("place",)
+        unique_together = ("event", "place")
 
     def __str__(self):
         return str((self.event, self.bib))

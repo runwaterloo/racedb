@@ -87,6 +87,7 @@ def create_result(db, create_event, create_category):
         name_suffix="a",
         gender="F",
         place=1,
+        rwmember=None,
     ):
         if event is None:
             event = create_event(name_suffix=name_suffix)
@@ -100,6 +101,7 @@ def create_result(db, create_event, create_category):
             city=f"Test City {name_suffix}",
             place=place,
             guntime=datetime.timedelta(seconds=300),
+            rwmember=rwmember,
         )
 
     return _create_result
