@@ -14,7 +14,7 @@ export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 cd /srv/racedb/deploy/helm
 
 git config --global --add safe.directory /srv/racedb
-git fetch --tags
+runuser -u ubuntu -- git fetch --tags
 LATEST_TAG=$(git for-each-ref --sort=-creatordate --format '%(refname:short)' refs/tags | head -n 1)
 if [ -z "$LATEST_TAG" ]; then
   echo "[ERROR] Failed to fetch latest tag from GitHub"
