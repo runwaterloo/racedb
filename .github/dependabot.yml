@@ -8,19 +8,19 @@ updates:
       - dependency-name: "Django"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: scope
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: scope
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "chore"
       include: scope
