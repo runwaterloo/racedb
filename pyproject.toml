@@ -1,5 +1,5 @@
 [tool.django-upgrade]
-target-version = "5.0"
+target-version = "5.1"
 [tool.djlint]
 indent = 2
 [tool.ruff]
