@@ -25,6 +25,7 @@ from ..models import (
 )
 from ..view_relay import get_individual_results_dict, get_relay_results, get_team_results
 
+
 def getwinnersdict():
     namedwinner = namedtuple("nw", ["athlete", "guntime"])
     malewinners = Result.objects.filter(gender="M", gender_place=1).values_list(
@@ -38,7 +39,9 @@ def getwinnersdict():
     return malewinnersdict, femalewinnersdict
 
 
-def get_race_records(race, distance, division_choice=False, individual_only=False)-> tuple[list, list | dict | None, list | None]:
+def get_race_records(
+    race, distance, division_choice=False, individual_only=False
+) -> tuple[list, list | dict | None, list | None]:
     if not race:
         return [], None, None
     membership = get_membership()
@@ -60,9 +63,9 @@ def get_race_records(race, distance, division_choice=False, individual_only=Fals
         except Exception:
             mmr = False
         else:
-            mmr = rawresults.filter(
-                gender="M", category__ismasters=True, guntime=mmrtime
-            ).order_by("year")
+            mmr = rawresults.filter(gender="M", category__ismasters=True, guntime=mmrtime).order_by(
+                "year"
+            )
         try:
             fmrtime = (
                 rawresults.filter(gender="F", category__ismasters=True)
@@ -72,9 +75,9 @@ def get_race_records(race, distance, division_choice=False, individual_only=Fals
         except Exception:
             fmr = False
         else:
-            fmr = rawresults.filter(
-                gender="F", category__ismasters=True, guntime=fmrtime
-            ).order_by("year")
+            fmr = rawresults.filter(gender="F", category__ismasters=True, guntime=fmrtime).order_by(
+                "year"
+            )
     else:
         distance = Distance.objects.get(id=distance.id)
         events = Event.objects.filter(race__in=races, distance=distance)
@@ -94,17 +97,13 @@ def get_race_records(race, distance, division_choice=False, individual_only=Fals
                             division=division_choice,
                             year=r.event.date.year,
                         )
-                    except:
+                    except Exception:
                         continue
-                    if ultimate_finished_all_events[r.event.date.year][
-                        ultimate_athlete
-                    ]:
+                    if ultimate_finished_all_events[r.event.date.year][ultimate_athlete]:
                         results_to_include.append(r.id)
                 rawresults = rawresults.filter(id__in=results_to_include)
         else:
-            rawresults = Result.objects.filter(
-                event__race__in=races, event__distance=distance
-            )
+            rawresults = Result.objects.filter(event__race__in=races, event__distance=distance)
         if rawresults.count() == 0:
             raise Http404("No results found for {}".format(distance))
         mrtime = rawresults.filter(gender="M").order_by("guntime")[:1][0].guntime
@@ -145,28 +144,24 @@ def get_race_records(race, distance, division_choice=False, individual_only=Fals
         elif race.slug == "endurrun":
             try:
                 mmrtime = (
-                    rawresults.filter(gender="M", age__gte=40)
-                    .order_by("guntime")[:1][0]
-                    .guntime
+                    rawresults.filter(gender="M", age__gte=40).order_by("guntime")[:1][0].guntime
                 )
             except Exception:
                 mmr = False
             else:
-                mmr = rawresults.filter(
-                    gender="M", age__gte=40, guntime=mmrtime
-                ).order_by("event__date")
+                mmr = rawresults.filter(gender="M", age__gte=40, guntime=mmrtime).order_by(
+                    "event__date"
+                )
             try:
                 fmrtime = (
-                    rawresults.filter(gender="F", age__gte=40)
-                    .order_by("guntime")[:1][0]
-                    .guntime
+                    rawresults.filter(gender="F", age__gte=40).order_by("guntime")[:1][0].guntime
                 )
             except Exception:
                 fmr = False
             else:
-                fmr = rawresults.filter(
-                    gender="F", age__gte=40, guntime=fmrtime
-                ).order_by("event__date")
+                fmr = rawresults.filter(gender="F", age__gte=40, guntime=fmrtime).order_by(
+                    "event__date"
+                )
     records = []
     records += makerecords("Overall Male", mrtime, mr, distance, membership)
     records += makerecords("Overall Female", frtime, fr, distance, membership)
@@ -377,10 +372,7 @@ def get_member(result, membership):
         member = membership.includes["{}-{}".format(result.event.id, result.place)]
     if member:
         if "{}-{}".format(result.event.id, result.place) in membership.excludes:
-            if (
-                member
-                in membership.excludes["{}-{}".format(result.event.id, result.place)]
-            ):
+            if member in membership.excludes["{}-{}".format(result.event.id, result.place)]:
                 member = False
     return member
 
@@ -410,9 +402,7 @@ def get_pages(
         pages.append(
             named_page(
                 "inactive",
-                "/event/{}/{}/{}/".format(
-                    event.date.year, event.race.slug, event.distance.slug
-                ),
+                "/event/{}/{}/{}/".format(event.date.year, event.race.slug, event.distance.slug),
                 "Overall",
             )
         )
@@ -491,27 +481,29 @@ def get_relay_records(year=None):
                 relay_records[j].append(i)
     return relay_records
 
+
 def get_config_value_or_false(name):
     try:
         value = Config.objects.get(name=name).value
-    except:
+    except Exception:
         value = False
     else:
         if value == "":
             value = False
     return value
 
+
 def get_race_by_slug_or_false(slug):
     try:
         race = Race.objects.get(slug=slug)
-    except:
+    except Exception:
         race = False
     return race
+
 
 def get_distance_by_slug_or_false(slug):
     try:
         distance = Distance.objects.get(slug=slug)
-    except:
+    except Exception:
         distance = False
     return distance
-

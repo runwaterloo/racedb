@@ -1,9 +1,9 @@
 from collections import namedtuple
 
-from django.http import HttpResponse
+from django.db.models import Count
 from django.shortcuts import redirect, render
 
-from .models import *
+from .models import Config, Event, Phototag
 
 
 def index(request):
@@ -11,14 +11,10 @@ def index(request):
         return redirect("/admin/login/?next=/adminphotos/")
     notifykey = Config.objects.get(name="notifykey").value
     dbevents = (
-        Event.objects.select_related()
-        .order_by("-date", "-distance__km")
-        .exclude(flickrsetid=None)
+        Event.objects.select_related().order_by("-date", "-distance__km").exclude(flickrsetid=None)
     )
     event_results_dict = dict(
-        Event.objects.annotate(num_results=Count("result")).values_list(
-            "id", "num_results"
-        )
+        Event.objects.annotate(num_results=Count("result")).values_list("id", "num_results")
     )
     event_tags_dict = dict(
         Phototag.objects.values("event_id")
@@ -33,7 +29,7 @@ def index(request):
             continue
         try:
             num_tags = event_tags_dict[e.id]
-        except:
+        except Exception:
             num_tags = 0
         pct = "{:.1%}".format(num_tags / num_results)
         events.append(named_event(e, num_results, num_tags, pct))

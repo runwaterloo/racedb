@@ -1,14 +1,12 @@
 import urllib
 from collections import namedtuple
-from datetime import timedelta
 
 import simplejson
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from .shared.endurrun import get_member_endurrace
-
 from .models import Endurraceresult, Event, Prime, Result, Teamresult
+from .shared.endurrun import get_member_endurrace
 from .shared.shared import get_membership
 
 namediresult = namedtuple(
@@ -51,9 +49,9 @@ def index(request, year, race_slug, distance_slug, individual_only=False):
         hill_results = []
         rank = "1st OA"
         try:
-            male_prime = Prime.objects.filter(event=event, gender="M").order_by(
-                "time", "place"
-            )[:1][0]
+            male_prime = Prime.objects.filter(event=event, gender="M").order_by("time", "place")[
+                :1
+            ][0]
         except Exception:
             hill_results = False
         else:
@@ -62,9 +60,9 @@ def index(request, year, race_slug, distance_slug, individual_only=False):
             male_member = male_result.rwmember
             if male_member:
                 male_member_slug = male_member.slug
-            female_prime = Prime.objects.filter(event=event, gender="F").order_by(
-                "time", "place"
-            )[:1][0]
+            female_prime = Prime.objects.filter(event=event, gender="F").order_by("time", "place")[
+                :1
+            ][0]
             female_result = results.get(place=female_prime.place)
             female_member_slug = None
             female_member = female_result.rwmember

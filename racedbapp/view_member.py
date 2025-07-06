@@ -4,15 +4,13 @@ from operator import attrgetter
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, render
 
 from . import view_boost
-from .shared import utils
 from .models import Bow, Bowathlete, Config, Event, Race, Result, Rwmember, Samerace
+from .shared import utils
 
-named_result = namedtuple(
-    "nr", ["result", "guntime", "gender_place", "category_place", "chiptime"]
-)
+named_result = namedtuple("nr", ["result", "guntime", "gender_place", "category_place", "chiptime"])
 named_pb = namedtuple("npb", ["time", "event"])
 named_badge = namedtuple("nb", ["name", "date", "image", "url"])
 
@@ -71,8 +69,7 @@ def get_pb(results, distance_slug):
     pb_results = [
         x
         for x in results
-        if x.result.event.distance.slug == distance_slug
-        and x.result.event.race.id != 17
+        if x.result.event.distance.slug == distance_slug and x.result.event.race.id != 17
     ]
     if len(pb_results) > 0:
         pb = sorted(pb_results, key=attrgetter("result.guntime"))[0]
@@ -101,9 +98,7 @@ def get_founders_badge(member):
     founders_badge = []
     if member.joindate <= FOUNDER_DATE:
         founders_badge.append(
-            named_badge(
-                "Founding Member", member.joindate, "founding-member.png", False
-            )
+            named_badge("Founding Member", member.joindate, "founding-member.png", False)
         )
     return founders_badge
 
@@ -125,9 +120,7 @@ def get_total_kms_badge(results):
                     break
             image = "km-{}.png".format(i)
             total_kms_badge.append(
-                named_badge(
-                    "Raced {} Total Kilometres".format(i), date_earned, image, False
-                )
+                named_badge("Raced {} Total Kilometres".format(i), date_earned, image, False)
             )
             break
     return total_kms_badge
@@ -167,9 +160,7 @@ def get_inaugural_finishes_badges(results):
     race_inaugural_years = {}
     for race in races:
         first_year = (
-            Event.objects.filter(race=race)
-            .aggregate(min_date=Min("date"))["min_date"]
-            .year
+            Event.objects.filter(race=race).aggregate(min_date=Min("date"))["min_date"].year
         )
         race_inaugural_years[race] = first_year
     already_have = []
@@ -202,9 +193,7 @@ def get_bow_finishes_badges(member, results):
     if len(bowathletes) > 0:
         result_ids = [x.result.event.id for x in results]
     for b in bowathletes:
-        event_ids = eval(
-            Bow.objects.filter(id=b.bow_id).values_list("events", flat=True)[0]
-        )
+        event_ids = eval(Bow.objects.filter(id=b.bow_id).values_list("events", flat=True)[0])
         if set(event_ids).issubset(result_ids):
             last_date = Event.objects.get(id=event_ids[-1]).date
             bow = Bow.objects.get(id=b.bow_id)
@@ -222,9 +211,7 @@ def get_endurrun_finishes_badges(member, results):
     years = []
     yearsdict = {}
     ultimate_finishes = 0
-    endurrun_results = [
-        x for x in reversed(results) if x.result.event.race.slug == "endurrun"
-    ]
+    endurrun_results = [x for x in reversed(results) if x.result.event.race.slug == "endurrun"]
     for er in endurrun_results:
         years.append(er.result.event.date.year)
         if er.result.event.date.year in yearsdict:
@@ -394,9 +381,7 @@ def get_event_finishes_badge(results):
 def get_adventurer_badge(results):
     ADVENTURER_THRESHOLD = 10
     adventurer_badge = []
-    same_races_dict = dict(
-        Samerace.objects.values_list("old_race_id", "current_race_id")
-    )
+    same_races_dict = dict(Samerace.objects.values_list("old_race_id", "current_race_id"))
     race_finishes = []
     race_finishes_dates = []
     for r in reversed(results):
@@ -410,9 +395,7 @@ def get_adventurer_badge(results):
         date_earned = race_finishes_dates[ADVENTURER_THRESHOLD - 1]
         adventurer_badge.append(
             named_badge(
-                "Finished {} or more different timed races".format(
-                    ADVENTURER_THRESHOLD
-                ),
+                "Finished {} or more different timed races".format(ADVENTURER_THRESHOLD),
                 date_earned,
                 "adventurer.png",
                 False,
@@ -462,12 +445,8 @@ def get_boost(member, request):
     boost = []
     boost_years = get_boost_years(member)
     for boost_year in boost_years:
-        boost_year_standings = view_boost.index(
-            request, boost_year, standings_only=True
-        )
-        member_boost_standings = [
-            x for x in boost_year_standings if x.member_id == member.id
-        ]
+        boost_year_standings = view_boost.index(request, boost_year, standings_only=True)
+        member_boost_standings = [x for x in boost_year_standings if x.member_id == member.id]
         if member_boost_standings:
             boost.append(member_boost_standings[0])
     return boost

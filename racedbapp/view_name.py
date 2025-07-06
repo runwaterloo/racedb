@@ -1,15 +1,13 @@
-import datetime
 import re
 import urllib
 from collections import namedtuple
 from datetime import timedelta
 
-from django import db
-from django.db.models import Count, Min, Q
-from django.http import Http404, HttpResponse
+from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import render
 
-from .models import *
+from .models import Result
 
 
 def index(request):
@@ -51,22 +49,16 @@ def index(request):
             ],
         )
         for result in dbresults.order_by("-event__date"):
-            guntime = result.guntime - timedelta(
-                microseconds=result.guntime.microseconds
-            )
+            guntime = result.guntime - timedelta(microseconds=result.guntime.microseconds)
             catplace = Result.objects.filter(
                 event=result.event, category=result.category, place__lte=result.place
             ).count()
-            catcount = Result.objects.filter(
-                event=result.event, category=result.category
-            ).count()
+            catcount = Result.objects.filter(event=result.event, category=result.category).count()
             genderplace = Result.objects.filter(
                 event=result.event, gender=result.gender, place__lte=result.place
             ).count()
             if result.chiptime:
-                chiptime = result.chiptime - timedelta(
-                    microseconds=result.chiptime.microseconds
-                )
+                chiptime = result.chiptime - timedelta(microseconds=result.chiptime.microseconds)
             else:
                 chiptime = ""
             member = None

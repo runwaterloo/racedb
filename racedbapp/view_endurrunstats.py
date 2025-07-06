@@ -5,8 +5,8 @@ from django.shortcuts import render
 
 import racedbapp.shared.endurrun
 
-from .shared import shared
 from .models import Result
+from .shared import shared
 
 
 def index(request):
@@ -14,9 +14,7 @@ def index(request):
     years = get_years(ultimate_results)
     min_finishes = get_min_finishes()
     endurrun_finishers_by_year = get_endurrun_finishers_by_year(ultimate_results, years)
-    endurrun_finishes_by_athlete = get_endurrun_finishes_by_athlete(
-        endurrun_finishers_by_year
-    )
+    endurrun_finishes_by_athlete = get_endurrun_finishes_by_athlete(endurrun_finishers_by_year)
     member_dict = shared.get_member_dict()
     endurrun_finishers_by_count = get_endurrun_finishers_by_count(
         endurrun_finishes_by_athlete, member_dict, years, min_finishes
@@ -87,10 +85,7 @@ def get_endurrun_finishes_by_athlete(endurrun_finishers_by_year):
     return endurrun_finishes_by_athlete
 
 
-def get_endurrun_finishers_by_count(
-    endurrun_finishes_by_athlete, member_dict, years, min_finishes
-):
-
+def get_endurrun_finishers_by_count(endurrun_finishes_by_athlete, member_dict, years, min_finishes):
     raw_endurrun_finishers_by_count = {}
     endurrun_finishers_by_count = []
     for athlete, count in endurrun_finishes_by_athlete.items():
@@ -134,9 +129,7 @@ class EndurrunFinisher:
         self.gold_jersey = False
 
     def __repr__(self):
-        return "EndurrunFinisher(athlete={}, member_slug={})".format(
-            self.athlete, self.member_slug
-        )
+        return "EndurrunFinisher(athlete={}, member_slug={})".format(self.athlete, self.member_slug)
 
 
 class EndurrunFinishCount:
@@ -148,6 +141,4 @@ class EndurrunFinishCount:
         )
 
     def __repr__(self):
-        return "EndurrunFinishCount(count={}, athletes={})".format(
-            self.count, self.athletes
-        )
+        return "EndurrunFinishCount(count={}, athletes={})".format(self.count, self.athletes)

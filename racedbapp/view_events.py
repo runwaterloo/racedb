@@ -1,15 +1,14 @@
 import urllib
 from collections import namedtuple
-from datetime import timedelta
 
-from django import db
-from django.db.models import Count, Min
-from django.http import Http404, HttpResponse
+from django.db.models import Count
+from django.http import Http404
 from django.shortcuts import render
 
-from .shared import shared
 from racedbapp.shared.types import Choice, Filter
-from .models import *
+
+from .models import Distance, Event, Samerace
+from .shared import shared
 
 
 def index(request):
@@ -43,14 +42,13 @@ def index(request):
         distancefilter_events = distancefilter_events.filter(race__in=races)
         racefilter = "&race={}".format(race_slug)
     else:
-        race_id = "All"
         race_name = "All"
         racefilter = ""
     if "distance" in qstring:
         distance_slug = qstring["distance"][0]
         try:
             distance_id = Distance.objects.get(slug=distance_slug).id
-        except:
+        except Exception:
             raise Http404("Invalid distance ({})".format(distance_slug))
         events = events.filter(distance_id=distance_id)
         yearfilter_events = yearfilter_events.filter(distance_id=distance_id)
@@ -62,9 +60,7 @@ def index(request):
         distance_name = "All"
         distancefilter = ""
     yearfilters = getfilter("year", racefilter, distancefilter, yearfilter_events, year)
-    racefilters = getfilter(
-        "race", yearfilter, distancefilter, racefilter_events, race_name
-    )
+    racefilters = getfilter("race", yearfilter, distancefilter, racefilter_events, race_name)
     distancefilters = getfilter(
         "distance", yearfilter, racefilter, distancefilter_events, distance_name
     )

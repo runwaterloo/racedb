@@ -1,17 +1,15 @@
-from collections import namedtuple
 from operator import attrgetter
 from urllib import parse
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Max
 from django.http import Http404
 from django.shortcuts import render
 
 from racedbapp.shared.types import Choice, Filter
 
-from .shared import shared, utils
 from .config import ValidRelayCategories
 from .models import Event, Relay, Result, Teamcategory, Teamresult
+from .shared import shared, utils
 
 valid_categories = ValidRelayCategories().categories
 
@@ -34,13 +32,9 @@ def index(request, year, race_slug, distance_slug):
         "category_filter": get_category_filter(events[0], category, team_results, year),
     }
     if category:
-        team_results = [
-            x for x in team_results if valid_categories[category] in x.categories
-        ]
+        team_results = [x for x in team_results if valid_categories[category] in x.categories]
     if year != "all":
-        pages = shared.get_pages(
-            events[0], "Relay", team_categories, relay_dict=True
-        )
+        pages = shared.get_pages(events[0], "Relay", team_categories, relay_dict=True)
     race_logo_slug = utils.get_race_logo_slug(events[0].race.slug)
     context = {
         "event": EventV(events[0], max_leg),
@@ -104,11 +98,7 @@ def get_year_filter(event):
         year = d[0].year
         if year == event.date.year:
             continue
-        choices.append(
-            Choice(
-                year, "/relay/{}/{}/{}/".format(year, d[1], event.distance.slug)
-            )
-        )
+        choices.append(Choice(year, "/relay/{}/{}/{}/".format(year, d[1], event.distance.slug)))
     year_filter = Filter(event.date.year, choices)
     return year_filter
 
@@ -126,9 +116,7 @@ def get_category_filter(event, category, team_results, year):
         choices.append(
             Choice(
                 "All",
-                "/relay/{}/{}/{}/".format(
-                    event_date_year, event.race.slug, event.distance.slug
-                ),
+                "/relay/{}/{}/{}/".format(event_date_year, event.race.slug, event.distance.slug),
             )
         )
     else:
@@ -216,9 +204,7 @@ class RelayResult:
             self.ismasters = False
 
     def __repr__(self):
-        return "RelayResult(place={}, year={}, team={})".format(
-            self.place, self.year, self.team
-        )
+        return "RelayResult(place={}, year={}, team={})".format(self.place, self.year, self.team)
 
 
 class RelayLeg:

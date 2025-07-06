@@ -1,15 +1,13 @@
-import datetime
-import urllib
 from collections import namedtuple
 from datetime import timedelta
 
-from django import db
-from django.db.models import Avg, Count, Min, Sum
-from django.http import Http404, HttpResponse
+from django.db.models import Avg, Sum
+from django.http import Http404
 from django.shortcuts import render
 
 import racedbapp.shared.utils as utils
-from .models import *
+
+from .models import Event, Relay, Teamcategory, Teamresult, Wheelchairresult
 
 
 def index(request, year, race_slug, distance_slug, team_category_slug):
@@ -36,7 +34,7 @@ def index(request, year, race_slug, distance_slug, team_category_slug):
         dowheelchair = True
     try:
         team_category = Teamcategory.objects.get(slug=team_category_slug)
-    except:
+    except Exception:
         raise Http404("Team category not found")
     present_team_categories = Teamresult.objects.filter(event_id=event.id).values_list(
         "team_category__name", flat=True
