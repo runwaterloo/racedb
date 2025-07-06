@@ -1,13 +1,6 @@
 name: Integration Tests
 
 on:
-  push:
-    branches-ignore:
-      - main
-    paths:
-      - 'Dockerfile'
-      - 'racedbapp/models.py'
-      - 'requirements/**'
   pull_request:
     paths:
       - 'Dockerfile'
