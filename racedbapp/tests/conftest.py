@@ -118,6 +118,10 @@ def create_f_m_results(
     category_m = create_category(name_suffix="m")
     result_f = create_result(event=event, category=category_f, name_suffix="f", gender="F", place=1)
     result_m = create_result(event=event, category=category_m, name_suffix="m", gender="M", place=2)
+    result_f.gender_place = 1
+    result_f.save()
+    result_m.gender_place = 1
+    result_m.save()
     return {
         "distance": distance,
         "race": race,
