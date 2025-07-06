@@ -8,6 +8,11 @@ on:
       - 'Dockerfile'
       - 'racedbapp/models.py'
       - 'requirements/**'
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'racedbapp/models.py'
+      - 'requirements/**'
   workflow_dispatch:
 
 jobs:
