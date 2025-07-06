@@ -4,13 +4,13 @@ import logging
 from itertools import chain
 from operator import attrgetter
 
-from .models import *
+from .models import Result, Rwmembercorrection
 
 logger = logging.getLogger(__name__)
 
 
 def update_membership(member):
-    """ Update rwmember field and isrwb in result table """
+    """Update rwmember field and isrwb in result table"""
     logger.info("Updating membership for {} ({})".format(member, member.id))
     # Clear all existing member results
     Result.objects.filter(rwmember=member).update(rwmember=None, isrwpb=False)
@@ -41,9 +41,7 @@ def update_membership(member):
 
 def get_includes(member):
     includes = []
-    dbincludes = Rwmembercorrection.objects.filter(
-        rwmember=member, correction_type="include"
-    )
+    dbincludes = Rwmembercorrection.objects.filter(rwmember=member, correction_type="include")
     for i in dbincludes:
         include_result = Result.objects.filter(event=i.event, place=i.place)
         if len(include_result) == 1:
@@ -52,9 +50,7 @@ def get_includes(member):
 
 
 def get_excludes(member):
-    dbexcludes = Rwmembercorrection.objects.filter(
-        rwmember=member, correction_type="exclude"
-    )
+    dbexcludes = Rwmembercorrection.objects.filter(rwmember=member, correction_type="exclude")
     excludes = []
     for e in dbexcludes:
         exclude_result = Result.objects.filter(event=e.event, place=e.place)

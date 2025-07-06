@@ -6,6 +6,6 @@ indent = 2
 exclude = [
     "racedbapp/migrations",
 ]
-extend-select = ["I"]
+lint.extend-select = ["I"]
 fix = true
 line-length = 100

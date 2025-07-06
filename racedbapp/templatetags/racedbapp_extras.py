@@ -15,7 +15,7 @@ def get_pace(guntime, distance):
     """
     try:
         paceseconds = guntime.total_seconds() / float(distance)
-    except:
+    except Exception:
         pace = ""
     else:
         rawpace = timedelta(seconds=round(paceseconds, 0))
@@ -42,7 +42,7 @@ def get_time(orig_time):
     """Truncate time and handle other weirdness"""
     try:
         clean_time = orig_time - timedelta(microseconds=orig_time.microseconds)
-    except:
+    except Exception:
         clean_time = ""
     else:
         if clean_time.total_seconds() >= 356400:
