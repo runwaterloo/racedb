@@ -1,18 +1,8 @@
 from django.http import Http404
 from django.shortcuts import render
 
-# from urllib import parse
-# from collections import defaultdict, namedtuple
 from .models import Event, Result
 from .shared import utils
-
-# from racedbapp.tasks import send_email_task
-# from . import view_shared, utils
-# from django.http import HttpResponse
-# from django.db.models import Count, Max, Q
-# from datetime import timedelta
-# from operator import attrgetter
-# import simplejson
 
 
 def index(request, year, race_slug, distance_slug):
@@ -24,9 +14,9 @@ def index(request, year, race_slug, distance_slug):
         raise Http404("Matching event not found")
     else:
         event_results = Result.objects.filter(event=event)
-    guntimes_have_microseconds = set(
-        [x.guntime.microseconds for x in event_results if x.guntime.microseconds != 0]
-    )
+    guntimes_have_microseconds = {
+        x.guntime.microseconds for x in event_results if x.guntime.microseconds != 0
+    }
     medals_type = event.medals
     medal_results = get_medal_results(medals_type, event_results)
     race_logo_slug = utils.get_race_logo_slug(event.race.slug)

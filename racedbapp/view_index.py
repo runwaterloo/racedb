@@ -6,9 +6,7 @@ from collections import namedtuple
 from datetime import datetime
 from operator import attrgetter
 
-import simplejson
 from django.core.cache import cache
-from django.http import HttpResponse
 from django.shortcuts import render
 
 from . import config, view_endurrun, view_member, view_recap
@@ -62,22 +60,9 @@ def index(request):
         "future_events": featured_event_context.future_events,
         "notification": notification,
     }
-    # Determine the format to return based on what is seen in the URL
-    if "format" in qstring:
-        if qstring["format"][0] == "json":
-            data = simplejson.dumps(context, default=str, indent=4, sort_keys=True)
-            if "callback" in qstring:
-                callback = qstring["callback"][0]
-                data = "{}({});".format(callback, data)
-                return HttpResponse(data, "text/javascript")
-            else:
-                return HttpResponse(data, "application/json")
-        else:
-            return HttpResponse("Unknown format in URL", "text/html")
-    else:
-        html = render(request, "racedbapp/index.html", context)
-        cache.set(cache_key, html)
-        return html
+    html = render(request, "racedbapp/index.html", context)
+    cache.set(cache_key, html)
+    return html
 
 
 def get_recap_context(asofdate):

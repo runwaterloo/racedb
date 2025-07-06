@@ -1,8 +1,5 @@
-import urllib
 from collections import namedtuple
 
-import simplejson
-from django.http import HttpResponse
 from django.shortcuts import render
 
 from .models import Endurraceresult, Event, Prime, Result, Teamresult
@@ -24,9 +21,6 @@ namediresult = namedtuple(
 
 
 def index(request, year, race_slug, distance_slug, individual_only=False):
-    qstring = ""
-    if not individual_only:
-        qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     if distance_slug == "combined":
         event = False
         results = Endurraceresult.objects.filter(year=year).order_by("guntime")
@@ -89,20 +83,7 @@ def index(request, year, race_slug, distance_slug, individual_only=False):
         "nomenu": True,
     }
 
-    # Determine the format to return based on what is seen in the URL
-    if "format" in qstring:
-        if qstring["format"][0] == "json":
-            data = simplejson.dumps(context, default=str, indent=4, sort_keys=True)
-            if "callback" in qstring:
-                callback = qstring["callback"][0]
-                data = "{}({});".format(callback, data)
-                return HttpResponse(data, "text/javascript")
-            else:
-                return HttpResponse(data, "application/json")
-        else:
-            return HttpResponse("Unknown format in URL", "text/html")
-    else:
-        return render(request, "racedbapp/recap.html", context)
+    return render(request, "racedbapp/recap.html", context)
 
 
 def get_individual_results(event, results, hasmasters, distance_slug, year=False):
