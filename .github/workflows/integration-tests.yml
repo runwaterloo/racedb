@@ -3,6 +3,8 @@ name: Integration Tests
 on:
   pull_request:
     paths:
+      - 'deploy/helm/values.yaml'
+      - 'deploy/local/docker-compose.yml'
       - 'Dockerfile'
       - 'racedbapp/models.py'
       - 'requirements/**'
