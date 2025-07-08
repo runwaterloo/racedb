@@ -4,7 +4,6 @@
   "packageRules": [
     {
       "matchPackageNames": ["redis"],
-      "matchDatasources": ["docker"],
       "matchManagers": ["docker-compose", "helm-values"],
       "groupName": "redis image updates",
       "prTitle": "chore(deps): update redis from {{currentVersion}} to {{newVersion}}"
