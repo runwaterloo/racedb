@@ -6,12 +6,10 @@
       "matchPackageNames": ["redis"],
       "matchManagers": ["docker-compose", "helm-values"],
       "groupName": "redis image updates",
-      "prTitle": "chore(deps): update redis from {{currentVersion}} to {{newVersion}}"
+      "commitMessagePrefix": "chore(deps):",
+      "commitMessageAction": "update redis",
+      "commitMessageExtra": "from {{currentVersion}} to {{newVersion}}"
     },
-    {
-      "matchPackagePatterns": [".*"],
-      "excludePackageNames": ["redis"],
-      "enabled": false
-    }
+    { "enabled": false, "matchPackageNames": ["/.*/", "!redis"] }
   ]
 }
