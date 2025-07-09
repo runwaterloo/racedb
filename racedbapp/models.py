@@ -45,29 +45,41 @@ class ResultQuerySet(models.QuerySet):
             return True
 
     def topmasters(self, event):
-        topfemale = self.filter(event=event, gender="F").filter(
-            Q(category__ismasters=True) | Q(age__gte=40)
-        )[0]
-        topmale = self.filter(event=event, gender="M").filter(
-            Q(category__ismasters=True) | Q(age__gte=40)
-        )[0]
-        femaletime = topfemale.guntime
-        female_member_slug = None
-        female_member = topfemale.rwmember
-        if female_member:
-            female_member_slug = female_member.slug
-        maletime = topmale.guntime
-        male_member_slug = None
-        male_member = topmale.rwmember
-        if male_member:
-            male_member_slug = male_member.slug
+        topfemale = (
+            self.filter(event=event, gender="F")
+            .filter(Q(category__ismasters=True) | Q(age__gte=40))
+            .first()
+        )
+        topmale = (
+            self.filter(event=event, gender="M")
+            .filter(Q(category__ismasters=True) | Q(age__gte=40))
+            .first()
+        )
+        if topfemale:
+            femaletime = topfemale.guntime
+            female_member_slug = None
+            female_member = topfemale.rwmember
+            if female_member:
+                female_member_slug = female_member.slug
+            topfemale_athlete = topfemale.athlete
+        else:
+            topfemale_athlete = femaletime = female_member_slug = None
+        if topmale:
+            maletime = topmale.guntime
+            male_member_slug = None
+            male_member = topmale.rwmember
+            if male_member:
+                male_member_slug = male_member.slug
+            topmale_athlete = topmale.athlete
+        else:
+            topmale_athlete = maletime = male_member_slug = None
         return namediresult(
             "1st Master",
-            topfemale.athlete,
+            topfemale_athlete,
             femaletime,
             female_member_slug,
             topfemale,
-            topmale.athlete,
+            topmale_athlete,
             maletime,
             male_member_slug,
             topmale,
