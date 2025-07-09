@@ -21,6 +21,23 @@ def test_recap_endpoint_one_result(create_result):
 
 
 @pytest.mark.django_db
+def test_recap_endpoint_one_result_master_member(create_result, create_rwmember):
+    client = APIClient()
+    rwmember = create_rwmember()
+    result = create_result(rwmember=rwmember)
+    result.category.ismasters = True
+    result.category.save()
+    url = f"/recap/{result.event.date.year}/{result.event.race.slug}/{result.event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+    # test male as well
+    result.gender = "M"
+    result.save()
+    response = client.get(url)
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
 def test_recap_endpoint_six_results(create_category, create_event, create_result, create_rwmember):
     client = APIClient()
     event = create_event()
