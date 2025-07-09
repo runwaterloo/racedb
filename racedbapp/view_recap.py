@@ -98,29 +98,40 @@ def get_individual_results(event, results, hasmasters, distance_slug, year=False
             rank = "2nd OA"
         elif i == 3:
             rank = "3rd OA"
-        female_time = female_results[i - 1].guntime
-        female_member_slug = None
-        if distance_slug != "combined":
-            female_member = female_results[i - 1].rwmember
+
+        if len(female_results) >= i:
+            female_time = female_results[i - 1].guntime
+            female_member_slug = None
+            if distance_slug != "combined":
+                female_member = female_results[i - 1].rwmember
+            else:
+                female_member = get_member_endurrace(female_results[i - 1], membership)
+            if female_member:
+                female_member_slug = female_member.slug
+            female_athlete = female_results[i - 1].athlete
         else:
-            female_member = get_member_endurrace(female_results[i - 1], membership)
-        if female_member:
-            female_member_slug = female_member.slug
-        male_time = male_results[i - 1].guntime
-        male_member_slug = None
-        if distance_slug != "combined":
-            male_member = male_results[i - 1].rwmember
+            female_athlete = female_time = female_member_slug = None
+
+        if len(male_results) >= i:
+            male_time = male_results[i - 1].guntime
+            male_member_slug = None
+            if distance_slug != "combined":
+                male_member = male_results[i - 1].rwmember
+            else:
+                male_member = get_member_endurrace(male_results[i - 1], membership)
+            if male_member:
+                male_member_slug = male_member.slug
+            male_athlete = male_results[i - 1].athlete
         else:
-            male_member = get_member_endurrace(male_results[i - 1], membership)
-        if male_member:
-            male_member_slug = male_member.slug
+            male_athlete = male_time = male_member_slug = None
+
         individual_results.append(
             namediresult(
                 rank,
-                female_results[i - 1].athlete,
+                female_athlete,
                 female_time,
                 female_member_slug,
-                male_results[i - 1].athlete,
+                male_athlete,
                 male_time,
                 male_member_slug,
             )

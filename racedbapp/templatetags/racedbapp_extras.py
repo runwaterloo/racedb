@@ -73,6 +73,8 @@ def show_str_decimal(orig_time):
 @register.filter(name="round_up")
 def round_up(orig_time):
     """Round times up to the second"""
+    if not orig_time:
+        return orig_time
     if orig_time.microseconds == 0:
         rounded_up_time = orig_time
     else:
