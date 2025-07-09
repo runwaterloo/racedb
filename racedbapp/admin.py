@@ -37,11 +37,26 @@ class DistanceAdmin(admin.ModelAdmin):
 admin.site.register(Race)
 
 
+def delete_all_results_for_event(modeladmin, request, queryset):
+    from .models import Result
+
+    event_ids = queryset.values_list("id", flat=True).distinct()
+    count = 0
+    for event_id in event_ids:
+        deleted, _ = Result.objects.filter(event_id=event_id).delete()
+        count += deleted
+    modeladmin.message_user(request, f"Deleted {count} results for selected events.")
+
+
+delete_all_results_for_event.short_description = "Delete all results for selected events"
+
+
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = ("id", "date", "race", "distance", "city", "flickrsetid")
     search_fields = ("date", "race__name", "distance__name")
     ordering = ("-date",)
+    actions = [delete_all_results_for_event]
 
 
 @admin.register(Result)
