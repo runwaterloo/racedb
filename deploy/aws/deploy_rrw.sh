@@ -68,4 +68,7 @@ echo '* * * * * /srv/racedb/deploy/helm/autoupgrade.sh' | crontab -
 # add backup cron job (hourly on the 12th minute)
 (crontab -l 2>/dev/null; echo '12 * * * * /srv/racedb/deploy/aws/backup_to_s3.sh') | crontab -
 
+# add backup monitor cron job (every 15 minutes)
+(crontab -l 2>/dev/null; echo "*/15 * * * * /srv/racedb/deploy/aws/backup_monitor.sh $BUCKET database_backup/racedb.latest.sql.gz") | crontab -
+
 echo "SUCCESS: deploy_rrw.sh completed"
