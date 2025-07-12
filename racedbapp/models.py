@@ -239,6 +239,12 @@ class Event(models.Model):
     )
     medals = models.CharField(max_length=32, choices=MEDALS_CHOICES, default="none")
     timer = models.ForeignKey(Timer, models.SET_NULL, null=True, blank=True, default=None)
+    custom_logo_url = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+        help_text="Override default race logo with a custom one for this event",
+    )
 
     class Meta:
         unique_together = ("race", "distance", "date")
