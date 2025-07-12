@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django import template
+from django.templatetags.static import static
 
 from ..models import Config, Distance
 
@@ -107,3 +108,10 @@ def get_default_record_distance_slug(string):
         if db_distance is not None:
             default_record_distance_slug = db_distance.slug
     return default_record_distance_slug
+
+
+@register.simple_tag
+def event_logo(event):
+    if getattr(event, "custom_logo_url", None):
+        return event.custom_logo_url
+    return static(f"race_logos/{event.race.slug}.png")

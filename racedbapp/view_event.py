@@ -148,6 +148,7 @@ def get_event_json(event):
             "distance",
             "medals",
             "timer",
+            "custom_logo_url",
         ],
     )
     named_race = namedtuple("nr", ["name", "shortname", "slug"])
@@ -172,6 +173,7 @@ def get_event_json(event):
         this_distance,
         event.medals,
         event.timer,
+        event.custom_logo_url,
     )
     return event_json
 
