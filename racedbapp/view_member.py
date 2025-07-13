@@ -283,7 +283,7 @@ def get_pb_badges(member, results):
                         tenk_pb = r.result
                         tenk_minutegroup = new_minutegroup
     if fivek_minutegroup:
-        image = "5-km-{}-{}.png".format(fivek_minutegroup, member.gender.lower())
+        image = utils.get_achievement_image(f"5-km-{fivek_minutegroup}", member.gender.lower())
         pb_badges.append(
             named_badge(
                 "5 KM: Sub {} Club".format(fivek_minutegroup),
@@ -293,7 +293,7 @@ def get_pb_badges(member, results):
             )
         )
     if tenk_minutegroup:
-        image = "10-km-{}-{}.png".format(tenk_minutegroup, member.gender.lower())
+        image = utils.get_achievement_image(f"10-km-{tenk_minutegroup}", member.gender.lower())
         pb_badges.append(
             named_badge(
                 "10 KM: Sub {} Club".format(tenk_minutegroup),
