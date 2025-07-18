@@ -2,7 +2,7 @@ from datetime import timedelta
 
 import pytest
 
-from racedbapp.templatetags.racedbapp_extras import round_up
+from racedbapp.templatetags.racedbapp_extras import event_logo, round_up
 
 
 def test_round_up_no_microseconds():
@@ -30,3 +30,11 @@ def test_round_up_various(input_td, expected_td):
 
 def test_round_up_none():
     assert round_up(None) is None
+
+
+@pytest.mark.django_db
+def test_event_logo(create_event):
+    event = create_event()
+    assert event_logo(event) == "/static/race_logos/test-race-a.png"
+    event.custom_logo_url = "http://example.com/logo.png"
+    assert event_logo(event) == "http://example.com/logo.png"

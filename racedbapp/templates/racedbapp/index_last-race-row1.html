@@ -1,23 +1,26 @@
 {% load static %}
+{% load racedbapp_extras %}
 <div class="row">
   <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-    <a href="https://runwaterloo.com/{{ recap_event.date.year }}-{{ recap_event.race.slug }}"><img class="img-responsive img-rounded" src="{% static "race_logos/"|add:recap_race_logo_slug|add:".png" %}"/></a>
+    <a href="https://runwaterloo.com/{{ recap_event.date.year }}-{{ recap_event.race.slug }}">
+      <img class="img-responsive img-rounded" src="{% event_logo recap_event %}" />
+    </a>
   </div>
   <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
     <h2>
       <strong>LAST RACE</strong>
       <small>
-           &nbsp;&nbsp;<a href="https://runwaterloo.com/{{ recap_event.date.year }}-{{ recap_event.race.slug }}" target="_blank"><i class="fas fa-newspaper"></i></a>
+        &nbsp;&nbsp;<a href="https://runwaterloo.com/{{ recap_event.date.year }}-{{ recap_event.race.slug }}"
+   target="_blank"><i class="fas fa-newspaper"></i></a>
       </small>
       <small>
         {% if recap_event.flickrsetid %}
-           &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ recap_event.flickrsetid }}" target="_blank"><i class="fas fa-camera"></i></a>
+          &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ recap_event.flickrsetid }}"
+   target="_blank"><i class="fas fa-camera"></i></a>
         {% endif %}
       </small>
     </h2>
-    <h3>
-      {{ recap_event.race.name }}
-    </h3>
+    <h3>{{ recap_event.race.name }}</h3>
     <div class="date">{{ recap_event.date }}</div>
     <div class="city">{{ recap_event.city }}</div>
   </div>
