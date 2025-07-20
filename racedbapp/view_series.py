@@ -181,10 +181,11 @@ class SeriesResult:
 
 def set_ismaster_from_result(result):
     ismaster = False
-    if hasattr(result, "age") and result.age is not None:
+    if result.age:
         if result.age >= 40:
             ismaster = True
-    elif hasattr(result, "category") and result.category is not None:
-        if result.category.ismasters:
-            ismaster = True
+        else:
+            ismaster = False
+    elif result.category.ismasters:
+        ismaster = True
     return ismaster
