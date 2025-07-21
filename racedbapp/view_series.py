@@ -69,7 +69,7 @@ def index(request, series_slug):
         if category in ("Male", "M-Masters"):
             results = [x for x in results if x.gender == "M"]
         if category in ("Masters", "F-Masters", "M-Masters"):
-            results = [x for x in results if x.category.ismasters]
+            results = [x for x in results if x.ismaster]
     elif category != "All":
         results = [x for x in results if x.category.name == category]
 
@@ -161,6 +161,7 @@ class SeriesResult:
             self.member_slug = False
         self.gender = result.gender
         self.category = result.category
+        self.ismaster = set_ismaster_from_result(result)
         self.times = [
             result.guntime,
         ]
@@ -176,3 +177,15 @@ class SeriesResult:
             self.total_time,
             [str(x) for x in self.times],
         )
+
+
+def set_ismaster_from_result(result):
+    ismaster = False
+    if result.age:
+        if result.age >= 40:
+            ismaster = True
+        else:
+            ismaster = False
+    elif result.category.ismasters:
+        ismaster = True
+    return ismaster
