@@ -1,7 +1,7 @@
 FROM python:3.13.5-alpine
 ARG INSTALL_TEST=0
 ARG INSTALL_DEV=0
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 COPY requirements/*.txt ./
 RUN apk add --no-cache --virtual .build-deps \
      gcc \
