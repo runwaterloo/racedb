@@ -1,91 +1,95 @@
 {% extends "racedbapp/base.html" %}
+
 {% load static %}
 {% load racedbapp_extras %}
+
 {% block title %}
   {{ date }}
   Baden Sprint Duathlon Relay
   |
 {% endblock title %}
+
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description"
-        content="Race results for the {{ year }} Baden Duathlon Relay." />
-  <meta property="og:image"
-        content="{% static "race_logos/baden-road-races.png" %}" />
+  <meta property="og:description" content="Race results for the {{ year }} Baden Duathlon Relay." />
+  <meta property="og:image" content="{% static "race_logos/baden-road-races.png" %}" />
   <meta property="og:image:width" content="200" />
   <meta property="og:image:height" content="200" />
 {% endblock ogmeta %}
+
 {% block content %}
   <div class="row">
     <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
-      <h3>{{ year }} Baden Sprint Duathlon Relay Results</h3>
+      <h3>
+        {{ year }} Baden Sprint Duathlon Relay Results
+      </h3>
       <p>
-        [ <a href="/event/{{ year }}/baden-road-races/sprint-duathlon">Back to individual results</a> ]
+      [ <a href="/event/{{ year }}/baden-road-races/sprint-duathlon">Back to individual results</a> ]
       </p>
+  </div>
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <table class="table table-bordered table-condensed table-hover">
+        <thead>
+          <tr class="info"?>
+            <th class="text-center" scope="col"></th>
+            <th class="text-center" scope="col">#</th>
+            <th class="text-left" scope="col">Team Name</th>
+            <th class="text-center" scope="col">Time</th>
+            <th class="text-center" scope="col">Pace</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for i in duresults %}
+          <tr class="accordion-toggle" data-toggle="collapse" data-target="#team-{{ i.id }}">
+            <td class="text-center">
+              <i class="fas fa-angle-right fa-icon-expand"></i>
+            </td>
+            <td class="text-center">{{ forloop.counter }}</td>
+            <td class="text-left">{{ i.team_name }}</td>
+            <td class="text-center">{{ i.team_time }}</td>
+            <td class="text-center">{{ i.team_time|get_pace:35.5 }}/km</td>
+          </tr>
+          <tr>
+            <td colspan="7" style="padding:0px;">
+              <div id="team-{{ i.id }}" class="accordion-body collapse">
+                <table class="table">
+                  <tbody>
+                    <tr>
+                      <td>&nbsp;&nbsp;</td>
+                      <td>Run 1</td>
+                      <td>5 KM</td>
+                      <td>{{ i.run1_athlete }}</td>
+                      <td>{{ i.run1_time }}</td>
+                      <td>{{ i.run1_time|get_pace:5 }}/km</td>
+                    </tr>
+                    <tr>
+                      <td>&nbsp;&nbsp;</td>
+                      <td>Bike</td>
+                      <td>25.5 KM</td>
+                      <td>{{ i.bike_athlete }}</td>
+                      <td>{{ i.bike_time }}</td>
+                      <td>{{ i.bike_time|get_pace:25.5 }}/km</td>
+                    </tr>
+                    <tr>
+                      <td>&nbsp;&nbsp;</td>
+                      <td>Run 2</td>
+                      <td>5 KM</td>
+                      <td>{{ i.run2_athlete }}</td>
+                      <td>{{ i.run2_time }}</td>
+                      <td>{{ i.run2_time|get_pace:5 }}/km</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
     </div>
-    <div class="row">
-      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <table class="table table-bordered table-condensed table-hover">
-          <thead>
-            <tr class="info"?>
-              <th class="text-center" scope="col"></th>
-              <th class="text-center" scope="col">#</th>
-              <th class="text-left" scope="col">Team Name</th>
-              <th class="text-center" scope="col">Time</th>
-              <th class="text-center" scope="col">Pace</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for i in duresults %}
-              <tr class="accordion-toggle"
-                  data-toggle="collapse"
-                  data-target="#team-{{ i.id }}">
-                <td class="text-center">
-                  <i class="fas fa-angle-right fa-icon-expand"></i>
-                </td>
-                <td class="text-center">{{ forloop.counter }}</td>
-                <td class="text-left">{{ i.team_name }}</td>
-                <td class="text-center">{{ i.team_time }}</td>
-                <td class="text-center">{{ i.team_time|get_pace:35.5 }}/km</td>
-              </tr>
-              <tr>
-                <td colspan="7" style="padding:0px;">
-                  <div id="team-{{ i.id }}" class="accordion-body collapse">
-                    <table class="table">
-                      <tbody>
-                        <tr>
-                          <td>&nbsp;&nbsp;</td>
-                          <td>Run 1</td>
-                          <td>5 KM</td>
-                          <td>{{ i.run1_athlete }}</td>
-                          <td>{{ i.run1_time }}</td>
-                          <td>{{ i.run1_time|get_pace:5 }}/km</td>
-                        </tr>
-                        <tr>
-                          <td>&nbsp;&nbsp;</td>
-                          <td>Bike</td>
-                          <td>25.5 KM</td>
-                          <td>{{ i.bike_athlete }}</td>
-                          <td>{{ i.bike_time }}</td>
-                          <td>{{ i.bike_time|get_pace:25.5 }}/km</td>
-                        </tr>
-                        <tr>
-                          <td>&nbsp;&nbsp;</td>
-                          <td>Run 2</td>
-                          <td>5 KM</td>
-                          <td>{{ i.run2_athlete }}</td>
-                          <td>{{ i.run2_time }}</td>
-                          <td>{{ i.run2_time|get_pace:5 }}/km</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  {% endblock content %}
+  </div>
+
+
+{% endblock content %}

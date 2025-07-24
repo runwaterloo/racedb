@@ -11,18 +11,14 @@
   {% for k, v in team_records.items %}
     {% if v %}
       {% for i in v %}
-        <tr class="accordion-toggle"
-            data-toggle="collapse"
-            data-target="#team-{{ i.team_id }}">
+        <tr class="accordion-toggle" data-toggle="collapse" data-target="#team-{{ i.team_id }}">
           <td class="text-center">
             <i class="fas fa-angle-right fa-icon-expand"></i>
           </td>
           <td class="text-left">{{ k }}</td>
           <td class="text-left">{{ i.team_time }}</td>
           <td class="text-left">{{ i.team }}</td>
-          <td class="text-left" data-toggle="no-collapse">
-            <a href="/relay/{{ i.year }}/{{ race.slug }}/{{ distance.slug }}/">{{ i.year }}</a>
-          </td>
+          <td class="text-left" data-toggle="no-collapse"><a href="/relay/{{ i.year }}/{{ race.slug }}/{{ distance.slug }}/">{{ i.year }}</a></td>
           <td class="text-left">{{ i.team_time|get_pace:10 }}</td>
         </tr>
         <tr>
@@ -35,9 +31,7 @@
                       <td>&nbsp;&nbsp;</td>
                       <td>Leg {{ j.leg }}</td>
                       {% if j.member_slug %}
-                        <td>
-                          <a href="/member/{{ j.member_slug }}/">{{ j.athlete }}</a>
-                        </td>
+                        <td><a href="/member/{{ j.member_slug }}/">{{ j.athlete }}</a></td>
                       {% else %}
                         <td>{{ j.athlete }}</td>
                       {% endif %}
@@ -54,18 +48,16 @@
         </tr>
       {% endfor %}
     {% else %}
-      <tr class="accordion-toggle"
-          data-toggle="collapse"
-          data-target="#team-{{ i.team_id }}">
-        <td class="text-center">
-          <i class="fas fa-angle-right"></i>
-        </td>
-        <td class="text-left">{{ k }}</td>
-        <td class="text-left"></td>
-        <td class="text-left">No record</td>
-        <td class="text-left">{{ x }}</td>
-        <td class="text-left">{{ x }}</td>
-      </tr>
+          <tr class="accordion-toggle" data-toggle="collapse" data-target="#team-{{ i.team_id }}">
+            <td class="text-center">
+              <i class="fas fa-angle-right"></i>
+            </td>
+            <td class="text-left">{{ k }}</td>
+            <td class="text-left"></td>
+            <td class="text-left">No record</td>
+            <td class="text-left">{{ x }}</td>
+            <td class="text-left">{{ x }}</td>
+          </tr>
     {% endif %}
   {% endfor %}
 </table>

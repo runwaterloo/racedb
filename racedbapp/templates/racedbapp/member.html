@@ -1,120 +1,107 @@
 {% extends "racedbapp/base.html" %}
+
 {% load static %}
 {% load racedbapp_extras %}
+
 {% block title %}
-  {{ member.name }}
+  {{ member.name }} 
   |
 {% endblock title %}
+
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description"
-        content="Explore results and records for every Run Waterloo event." />
+  <meta property="og:description" content="Explore results and records for every Run Waterloo event." />
   <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <script src="{% static "jquery.filtertable.min.js" %}"></script>
 {% endblock ogmeta %}
+
 {% block content %}
-  <div class="row">
-    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-      <h3>
-        <strong>{{ member.name }}</strong>
-        {% if member.hasphotos %}
-          {% if no_profile_camera %}
-            {% if user.is_authenticated %}
-              <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ member.id }}?sort=date-taken-desc"
-                 target="_blank">
-                <i class="fas fa-camera fa-icon-notcounts"></i>
-              </a>
-            {% endif %}
-          {% else %}
-            <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ member.id }}?sort=date-taken-desc"
-               target="_blank">
-              <i class="fas fa-camera"></i>
+
+<div class="row">
+  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+    <h3>
+      <strong>{{ member.name }}</strong>
+      {% if member.hasphotos %}
+        {% if no_profile_camera %}
+          {% if user.is_authenticated %}
+            <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ member.id }}?sort=date-taken-desc" target="_blank">
+              <i class="fas fa-camera fa-icon-notcounts"></i>
             </a>
           {% endif %}
+        {% else %}
+          <a href="https://www.flickr.com/photos/runwaterloo/tags/m{{ member.id }}?sort=date-taken-desc" target="_blank">
+            <i class="fas fa-camera"></i>
+          </a>
         {% endif %}
-      </h3>
-      <h5>Run Waterloo Member since {{ member.joindate.year }}</h5>
-      <h5>Member #{{ member.id }} | {{ member.city }}</h5>
-      <table class="table table-bordered table-striped table-hover">
-        <thead>
-          <tr class="info">
-            <th class="text-left" colspan="2" scope="col">Career Run Waterloo Stats</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Racing Since</td>
-            <td class="text-right">{{ racing_since }}</td>
-          </tr>
-          <tr>
-            <td>Total Events</td>
-            <td class="text-right">{{ results|length }}</td>
-          </tr>
-          <tr>
-            <td>Total KMs Raced</td>
-            <td class="text-right">{{ total_distance }}</td>
-          </tr>
-          <tr>
-            <td>5 KM Personal Best</td>
-            <td class="text-right">
-              <a href="/event/{{ fivek_pb.result.event.date.year }}/{{ fivek_pb.result.event.race.slug }}/{{ fivek_pb.result.event.distance.slug }}/"
-                 title="{{ fivek_pb.result.event.date.year }} {{ fivek_pb.result.event.race.shortname }} {{ fivek_pb.result.event.distance.name }}">{{ fivek_pb.guntime }}</a>
-            </td>
-          </tr>
-          <tr>
-            <td>10 KM Personal Best</td>
-            <td class="text-right">
-              <a href="/event/{{ tenk_pb.result.event.date.year }}/{{ tenk_pb.result.event.race.slug }}/{{ tenk_pb.result.event.distance.slug }}/"
-                 title="{{ tenk_pb.result.event.date.year }} {{ tenk_pb.result.event.race.shortname }} {{ tenk_pb.result.event.distance.name }}">{{ tenk_pb.guntime }}</a>
-            </td>
-          </tr>
-          <tr>
-            <td>Best Gender Place</td>
-            <td class="text-right">
-              <a href="/event/{{ best_gender_place.result.event.date.year }}/{{ best_gender_place.result.event.race.slug }}/{{ best_gender_place.result.event.distance.slug }}/"
-                 title="{{ best_gender_place.result.event.date.year }} {{ best_gender_place.result.event.race.shortname }} {{ best_gender_place.result.event.distance.name }}">{{ best_gender_place.gender_place }}</a>
-            </td>
-          </tr>
-          <tr>
-            <td>Best Category Place</td>
-            <td class="text-right">
-              <a href="/event/{{ best_category_place.result.event.date.year }}/{{ best_category_place.result.event.race.slug }}/{{ best_category_place.result.event.distance.slug }}/"
-                 title="{{ best_category_place.result.event.date.year }} {{ best_category_place.result.event.race.shortname }} {{ best_category_place.result.event.distance.name }}">{{ best_category_place.category_place }}</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-      <div style="padding-top: 20px; padding-bottom: 20px">
-        <div class="profile-outer">
-          <div class="profile-inner">
-            {% if member.photourl %}
-              <a href="{{ member.photourl }}">
-                <img src="{{ member.photourl }}">
-              </a>
-            {% else %}
-              <a href="http://runwaterloo.com/member-profile-photo" target="_blank">
-                <img src="{{ nophoto_url }}">
-              </a>
-            {% endif %}
-          </div>
+      {% endif %}
+    </h3>
+    <h5>Run Waterloo Member since {{ member.joindate.year }}</h5>
+    <h5>Member #{{ member.id }} | {{ member.city }}</h5>
+    <table class="table table-bordered table-striped table-hover">
+      <thead>
+        <tr class="info">
+          <th class="text-left" colspan="2" scope="col">Career Run Waterloo Stats</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Racing Since</td>
+          <td class="text-right">{{ racing_since }}</td>
+        </tr>
+        <tr>
+          <td>Total Events</td>
+          <td class="text-right">{{ results|length }}</td>
+        </tr>
+        <tr>
+          <td>Total KMs Raced</td>
+          <td class="text-right">{{ total_distance }}</td>
+        </tr>
+        <tr>
+          <td>5 KM Personal Best</td>
+          <td class="text-right"><a href="/event/{{ fivek_pb.result.event.date.year }}/{{ fivek_pb.result.event.race.slug }}/{{ fivek_pb.result.event.distance.slug }}/" title="{{ fivek_pb.result.event.date.year }} {{ fivek_pb.result.event.race.shortname }} {{ fivek_pb.result.event.distance.name }}">{{ fivek_pb.guntime }}</a></td>
+        </tr>
+        <tr>
+          <td>10 KM Personal Best</td>
+          <td class="text-right"><a href="/event/{{ tenk_pb.result.event.date.year }}/{{ tenk_pb.result.event.race.slug }}/{{ tenk_pb.result.event.distance.slug }}/" title="{{ tenk_pb.result.event.date.year }} {{ tenk_pb.result.event.race.shortname }} {{ tenk_pb.result.event.distance.name }}">{{ tenk_pb.guntime }}</a></td>
+        </tr>
+        <tr>
+          <td>Best Gender Place</td>
+          <td class="text-right"><a href="/event/{{ best_gender_place.result.event.date.year }}/{{ best_gender_place.result.event.race.slug }}/{{ best_gender_place.result.event.distance.slug}}/" title="{{ best_gender_place.result.event.date.year }} {{ best_gender_place.result.event.race.shortname }} {{ best_gender_place.result.event.distance.name }}">{{ best_gender_place.gender_place }}</a></td>
+        </tr>
+        <tr>
+          <td>Best Category Place</td>
+          <td class="text-right"><a href="/event/{{ best_category_place.result.event.date.year }}/{{ best_category_place.result.event.race.slug }}/{{ best_category_place.result.event.distance.slug }}/" title="{{ best_category_place.result.event.date.year }} {{ best_category_place.result.event.race.shortname }} {{ best_category_place.result.event.distance.name }}">{{ best_category_place.category_place }}</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+    <div style="padding-top: 20px; padding-bottom: 20px">
+      <div class="profile-outer">
+        <div class="profile-inner">
+          {% if member.photourl %}
+            <a href="{{ member.photourl }}">
+              <img src="{{ member.photourl }}">
+            </a>
+          {% else %}
+            <a href="http://runwaterloo.com/member-profile-photo" target="_blank">
+              <img src="{{ nophoto_url }}">
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
-  {% if boost %}
-    <div class="row">
-      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <a href="https://runwaterloo.com/boost/" target="_blank">
-          <img src="{% static "RW-Boost-Wordmark.png" %}" height="40px">
-        </a>
-        <br>
-        <strong>Run Fast. Run Often. Get Points. Win Stuff.</strong>
-        <table class="table table-bordered table-condensed table-striped table-hover">
+</div>
+
+{% if boost %}
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <a href="https://runwaterloo.com/boost/" target="_blank"><img src="{% static "RW-Boost-Wordmark.png" %}" height="40px"></a><br><strong>Run Fast. Run Often. Get Points. Win Stuff.</strong>
+      <table class="table table-bordered table-condensed table-striped table-hover">
           <thead>
             <tr class="info">
               <th class="text-center" scope="col">Year</th>
@@ -128,12 +115,8 @@
           <tbody>
             {% for b in boost %}
               <tr>
-                <td class="text-center">
-                  <a href="/boost/{{ b.year }}/"">{{ b.year }}</a>
-                </td>
-                <td class="text-center">
-                  <a href="/boost/{{ b.year }}/?member={{ member.slug }}">{{ b.total_points|floatformat:"2" }}</a>
-                </td>
+                <td class="text-center"><a href="/boost/{{ b.year }}/"">{{ b.year }}</a></td>
+                <td class="text-center"><a href="/boost/{{ b.year }}/?member={{ member.slug }}">{{ b.total_points|floatformat:"2" }}</a></td>
                 <td class="text-center">{{ b.category }}</td>
                 <td class="text-center">{{ b.category_place }}</td>
                 <td class="text-center">{{ b.gender_place }}</td>
@@ -141,78 +124,74 @@
               </tr>
             {% endfor %}
           </tbody>
-        </table>
-      </div>
-    </div>
-  {% endif %}
-  {% if badges %}
-    <div class="row">
-      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-        <h4>
-          <a href="http://runwaterloo.com/member-achievements/" target="_blank">Achievements</a>
-        </h4>
-        {% for badge in badges %}
-          <img src="{% static "achievements/"|add:badge.image %}"
-               title="{{ badge.name }}&#10;{{ badge.date }}"
-               height="100"
-               width="100"
-               hspace="15"
-               vspace="15">
-        {% endfor %}
-      </div>
-    </div>
-  {% endif %}
+      </table>
+    </div>  
+  </div>
+{% endif %}
+
+{% if badges %}
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <h4>All Results</h4>
-      {% if results|length >= 8 %}
-        <!-- search input -->
-        <div class="row">
-          <div class="col-xs-3">
-            <div class="form-group">
-              <input class="form-control input-sm"
-                     type="text"
-                     id="input-filter"
-                     placeholder="Search these results..."
-                     size="12">
-            </div>
-          </div>
-        </div>
-        <!-- end search input -->
-      {% endif %}
-      <table class="table table-bordered table-condensed table-striped table-hover">
-        <thead>
-          <tr class="info">
-            <th class="text-left" scope="col">Event</th>
-            <th class="text-center" title="Overall Place" scope="col">Place</th>
-            <th class="text-center" title="Bib Number" scope="col">Bib</th>
-            <th class="text-center" title="Gun Time" scope="col">Time</th>
-            <th class="text-center" title="Gender Place" scope="col">GP</th>
-            <th class="text-center" title="Category" scope="col">Cat</th>
-            <th class="text-center" title="Category Place" scope="col">CP</th>
-            <th class="text-center" title="Minutes per KM" scope="col">Pace</th>
-            <th class="text-center" title="Chip Time" scope="col">Chiptime</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in results %}
-            <tr>
-              <td class="text-left" scope="col">
-                <a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.date.year }} {{ r.result.event.race.shortname }} {{ r.result.event.distance.name }}</a>
-              </td>
-              <td class="text-center" scope="col">{{ r.result.place|get_place }}</td>
-              <td class="text-center" scope="col">{{ r.result.bib }}</td>
-              <td class="text-center" scope="col">{{ r.guntime }}</td>
-              <td class="text-center" scope="col">{{ r.gender_place }}</td>
-              <td class="text-center" scope="col">{{ r.result.category }}</td>
-              <td class="text-center" scope="col">{{ r.category_place }}</td>
-              <td class="text-center" scope="col">{{ r.guntime|get_pace:r.result.event.distance.km }}</td>
-              <td class="text-center" scope="col">{{ r.chiptime }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <script>$('table').filterTable({inputSelector: '#input-filter'});</script>
+      <h4><a href="http://runwaterloo.com/member-achievements/" target="_blank">Achievements</a></h4>
+      {% for badge in badges %}
+        <img src="{% static "achievements/"|add:badge.image %}" title="{{ badge.name }}&#10;{{ badge.date }}" height="100" width="100" hspace="15" vspace="15">
+      {% endfor %}
     </div>
   </div>
+{% endif %}
+
+<div class="row">
+  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+    <h4>All Results</h4>
+
+    {% if results|length >= 8 %}
+    <!-- search input -->
+      <div class="row">
+        <div class="col-xs-3">
+          <div class="form-group">
+            <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search these results..." size="12">
+          </div>
+        </div>
+      </div>
+    <!-- end search input -->
+    {% endif %}
+
+    <table class="table table-bordered table-condensed table-striped table-hover">
+      <thead>
+        <tr class="info">
+          <th class="text-left" scope="col">Event</th>
+          <th class="text-center" title="Overall Place" scope="col">Place</th>
+          <th class="text-center" title="Bib Number" scope="col">Bib</th>
+          <th class="text-center" title="Gun Time" scope="col">Time</th>
+          <th class="text-center" title="Gender Place" scope="col">GP</th>
+          <th class="text-center" title="Category" scope="col">Cat</th>
+          <th class="text-center" title="Category Place" scope="col">CP</th>
+          <th class="text-center" title="Minutes per KM" scope="col">Pace</th>
+          <th class="text-center" title="Chip Time" scope="col">Chiptime</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+          <tr>
+            <td class="text-left" scope="col">
+              <a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.date.year }} {{ r.result.event.race.shortname }} {{ r.result.event.distance.name }}</a>
+            </td>
+            <td class="text-center" scope="col">{{ r.result.place|get_place }}</td>
+            <td class="text-center" scope="col">{{ r.result.bib }}</td>
+            <td class="text-center" scope="col">{{ r.guntime }}</td>
+            <td class="text-center" scope="col">{{ r.gender_place }}</td>
+            <td class="text-center" scope="col">{{ r.result.category }}</td>
+            <td class="text-center" scope="col">{{ r.category_place }}</td>
+            <td class="text-center" scope="col">{{ r.guntime|get_pace:r.result.event.distance.km }}</td>
+            <td class="text-center" scope="col">{{ r.chiptime }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <script>
+      $('table').filterTable({inputSelector: '#input-filter'});
+    </script>
+  </div>
+</div>
+
 {% endblock content %}

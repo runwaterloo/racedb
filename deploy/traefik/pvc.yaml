@@ -9,6 +9,6 @@ spec:
   resources:
     requests:
       storage: 32Mi
-  selector:
+  selector: 
     matchLabels:
       app: traefik

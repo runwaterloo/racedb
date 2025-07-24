@@ -1,74 +1,70 @@
 {% extends "racedbapp/base.html" %}
 {% load static %}
+
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description"
-        content="Explore results and records for every Run Waterloo event." />
+  <meta property="og:description" content="Explore results and records for every Run Waterloo event." />
   <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
+
 {% block content %}
-  <h3>
-    Team Results: <small>{{ event.date.year }} {{ event.race.shortname }} {{ event.distance.name }}</small>
-  </h3>
-  <p>
-    <a href="/event/{{ event_parameters }}" class="btn btn-primary btn-sm">Overall</a>
-    {% if dohill %}
-      <a href="/event/{{ event_parameters }}/?hill=true"
-         class="btn btn-primary btn-sm">Hill Sprint</a>
+   <h3>Team Results: <small>{{ event.date.year }} {{ event.race.shortname }} {{ event.distance.name }}</small></h3>
+   <p>
+   <a href="/event/{{ event_parameters }}" class="btn btn-primary btn-sm">Overall</a>
+   {% if dohill %}
+   <a href="/event/{{ event_parameters }}/?hill=true" class="btn btn-primary btn-sm">Hill Sprint</a>
+   {% endif %}
+   {% if dorelay %}
+   <a href="/relay/{{ event_parameters }}/" class="btn btn-primary btn-sm">Relay</a>
+   {% endif %}
+   {% if dowheelchair %}
+   <a href="/event/{{ event_parameters }}/?wheelchair=true" class="btn btn-primary btn-sm">Wheelchair</a>
+   {% endif %}
+   {% for category in team_categories %}
+    {% if category|stringformat:"s" == team_category|stringformat:"s" %}
+      <a href="#" class="btn btn-primary btn-sm disabled">{{ category }}</a>
+    {% else %}
+      <a href="/event/{{ event_parameters }}/team/{{ category.slug }}/" class="btn btn-primary btn-sm">{{ category }}</a>
     {% endif %}
-    {% if dorelay %}
-      <a href="/relay/{{ event_parameters }}/" class="btn btn-primary btn-sm">Relay</a>
-    {% endif %}
-    {% if dowheelchair %}
-      <a href="/event/{{ event_parameters }}/?wheelchair=true"
-         class="btn btn-primary btn-sm">Wheelchair</a>
-    {% endif %}
-    {% for category in team_categories %}
-      {% if category|stringformat:"s" == team_category|stringformat:"s" %}
-        <a href="#" class="btn btn-primary btn-sm disabled">{{ category }}</a>
+   {% endfor %}
+   </p>
+   <div class="row">
+      <div class="container col-xs-12 col-sm-10 col-md-8 col-lg-6 column">
+  <table class="table table-condensed col-xs-6">
+  {% for result in team_results %}
+    <tr class="active">
+      <td>{{ result.team_place }}</td>
+      <td>{{ result.team_name }}</td>
+      <td>Total: {{ result.total_time }}</td>
+      <td>Average: {{ result.avg_time }}</td>
+    </tr>
+    {% if result.athletes.0.athlete_name != '' %}
+      <td colspan=4>
+      <div class="container col-xs-12 col-sm-12 col-md-12 col-lg-12 column">
+      <table class="table table-condensed table-bordered table-hover">
+      {% for athlete in result.athletes %}
+      <td class="text-center">{{ athlete.athlete_team_place }}</td>
+      <td>{{ athlete.athlete_name }}</td>
+      {% if athlete.estimated %}
+      <td></td>
       {% else %}
-        <a href="/event/{{ event_parameters }}/team/{{ category.slug }}/"
-           class="btn btn-primary btn-sm">{{ category }}</a>
+      {% if athlete.counts %}
+      <td class="text-center">{{ athlete.athlete_time }}</td>
+      {% else %}
+      <td class="text-center">({{ athlete.athlete_time }})</td>
       {% endif %}
-    {% endfor %}
-  </p>
-  <div class="row">
-    <div class="container col-xs-12 col-sm-10 col-md-8 col-lg-6 column">
-      <table class="table table-condensed col-xs-6">
-        {% for result in team_results %}
-          <tr class="active">
-            <td>{{ result.team_place }}</td>
-            <td>{{ result.team_name }}</td>
-            <td>Total: {{ result.total_time }}</td>
-            <td>Average: {{ result.avg_time }}</td>
-          </tr>
-          {% if result.athletes.0.athlete_name != '' %}
-            <td colspan=4>
-              <div class="container col-xs-12 col-sm-12 col-md-12 col-lg-12 column">
-                <table class="table table-condensed table-bordered table-hover">
-                  {% for athlete in result.athletes %}
-                    <td class="text-center">{{ athlete.athlete_team_place }}</td>
-                    <td>{{ athlete.athlete_name }}</td>
-                    {% if athlete.estimated %}
-                      <td></td>
-                    {% else %}
-                      {% if athlete.counts %}
-                        <td class="text-center">{{ athlete.athlete_time }}</td>
-                      {% else %}
-                        <td class="text-center">({{ athlete.athlete_time }})</td>
-                      {% endif %}
-                    {% endif %}
-                  </tr>
-                {% endfor %}
-              </table>
-            </div>
-          </td>
-        {% endif %}
+      {% endif %}
+      </tr>
       {% endfor %}
-    </table>
+      </table>
+      </div>
+      </td>
+    {% endif %}
+  {% endfor %}
+  </table>
   </div>
-</div>
+  </div>
 {% endblock content %}

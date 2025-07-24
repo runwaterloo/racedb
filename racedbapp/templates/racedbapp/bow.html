@@ -1,70 +1,76 @@
 {% extends "racedbapp/base.html" %}
 {% load static %}
+
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description"
-        content="Explore results and records for every Run Waterloo event." />
+  <meta property="og:description" content="Explore results and records for every Run Waterloo event." />
   <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
+
 {% block content %}
-  <h3>
-    Battle of Waterloo: <small>
-    <select onchange="location = this.options[this.selectedIndex].value;">
-      <option>{{ bow.name }}</option>
-      {% for b in bows %}
-        {% if b != bow %}<option value="/bow/{{ b.slug }}/">{{ b.name }}</option>{% endif %}
-      {% endfor %}
+   <h3>Battle of Waterloo: <small>
+   <select onchange="location = this.options[this.selectedIndex].value;">
+   <option>{{ bow.name }}</option>
+     {% for b in bows %}
+       {% if b != bow %}
+       <option value="/bow/{{ b.slug }}/">{{ b.name }}</option>
+       {% endif %}
+     {% endfor %}
     </select>
-  </small>
-</h3>
-<table class="table table-striped table-bordered table-condensed">
+    </small></h3>
+   <table class="table table-striped table-bordered table-condensed">
+   <tr>
+   {% for event in events %}
+   <th class="text-center">Event {{ forloop.counter }}</th>
+   {% endfor %}
+   </tr>
+   <tr>
+   {% for event in events %}
+   {% endfor %}
+   {% for event in events %}
+    {% for count in events_results_count %}
+     {% if forloop.counter == forloop.parentloop.counter %}
+     <td class="text-center">
+     {% if count != 0 %}
+   <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/">{{ event.date.year }} {{ event.race.shortname }} {{ event.distance.name }}</a>
+    {% else %}
+   {{ event.date.year }} {{ event.race.shortname }} {{ event.distance.name }}
+     {% endif %}
+   {% endif %}
+     </td>
+   {% endfor %}
+   {% endfor %}
+   </tr>
+   </table>
+   <!-- Phase Filter  -->
+   {% if phasefilter.current %}
+   <select onchange="location = this.options[this.selectedIndex].value;">
+   <option>{{ phasefilter.current }}</option>
+     {% for choice in phasefilter.choices %}
+       <option value="{{ choice.url }}">{{ choice.name }}</option>
+     {% endfor %}
+    </select>
+   {% endif %}
+
+   Filter: <select onchange="location = this.options[this.selectedIndex].value;">
+   <option>{{ resultfilter.current }}</option>
+     {% for choice in resultfilter.choices %}
+       <option value="{{ choice.url }}">{{ choice.name }}</option>
+     {% endfor %}
+    </select>
+  </p>
+  <table class="table table-striped table-hover table-condensed">
   <tr>
-    {% for event in events %}<th class="text-center">Event {{ forloop.counter }}</th>{% endfor %}
-  </tr>
-  <tr>
-    {% for event in events %}{% endfor %}
-    {% for event in events %}
-      {% for count in events_results_count %}
-        {% if forloop.counter == forloop.parentloop.counter %}
-          <td class="text-center">
-            {% if count != 0 %}
-              <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/">{{ event.date.year }} {{ event.race.shortname }} {{ event.distance.name }}</a>
-            {% else %}
-              {{ event.date.year }} {{ event.race.shortname }} {{ event.distance.name }}
-            {% endif %}
-          {% endif %}
-        </td>
-      {% endfor %}
-    {% endfor %}
-  </tr>
-</table>
-<!-- Phase Filter  -->
-{% if phasefilter.current %}
-  <select onchange="location = this.options[this.selectedIndex].value;">
-    <option>{{ phasefilter.current }}</option>
-    {% for choice in phasefilter.choices %}
-      <option value="{{ choice.url }}">{{ choice.name }}</option>
-    {% endfor %}
-  </select>
-{% endif %}
-Filter:
-<select onchange="location = this.options[this.selectedIndex].value;">
-  <option>{{ resultfilter.current }}</option>
-  {% for choice in resultfilter.choices %}
-    <option value="{{ choice.url }}">{{ choice.name }}</option>
+  <th class="text-center">Place</th>
+  <th>Name</th>
+  <th>Category</th>
+  <th class="text-center">Total</th>
+  {% for event in events %}
+  <th class="text-center">Event {{ forloop.counter }}</th>
   {% endfor %}
-</select>
-</p>
-<table class="table table-striped table-hover table-condensed">
-  <tr>
-    <th class="text-center">Place</th>
-    <th>Name</th>
-    <th>Category</th>
-    <th class="text-center">Total</th>
-    {% for event in events %}<th class="text-center">Event {{ forloop.counter }}</th>{% endfor %}
   </tr>
   {% for result in results %}
     <tr>
@@ -76,7 +82,9 @@ Filter:
       <td>{{ result.athlete.name }}</td>
       <td>{{ result.athlete.category }}</td>
       <td class="text-center">{{ result.total_time }}</td>
-      {% for t in result.stage_times %}<td class="text-center">{{ t }}</td>{% endfor %}
+      {% for t in result.stage_times %}
+      <td class="text-center">{{ t }}</td>
+      {% endfor %}
     </tr>
   {% endfor %}
 </table>

@@ -1,40 +1,32 @@
-<div class="modal fade"
-     id="contactModal"
-     tabindex="-1"
-     role="dialog"
-     aria-labelledby="contactModalLabel">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title" id="contactModalLabel">Run Waterloo results inquiry</h4>
+      <div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="contactModalLabel">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title" id="contactModalLabel">Run Waterloo results inquiry</h4>
+            </div>
+            <div class="modal-body">
+              <form action="." method="post">
+              {% csrf_token %}
+                <div class="form-group">
+                  <label for="user_name" class="control-label">Full name:</label>
+                  <input type="text" class="form-control" id="user_name" name="user_name">
+                </div>
+                <div class="form-group">
+                  <label for="email-address" class="control-label">Email address:</label>
+                  <input type="text" class="form-control" id="email-address" name="user_email">
+                </div>
+                <div class="form-group">
+                  <label for="message-text" class="control-label">Message:</label>
+                  <textarea class="form-control" id="message-text" name="message_text" rows="8"></textarea>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                  <button type="submit" class="btn btn-primary">Send message</button>
+                </div>
+              </form>
+              <p>You should receive a confirmation email shortly after clicking <strong>Send message</strong>. You only need to click once. If you do not receive a confirmation email Run Waterloo directly at results@runwaterloo.com .</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="modal-body">
-        <form action="." method="post">
-          {% csrf_token %}
-          <div class="form-group">
-            <label for="user_name" class="control-label">Full name:</label>
-            <input type="text" class="form-control" id="user_name" name="user_name">
-          </div>
-          <div class="form-group">
-            <label for="email-address" class="control-label">Email address:</label>
-            <input type="text" class="form-control" id="email-address" name="user_email">
-          </div>
-          <div class="form-group">
-            <label for="message-text" class="control-label">Message:</label>
-            <textarea class="form-control" id="message-text" name="message_text" rows="8"></textarea>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">Send message</button>
-          </div>
-        </form>
-        <p>
-          You should receive a confirmation email shortly after clicking <strong>Send message</strong>. You only need to click once. If you do not receive a confirmation email Run Waterloo directly at results@runwaterloo.com .
-        </p>
-      </div>
-    </div>
-  </div>
-</div>

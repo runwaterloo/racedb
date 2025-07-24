@@ -1,118 +1,130 @@
 {% extends "racedbapp/base.html" %}
+
 {% load static %}
 {% load racedbapp_extras %}
+
 {% block title %}
-  {% if year %}{{ year }}{% endif %}
-  {{ all_series.0.name }}
-  |
+{% if year %}
+{{ year }}
+{% endif %}
+{{ all_series.0.name }}
+|
 {% endblock title %}
+
 {% block ogmeta %}
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description"
-        content="Explore results and records for every Run Waterloo event." />
-  <meta property="og:image" content="{% static " ogimage.png" %}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Run Waterloo Results" />
+<meta property="og:description" content="Explore results and records for every Run Waterloo event." />
+<meta property="og:image" content="{% static " ogimage.png" %}" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
+
 {% block content %}
-  <h3>
-    Series:
-    <small>
-      {% if year %}{{ year }}{% endif %}
-      {{ all_series.0.name }}
-    </small>
-  </h3>
-  <table class="table table-bordered table-condensed">
-    <thead>
-      <tr class="info">
-        <th class="text-center">Year</th>
-        {% for i in all_series.0.events %}
-          <th class="text-center">Event {{ forloop.counter }}</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for series in all_series %}
-        <tr>
-          <td class="text-center">{{ series.year }}</td>
-          {% for event in series.events %}
-            <td class="text-center">
-              <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/">{{ event }}</a>
-            </td>
-          {% endfor %}
-        </tr>
+<h3>Series:
+  <small>
+    {% if year %}
+    {{ year }}
+    {% endif %}
+    {{ all_series.0.name }}
+  </small>
+</h3>
+
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr class="info">
+      <th class="text-center">Year</th>
+      {% for i in all_series.0.events %}
+      <th class="text-center">Event {{ forloop.counter }}</th>
       {% endfor %}
-    </tbody>
-  </table>
-  <!-- Filter table -->
-  <table class="table table-bordered table-condensed">
-    <thead>
-      <tr class="info">
-        <th class="text-center">Year</th>
-        <th class="text-center">Age/Gender Filter</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="text-center">
-          <select onchange="location = this.options[this.selectedIndex].value;">
-            <option>{{ filters.year_filter.current }}</option>
-            {% for yc in filters.year_filter.choices %}
-              <option value="{{ yc.url }}">{{ yc.name }}</option>
-            {% endfor %}
-          </select>
-        </td>
-        <td class="text-center">
-          <select onchange="location = this.options[this.selectedIndex].value;">
-            <option>{{ filters.category_filter.current }}</option>
-            {% for cc in filters.category_filter.choices %}
-              <option value="{{ cc.url }}">{{ cc.name }}</option>
-            {% endfor %}
-          </select>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <!-- End Filter Table -->
-  {% if results %}
-    <table class="table table-bordered table-condensed">
-      <thead>
-        <tr class="info">
-          <th class="text-center">Place</th>
-          {% if not year %}<th class="text-center">Year</th>{% endif %}
-          <th class="text-center">Name</th>
-          <th class="text-center">Category</th>
-          <th class="text-center">Total Time</th>
-          {% for i in results.0.times %}<th class="text-center">Event {{ forloop.counter }}</th>{% endfor %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for result in results %}
-          <tr>
-            <td class="text-center">{{ forloop.counter }}</td>
-            {% if not year %}<td class="text-center">{{ result.year }}</td>{% endif %}
-            {% if result.member_slug %}
-              <td>
-                <a href="/member/{{ result.member_slug }}/">{{ result.athlete }}</a>
-              </td>
-            {% else %}
-              <td>{{ result.athlete }}</td>
-            {% endif %}
-            <td class="text-center">{{ result.category }}</td>
-            <td class="text-center">{{ result.total_time|get_time }}</td>
-            {% for time in result.times %}
-              {% if time %}
-                <td class="text-center">{{ time|get_time }}</td>
-              {% else %}
-                <td></td>
-              {% endif %}
-            {% endfor %}
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    No results
-  {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for series in all_series %}
+    <tr>
+      <td class="text-center">{{ series.year }}</td>
+      {% for event in series.events %}
+      <td class="text-center"><a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/">{{ event }}</a></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Filter table -->
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr class="info">
+      <th class="text-center">Year</th>
+      <th class="text-center">Age/Gender Filter</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="text-center">
+        <select onchange="location = this.options[this.selectedIndex].value;">
+          <option>{{ filters.year_filter.current }}</option>
+          {% for yc in filters.year_filter.choices %}
+          <option value="{{ yc.url }}">{{ yc.name }}</option>
+          {% endfor %}
+        </select>
+      </td>
+      <td class="text-center">
+        <select onchange="location = this.options[this.selectedIndex].value;">
+          <option>{{ filters.category_filter.current }}</option>
+          {% for cc in filters.category_filter.choices %}
+          <option value="{{ cc.url }}">{{ cc.name }}</option>
+          {% endfor %}
+        </select>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<!-- End Filter Table -->
+
+{% if results %}
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr class="info">
+      <th class="text-center">Place</th>
+      {% if not year %}
+      <th class="text-center">Year</th>
+      {% endif %}
+      <th class="text-center">Name</th>
+      <th class="text-center">Category</th>
+      <th class="text-center">Total Time</th>
+      {% for i in results.0.times %}
+      <th class="text-center">Event {{ forloop.counter }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for result in results %}
+    <tr>
+      <td class="text-center">{{ forloop.counter }}</td>
+      {% if not year %}
+      <td class="text-center">{{ result.year }}</td>
+      {% endif %}
+      {% if result.member_slug %}
+      <td><a href="/member/{{ result.member_slug}}/">{{ result.athlete }}</a></td>
+      {% else %}
+      <td>{{ result.athlete }}</td>
+      {% endif %}
+      <td class="text-center">{{ result.category }}</td>
+      <td class="text-center">{{ result.total_time|get_time }}</td>
+      {% for time in result.times %}
+      {% if time %}
+      <td class="text-center">{{ time|get_time }}</td>
+      {% else %}
+      <td></td>
+      {% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+No results
+{% endif %}
+
 {% endblock content %}

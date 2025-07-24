@@ -1,38 +1,38 @@
 {% extends "racedbapp/base.html" %}
 {% load static %}
 {% load racedbapp_extras %}
+
 {% block ogmeta %}
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description"
-        content="Explore results and records for every Run Waterloo event." />
-  <meta property="og:image" content="{% static " ogimage.png" %}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Run Waterloo Results" />
+<meta property="og:description" content="Explore results and records for every Run Waterloo event." />
+<meta property="og:image" content="{% static " ogimage.png" %}" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
+
+
 {% block content %}
-  <h3>
-    ENDURrace Combined: <small>
+<h3>ENDURrace Combined: <small>
     <select onchange="location = this.options[this.selectedIndex].value;">
       <option>{{ year }}</option>
-      {% for y in years %}<option value="/endurrace/{{ y }}">{{ y }}</option>{% endfor %}
+      {% for y in years %}
+      <option value="/endurrace/{{ y }}">{{ y }}</option>
+      {% endfor %}
     </select>
-  </small>
-</h3>
+  </small></h3>
 {% if team_categories|length > 0 %}
-  <p>
-    <a href="#" class="btn btn-primary btn-sm disabled">Overall</a>
-    {% for category in team_categories %}
-      <a href="/event/{{ event_parameters }}/team/{{ category.slug }}"
-         class="btn btn-primary btn-sm">{{ category }}</a>
-    {% endfor %}
-  </p>
+<p>
+  <a href="#" class="btn btn-primary btn-sm disabled">Overall</a>
+  {% for category in team_categories %}
+  <a href="/event/{{ event_parameters }}/team/{{ category.slug }}" class="btn btn-primary btn-sm">{{ category }}</a>
+  {% endfor %}
+</p>
 {% endif %}
-Filter:
-<select onchange="location = this.options[this.selectedIndex].value;">
+Filter: <select onchange="location = this.options[this.selectedIndex].value;">
   <option>{{ resultfilter.current }}</option>
   {% for choice in resultfilter.choices %}
-    <option value="{{ choice.url }}">{{ choice.name }}</option>
+  <option value="{{ choice.url }}">{{ choice.name }}</option>
   {% endfor %}
 </select>
 </p>
@@ -43,39 +43,33 @@ Filter:
     <th>Name</th>
     <th class="text-center">Total Time</th>
     {% if categorydict|length != 1 %}
-      <th>Category</th>
-      <th class="text-center">Cat Place</th>
+    <th>Category</th>
+    <th class="text-center">Cat Place</th>
     {% endif %}
     <th class="text-center">Gender Place</th>
-    <th class="text-center">
-      <a href="/event/{{ events.0.date.year }}/endurrace/5-km/">5 KM</a>
-    </th>
-    <th class="text-center">
-      <a href="/event/{{ events.0.date.year }}/endurrace/8-km/">8 KM</a>
-    </th>
+    <th class="text-center"><a href="/event/{{events.0.date.year }}/endurrace/5-km/">5 KM</a></th>
+    <th class="text-center"><a href="/event/{{events.0.date.year }}/endurrace/8-km/">8 KM</a></th>
     <th>City</th>
   </tr>
   {% for result in results %}
-    <tr>
-      <td class="text-center">{{ result.place }}</td>
-      <td class="text-center">{{ result.bib }}</td>
-      {% if result.member %}
-        <td>
-          <a href="/member/{{ result.member.slug }}/">{{ result.athlete }}</a>
-        </td>
-      {% else %}
-        <td>{{ result.athlete }}</td>
-      {% endif %}
-      <td class="text-center">{{ result.total_time|round_up }}</td>
-      {% if categorydict|length != 1 %}
-        <td>{{ result.category }}</td>
-        <td class="text-center">{{ result.category_place }}/{{ result.category_total }}</td>
-      {% endif %}
-      <td class="text-center">{{ result.gender_place }}</td>
-      <td class="text-center">{{ result.fivek_time|round_up }}</td>
-      <td class="text-center">{{ result.eightk_time|round_up }}</td>
-      <td>{{ result.city }}</td>
-    </tr>
+  <tr>
+    <td class="text-center">{{ result.place }}</td>
+    <td class="text-center">{{ result.bib }}</td>
+    {% if result.member %}
+    <td><a href="/member/{{ result.member.slug }}/">{{ result.athlete }}</a></td>
+    {% else %}
+    <td>{{ result.athlete }}</td>
+    {% endif %}
+    <td class="text-center">{{ result.total_time|round_up }}</td>
+    {% if categorydict|length != 1 %}
+    <td>{{ result.category }}</td>
+    <td class="text-center">{{ result.category_place }}/{{ result.category_total }}</td>
+    {% endif %}
+    <td class="text-center">{{ result.gender_place }}</td>
+    <td class="text-center">{{ result.fivek_time|round_up }}</td>
+    <td class="text-center">{{ result.eightk_time|round_up }}</td>
+    <td>{{ result.city }}</td>
+  </tr>
   {% endfor %}
 </table>
 {% endblock content %}
