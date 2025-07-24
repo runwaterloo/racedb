@@ -72,7 +72,9 @@
               <td class="text-left">{{ m.city }}</td>
               <td class="text-center">{{ m.joindate.year }}</td>
               <td class="text-center">{{ member_event_dates|get_date:m.id }}</td>
-              {% if request.GET.ordering == 'date' %}<td class="text-center">{{ members|get_ranking:m }}</td>{% endif %}
+              {% if request.GET.ordering == 'date' %}
+                <td class="text-center">{{ members|get_ranking:m }}</td>
+              {% endif %}
               {% if m.hasphotos %}
                 {% if m not in no_camera_members %}
                   <td class="text-center">

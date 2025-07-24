@@ -1,57 +1,61 @@
 {% extends "racedbapp/base.html" %}
 {% load static %}
-
 {% block title %}
   Photo Update
   |
 {% endblock title %}
-
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description" content="Explore results and records for every Run Waterloo event." />
+  <meta property="og:description"
+        content="Explore results and records for every Run Waterloo event." />
   <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
-
 {% block content %}
-<h3>Photo Update</h3>
-{% if numevents == 1 %}
-  <h4>{{ numevents }} Event Processed</h4>
-{% else %}
-  <h4>{{ numevents }} Events Processed</h4>
-{% endif %}
-{% if results %}
-  <div class="row">
-    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-      <table class="table table-bordered table-condensed table-striped table-hover">
-        <thead>
-          <tr class="info">
-            <th class="text-left" scope="col">Event</th>
-            <th class="text-center" scope="col" title="number of photos in the album">Photos</th>
-            <th class="text-center" scope="col" title="number of results">Results</th>
-            <th class="text-center" scope="col" title="unique tags">Tags</th>
-            <th class="text-center" scope="col" title="percent coverage">Pct</th>
-            <th class="text-center" scope="col" title="change in unique tags this update">Delta</th>
-            <th class="text-center" scope="col" title="number of tags applied on flickr">Applied</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in results %}
-            <tr>
-              <td class="text-left"><a href="/event/{{ r.event.date.year }}/{{ r.event.race.slug }}/{{ r.event.distance.slug }}/">{{ r.event.date.year }} {{ r.event.race.shortname }} {{ r.event.distance.name }}</a></td>
-              <td class="text-center">{{ r.numphotos }}</td>
-              <td class="text-center">{{ r.finishers }}</td>
-              <td class="text-center">{{ r.unique_tags }}</td>
-              <td class="text-center">{{ r.pct }}</td>
-              <td class="text-center">{{ r.delta }}</td>
-              <td class="text-center">{{ r.tags_applied }}</td>
+  <h3>Photo Update</h3>
+  {% if numevents == 1 %}
+    <h4>{{ numevents }} Event Processed</h4>
+  {% else %}
+    <h4>{{ numevents }} Events Processed</h4>
+  {% endif %}
+  {% if results %}
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <table class="table table-bordered table-condensed table-striped table-hover">
+          <thead>
+            <tr class="info">
+              <th class="text-left" scope="col">Event</th>
+              <th class="text-center" scope="col" title="number of photos in the album">Photos</th>
+              <th class="text-center" scope="col" title="number of results">Results</th>
+              <th class="text-center" scope="col" title="unique tags">Tags</th>
+              <th class="text-center" scope="col" title="percent coverage">Pct</th>
+              <th class="text-center"
+                  scope="col"
+                  title="change in unique tags this update">Delta</th>
+              <th class="text-center"
+                  scope="col"
+                  title="number of tags applied on flickr">Applied</th>
             </tr>
-         {% endfor %}
-       </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {% for r in results %}
+              <tr>
+                <td class="text-left">
+                  <a href="/event/{{ r.event.date.year }}/{{ r.event.race.slug }}/{{ r.event.distance.slug }}/">{{ r.event.date.year }} {{ r.event.race.shortname }} {{ r.event.distance.name }}</a>
+                </td>
+                <td class="text-center">{{ r.numphotos }}</td>
+                <td class="text-center">{{ r.finishers }}</td>
+                <td class="text-center">{{ r.unique_tags }}</td>
+                <td class="text-center">{{ r.pct }}</td>
+                <td class="text-center">{{ r.delta }}</td>
+                <td class="text-center">{{ r.tags_applied }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-{% endif %}
+  {% endif %}
 {% endblock content %}

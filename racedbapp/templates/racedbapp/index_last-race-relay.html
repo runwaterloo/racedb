@@ -5,29 +5,33 @@
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <p></p>
       <ul class="pagination">
-        <li><a href="/relay/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ recap_event.distance.slug }}/"><b>Relay</b></a></li>
+        <li>
+          <a href="/relay/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ recap_event.distance.slug }}/"><b>Relay</b></a>
+        </li>
         {% for i in distances %}
-          <li><a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ i.slug }}/">{{ i }}</a></li>
+          <li>
+            <a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ i.slug }}/">{{ i }}</a>
+          </li>
         {% endfor %}
       </ul>
       {% if recap_results|length > 4 %}
         <table class="table table-condensed">
-      {% else %}
-        <table class="table">
-      {% endif %}
-        <tr class="info">
-          <th>Category</th>
-          <th>Team Name</th>
-          <th>Time</th>
-        </tr>
-        {% for k, v in recap_results.items %}
-          <tr>
-            <td>{{ k }}</td>
-            <td>{{ v.team }}</td>
-            <td>{{ v.team_time|round_up }}</td>
+        {% else %}
+          <table class="table">
+          {% endif %}
+          <tr class="info">
+            <th>Category</th>
+            <th>Team Name</th>
+            <th>Time</th>
           </tr>
-        {% endfor %}
-      </table>
+          {% for k, v in recap_results.items %}
+            <tr>
+              <td>{{ k }}</td>
+              <td>{{ v.team }}</td>
+              <td>{{ v.team_time|round_up }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
     </div>
   </div>
-</div>

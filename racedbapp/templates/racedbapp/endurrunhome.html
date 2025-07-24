@@ -1,30 +1,68 @@
 {% extends "racedbapp/base.html" %}
 {% load static %}
-
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description" content="Explore results and records for every Run Waterloo event." />
+  <meta property="og:description"
+        content="Explore results and records for every Run Waterloo event." />
   <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 {% endblock ogmeta %}
-
 {% block content %}
-<div>
-  <a href="http://www.endurrun.com"><img src="{% static "endurrun.png" %}" height="70" style="PADDING-TOP: 20px"></a>
-  <br><br>
-</div>
-<div class="row">
-  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-    <div class="well well-lg"><center><h4><a href="/events/?race=endurrun">Individual Event Results</a></h4></center></div>
-    <div class="well well-lg"><center><h4><a href="/race/endurrun/half-marathon/">Stage Records</a></h4></center></div>
-    <div class="well well-lg"><center><h4><a href="/endurrun/stats/">Stats</a></h4></center></div>
+  <div>
+    <a href="http://www.endurrun.com">
+      <img src="{% static "endurrun.png" %}"
+           height="70"
+           style="PADDING-TOP: 20px">
+    </a>
+    <br>
+    <br>
   </div>
-  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-    <div class="well well-lg"><center><h4><a href="/endurrun/ultimate/?year=2024">Cumulative Results</a></h4></center></div>
-    <div class="well well-lg"><center><h4><a href="/endurrun/ultimate/?contest=sprint&year=2024">Sprint</a> / <a href="/endurrun/ultimate/?contest=trail&year=2024">Trail</a></h4></center></div>
-    <div class="well well-lg"><center><h4>Live Results</h4></center></div>
+  <div class="row">
+    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+      <div class="well well-lg">
+        <center>
+          <h4>
+            <a href="/events/?race=endurrun">Individual Event Results</a>
+          </h4>
+        </center>
+      </div>
+      <div class="well well-lg">
+        <center>
+          <h4>
+            <a href="/race/endurrun/half-marathon/">Stage Records</a>
+          </h4>
+        </center>
+      </div>
+      <div class="well well-lg">
+        <center>
+          <h4>
+            <a href="/endurrun/stats/">Stats</a>
+          </h4>
+        </center>
+      </div>
+    </div>
+    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+      <div class="well well-lg">
+        <center>
+          <h4>
+            <a href="/endurrun/ultimate/?year=2024">Cumulative Results</a>
+          </h4>
+        </center>
+      </div>
+      <div class="well well-lg">
+        <center>
+          <h4>
+            <a href="/endurrun/ultimate/?contest=sprint&year=2024">Sprint</a> / <a href="/endurrun/ultimate/?contest=trail&year=2024">Trail</a>
+          </h4>
+        </center>
+      </div>
+      <div class="well well-lg">
+        <center>
+          <h4>Live Results</h4>
+        </center>
+      </div>
+    </div>
   </div>
-</div>
 {% endblock content %}

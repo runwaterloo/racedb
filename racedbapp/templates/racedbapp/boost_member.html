@@ -1,79 +1,85 @@
 {% extends "racedbapp/base.html" %}
 {% load static %}
 {% load racedbapp_extras %}
-
 {% block title %}
- {{ member_results.athlete }} | Boost {{ year }}
+  {{ member_results.athlete }} | Boost {{ year }}
   |
 {% endblock title %}
-
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description" content="Explore results and records for every Run Waterloo event." />
+  <meta property="og:description"
+        content="Explore results and records for every Run Waterloo event." />
   <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <script src="{% static "jquery.filtertable.min.js" %}"></script>
 {% endblock ogmeta %}
-
 {% block content %}
-
-<h3>
-<img class="img-responsive" src="{% static "RW-Boost-Wordmark.png" %}">
- </h3>
-<div class="row">
-  <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-    <h4><a href="/boost/{{ year }}">{{ year }}
-    </a> Score Report for:
-      {% if member_results.active %}
-        <a href="/member/{{ member_results.slug }}/">{{ member_results.athlete }}</a>
-      {% else %}
-        {{ member_results.athlete }}
-      {% endif %}
-    </h4>
-    <h5>Total Points:
-    <strong>{{ member_results.total_points|floatformat:"2" }}</strong>
-    &nbsp;|&nbsp;Event Finishes:
-    {{ member_results.results|length }}</h5>
-    <h5>Gender Place:
-    {{ member_results.gender_place }}
-    &nbsp;|&nbsp;Demographic Place:
-    {{ member_results.category_place }}</h5>
+  <h3>
+    <img class="img-responsive" src="{% static "RW-Boost-Wordmark.png" %}">
+  </h3>
+  <div class="row">
+    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+      <h4>
+        <a href="/boost/{{ year }}">{{ year }}</a> Score Report for:
+        {% if member_results.active %}
+          <a href="/member/{{ member_results.slug }}/">{{ member_results.athlete }}</a>
+        {% else %}
+          {{ member_results.athlete }}
+        {% endif %}
+      </h4>
+      <h5>
+        Total Points:
+        <strong>{{ member_results.total_points|floatformat:"2" }}</strong>
+        &nbsp;|&nbsp;Event Finishes:
+        {{ member_results.results|length }}
+      </h5>
+      <h5>
+        Gender Place:
+        {{ member_results.gender_place }}
+        &nbsp;|&nbsp;Demographic Place:
+        {{ member_results.category_place }}
+      </h5>
+    </div>
   </div>
-</div>
-
-
-<div class="row">
-  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-    <table class="table table-bordered table-condensed table-striped">
-      <tr class="info">
-        <th class="text-center">Event</th>
-        <th class="text-center">Time</th>
-        <th class="text-center" title="Gender Place">GP</th>
-        <th class="text-center" title="Merit points">Merit</th>
-        <th class="text-center">Boosters</th>
-        <th class="text-center">Points</th>
-        <th class="text-center">Counts</th>
-      </tr>
-      {% for i in member_results.results %}
-        <tr>
-          <td><a href="/event/{{ year }}/{{ i.event_race_slug }}/{{ i.event_distance_slug }}/">{{ i.event_race_short_name }} {{ i.event_distance_name }}</a></td>
-          <td class="text-center">{{ i.guntime|get_time }}</td>
-          <td class="text-center">{{ i.gender_place }}/{{ i.gender_finishers }}</td>
-          <td class="text-center">{{ i.mp|floatformat:"2" }}</td>
-          <td class="text-center">
-            {% if i.classic_boost > 0 %}
-              <i class="fas fa-certificate fa-icon-classic" title="Classic Event ({{ config_dict.boost_classic_points }} points)"></i>
-            {% endif %}
-            {% if i.pb_boost > 0 %}
-            <i class="fas fa-stopwatch fa-icon-pb" title="Run Waterloo PB ({{ config_dict.boost_pb_points }} points)"></i>
-            {% endif %}
-            {% if i.ditto_boost > 0 %}
-              <i class="fas fa-redo-alt fa-icon-ditto" title="Ditto ({{ config_dict.boost_ditto_points }} points)"></i></span>
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+      <table class="table table-bordered table-condensed table-striped">
+        <tr class="info">
+          <th class="text-center">Event</th>
+          <th class="text-center">Time</th>
+          <th class="text-center" title="Gender Place">GP</th>
+          <th class="text-center" title="Merit points">Merit</th>
+          <th class="text-center">Boosters</th>
+          <th class="text-center">Points</th>
+          <th class="text-center">Counts</th>
+        </tr>
+        {% for i in member_results.results %}
+          <tr>
+            <td>
+              <a href="/event/{{ year }}/{{ i.event_race_slug }}/{{ i.event_distance_slug }}/">{{ i.event_race_short_name }} {{ i.event_distance_name }}</a>
+            </td>
+            <td class="text-center">{{ i.guntime|get_time }}</td>
+            <td class="text-center">{{ i.gender_place }}/{{ i.gender_finishers }}</td>
+            <td class="text-center">{{ i.mp|floatformat:"2" }}</td>
+            <td class="text-center">
+              {% if i.classic_boost > 0 %}
+                <i class="fas fa-certificate fa-icon-classic"
+                   title="Classic Event ({{ config_dict.boost_classic_points }} points)"></i>
+              {% endif %}
+              {% if i.pb_boost > 0 %}
+                <i class="fas fa-stopwatch fa-icon-pb"
+                   title="Run Waterloo PB ({{ config_dict.boost_pb_points }} points)"></i>
+              {% endif %}
+              {% if i.ditto_boost > 0 %}
+                <i class="fas fa-redo-alt fa-icon-ditto"
+                   title="Ditto ({{ config_dict.boost_ditto_points }} points)"></i></span>
             {% endif %}
           </td>
-          <td class="text-center"><strong>{{ i.ep|floatformat:"2" }}</strong></td>
+          <td class="text-center">
+            <strong>{{ i.ep|floatformat:"2" }}</strong>
+          </td>
           <td class="text-center">
             {% if i.counts %}
               <i class="fas fa-check fa-icon-counts"></i>
@@ -87,17 +93,27 @@
   </div>
 </div>
 <p>
-<strong><a href="http://runwaterloo.com/boost" target="_blank">RW Boost Rules</a></strong><br>
-Points count for the top {{ config_dict.boost_max_events }} events, including a maximum of {{ config_dict.boost_max_endurrun }} ENDURrun events.<br>
-Event points calculated as follows:<br>
-&nbsp;&nbsp;{{ config_dict.boost_participation_points }} for finishing a timed event<br>
-&nbsp;&nbsp;+ Merit points (1 - (gender place / gender finishers)) * {{ config_dict.boost_merit_max }}<br>
-&nbsp;&nbsp;+ Boosters<br>
-<strong>Boosters</strong><br>
-<i class="fas fa-certificate fa-icon-classic"></i>
-= Classic ({{ config_dict.boost_classic_points }} points) - Finishing one of the two Classic races<br>
-<i class="fas fa-stopwatch fa-icon-pb"></i>
-= PB ({{ config_dict.boost_pb_points }} points) - RW personal best for the distance (including first time running that distance)<br>
-<i class="fas fa-redo-alt fa-icon-ditto"></i> = Ditto ({{ config_dict.boost_ditto_points }} points) - Repeating a race from last year (any event/distance)<br>
+  <strong><a href="http://runwaterloo.com/boost" target="_blank">RW Boost Rules</a></strong>
+  <br>
+  Points count for the top {{ config_dict.boost_max_events }} events, including a maximum of {{ config_dict.boost_max_endurrun }} ENDURrun events.
+  <br>
+  Event points calculated as follows:
+  <br>
+  &nbsp;&nbsp;{{ config_dict.boost_participation_points }} for finishing a timed event
+  <br>
+  &nbsp;&nbsp;+ Merit points (1 - (gender place / gender finishers)) * {{ config_dict.boost_merit_max }}
+  <br>
+  &nbsp;&nbsp;+ Boosters
+  <br>
+  <strong>Boosters</strong>
+  <br>
+  <i class="fas fa-certificate fa-icon-classic"></i>
+  = Classic ({{ config_dict.boost_classic_points }} points) - Finishing one of the two Classic races
+  <br>
+  <i class="fas fa-stopwatch fa-icon-pb"></i>
+  = PB ({{ config_dict.boost_pb_points }} points) - RW personal best for the distance (including first time running that distance)
+  <br>
+  <i class="fas fa-redo-alt fa-icon-ditto"></i> = Ditto ({{ config_dict.boost_ditto_points }} points) - Repeating a race from last year (any event/distance)
+  <br>
 </p>
 {% endblock content %}

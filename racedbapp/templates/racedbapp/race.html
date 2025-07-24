@@ -56,7 +56,9 @@
           {% if distance.slug == 'combined' %}
             <option value="/endurrace/{{ year.year }}/">{{ year.year }}</option>
           {% else %}
-            <option value="/event/{{ year.year }}/{{ year.race_slug }}/{{ distance.slug }}/">{{ year.year }}</option>
+            <option value="/event/{{ year.year }}/{{ year.race_slug }}/{{ distance.slug }}/">
+              {{ year.year }}
+            </option>
           {% endif %}
         {% endfor %}
       </select>
@@ -72,7 +74,9 @@
           </a>
         {% else %}
           <div style="padding-top: 20px; padding-bottom: 20px">
-            <img class="img-rounded pull-right" src="{% static "race_logos/"|add:race_logo_slug|add:".png" %}" height="150">
+            <img class="img-rounded pull-right"
+                 src="{% static "race_logos/"|add:race_logo_slug|add:".png" %}"
+                 height="150">
           </div>
         {% endif %}
       </div>
@@ -89,10 +93,14 @@
               <option value="/race/{{ race.slug }}/{{ distance.slug }}/">{{ division }}</option>
             {% elif division == 'Sport' %}
               {% if distance.slug == '25_6-km' or distance.slug == '10-km' or distance.slug == 'marathon' %}
-                <option value="/race/{{ race.slug }}/{{ distance.slug }}/?division={{ division }}">{{ division }}</option>
+                <option value="/race/{{ race.slug }}/{{ distance.slug }}/?division={{ division }}">
+                  {{ division }}
+                </option>
               {% endif %}
             {% else %}
-              <option value="/race/{{ race.slug }}/{{ distance.slug }}/?division={{ division }}">{{ division }}</option>
+              <option value="/race/{{ race.slug }}/{{ distance.slug }}/?division={{ division }}">
+                {{ division }}
+              </option>
             {% endif %}
           {% endif %}
         {% endfor %}
@@ -203,7 +211,9 @@
     Filter:
     <select onchange="location = this.options[this.selectedIndex].value;">
       <option>{{ resultfilter.current }}</option>
-      {% for choice in resultfilter.choices %}<option value="{{ choice.url }}">{{ choice.name }}</option>{% endfor %}
+      {% for choice in resultfilter.choices %}
+        <option value="{{ choice.url }}">{{ choice.name }}</option>
+      {% endfor %}
     </select>
   </p>
   <p>

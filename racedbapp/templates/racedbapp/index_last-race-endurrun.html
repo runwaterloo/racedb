@@ -4,10 +4,18 @@
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <ul class="pagination">
-          <li><a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ recap_event.distance.slug }}/">Latest results</a></li>
-          <li><a href="/endurrun/ultimate/?year={{ recap_results.year }}">Ultimate</a></li>
-          <li><a href="/endurrun/relay/?year={{ recap_results.year }}">Relay</a></li>
-          <li><a href="/endurrun/">More</a></li>
+        <li>
+          <a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ recap_event.distance.slug }}/">Latest results</a>
+        </li>
+        <li>
+          <a href="/endurrun/ultimate/?year={{ recap_results.year }}">Ultimate</a>
+        </li>
+        <li>
+          <a href="/endurrun/relay/?year={{ recap_results.year }}">Relay</a>
+        </li>
+        <li>
+          <a href="/endurrun/">More</a>
+        </li>
       </ul>
       <table class="table">
         <tr class="info">
@@ -17,64 +25,80 @@
         </tr>
         <tr>
           <td>1st OA</td>
-            {% if recap_results.top_female.0.member_slug %}
-              <td><a href="/member/{{ recap_results.top_female.0.member_slug }}/">{{ recap_results.top_female.0.athlete.name }}</a></td>
-            {% else %}
-              <td>{{ recap_results.top_female.0.athlete.name }}</td>
-            {% endif %}
-            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_female.0.total_time|round_up }}</td>
-            {% if recap_results.top_male.0.member_slug %}
-              <td><a href="/member/{{ recap_results.top_male.0.member_slug }}/">{{ recap_results.top_male.0.athlete.name }}</a></td>
-            {% else %}
-              <td>{{ recap_results.top_male.0.athlete.name }}</td>
-            {% endif %}
-            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_male.0.total_time|round_up }}</td>
+          {% if recap_results.top_female.0.member_slug %}
+            <td>
+              <a href="/member/{{ recap_results.top_female.0.member_slug }}/">{{ recap_results.top_female.0.athlete.name }}</a>
+            </td>
+          {% else %}
+            <td>{{ recap_results.top_female.0.athlete.name }}</td>
+          {% endif %}
+          <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_female.0.total_time|round_up }}</td>
+          {% if recap_results.top_male.0.member_slug %}
+            <td>
+              <a href="/member/{{ recap_results.top_male.0.member_slug }}/">{{ recap_results.top_male.0.athlete.name }}</a>
+            </td>
+          {% else %}
+            <td>{{ recap_results.top_male.0.athlete.name }}</td>
+          {% endif %}
+          <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_male.0.total_time|round_up }}</td>
         </tr>
         <tr>
           <td>2nd OA</td>
-            {% if recap_results.top_female.1.member_slug %}
-              <td><a href="/member/{{ recap_results.top_female.1.member_slug }}/">{{ recap_results.top_female.1.athlete.name }}</a></td>
-            {% else %}
-              <td>{{ recap_results.top_female.1.athlete.name }}</td>
-            {% endif %}
-            <td class="text-center">+{{ recap_results.top_female.1.lead_gap }}</td>
-            {% if recap_results.top_male.1.member_slug %}
-              <td><a href="/member/{{ recap_results.top_male.1.member_slug }}/">{{ recap_results.top_male.1.athlete.name }}</a></td>
-            {% else %}
-              <td>{{ recap_results.top_male.1.athlete.name }}</td>
-            {% endif %}
-            <td class="text-center">+{{ recap_results.top_male.1.lead_gap }}</td>
+          {% if recap_results.top_female.1.member_slug %}
+            <td>
+              <a href="/member/{{ recap_results.top_female.1.member_slug }}/">{{ recap_results.top_female.1.athlete.name }}</a>
+            </td>
+          {% else %}
+            <td>{{ recap_results.top_female.1.athlete.name }}</td>
+          {% endif %}
+          <td class="text-center">+{{ recap_results.top_female.1.lead_gap }}</td>
+          {% if recap_results.top_male.1.member_slug %}
+            <td>
+              <a href="/member/{{ recap_results.top_male.1.member_slug }}/">{{ recap_results.top_male.1.athlete.name }}</a>
+            </td>
+          {% else %}
+            <td>{{ recap_results.top_male.1.athlete.name }}</td>
+          {% endif %}
+          <td class="text-center">+{{ recap_results.top_male.1.lead_gap }}</td>
         </tr>
         <tr>
           <td>3rd OA</td>
-            {% if recap_results.top_female.2.member_slug %}
-              <td><a href="/member/{{ recap_results.top_female.2.member_slug }}/">{{ recap_results.top_female.2.athlete.name }}</a></td>
-            {% else %}
-              <td>{{ recap_results.top_female.2.athlete.name }}</td>
-            {% endif %}
-            <td class="text-center">+{{ recap_results.top_female.2.lead_gap }}</td>
-            {% if recap_results.top_male.2.member_slug %}
-              <td><a href="/member/{{ recap_results.top_male.2.member_slug }}/">{{ recap_results.top_male.2.athlete.name }}</a></td>
-            {% else %}
-              <td>{{ recap_results.top_male.2.athlete.name }}</td>
-            {% endif %}
-            <td class="text-center">+{{ recap_results.top_male.2.lead_gap }}</td>
+          {% if recap_results.top_female.2.member_slug %}
+            <td>
+              <a href="/member/{{ recap_results.top_female.2.member_slug }}/">{{ recap_results.top_female.2.athlete.name }}</a>
+            </td>
+          {% else %}
+            <td>{{ recap_results.top_female.2.athlete.name }}</td>
+          {% endif %}
+          <td class="text-center">+{{ recap_results.top_female.2.lead_gap }}</td>
+          {% if recap_results.top_male.2.member_slug %}
+            <td>
+              <a href="/member/{{ recap_results.top_male.2.member_slug }}/">{{ recap_results.top_male.2.athlete.name }}</a>
+            </td>
+          {% else %}
+            <td>{{ recap_results.top_male.2.athlete.name }}</td>
+          {% endif %}
+          <td class="text-center">+{{ recap_results.top_male.2.lead_gap }}</td>
         </tr>
-          <td>1st Master</td>
-            {% if recap_results.top_f_masters.member_slug %}
-              <td><a href="/member/{{ recap_results.top_f_masters.member_slug }}/">{{ recap_results.top_f_masters.athlete.name }}</a></td>
-            {% else %}
-              <td>{{ recap_results.top_f_masters.athlete.name }}</td>
-            {% endif %}
-            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_f_masters.total_time|round_up }}</td>
-            {% if recap_results.top_m_masters.member_slug %}
-              <td><a href="/member/{{ recap_results.top_m_masters.member_slug }}/">{{ recap_results.top_m_masters.athlete.name }}</a></td>
-            {% else %}
-              <td>{{ recap_results.top_m_masters.athlete.name }}</td>
-            {% endif %}
-            <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_m_masters.total_time|round_up }}</td>
-        </tr>
-        <tr>
+        <td>1st Master</td>
+        {% if recap_results.top_f_masters.member_slug %}
+          <td>
+            <a href="/member/{{ recap_results.top_f_masters.member_slug }}/">{{ recap_results.top_f_masters.athlete.name }}</a>
+          </td>
+        {% else %}
+          <td>{{ recap_results.top_f_masters.athlete.name }}</td>
+        {% endif %}
+        <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_f_masters.total_time|round_up }}</td>
+        {% if recap_results.top_m_masters.member_slug %}
+          <td>
+            <a href="/member/{{ recap_results.top_m_masters.member_slug }}/">{{ recap_results.top_m_masters.athlete.name }}</a>
+          </td>
+        {% else %}
+          <td>{{ recap_results.top_m_masters.athlete.name }}</td>
+        {% endif %}
+        <td class="text-center">&nbsp;&nbsp;{{ recap_results.top_m_masters.total_time|round_up }}</td>
+      </tr>
+      <tr>
       </table>
     </div>
   </div>

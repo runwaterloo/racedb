@@ -1,99 +1,114 @@
 {% extends "racedbapp/base.html" %}
 {% load racedbapp_extras %}
 {% block content %}
-<h4>
-{% if distance_slug == 'combined' %}
-  <a href="/endurrace/{{ year }}/" target="_blank">Combined Results -  {{ year }} ENDURrace</a>
-{% else %}
-  <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/" target="_blank">{{ event.distance }} Results - {{ event.date.year }} {{ event.race.name }}</a>
-{% endif %}
-</h4>
-<table class="table table-condensed">
-  <tr class="info">
-    <th>Place</th>
-    <th>Female</th>
-    <th>Time</th>
-    <th>Male</th>
-    <th>Time</th>
-  </tr>
-  {% for result in individual_results %}
-  <tr>
-    <td>
-      {% if result.place == "1st OA" %}
-        <i class="fas fa-trophy fa-icon-1st-oa" title="1st Overall"></i>
-      {% endif %}
-      {% if result.place == "2nd OA" %}
-        <i class="fas fa-medal fa-icon-2nd-oa" title="2nd Overall"></i>
-      {% endif %}
-      {% if result.place == "3rd OA" %}
-        <i class="fas fa-medal fa-icon-3rd-oa" title="3rd Overall"></i>
-      {% endif %}
-      {% if result.place == "1st Master" %}
-        <i class="fas fa-medal fa-icon-1st-master" title="1st Master"></i>
-      {% endif %}
-      {{ result.place }}
-    </td>
-    {% if result.female_member_slug %}
-      <td><a href="/member/{{ result.female_member_slug }}/" target="_blank">{{ result.female_athlete }}</a></td>
+  <h4>
+    {% if distance_slug == 'combined' %}
+      <a href="/endurrace/{{ year }}/" target="_blank">Combined Results -  {{ year }} ENDURrace</a>
     {% else %}
-      <td>{{ result.female_athlete }}</td>
+      <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/"
+         target="_blank">{{ event.distance }} Results - {{ event.date.year }} {{ event.race.name }}</a>
     {% endif %}
-    <td>{{ result.female_time|round_up }}</td>
-    {% if result.male_member_slug %}
-      <td><a href="/member/{{ result.male_member_slug }}/" target="_blank">{{ result.male_athlete }}</a></td>
-    {% else %}
-      <td>{{ result.male_athlete }}</td>
-    {% endif %}
-    <td>{{ result.male_time|round_up }}</td>
-  </tr>
-  {% endfor %}
-</table>
-{% if hill_results %}
-<table class="table table-condensed">
-  <tr class="info">
-    <th>Hill Sprint</th>
-    <th>Female</th>
-    <th>Time</th>
-    <th>Male</th>
-    <th>Time</th>
-  </tr>
-  {% for result in hill_results %}
-  <tr>
-    <td><a target="_blank" href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/?hill=true">{{ result.place }}</a></td>
-    {% if result.female_member_slug %}
-      <td><a href="/member/{{ result.female_member_slug }}/" target="_blank">{{ result.female_athlete }}</a></td>
-    {% else %}
-      <td>{{ result.female_athlete }}</td>
-    {% endif %}
-    <td>{{ result.female_time|round_up }}</td>
-    {% if result.male_member_slug %}
-      <td><a href="/member/{{ result.male_member_slug }}/" target="_blank">{{ result.male_athlete }}</a></td>
-    {% else %}
-      <td>{{ result.male_athlete }}</td>
-    {% endif %}
-    <td>{{ result.male_time|round_up }}</td>
-  </tr>
-  {% endfor %}
-</table>
-{% endif %}
-{% if team_results|length > 0 %}
-<table class="table table-condensed">
-  <tr class="info">
-    <th>Team Category</th>
-    <th>Count</th>
-    <th>Winning Team</th>
-    <th>Total Time</th>
-    <th>Avg Time</th>
-  </tr>
-  {% for result in team_results %}
-  <tr>
-    <td><a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/team/{{ result.team_category.slug }}" target="_blank">{{ result.team_category }}</a></td>
-    <td>{{ result.top }}</td>
-    <td>{{ result.winning_team }}</td>
-    <td>{{ result.total_time|round_up }}</td>
-    <td>{{ result.avg_time|round_up }}</td>
-  </tr>
-  {% endfor %}
-</table>
-{% endif %}
+  </h4>
+  <table class="table table-condensed">
+    <tr class="info">
+      <th>Place</th>
+      <th>Female</th>
+      <th>Time</th>
+      <th>Male</th>
+      <th>Time</th>
+    </tr>
+    {% for result in individual_results %}
+      <tr>
+        <td>
+          {% if result.place == "1st OA" %}
+            <i class="fas fa-trophy fa-icon-1st-oa" title="1st Overall"></i>
+          {% endif %}
+          {% if result.place == "2nd OA" %}
+            <i class="fas fa-medal fa-icon-2nd-oa" title="2nd Overall"></i>
+          {% endif %}
+          {% if result.place == "3rd OA" %}
+            <i class="fas fa-medal fa-icon-3rd-oa" title="3rd Overall"></i>
+          {% endif %}
+          {% if result.place == "1st Master" %}
+            <i class="fas fa-medal fa-icon-1st-master" title="1st Master"></i>
+          {% endif %}
+          {{ result.place }}
+        </td>
+        {% if result.female_member_slug %}
+          <td>
+            <a href="/member/{{ result.female_member_slug }}/" target="_blank">{{ result.female_athlete }}</a>
+          </td>
+        {% else %}
+          <td>{{ result.female_athlete }}</td>
+        {% endif %}
+        <td>{{ result.female_time|round_up }}</td>
+        {% if result.male_member_slug %}
+          <td>
+            <a href="/member/{{ result.male_member_slug }}/" target="_blank">{{ result.male_athlete }}</a>
+          </td>
+        {% else %}
+          <td>{{ result.male_athlete }}</td>
+        {% endif %}
+        <td>{{ result.male_time|round_up }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+  {% if hill_results %}
+    <table class="table table-condensed">
+      <tr class="info">
+        <th>Hill Sprint</th>
+        <th>Female</th>
+        <th>Time</th>
+        <th>Male</th>
+        <th>Time</th>
+      </tr>
+      {% for result in hill_results %}
+        <tr>
+          <td>
+            <a target="_blank"
+               href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/?hill=true">{{ result.place }}</a>
+          </td>
+          {% if result.female_member_slug %}
+            <td>
+              <a href="/member/{{ result.female_member_slug }}/" target="_blank">{{ result.female_athlete }}</a>
+            </td>
+          {% else %}
+            <td>{{ result.female_athlete }}</td>
+          {% endif %}
+          <td>{{ result.female_time|round_up }}</td>
+          {% if result.male_member_slug %}
+            <td>
+              <a href="/member/{{ result.male_member_slug }}/" target="_blank">{{ result.male_athlete }}</a>
+            </td>
+          {% else %}
+            <td>{{ result.male_athlete }}</td>
+          {% endif %}
+          <td>{{ result.male_time|round_up }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  {% if team_results|length > 0 %}
+    <table class="table table-condensed">
+      <tr class="info">
+        <th>Team Category</th>
+        <th>Count</th>
+        <th>Winning Team</th>
+        <th>Total Time</th>
+        <th>Avg Time</th>
+      </tr>
+      {% for result in team_results %}
+        <tr>
+          <td>
+            <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/team/{{ result.team_category.slug }}"
+               target="_blank">{{ result.team_category }}</a>
+          </td>
+          <td>{{ result.top }}</td>
+          <td>{{ result.winning_team }}</td>
+          <td>{{ result.total_time|round_up }}</td>
+          <td>{{ result.avg_time|round_up }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
 {% endblock content %}

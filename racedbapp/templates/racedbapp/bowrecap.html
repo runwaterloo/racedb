@@ -1,24 +1,24 @@
 {% extends "racedbapp/base.html" %}
 {% block content %}
-<h4>
-  <a href="/bow/{{ bow.slug }}/" target="_blank">{{ bow }} - {{ heading }}</a>
-</h4>
-<table class="table table-condensed">
-  <tr class="info">
-    <th>Category</th>
-    <th>Female</th>
-    <th>Time</th>
-    <th>Male</th>
-    <th>Time</th>
-  </tr>
-  {% for r in results %}
-  <tr>
-    <td>{{ r.category }}</td>
-    <td>{{ r.female_athlete }}</td>
-    <td>{{ r.female_time }}</td>
-    <td>{{ r.male_athlete }}</td>
-    <td>{{ r.male_time }}</td>
-  </tr>
-  {% endfor %}
-</table>
+  <h4>
+    <a href="/bow/{{ bow.slug }}/" target="_blank">{{ bow }} - {{ heading }}</a>
+  </h4>
+  <table class="table table-condensed">
+    <tr class="info">
+      <th>Category</th>
+      <th>Female</th>
+      <th>Time</th>
+      <th>Male</th>
+      <th>Time</th>
+    </tr>
+    {% for r in results %}
+      <tr>
+        <td>{{ r.category }}</td>
+        <td>{{ r.female_athlete }}</td>
+        <td>{{ r.female_time }}</td>
+        <td>{{ r.male_athlete }}</td>
+        <td>{{ r.male_time }}</td>
+      </tr>
+    {% endfor %}
+  </table>
 {% endblock content %}

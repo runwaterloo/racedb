@@ -1,135 +1,150 @@
 {% extends "racedbapp/base.html" %}
-
 {% load static %}
 {% load racedbapp_extras %}
-
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description" content="Explore results and records for every Run Waterloo event." />
+  <meta property="og:description"
+        content="Explore results and records for every Run Waterloo event." />
   <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <script src="{% static "jquery.filtertable.min.js" %}"></script>
 {% endblock ogmeta %}
-
 {% block content %}
-<h3>Distance Records</h3>
-
-<!-- Distance selection -->
-<ul class="pagination">
-{% for d in distances %}
-  {% if d == distance %}
-    <li class="active"><a href="#">{{ d.name }}</a></li>
-  {% else %}
-    {% if topx_filter %}
-      <li><a href="/distance/{{ d.slug }}/?filter={{ topx_filter }}">{{ d.name }}</a></li>
-    {% else %}
-      <li><a href="/distance/{{ d.slug }}/">{{ d.name }}</a></li>
-    {% endif %}
-  {% endif %}
-{% endfor %}
-</ul>
-<!-- End distance selection -->
-
-<p></p>
-<table class="table table-striped table-condensed">
-  <thead>
-    <tr class="info">
-      <th>Individual</th>
-      <th class="text-center">Time</th>
-      <th>Name</th>
-      <th>Year</th>
-      <th>Race</th>
-      <th class="text-center">Age/Cat</th>
-      <th>Pace</th>
-      <th>City</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for r in records %}
-      <tr>
-        {% ifchanged r.place %}
-          <td>{{ r.place }}</td>
+  <h3>Distance Records</h3>
+  <!-- Distance selection -->
+  <ul class="pagination">
+    {% for d in distances %}
+      {% if d == distance %}
+        <li class="active">
+          <a href="#">{{ d.name }}</a>
+        </li>
+      {% else %}
+        {% if topx_filter %}
+          <li>
+            <a href="/distance/{{ d.slug }}/?filter={{ topx_filter }}">{{ d.name }}</a>
+          </li>
         {% else %}
-          <td></td>
-        {% endifchanged %}
-        <td class="text-center">{{ r.result.guntime|round_up }}</td>
-        {% if r.member %}
-          <td><a href="/member/{{ r.member.slug }}/">{{ r.result.athlete }}</a></td>
-        {% else %}
-          <td>{{ r.result.athlete }}</td>
+          <li>
+            <a href="/distance/{{ d.slug }}/">{{ d.name }}</a>
+          </li>
         {% endif %}
-        <td><a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.date.year }}</a></td>
-        <td><a href="/race/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.race.name }}</a></td>
-        {% if r.result.age %}
-        <td class="text-center">{{ r.result.age }}</td>
-        {% else %}
-        <td class="text-center">{{ r.result.category.name }}</td>
-        {% endif %}
-        <td>{{ r.result.guntime|get_pace:r.result.event.distance.km }}</td>
-        <td>{{ r.result.city }}</td>
-      </tr>
+      {% endif %}
     {% endfor %}
-  </tbody>
-</table>
-<h4>Top {{ topx }}</h4>
-<p>
- Filter: <select onchange="location = this.options[this.selectedIndex].value;">
- <option>{{ resultfilter.current }}</option>
-   {% for choice in resultfilter.choices %}
-     <option value="{{ choice.url }}">{{ choice.name }}</option>
-   {% endfor %}
-  </select>
-</p>
-<!-- search input -->
+  </ul>
+  <!-- End distance selection -->
+  <p></p>
+  <table class="table table-striped table-condensed">
+    <thead>
+      <tr class="info">
+        <th>Individual</th>
+        <th class="text-center">Time</th>
+        <th>Name</th>
+        <th>Year</th>
+        <th>Race</th>
+        <th class="text-center">Age/Cat</th>
+        <th>Pace</th>
+        <th>City</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+        <tr>
+          {% ifchanged r.place %}
+            <td>{{ r.place }}</td>
+          {% else %}
+            <td></td>
+          {% endifchanged %}
+          <td class="text-center">{{ r.result.guntime|round_up }}</td>
+          {% if r.member %}
+            <td>
+              <a href="/member/{{ r.member.slug }}/">{{ r.result.athlete }}</a>
+            </td>
+          {% else %}
+            <td>{{ r.result.athlete }}</td>
+          {% endif %}
+          <td>
+            <a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.date.year }}</a>
+          </td>
+          <td>
+            <a href="/race/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.race.name }}</a>
+          </td>
+          {% if r.result.age %}
+            <td class="text-center">{{ r.result.age }}</td>
+          {% else %}
+            <td class="text-center">{{ r.result.category.name }}</td>
+          {% endif %}
+          <td>{{ r.result.guntime|get_pace:r.result.event.distance.km }}</td>
+          <td>{{ r.result.city }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <h4>Top {{ topx }}</h4>
+  <p>
+    Filter:
+    <select onchange="location = this.options[this.selectedIndex].value;">
+      <option>{{ resultfilter.current }}</option>
+      {% for choice in resultfilter.choices %}
+        <option value="{{ choice.url }}">{{ choice.name }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <!-- search input -->
   <div class="row">
     <div class="col-xs-6 col-sm-5 col-lg-4 col-lg-3">
       <div class="form-group">
-        <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search results..." size="12">
+        <input class="form-control input-sm"
+               type="text"
+               id="input-filter"
+               placeholder="Search results..."
+               size="12">
       </div>
     </div>
   </div>
-<!-- end search input -->
-
-<table class="table table-striped table-condensed">
-  <thead>
-    <tr class="info">
-      <th class="text-center">#</th>
-      <th class="text-center">Time</th>
-      <th>Name</th>
-      <th>Year</th>
-      <th>Race</th>
-      <th class="text-center">Age/Cat</th>
-      <th>Pace</th>
-      <th>City</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for r in topxresults %}
-      <tr>
-        <td class="text-center">{{ forloop.counter }}</td>
-        <td class="text-center">{{ r.result.guntime|round_up }}</td>
-        {% if r.member %}
-          <td><a href="/member/{{ r.member.slug }}/">{{ r.result.athlete }}</a></td>
-        {% else %}
-          <td>{{ r.result.athlete }}</td>
-        {% endif %}
-        <td><a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.date.year }}</a></td>
-        <td><a href="/race/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.race.name }}</a></td>
-        {% if r.result.age %}
-        <td class="text-center">{{ r.result.age }}</td>
-        {% else %}
-        <td class="text-center">{{ r.result.category.name }}</td>
-        {% endif %}
-        <td>{{ r.result.guntime|get_pace:r.result.event.distance.km }}</td>
-        <td>{{ r.result.city }}</td>
+  <!-- end search input -->
+  <table class="table table-striped table-condensed">
+    <thead>
+      <tr class="info">
+        <th class="text-center">#</th>
+        <th class="text-center">Time</th>
+        <th>Name</th>
+        <th>Year</th>
+        <th>Race</th>
+        <th class="text-center">Age/Cat</th>
+        <th>Pace</th>
+        <th>City</th>
       </tr>
-    {% endfor %}
-  </tbody>
-</table>
-<script>
-  $('table').filterTable({inputSelector: '#input-filter', minRows: 5});
-</script>
-
+    </thead>
+    <tbody>
+      {% for r in topxresults %}
+        <tr>
+          <td class="text-center">{{ forloop.counter }}</td>
+          <td class="text-center">{{ r.result.guntime|round_up }}</td>
+          {% if r.member %}
+            <td>
+              <a href="/member/{{ r.member.slug }}/">{{ r.result.athlete }}</a>
+            </td>
+          {% else %}
+            <td>{{ r.result.athlete }}</td>
+          {% endif %}
+          <td>
+            <a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.date.year }}</a>
+          </td>
+          <td>
+            <a href="/race/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.race.name }}</a>
+          </td>
+          {% if r.result.age %}
+            <td class="text-center">{{ r.result.age }}</td>
+          {% else %}
+            <td class="text-center">{{ r.result.category.name }}</td>
+          {% endif %}
+          <td>{{ r.result.guntime|get_pace:r.result.event.distance.km }}</td>
+          <td>{{ r.result.city }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <script>$('table').filterTable({inputSelector: '#input-filter', minRows: 5});</script>
 {% endblock content %}

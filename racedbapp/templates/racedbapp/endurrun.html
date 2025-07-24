@@ -1,271 +1,304 @@
 {% extends "racedbapp/base.html" %}
 {% load static %}
 {% load racedbapp_extras %}
-
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />
-  <meta property="og:description" content="Explore results and records for every Run Waterloo event." />
+  <meta property="og:description"
+        content="Explore results and records for every Run Waterloo event." />
   <meta property="og:image" content="{% static "ogimage.png" %}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <script src="{% static "jquery.filtertable.min.js" %}"></script>
 {% endblock ogmeta %}
-
 {% block content %}
-   <div class="row">
-     <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
-     <br>
-   <h4>ENDURrun
-   <!-- Division Filter  -->
-   <select onchange="location = this.options[this.selectedIndex].value;">
-   <option>{{ divisionfilter.current }}</option>
-     {% for choice in divisionfilter.choices %}
-       <option value="{{ choice.url }}">{{ choice.name }}</option>
-     {% endfor %}
-    </select>
-
-   <select onchange="location = this.options[this.selectedIndex].value;">
-   {% if year %}
-     <option>{{ year }}</option>
-     {% if contest_slug %}
-       <option value="/endurrun/{{ division }}/?contest={{ contest_slug }}">All-Time</option>
-     {% else %}
-       <option value="/endurrun/{{ division }}/">All-Time</option>
-     {% endif %}
-   {% else %}
-     <option>All-Time</option>
-   {% endif %}
-     {% for y in years %}
-       {% if y != year %}
-         {% if contest_slug %}
-           <option value="/endurrun/{{ division }}/?contest={{ contest_slug }}&year={{ y }}">{{ y }}</option>
-         {% else %}
-           <option value="/endurrun/{{ division }}/?year={{ y }}">{{ y }}</option>
-         {% endif %}
-       {% endif %}
-     {% endfor %}
-    </select>
-    </h4>
-
-   Filter: <select onchange="location = this.options[this.selectedIndex].value;" class="vcenter">
-   <option>{{ resultfilter.current }}</option>
-     {% for choice in resultfilter.choices %}
-       <option value="{{ choice.url }}">{{ choice.name }}</option>
-     {% endfor %}
-    </select>
-
-   <!-- Phase Filter  -->
-   {% if not contest_slug %}
-     {% if phasefilter.current %}
-       <select onchange="location = this.options[this.selectedIndex].value;" class="vcenter">
-       <option>{{ phasefilter.current }}</option>
-       {% for choice in phasefilter.choices %}
-         <option value="{{ choice.url }}">{{ choice.name }}</option>
-       {% endfor %}
-      </select>
-     {% endif %}
-   {% endif %}
-
-    {% if year %}
-    <a href="/events/?race=endurrun&year={{ year }}" class="btn btn-primary btn-sm vcenter"> Full Results</a>
-    {% else %}
-    <a href="/events/?race=endurrun" class="btn btn-primary btn-sm vcenter"> Full Results</a>
-    {% endif %}
-</div>
-<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
-  <a href="http://www.endurrun.com"><img class="pull-right" src="{% static "endurrun.png" %}" height="70" style="PADDING-TOP: 20px"></a>
-</div>
-</div>
-<p>
-
-<!-- search input -->
   <div class="row">
-    <div class="col-xs-3">
-      <div class="form-group">
-        <input class="form-control input-sm" type="text" id="input-filter" placeholder="Search these results..." size="12">
-      </div>
+    <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+      <br>
+      <h4>
+        ENDURrun
+        <!-- Division Filter  -->
+        <select onchange="location = this.options[this.selectedIndex].value;">
+          <option>{{ divisionfilter.current }}</option>
+          {% for choice in divisionfilter.choices %}
+            <option value="{{ choice.url }}">{{ choice.name }}</option>
+          {% endfor %}
+        </select>
+        <select onchange="location = this.options[this.selectedIndex].value;">
+          {% if year %}
+            <option>{{ year }}</option>
+            {% if contest_slug %}
+              <option value="/endurrun/{{ division }}/?contest={{ contest_slug }}">All-Time</option>
+            {% else %}
+              <option value="/endurrun/{{ division }}/">All-Time</option>
+            {% endif %}
+          {% else %}
+            <option>All-Time</option>
+          {% endif %}
+          {% for y in years %}
+            {% if y != year %}
+              {% if contest_slug %}
+                <option value="/endurrun/{{ division }}/?contest={{ contest_slug }}&year={{ y }}">{{ y }}</option>
+              {% else %}
+                <option value="/endurrun/{{ division }}/?year={{ y }}">{{ y }}</option>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </select>
+      </h4>
+      Filter:
+      <select onchange="location = this.options[this.selectedIndex].value;"
+              class="vcenter">
+        <option>{{ resultfilter.current }}</option>
+        {% for choice in resultfilter.choices %}
+          <option value="{{ choice.url }}">{{ choice.name }}</option>
+        {% endfor %}
+      </select>
+      <!-- Phase Filter  -->
+      {% if not contest_slug %}
+        {% if phasefilter.current %}
+          <select onchange="location = this.options[this.selectedIndex].value;"
+                  class="vcenter">
+            <option>{{ phasefilter.current }}</option>
+            {% for choice in phasefilter.choices %}
+              <option value="{{ choice.url }}">{{ choice.name }}</option>
+            {% endfor %}
+          </select>
+        {% endif %}
+      {% endif %}
+      {% if year %}
+        <a href="/events/?race=endurrun&year={{ year }}"
+           class="btn btn-primary btn-sm vcenter">Full Results</a>
+      {% else %}
+        <a href="/events/?race=endurrun" class="btn btn-primary btn-sm vcenter">Full Results</a>
+      {% endif %}
+    </div>
+    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+      <a href="http://www.endurrun.com">
+        <img class="pull-right"
+             src="{% static "endurrun.png" %}"
+             height="70"
+             style="PADDING-TOP: 20px">
+      </a>
     </div>
   </div>
-<!-- end search input -->
-
-  <table class="table table-striped table-hover table-condensed">
-  <thead>
-  <tr>
-    {% if year and results.0.stages >= 2 %}
-    <th class="text-center"><i class="fa-regular fa-arrow-up-arrow-down" title="Place change since previous Stage"></i></th>
-    {% endif %}
-  <th class="text-center">Place</th>
-  <th>Name</th>
-
-  <!-- start temporary fix until better solution -->
-  {% if year >= 2014 and division != 'relay' %}
-    {% if results.0.total_time %}
-    <th class="text-center" scope="col">
-        <i class="fas fa-camera"></i>
-    </th>
-    {% endif %}
-  {% endif %}
-  <!-- end temporary fix until better solution -->
-
-  {% if not year %}
-  <th class="text-center">Year</th>
-  {% endif %}
-  {% if division != 'relay' %}
-    <th class="text-center" title="Gender">G</th>
-    {% if not year and phasefilter.current == "Final Results" %}
-    <th class="text-center" title="Gender place for that year">GP</th>
-    {% endif %}
-    <th class="text-center">Age</th>
-  {% endif %}
-  {% if results.0.total_time %}
-    <th class="text-center">Total</th>
-    <th class="text-center" title="Time gap to 1st place">Gap 1</th>
-    <th class="text-center" title="Time gap to the next place up">Gap 2</th>
-    {% if contest_slug == "sprint" %}
-    <th class="text-center">Stage 2</th>
-    <th class="text-center">Stage 6</th>
-    {% elif contest_slug == "trail" %}
-    <th class="text-center">Stage 3</th>
-    <th class="text-center">Stage 5</th>
-    {% elif division == 'sport' %}
-    <th class="text-center">Stage 5</th>
-    <th class="text-center">Stage 6</th>
-    <th class="text-center">Stage 7</th>
-    {% else %}
-    <th class="text-center">Stage 1</th>
-    <th class="text-center">Stage 2</th>
-    <th class="text-center">Stage 3</th>
-    <th class="text-center">Stage 4</th>
-    <th class="text-center">Stage 5</th>
-    <th class="text-center">Stage 6</th>
-    <th class="text-center">Stage 7</th>
-    {% endif %}
-  {% endif %}
-  </tr>
-  </thead>
-  <tbody>
-  {% for result in results %}
-    <tr>
-      {% if year and results.0.stages >= 2 %}
-      <td class="text-center">
-        {% if result.change > 0 %}
-        <i class="fa-solid fa-chevron-up fa-lg" style="color:green"></i> {{ result.change }}
-        {% elif result.change < 0 %}
-        <i class="fa-solid fa-chevron-down fa-lg" style="color:red"></i> {{ result.change|neg_to_pos }}
-        {% endif %}
-      </td>
-      {% endif %}
-      {% if result.final_status == 0 %}
-      {% ifchanged result.total_time %}
-        {% if result.stages == maxstages %}
-        <td class="text-center">{{ forloop.counter }}</td>
-          {% else %}
-            <td class="text-center"></td>   <!-- Not started or in progress -->
+  <p>
+    <!-- search input -->
+    <div class="row">
+      <div class="col-xs-3">
+        <div class="form-group">
+          <input class="form-control input-sm"
+                 type="text"
+                 id="input-filter"
+                 placeholder="Search these results..."
+                 size="12">
+        </div>
+      </div>
+    </div>
+    <!-- end search input -->
+    <table class="table table-striped table-hover table-condensed">
+      <thead>
+        <tr>
+          {% if year and results.0.stages >= 2 %}
+            <th class="text-center">
+              <i class="fa-regular fa-arrow-up-arrow-down"
+                 title="Place change since previous Stage"></i>
+            </th>
           {% endif %}
-        {% else %}
-          {% if result.stages == maxstages %}
-            <td class="text-center">{{ forloop.counter }}</td>
-          {% else %}
-            <td class="text-center"></td>   <!-- Not started or in progress -->
+          <th class="text-center">Place</th>
+          <th>Name</th>
+          <!-- start temporary fix until better solution -->
+          {% if year >= 2014 and division != 'relay' %}
+            {% if results.0.total_time %}
+              <th class="text-center" scope="col">
+                <i class="fas fa-camera"></i>
+              </th>
+            {% endif %}
           {% endif %}
-        {% endifchanged %}
-      {% else %}
-        {% if result.stages == maxstages %}
-            <td class="text-center">{{ forloop.counter }}</td>
-        {% else %}
-          {% if result.final_status == 1 %}
-            <td class="text-center">DQ</td>
-          {% else %}
-            <td class="text-center">DNF</td>
+          <!-- end temporary fix until better solution -->
+          {% if not year %}<th class="text-center">Year</th>{% endif %}
+          {% if division != 'relay' %}
+            <th class="text-center" title="Gender">G</th>
+            {% if not year and phasefilter.current == "Final Results" %}
+              <th class="text-center" title="Gender place for that year">GP</th>
+            {% endif %}
+            <th class="text-center">Age</th>
           {% endif %}
-        {% endif %}
-      {% endif %}
-      {% if result.mouseover %}
-      <td title="{{ result.mouseover }}">
-      {% else %}
-      <td>
-      {% endif %}
-      <!--
+          {% if results.0.total_time %}
+            <th class="text-center">Total</th>
+            <th class="text-center" title="Time gap to 1st place">Gap 1</th>
+            <th class="text-center" title="Time gap to the next place up">Gap 2</th>
+            {% if contest_slug == "sprint" %}
+              <th class="text-center">Stage 2</th>
+              <th class="text-center">Stage 6</th>
+            {% elif contest_slug == "trail" %}
+              <th class="text-center">Stage 3</th>
+              <th class="text-center">Stage 5</th>
+            {% elif division == 'sport' %}
+              <th class="text-center">Stage 5</th>
+              <th class="text-center">Stage 6</th>
+              <th class="text-center">Stage 7</th>
+            {% else %}
+              <th class="text-center">Stage 1</th>
+              <th class="text-center">Stage 2</th>
+              <th class="text-center">Stage 3</th>
+              <th class="text-center">Stage 4</th>
+              <th class="text-center">Stage 5</th>
+              <th class="text-center">Stage 6</th>
+              <th class="text-center">Stage 7</th>
+            {% endif %}
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for result in results %}
+          <tr>
+            {% if year and results.0.stages >= 2 %}
+              <td class="text-center">
+                {% if result.change > 0 %}
+                  <i class="fa-solid fa-chevron-up fa-lg" style="color:green"></i> {{ result.change }}
+                {% elif result.change < 0 %}
+                  <i class="fa-solid fa-chevron-down fa-lg" style="color:red"></i> {{ result.change|neg_to_pos }}
+                {% endif %}
+              </td>
+            {% endif %}
+            {% if result.final_status == 0 %}
+              {% ifchanged result.total_time %}
+                {% if result.stages == maxstages %}
+                  <td class="text-center">{{ forloop.counter }}</td>
+                {% else %}
+                  <td class="text-center"></td>
+                  <!-- Not started or in progress -->
+                {% endif %}
+              {% else %}
+                {% if result.stages == maxstages %}
+                  <td class="text-center">{{ forloop.counter }}</td>
+                {% else %}
+                  <td class="text-center"></td>
+                  <!-- Not started or in progress -->
+                {% endif %}
+              {% endifchanged %}
+            {% else %}
+              {% if result.stages == maxstages %}
+                <td class="text-center">{{ forloop.counter }}</td>
+              {% else %}
+                {% if result.final_status == 1 %}
+                  <td class="text-center">DQ</td>
+                {% else %}
+                  <td class="text-center">DNF</td>
+                {% endif %}
+              {% endif %}
+            {% endif %}
+            {% if result.mouseover %}
+              <td title="{{ result.mouseover }}">
+              {% else %}
+                <td>
+                {% endif %}
+                <!--
       Flag images available at http://www.iconarchive.com/show/flag-icons-by-gosquared.html
       Currently using default (shiny) 24px.
       -->
-      {% if result.flag_slug %}
-      <img title="{{ result.athlete.country }}" src="{% static "flags/"|add:result.flag_slug|add:"_shiny_24px.png" %}">
-      {% endif %}
-      {% if result.athlete.name in ultimate_winners %}
-      <i class="fa-solid fa-shirt-running fa-icon-ultimate-gold-jersey" title="Past ENDURrun Ultimate Champion"></i>
-      {% elif result.athlete.name in ultimate_gold_jerseys %}
-      <i class="fa-solid fa-shirt-tank-top fa-icon-ultimate-gold-jersey"  title="Gold Jersey Club member"></i>
-      {% endif %}
-      {% if result.member_slug %}
-        <a href="/member/{{ result.member_slug }}/">{{ result.athlete.name }}</a>
-      {% else %}
-        {{ result.athlete.name }}
-      {% endif %}
-    </td>
-
-  <!-- start temporary fix until better solution -->
-  {% if year >= 2014 and division != 'relay' %}
-    {% if results.0.total_time %}
-    <td class="text-center">
-      <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ year }}endurrun,{{ result.bib }}" target="_blank">
-        <i class="fas fa-camera"></i>      </a>
-    </td>
-    {% endif %}
-  {% endif %}
-  <!-- end temporary fix until better solution -->
-
-      {% if not year %}
-      <td class="text-center">{{ result.athlete.year }}</td>
-      {% endif %}
-      {% if division != 'relay' %}
-          <td class="text-center">{{ result.athlete.gender }}</td>
-          {% if not year and phasefilter.current == "Final Results" %}
-            {% if result.gp %}
-            <td class="text-center">{{ result.gp }}</td>
-            {% else %}
-            <td></td>
+                {% if result.flag_slug %}
+                  <img title="{{ result.athlete.country }}"
+                       src="{% static "flags/"|add:result.flag_slug|add:"_shiny_24px.png" %}">
+                {% endif %}
+                {% if result.athlete.name in ultimate_winners %}
+                  <i class="fa-solid fa-shirt-running fa-icon-ultimate-gold-jersey"
+                     title="Past ENDURrun Ultimate Champion"></i>
+                {% elif result.athlete.name in ultimate_gold_jerseys %}
+                  <i class="fa-solid fa-shirt-tank-top fa-icon-ultimate-gold-jersey"
+                     title="Gold Jersey Club member"></i>
+                {% endif %}
+                {% if result.member_slug %}
+                  <a href="/member/{{ result.member_slug }}/">{{ result.athlete.name }}</a>
+                {% else %}
+                  {{ result.athlete.name }}
+                {% endif %}
+              </td>
+              <!-- start temporary fix until better solution -->
+              {% if year >= 2014 and division != 'relay' %}
+                {% if results.0.total_time %}
+                  <td class="text-center">
+                    <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ year }}endurrun,{{ result.bib }}"
+                       target="_blank">
+                      <i class="fas fa-camera"></i>      </a>
+                  </td>
+                {% endif %}
+              {% endif %}
+              <!-- end temporary fix until better solution -->
+              {% if not year %}<td class="text-center">{{ result.athlete.year }}</td>{% endif %}
+              {% if division != 'relay' %}
+                <td class="text-center">{{ result.athlete.gender }}</td>
+                {% if not year and phasefilter.current == "Final Results" %}
+                  {% if result.gp %}
+                    <td class="text-center">{{ result.gp }}</td>
+                  {% else %}
+                    <td></td>
+                  {% endif %}
+                {% endif %}
+                {% if result.athlete.age %}
+                  <td class="text-center">{{ result.athlete.age }}</td>
+                {% else %}
+                  <td></td>
+                {% endif %}
+              {% endif %}
+              <td class="text-center">{{ result.total_time }}</td>
+              <td class="text-center">{{ result.lead_gap }}</td>
+              <td class="text-center">{{ result.place_gap }}</td>
+              {% if not result.stage_times %}
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              {% else %}
+                {% for t in result.stage_times %}
+                  {% if division != 'sport' %}
+                    {% if forloop.counter == 1 %}
+                      <td class="text-center"
+                          {% if division == 'relay' %}title="{{ t.name }}"{% endif %}>
+                        <a href="/event/{{ result.athlete.year }}/endurrun/half-marathon/?division={{ division|title }}">{{ t.time }}</a>
+                      </td>
+                    {% elif forloop.counter == 2 %}
+                      <td class="text-center"
+                          {% if division == 'relay' %}title="{{ t.name }}"{% endif %}>
+                        <a href="/event/{{ result.athlete.year }}/endurrun/15-km/?division={{ division|title }}">{{ t.time }}</a>
+                      </td>
+                    {% elif forloop.counter == 3 %}
+                      <td class="text-center"
+                          {% if division == 'relay' %}title="{{ t.name }}"{% endif %}>
+                        <a href="/event/{{ result.athlete.year }}/endurrun/30-km/?division={{ division|title }}">{{ t.time }}</a>
+                      </td>
+                    {% elif forloop.counter == 4 %}
+                      <td class="text-center"
+                          {% if division == 'relay' %}title="{{ t.name }}"{% endif %}>
+                        <a href="/event/{{ result.athlete.year }}/endurrun/10-mi/?division={{ division|title }}">{{ t.time }}</a>
+                      </td>
+                    {% endif %}
+                  {% endif %}
+                  {% if forloop.counter == 5 %}
+                    <td class="text-center"
+                        {% if division == 'relay' %}title="{{ t.name }}"{% endif %}>
+                      <a href="/event/{{ result.athlete.year }}/endurrun/25_6-km/?division={{ division|title }}">{{ t.time }}</a>
+                    </td>
+                  {% elif forloop.counter == 6 %}
+                    <td class="text-center"
+                        {% if division == 'relay' %}title="{{ t.name }}"{% endif %}>
+                      <a href="/event/{{ result.athlete.year }}/endurrun/10-km/?division={{ division|title }}">{{ t.time }}</a>
+                    </td>
+                  {% elif forloop.counter == 7 %}
+                    <td class="text-center"
+                        {% if division == 'relay' %}title="{{ t.name }}"{% endif %}>
+                      <a href="/event/{{ result.athlete.year }}/endurrun/marathon/?division={{ division|title }}">{{ t.time }}</a>
+                    </td>
+                  {% endif %}
+                {% endfor %}
+              </tr>
             {% endif %}
-          {% endif %}
-        {% if result.athlete.age %}
-          <td class="text-center">{{ result.athlete.age }}</td>
-        {% else %}
-          <td></td>
-        {% endif %}
-      {% endif %}
-      <td class="text-center">{{ result.total_time }}</td>
-      <td class="text-center">{{ result.lead_gap }}</td>
-      <td class="text-center">{{ result.place_gap }}</td>
-      {% if not result.stage_times %}
-      <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-      {% else %}
-        {% for t in result.stage_times %}
-          {% if division != 'sport' %}
-            {% if forloop.counter == 1 %}
-              <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/half-marathon/?division={{ division|title }}">{{ t.time }}</a></td>
-            {% elif forloop.counter == 2 %}
-              <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/15-km/?division={{ division|title }}">{{ t.time }}</a></td>
-            {% elif forloop.counter == 3 %}
-              <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/30-km/?division={{ division|title }}">{{ t.time }}</a></td>
-            {% elif forloop.counter == 4 %}
-              <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/10-mi/?division={{ division|title }}">{{ t.time }}</a></td>
-            {% endif %}
-          {% endif %}
-          {% if forloop.counter == 5 %}
-            <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/25_6-km/?division={{ division|title }}">{{ t.time }}</a></td>
-          {% elif forloop.counter == 6 %}
-            <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/10-km/?division={{ division|title }}">{{ t.time }}</a></td>
-          {% elif forloop.counter == 7 %}
-            <td class="text-center" {% if division == 'relay' %} title="{{ t.name }}" {% endif %}><a href="/event/{{ result.athlete.year }}/endurrun/marathon/?division={{ division|title }}">{{ t.time }}</a></td>
-          {% endif %}
-        {% endfor %}
-    </tr>
-    {% endif %}
-  {% endfor %}
-  </tbody>
-</table>
-<script>
-  $('table').filterTable({inputSelector: '#input-filter', minRows: 0});
-</script>
-{% endblock content %}
+          {% endfor %}
+        </tbody>
+      </table>
+      <script>$('table').filterTable({inputSelector: '#input-filter', minRows: 0});</script>
+    {% endblock content %}
