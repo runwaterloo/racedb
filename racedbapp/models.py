@@ -3,6 +3,7 @@ from datetime import datetime
 
 from django.db import models
 from django.db.models import Avg, Count, Min, Q, Sum
+from django.forms import ValidationError
 
 import racedbapp.shared.utils as utils
 
@@ -239,6 +240,14 @@ class Event(models.Model):
     )
     medals = models.CharField(max_length=32, choices=MEDALS_CHOICES, default="none")
     timer = models.ForeignKey(Timer, models.SET_NULL, null=True, blank=True, default=None)
+    sequel = models.ForeignKey(
+        "Sequel",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        help_text="Optional: Attach a Sequel instance to this event.",
+    )
     custom_logo_url = models.URLField(
         max_length=500,
         null=True,
@@ -247,7 +256,7 @@ class Event(models.Model):
     )
 
     class Meta:
-        unique_together = ("race", "distance", "date")
+        unique_together = ("race", "distance", "date", "sequel")
 
     #    ordering = ('-date', '-distance__km')
     def __str__(self):
@@ -490,3 +499,12 @@ class Series(models.Model):
     class Meta:
         unique_together = ("year", "slug")
         verbose_name_plural = "Series"
+
+
+class Sequel(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField()
+
+    def clean(self):
+        if self.slug == "team":
+            raise ValidationError({"slug": "'team' is not allowed as a slug value."})

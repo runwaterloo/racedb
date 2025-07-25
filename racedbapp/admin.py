@@ -16,6 +16,7 @@ from .models import (
     Rwmember,
     Rwmembercorrection,
     Rwmembertag,
+    Sequel,
     Series,
     Teamcategory,
     Timer,
@@ -214,3 +215,8 @@ class TeamcategoryAdmin(admin.ModelAdmin):
         "name",
         "slug",
     )
+
+
+@admin.register(Sequel)
+class SequelAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug")

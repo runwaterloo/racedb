@@ -52,7 +52,9 @@ def create_race(db):
 
 @pytest.fixture
 def create_event(db, create_race, create_distance):
-    def _create_event(name_suffix="a", date=datetime.date(2025, 1, 1), race=None, distance=None):
+    def _create_event(
+        name_suffix="a", date=datetime.date(2025, 1, 1), race=None, distance=None, sequel=None
+    ):
         if isinstance(date, str):
             date = datetime.date.fromisoformat(date)
         if race is None:
@@ -63,6 +65,7 @@ def create_event(db, create_race, create_distance):
             race=race,
             distance=distance,
             date=date,
+            sequel=sequel,
             city=f"Test City {name_suffix}",
         )
 
@@ -192,3 +195,13 @@ def create_prime(db, create_event):
         return Prime.objects.create(event=event, place=1, gender="F")
 
     return _create_prime
+
+
+@pytest.fixture
+def create_sequel(db):
+    def _create_sequel(name="Test Sequel", slug="test-sequel"):
+        from racedbapp.models import Sequel
+
+        return Sequel.objects.create(name=name, slug=slug)
+
+    return _create_sequel
