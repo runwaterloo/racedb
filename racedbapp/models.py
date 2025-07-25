@@ -258,7 +258,21 @@ class Event(models.Model):
     class Meta:
         unique_together = ("race", "distance", "date", "sequel")
 
-    #    ordering = ('-date', '-distance__km')
+    def clean(self):
+        # Enforce uniqueness for (race, distance, year, sequel)
+        query = Event.objects.filter(
+            race=self.race,
+            distance=self.distance,
+            date__year=self.date.year,
+            sequel=self.sequel,
+        )
+        if self.pk:
+            query = query.exclude(pk=self.pk)
+        if query.exists():
+            raise ValidationError(
+                {"__all__": "An event with this race, distance, year, and sequel already exists."}
+            )
+
     def __str__(self):
         return "{} {} {}".format(self.date.year, self.race, self.distance)
 
