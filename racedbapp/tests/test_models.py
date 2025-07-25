@@ -5,6 +5,13 @@ from racedbapp.models import Sequel
 
 
 @pytest.mark.django_db
+def test_sequel_creation(create_sequel):
+    sequel = create_sequel(name="My Sequel Name")
+    sequel.clean()
+    assert str(sequel) == "My Sequel Name"
+
+
+@pytest.mark.django_db
 def test_sequel_slug_team_not_allowed():
     sequel = Sequel(name="Test Sequel", slug="team")
     with pytest.raises(ValidationError) as excinfo:

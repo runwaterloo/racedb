@@ -1,9 +1,9 @@
 from collections import namedtuple
 from datetime import datetime
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Avg, Count, Min, Q, Sum
-from django.forms import ValidationError
 
 import racedbapp.shared.utils as utils
 
