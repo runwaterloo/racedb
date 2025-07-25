@@ -1,0 +1,11 @@
+---
+- model: racedbapp.sequel
+  pk: 1
+  fields:
+    name: Winter 5 KM
+    slug: winter-5-km
+- model: racedbapp.sequel
+  pk: 2
+  fields:
+    name: Another Sequel
+    slug: another-sequel

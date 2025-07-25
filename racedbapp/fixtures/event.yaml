@@ -167,3 +167,12 @@
     date: 2124-01-01
     city: Kitchener
     medals: none
+- model: racedbapp.event
+  pk: 22
+  fields:
+    race: 2
+    distance: 2
+    date: 2023-02-15
+    city: Kitchener
+    medals: none
+    sequel: 1
