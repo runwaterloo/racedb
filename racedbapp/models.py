@@ -503,7 +503,7 @@ class Series(models.Model):
 
 class Sequel(models.Model):
     name = models.CharField(max_length=256)
-    slug = models.SlugField()
+    slug = models.SlugField(unique=True)
 
     def clean(self):
         if self.slug == "team":
