@@ -507,3 +507,13 @@ def get_distance_by_slug_or_false(slug):
     except Exception:
         distance = False
     return distance
+
+
+def set_distance_display_name(distance, sequel):
+    """Set display_name attribute on a Distance instance based on sequel."""
+    if sequel:
+        display_name = sequel.name
+    else:
+        display_name = distance.name
+    setattr(distance, "display_name", display_name)
+    return distance
