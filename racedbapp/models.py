@@ -508,3 +508,6 @@ class Sequel(models.Model):
     def clean(self):
         if self.slug == "team":
             raise ValidationError({"slug": "'team' is not allowed as a slug value."})
+
+    def __str__(self):
+        return self.name
