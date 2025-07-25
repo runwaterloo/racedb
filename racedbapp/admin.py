@@ -16,6 +16,7 @@ from .models import (
     Rwmember,
     Rwmembercorrection,
     Rwmembertag,
+    Sequel,
     Series,
     Teamcategory,
     Timer,
@@ -53,7 +54,7 @@ delete_all_results_for_event.short_description = "Delete all results for selecte
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("id", "date", "race", "distance", "city", "flickrsetid")
+    list_display = ("id", "date", "race", "distance", "sequel", "city", "flickrsetid")
     search_fields = ("date", "race__name", "distance__name")
     ordering = ("-date",)
     actions = [delete_all_results_for_event]
@@ -214,3 +215,8 @@ class TeamcategoryAdmin(admin.ModelAdmin):
         "name",
         "slug",
     )
+
+
+@admin.register(Sequel)
+class SequelAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug")

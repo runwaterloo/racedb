@@ -1,6 +1,7 @@
 from collections import namedtuple
 from datetime import datetime
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Avg, Count, Min, Q, Sum
 
@@ -239,6 +240,14 @@ class Event(models.Model):
     )
     medals = models.CharField(max_length=32, choices=MEDALS_CHOICES, default="none")
     timer = models.ForeignKey(Timer, models.SET_NULL, null=True, blank=True, default=None)
+    sequel = models.ForeignKey(
+        "Sequel",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+        help_text="Optional: Attach a Sequel instance to this event.",
+    )
     custom_logo_url = models.URLField(
         max_length=500,
         null=True,
@@ -247,9 +256,23 @@ class Event(models.Model):
     )
 
     class Meta:
-        unique_together = ("race", "distance", "date")
+        unique_together = ("race", "distance", "date", "sequel")
 
-    #    ordering = ('-date', '-distance__km')
+    def clean(self):
+        # Enforce uniqueness for (race, distance, year, sequel)
+        query = Event.objects.filter(
+            race=self.race,
+            distance=self.distance,
+            date__year=self.date.year,
+            sequel=self.sequel,
+        )
+        if self.pk:
+            query = query.exclude(pk=self.pk)
+        if query.exists():
+            raise ValidationError(
+                {"__all__": "An event with this race, distance, year, and sequel already exists."}
+            )
+
     def __str__(self):
         return "{} {} {}".format(self.date.year, self.race, self.distance)
 
@@ -490,3 +513,15 @@ class Series(models.Model):
     class Meta:
         unique_together = ("year", "slug")
         verbose_name_plural = "Series"
+
+
+class Sequel(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True)
+
+    def clean(self):
+        if self.slug == "team":
+            raise ValidationError({"slug": "'team' is not allowed as a slug value."})
+
+    def __str__(self):
+        return self.name
