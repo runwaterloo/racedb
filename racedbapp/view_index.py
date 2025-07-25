@@ -182,7 +182,10 @@ def get_recap_type(last_race_day_events):
 def get_distances(last_race_day_events):
     if not last_race_day_events.exists():
         return
-    distances = [x.distance for x in last_race_day_events]
+    distances = []
+    for e in last_race_day_events:
+        distance = shared.set_distance_display_name(e.distance, e.sequel)
+        distances.append(distance)
     return distances
 
 
