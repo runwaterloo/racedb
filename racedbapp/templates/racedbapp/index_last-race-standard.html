@@ -6,21 +6,15 @@
       <p></p>
       <ul class="pagination">
         {% for i in distances %}
-          {% if i == recap_event.distance %}
-            {% if i.name == i.display_name or i.display_name == recap_event.sequel.name %}
-              <li>
-                <a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ i.slug }}/"><b>{{ i.display_name }}</b></a>
-              </li>
-            {% else %}
-              <li>
-                <a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ i.slug }}/">{{ i.display_name }}</a>
-              </li>
-            {% endif %}
-          {% else %}
-            <li>
-              <a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ i.slug }}/">{{ i.display_name }}</a>
-            </li>
-          {% endif %}
+          <li>
+            <a href="{% url 'event' recap_event.date.year recap_event.race.slug i.slug %}">
+              {% if forloop.first %}
+                <strong>{{ i.display_name }}</strong>
+              {% else %}
+                {{ i.display_name }}
+              {% endif %}
+            </a>
+          </li>
         {% endfor %}
       </ul>
       <table class="table">
