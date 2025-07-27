@@ -15,11 +15,21 @@ def test_event_endpoint_success(create_event):
 
 
 @pytest.mark.django_db
+@pytest.mark.django_db
 def test_event_endpoint_missing():
     client = APIClient()
     url = "/event/2025/fake-race/fake-event/"
     response = client.get(url)
     assert response.status_code == 404
+
+
+def test_event_endpoint_sequel(create_event, create_sequel):
+    client = APIClient()
+    sequel = create_sequel()
+    event = create_event(sequel=sequel)
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/{event.sequel.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
 
 
 @pytest.mark.django_db

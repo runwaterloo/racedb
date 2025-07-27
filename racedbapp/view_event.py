@@ -15,7 +15,7 @@ from django.db.models import (
     When,
 )
 from django.http import Http404, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 
 import racedbapp.shared.endurrun
 from racedbapp.shared.types import Choice, Filter
@@ -31,6 +31,7 @@ from .models import (
     Prime,
     Relay,
     Result,
+    Sequel,
     Series,
     Split,
     Wheelchairresult,
@@ -40,14 +41,21 @@ from .shared import shared, utils
 named_split = namedtuple("ns", ["split_num", "split_time"])
 
 
-def index(request, year, race_slug, distance_slug):
+def index(request, year, race_slug, distance_slug, sequel_slug=None):
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
     page = get_page(qstring)
     category = get_category(qstring)
     division = get_division(qstring)
+    if sequel_slug:
+        sequel = get_object_or_404(Sequel, slug=sequel_slug)
+    else:
+        sequel = None
     try:
         event = Event.objects.select_related().get(
-            race__slug=race_slug, distance__slug=distance_slug, date__icontains=year
+            race__slug=race_slug,
+            distance__slug=distance_slug,
+            date__icontains=year,
+            sequel=sequel,
         )
     except Exception:
         raise Http404("Matching event not found")

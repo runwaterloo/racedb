@@ -513,7 +513,10 @@ def set_distance_display_name(distance, sequel):
     """Set display_name attribute on a Distance instance based on sequel."""
     if sequel:
         display_name = sequel.name
+        sequel_slug = sequel.slug
     else:
         display_name = distance.name
+        sequel_slug = None
     setattr(distance, "display_name", display_name)
+    setattr(distance, "sequel_slug", sequel_slug)
     return distance
