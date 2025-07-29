@@ -11,5 +11,14 @@
       "commitMessageExtra": "from {{currentVersion}} to {{newVersion}}"
     },
     { "enabled": false, "matchPackageNames": ["/.*/", "!redis"] }
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "-\\s+repo:\\s+(?<depName>[\"']?\\S+[\"']?)\\s*(?:#.*)?\n\\s+rev:\\s+(?<currentValue>[\"']?\\S+[\"']?)\\s*(?:#.*)?"
+      ],
+      "datasourceTemplate": "github-tags"
+    }
   ]
 }
