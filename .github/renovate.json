@@ -16,7 +16,7 @@
     {
       "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
       "matchStrings": [
-        "-\\s+repo:\\s+(?<depName>[\"']?\\S+[\"']?)\\s*(?:#.*)?\n\\s+rev:\\s+(?<currentValue>[\"']?\\S+[\"']?)\\s*(?:#.*)?"
+        "\\s*-\\s+repo:\\s+(?<depName>\\S+)\\s*\\n\\s+rev:\\s+[\"']?(?<currentValue>[^\"'\\s]+)[\"']?"
       ],
       "datasourceTemplate": "github-tags"
     }
