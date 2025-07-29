@@ -5,7 +5,7 @@ repos:
       - id: pyupgrade
         exclude: ^migrations/
   -   repo: https://github.com/adamchainz/django-upgrade
-      rev: "1.25.0"
+      rev: 1.25.0
       hooks:
       -   id: django-upgrade
   - repo: https://github.com/charliermarsh/ruff-pre-commit
