@@ -7,7 +7,12 @@
       <ul class="pagination">
         {% for i in distances %}
           <li>
-            <a href="{% url 'event' recap_event.date.year recap_event.race.slug i.slug %}">
+            {% if i.sequel_slug %}
+              {% url 'event' recap_event.date.year recap_event.race.slug i.slug i.sequel_slug as event_url %}
+            {% else %}
+              {% url 'event' recap_event.date.year recap_event.race.slug i.slug as event_url %}
+            {% endif %}
+            <a href="{{ event_url }}">
               {% if forloop.first %}
                 <strong>{{ i.display_name }}</strong>
               {% else %}

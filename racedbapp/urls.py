@@ -62,6 +62,11 @@ urlpatterns = [
         name="event_team",
     ),
     re_path(
+        r"^event/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/(?P<sequel_slug>(?!team$)[^/]+)/$",
+        view_event.index,
+        name="event",
+    ),
+    re_path(
         r"^event/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/$",
         view_event.index,
         name="event",

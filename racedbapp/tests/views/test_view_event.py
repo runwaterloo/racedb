@@ -23,6 +23,16 @@ def test_event_endpoint_missing():
 
 
 @pytest.mark.django_db
+def test_event_endpoint_sequel(create_event, create_sequel):
+    client = APIClient()
+    sequel = create_sequel()
+    event = create_event(sequel=sequel)
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/{event.sequel.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
 def test_event_endpoint_pages(create_event):
     client = APIClient()
     event = create_event()
