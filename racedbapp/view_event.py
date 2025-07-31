@@ -160,14 +160,13 @@ def get_event_json(event):
         ],
     )
     named_race = namedtuple("nr", ["name", "shortname", "slug"])
-    named_distance = namedtuple("nd", ["name", "km", "slug"])
     flickrsearchstr = (
         "{}-{}-{}".format(event.date.year, event.race.slug, event.distance.slug)
         .replace("-", "")
         .replace("_", "")
     )
     this_race = named_race(event.race.name, event.race.shortname, event.race.slug)
-    this_distance = named_distance(event.distance.name, event.distance.km, event.distance.slug)
+    shared.set_distance_display_name(event.distance, getattr(event, "sequel", None))
     event_json = named_event(
         event.id,
         event.city,
@@ -178,7 +177,7 @@ def get_event_json(event):
         event.youtube_id,
         event.youtube_offset_seconds,
         this_race,
-        this_distance,
+        event.distance,
         event.medals,
         event.timer,
         event.custom_logo_url,
