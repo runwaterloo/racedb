@@ -53,7 +53,12 @@
   {% for event in events %}
     <tr>
       <td>
-        <a href="/event/{{ event.year }}/{{ event.race_slug }}/{{ event.distance_slug }}">{{ event.year }} {{ event.race_name }} {{ event.distance_name }}</a>
+        {% if event.distance.sequel_slug %}
+          {% url 'event' event.year event.race_slug event.distance.slug event.distance.sequel_slug as event_url %}
+        {% else %}
+          {% url 'event' event.year event.race_slug event.distance.slug as event_url %}
+        {% endif %}
+        <a href="{{ event_url }}">{{ event.year }} {{ event.race_name }} {{ event.distance.display_name }}</a>
       </td>
       {% if event.femalemember %}
         <td>
