@@ -366,6 +366,9 @@ def get_category_filter(event, category, division):
     categories = get_categories(event, division)
     all_categories = genders + masters + list(categories)
     choices = []
+    base_url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    if event.sequel:
+        base_url += f"{event.sequel.slug}/"
     if category == "All":
         current = "All ({})".format(total_count)
     else:
@@ -377,49 +380,38 @@ def get_category_filter(event, category, division):
             category_count = 0
         current = "{} ({})".format(category, category_count)
         if division == "All":
+            url = base_url
             choices.append(
                 Choice(
                     "All ({})".format(total_count),
-                    "/event/{}/{}/{}/".format(
-                        event.date.year, event.race.slug, event.distance.slug
-                    ),
+                    url,
                 )
             )
         else:
+            url = f"{base_url}?division={division}"
             choices.append(
                 Choice(
                     "All ({})".format(total_count),
-                    "/event/{}/{}/{}/?division={}".format(
-                        event.date.year, event.race.slug, event.distance.slug, division
-                    ),
+                    url,
                 )
             )
     for a in all_categories:
         if a["category__name"] == category:
             continue
         if division == "All":
+            url = f"{base_url}?filter={a['category__name']}"
             choices.append(
                 Choice(
                     "{} ({})".format(a["category__name"], a["count"]),
-                    "/event/{}/{}/{}/?filter={}".format(
-                        event.date.year,
-                        event.race.slug,
-                        event.distance.slug,
-                        a["category__name"],
-                    ),
+                    url,
                 )
             )
         else:
+            url = f"{base_url}?filter={a['category__name']}&division={division}"
             choices.append(
                 Choice(
                     "{} ({})".format(a["category__name"], a["count"]),
-                    "/event/{}/{}/{}/?filter={}&division={}".format(
-                        event.date.year,
-                        event.race.slug,
-                        event.distance.slug,
-                        a["category__name"],
-                        division,
-                    ),
+                    url,
                 )
             )
     category_filter = Filter(current, choices)

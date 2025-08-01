@@ -1,8 +1,98 @@
+import types
+
 import pytest
 from rest_framework.test import APIClient
 
 from racedbapp.models import Result
-from racedbapp.view_event import annotate_isrwfirst
+from racedbapp.shared.types import Filter
+from racedbapp.view_event import annotate_isrwfirst, get_category_filter
+
+
+@pytest.fixture
+def mock_event():
+    return types.SimpleNamespace(
+        date=types.SimpleNamespace(year=2024),
+        race=types.SimpleNamespace(slug="test-race"),
+        distance=types.SimpleNamespace(slug="test-distance"),
+        sequel=None,
+    )
+
+
+def get_choice_names(f):
+    return [c.name for c in f.choices]
+
+
+@pytest.mark.parametrize(
+    "category,division,expected_current,expected_choices,not_expected_choices,all_url_contains",
+    [
+        ("All", "All", "All (2)", ["Female", "Masters", "Cat1", "Cat2"], [], None),
+        ("Cat1", "All", "Cat1 (1)", ["All", "Female", "Masters", "Cat2"], ["Cat1"], None),
+        ("Cat1", "A", "Cat1 (1)", ["All"], ["Cat1"], "?division=A"),
+        ("All", "A", None, [], [], "division=A"),
+    ],
+)
+def test_get_category_filter_parametrized(
+    monkeypatch,
+    mock_event,
+    category,
+    division,
+    expected_current,
+    expected_choices,
+    not_expected_choices,
+    all_url_contains,
+):
+    # Patch Result.objects.filter to return a mock queryset with count()
+    class MockQueryset(list):
+        def count(self):
+            return len(self)
+
+        def filter(self, *args, **kwargs):
+            return self
+
+    # Simulate results for the mock event
+    mock_results = MockQueryset([object(), object()])  # 2 results for 'All'
+    monkeypatch.setattr(
+        "racedbapp.view_event.Result.objects.filter", lambda *args, **kwargs: mock_results
+    )
+
+    # Patch helper functions to return predictable categories
+    monkeypatch.setattr(
+        "racedbapp.view_event.get_genders",
+        lambda event, division: [
+            {"category__name": "Female", "count": 1},
+        ],
+    )
+    monkeypatch.setattr(
+        "racedbapp.view_event.get_masters",
+        lambda event, division: [
+            {"category__name": "Masters", "count": 1},
+        ],
+    )
+    monkeypatch.setattr(
+        "racedbapp.view_event.get_categories",
+        lambda event, division: [
+            {"category__name": "Cat1", "count": 1},
+            {"category__name": "Cat2", "count": 1},
+        ],
+    )
+
+    f = get_category_filter(mock_event, category=category, division=division)
+    assert isinstance(f, Filter)
+    if expected_current:
+        assert f.current == expected_current
+    names = get_choice_names(f)
+    for expected in expected_choices:
+        assert any(expected in n for n in names)
+    for not_expected in not_expected_choices:
+        assert not any(n.startswith(not_expected) for n in names)
+    if all_url_contains:
+        # For Cat1/A, the first choice is All with ?division=A; for All/A, all choices have division=A
+        if category != "All":
+            assert f.choices[0].name.startswith("All")
+            assert all_url_contains in f.choices[0].url
+        else:
+            for c in f.choices:
+                assert "division=A" in c.url or "filter=" in c.url
 
 
 @pytest.mark.django_db
