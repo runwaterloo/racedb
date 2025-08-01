@@ -33,6 +33,19 @@ def test_event_endpoint_sequel(create_event, create_sequel):
 
 
 @pytest.mark.django_db
+def test_event_multiple_with_sequel(create_distance, create_event, create_race, create_sequel):
+    client = APIClient()
+    distance = create_distance()
+    race = create_race()
+    sequel = create_sequel()
+    event1 = create_event(distance=distance, race=race)
+    create_event(distance=distance, race=race, sequel=sequel)
+    url = f"/event/{event1.date.year}/{event1.race.slug}/{event1.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
 def test_event_endpoint_pages(create_event):
     client = APIClient()
     event = create_event()

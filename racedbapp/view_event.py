@@ -17,13 +17,11 @@ from django.db.models import (
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-import racedbapp.shared.endurrun
 from racedbapp.shared.types import Choice, Filter
 from racedbapp.tasks import send_email_task
 
 from .models import (
     Config,
-    Distance,
     Durelay,
     Endurteam,
     Event,
@@ -59,6 +57,7 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
         )
     except Exception:
         raise Http404("Matching event not found")
+    shared.set_distance_display_name(event.distance, sequel)
     races = shared.create_samerace_list(event.race)
     team_categories = shared.get_team_categories(event)
     hill_dict = get_hill_dict(event)
@@ -311,27 +310,30 @@ def get_division(qstring):
 
 
 def get_distance_filter(event, races):
-    distance_ids = Result.objects.filter(
-        event__race__in=races, event__date__icontains=event.date.year
-    ).values_list("event__distance", flat=True)
-    distances = Distance.objects.filter(pk__in=set(distance_ids)).order_by("-km")
-    if event.race.slug == "endurrun":
-        distances = racedbapp.shared.endurrun.sort_endurrun_distances(distances)
+    events = list(
+        Event.objects.select_related()
+        .filter(race__in=races, date__icontains=event.date.year)
+        .order_by("date", "-distance__km")
+    )
+    for e in events:
+        shared.set_distance_display_name(e.distance, getattr(e, "sequel", None))
     choices = []
-    for d in distances:
-        if d == event.distance:
+    for e in events:
+        if e.distance.display_name == event.distance.display_name:
             continue
-        choices.append(
-            Choice(
-                d.name,
-                "/event/{}/{}/{}/".format(event.date.year, event.race.slug, d.slug),
-            )
+        url = "/event/{}/{}/{}/".format(
+            event.date.year,
+            event.race.slug,
+            e.distance.slug,
         )
+        if e.sequel:
+            url += f"{e.sequel.slug}/"
+        choices.append(Choice(e.distance.display_name, url))
     if event.race.slug == "baden-road-races":
         durelaycount = Durelay.objects.filter(year=event.date.year).count()
         if durelaycount > 0:
             choices.append(Choice("Sprint Duathlon Relay", "/durelay/{}/".format(event.date.year)))
-    distance_filter = Filter(event.distance.name, choices)
+    distance_filter = Filter(event.distance.display_name, choices)
     return distance_filter
 
 

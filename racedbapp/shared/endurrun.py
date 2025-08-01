@@ -1,4 +1,4 @@
-from racedbapp.models import Config, Distance, Endurathlete, Result
+from racedbapp.models import Config, Endurathlete, Result
 
 
 def get_member_endurrace(result, membership):
@@ -7,27 +7,6 @@ def get_member_endurrace(result, membership):
     if lower_athlete in membership.names:
         member = membership.names[lower_athlete]
     return member
-
-
-def sort_endurrun_distances(distances):
-    """Sort ENDURrun distances into stage order"""
-    endurrun_distances = []
-    endurrun_slugs = [
-        "half-marathon",
-        "15-km",
-        "30-km",
-        "10-mi",
-        "25_6-km",
-        "10-km",
-        "marathon",
-    ]
-    for dist in endurrun_slugs:
-        next_distance = Distance.objects.get(slug=dist)
-        if next_distance in distances:
-            endurrun_distances.append(next_distance)
-        else:
-            break
-    return endurrun_distances
 
 
 def get_ultimate_finished_all_events(years):
