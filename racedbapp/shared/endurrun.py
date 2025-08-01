@@ -63,9 +63,7 @@ def get_endurrun_same_name_dict():
     endurrun_same_name objects in Config
     """
     same_name_dict = {}
-    db_same_names = Config.objects.filter(name="endurrun_same_name").values_list(
-        "value", flat=True
-    )
+    db_same_names = Config.objects.filter(name="endurrun_same_name").values_list("value", flat=True)
     for i in db_same_names:
         names = [x.strip() for x in i.split(";")]
         for name in names:
@@ -73,7 +71,7 @@ def get_endurrun_same_name_dict():
     return same_name_dict
 
 
-def get_ultimate_winners_and_gold_jerseys(years, athletes)-> tuple[set | None, set | None]:
+def get_ultimate_winners_and_gold_jerseys(years, athletes) -> tuple[set | None, set | None]:
     """
     Get a list of names of people who have won the ENDURrun ultimate.
     If there is ever a tie for winner times in a year, this won't work.
@@ -119,9 +117,7 @@ def get_ultimate_winners_and_gold_jerseys(years, athletes)-> tuple[set | None, s
                     for key, val in female_cumulative_time.items()
                     if athlete_event_count[key] == num_events
                 }
-                female_gold_jersey = min(
-                    female_cumulative_time, key=female_cumulative_time.get
-                )
+                female_gold_jersey = min(female_cumulative_time, key=female_cumulative_time.get)
                 ultimate_gold_jerseys.append(female_gold_jersey)
                 if num_events == 7:
                     ultimate_winners.append(female_gold_jersey)
@@ -131,9 +127,7 @@ def get_ultimate_winners_and_gold_jerseys(years, athletes)-> tuple[set | None, s
                     for key, val in male_cumulative_time.items()
                     if athlete_event_count[key] == num_events
                 }
-                male_gold_jersey = min(
-                    male_cumulative_time, key=male_cumulative_time.get
-                )
+                male_gold_jersey = min(male_cumulative_time, key=male_cumulative_time.get)
                 ultimate_gold_jerseys.append(male_gold_jersey)
                 if num_events == 7:
                     ultimate_winners.append(male_gold_jersey)
@@ -172,9 +166,7 @@ def get_ultimate_gp():
     for result in ultimate_results:
         if result.athlete in ultimate_gp1[result.event.date.year]:
             ultimate_gp1[result.event.date.year][result.athlete]["events"] += 1
-            ultimate_gp1[result.event.date.year][result.athlete][
-                "total_time"
-            ] += result.guntime
+            ultimate_gp1[result.event.date.year][result.athlete]["total_time"] += result.guntime
         else:
             ultimate_gp1[result.event.date.year][result.athlete] = {
                 "events": 1,
