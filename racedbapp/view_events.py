@@ -71,8 +71,7 @@ def index(request):
             "year",
             "race_name",
             "race_slug",
-            "distance_name",
-            "distance_slug",
+            "distance",
             "femalewinner",
             "femaletime",
             "femalemember",
@@ -95,13 +94,13 @@ def index(request):
         malemember = False
         if malewinner.athlete.lower() in member_dict:
             malemember = member_dict[malewinner.athlete.lower()]
+        shared.set_distance_display_name(e.distance, getattr(e, "sequel", None))
         namedevents.append(
             namedevent(
                 e.date.year,
                 e.race.shortname,
                 e.race.slug,
-                e.distance.name,
-                e.distance.slug,
+                e.distance,
                 femalewinnersdict[e.id].athlete,
                 femaletime,
                 femalemember,
