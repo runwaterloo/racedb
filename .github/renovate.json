@@ -1,6 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "enabledManagers": ["docker-compose", "helm-values"],
+  "enabledManagers": ["docker-compose", "helm-values", "pip_requirements"],
+  "timezone": "America/Toronto",
   "packageRules": [
     {
       "matchPackageNames": ["redis"],
@@ -10,6 +11,31 @@
       "commitMessageAction": "update",
       "commitMessageExtra": "from {{currentVersion}} to {{newVersion}}"
     },
-    { "enabled": false, "matchPackageNames": ["/.*/", "!redis"] }
+    {
+      "matchManagers": ["pip_requirements"],
+      "matchPackageNames": ["Django"],
+      "matchUpdateTypes": ["patch"]
+    },
+    {
+      "matchManagers": ["pip_requirements"],
+      "matchFileNames": ["requirements/requirements.txt"],
+      "schedule": ["* 9-13 * * *"],
+      "commitMessagePrefix": "chore(deps):",
+      "commitMessageAction": "update",
+      "commitMessageExtra": "from {{currentVersion}} to {{newVersion}}"
+    },
+    {
+      "matchManagers": ["pip_requirements"],
+      "matchFileNames": [
+        "requirements/requirements-dev.txt",
+        "requirements/requirements-test.txt"
+      ],
+      "schedule": ["* 9-13 * * 1"],
+      "commitMessagePrefix": "chore(deps):",
+      "commitMessageAction": "update",
+      "commitMessageExtra": "from {{currentVersion}} to {{newVersion}} [skip build]",
+      "groupName": "test/dev dependencies",
+      "groupSlug": "test-dev-dependencies"
+    }
   ]
 }
