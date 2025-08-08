@@ -421,89 +421,61 @@ def get_category_filter(event, category, division):
 def get_division_filter(event, division, category):
     divisions = get_divisions(event, category)
     if len(divisions) == 0:
-        division_filter = False
+        return False
+    all_results = filter_results_by_category(Result.objects.filter(event=event), category)
+    total_count = all_results.count()
+    choices = []
+    base_url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    if event.sequel:
+        base_url += f"{event.sequel.slug}/"
+    if division == "All":
+        current = "All ({})".format(total_count)
     else:
-        all_results = Result.objects.filter(event=event)
-        if category != "All":
-            if category in ("Female", "Male"):
-                all_results = all_results.filter(gender=category[0])
-            elif category == "Masters":
-                all_results = all_results.filter(Q(category__ismasters=True) | Q(age__gte=40))
-            elif category == "F-Masters":
-                all_results = all_results.filter(gender="F").filter(
-                    Q(category__ismasters=True) | Q(age__gte=40)
-                )
-            elif category == "M-Masters":
-                all_results = all_results.filter(gender="M").filter(
-                    Q(category__ismasters=True) | Q(age__gte=40)
-                )
-            elif category == "NB-Masters":
-                all_results = all_results.filter(gender="NB").filter(
-                    Q(category__ismasters=True) | Q(age__gte=40)
-                )
-            else:
-                all_results = all_results.filter(category__name=category)
-        total_count = all_results.count()
-        choices = []
-        if division == "All":
-            current = "All ({})".format(total_count)
+        division_count = get_division_count(divisions, division)
+        current = "{} ({})".format(division, division_count)
+        if category == "All":
+            url = base_url
+            choices.append(
+                Choice("All ({})".format(total_count), url),
+            )
         else:
-            try:
-                division_count = [x["count"] for x in divisions if x["division"] == division][0]
-            except Exception:
-                division_count = 0
-            current = "{} ({})".format(division, division_count)
-            if category == "All":
-                choices.append(
-                    Choice(
-                        "All ({})".format(total_count),
-                        "/event/{}/{}/{}/".format(
-                            event.date.year, event.race.slug, event.distance.slug
-                        ),
-                    )
-                )
-            else:
-                choices.append(
-                    Choice(
-                        "All ({})".format(total_count),
-                        "/event/{}/{}/{}/?filter={}".format(
-                            event.date.year,
-                            event.race.slug,
-                            event.distance.slug,
-                            category,
-                        ),
-                    )
-                )
-        for d in divisions:
-            if d["division"] == division:
-                continue
-            if category == "All":
-                choices.append(
-                    Choice(
-                        "{} ({})".format(d["division"], d["count"]),
-                        "/event/{}/{}/{}/?division={}".format(
-                            event.date.year,
-                            event.race.slug,
-                            event.distance.slug,
-                            d["division"],
-                        ),
-                    )
-                )
-            else:
-                choices.append(
-                    Choice(
-                        "{} ({})".format(d["division"], d["count"]),
-                        "/event/{}/{}/{}/?filter={}&division={}".format(
-                            event.date.year,
-                            event.race.slug,
-                            event.distance.slug,
-                            category,
-                            d["division"],
-                        ),
-                    )
-                )
-        division_filter = Filter(current, choices)
+            url = f"{base_url}?filter={category}"
+            choices.append(Choice("All ({})".format(total_count), url))
+    for d in divisions:
+        if d["division"] == division:
+            continue
+        if category == "All":
+            url = f"{base_url}?division={d['division']}"
+            choices.append(Choice("{} ({})".format(d["division"], d["count"]), url))
+        else:
+            url = f"{base_url}?filter={category}&division={d['division']}"
+            choices.append(Choice("{} ({})".format(d["division"], d["count"]), url))
+    division_filter = Filter(current, choices)
     return division_filter
+
+
+def get_division_count(divisions, division):
+    """Return the count for the given division name from a list of division dicts"""
+    for d in divisions:
+        if d["division"] == division:
+            return d["count"]
+    return 0
+
+
+def filter_results_by_category(queryset, category):
+    if category == "All":
+        return queryset
+    if category in ("Female", "Male"):
+        return queryset.filter(gender=category[0])
+    if category == "Masters":
+        return queryset.filter(Q(category__ismasters=True) | Q(age__gte=40))
+    if category == "F-Masters":
+        return queryset.filter(gender="F").filter(Q(category__ismasters=True) | Q(age__gte=40))
+    if category == "M-Masters":
+        return queryset.filter(gender="M").filter(Q(category__ismasters=True) | Q(age__gte=40))
+    if category == "NB-Masters":
+        return queryset.filter(gender="NB").filter(Q(category__ismasters=True) | Q(age__gte=40))
+    return queryset.filter(category__name=category)
 
 
 def get_results(
