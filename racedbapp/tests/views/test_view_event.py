@@ -5,7 +5,12 @@ from rest_framework.test import APIClient
 
 from racedbapp.models import Result
 from racedbapp.shared.types import Filter
-from racedbapp.view_event import annotate_isrwfirst, get_category_filter
+from racedbapp.view_event import (
+    annotate_isrwfirst,
+    filter_results_by_category,
+    get_category_filter,
+    get_division_count,
+)
 
 
 @pytest.mark.django_db
@@ -82,6 +87,39 @@ def test_event_endpoint_division(create_event):
 
 
 @pytest.mark.django_db
+def test_event_endpoint_division_with_results(create_result):
+    client = APIClient()
+    result = create_result()
+    result.division = "Ultimate"
+    result.save()
+    result2 = create_result(event=result.event, category=result.category, place=2)
+    result2.division = "Different"
+    result2.save()
+    url = f"/event/{result.event.date.year}/{result.event.race.slug}/{result.event.distance.slug}/?division=Ultimate"
+    response = client.get(url)
+    assert response.status_code == 200
+    url = f"/event/{result.event.date.year}/{result.event.race.slug}/{result.event.distance.slug}/?filter=Female&division=Ultimate"
+    response = client.get(url)
+    assert response.status_code == 200
+    url = f"/event/{result.event.date.year}/{result.event.race.slug}/{result.event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_event_endpoint_division_with_results_sequel(create_result, create_sequel):
+    client = APIClient()
+    result = create_result()
+    result.division = "Ultimate"
+    result.event.sequel = create_sequel()
+    result.event.save()
+    result.save()
+    url = f"/event/{result.event.date.year}/{result.event.race.slug}/{result.event.distance.slug}/{result.event.sequel.slug}/?division=Ultimate"
+    response = client.get(url)
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
 def test_event_endpoint_hilldict(create_event, create_distance, create_race, create_prime):
     client = APIClient()
     distance = create_distance()
@@ -136,6 +174,47 @@ def test_event_isrwfirst(create_category, create_event, create_result, create_rw
     annotated_results = annotate_isrwfirst(results)
     # check that first result (member) has isrwfirst set to False (the 1st was event2)
     assert annotated_results[0].isrwfirst is False
+
+
+@pytest.mark.django_db
+def test_filter_results_by_category(create_event, create_category, create_result):
+    event = create_event()
+    cat_female = create_category(name_suffix="TestCatF", is_masters=False)
+    cat_masters = create_category(name_suffix="TestCatM", is_masters=True)
+    # Create results with different genders and ages
+    r1 = create_result(event=event, category=cat_female, gender="F", age=25, place=1)
+    r2 = create_result(event=event, category=cat_masters, gender="M", age=45, place=2)
+    r3 = create_result(event=event, category=cat_female, gender="F", age=41, place=3)
+    r4 = create_result(event=event, category=cat_female, gender="NB", age=50, place=4)
+
+    qs = Result.objects.filter(event=event)
+
+    # All
+    assert set(filter_results_by_category(qs, "All")) == {r1, r2, r3, r4}
+    # Female
+    assert set(filter_results_by_category(qs, "Female")) == {r1, r3}
+    # Male
+    assert set(filter_results_by_category(qs, "Male")) == {r2}
+    # Masters
+    assert set(filter_results_by_category(qs, "Masters")) == {r2, r3, r4}
+    # F-Masters
+    assert set(filter_results_by_category(qs, "F-Masters")) == {r3}
+    # M-Masters
+    assert set(filter_results_by_category(qs, "M-Masters")) == {r2}
+    # NB-Masters
+    assert set(filter_results_by_category(qs, "NB-Masters")) == {r4}
+    # By category name
+    assert set(filter_results_by_category(qs, cat_female.name)) == {r1, r3, r4}
+
+
+def test_get_division_count_found():
+    divisions = [
+        {"division": "A", "count": 10},
+        {"division": "B", "count": 5},
+    ]
+    assert get_division_count(divisions, "A") == 10
+    assert get_division_count(divisions, "B") == 5
+    assert get_division_count(divisions, "C") == 0
 
 
 # below here is AI generated and a bit complicated, but it works

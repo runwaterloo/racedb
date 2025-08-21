@@ -74,9 +74,10 @@ def create_event(db, create_race, create_distance):
 
 @pytest.fixture
 def create_category(db):
-    def _create_category(name_suffix="a"):
+    def _create_category(name_suffix="a", is_masters=False):
         return Category.objects.create(
             name=f"Test Category {name_suffix}",
+            ismasters=is_masters,
         )
 
     return _create_category
@@ -91,6 +92,7 @@ def create_result(db, create_event, create_category):
         gender="F",
         place=1,
         rwmember=None,
+        age=None,
     ):
         if event is None:
             event = create_event(name_suffix=name_suffix)
@@ -101,6 +103,7 @@ def create_result(db, create_event, create_category):
             category=category,
             athlete=f"Test Athlete {name_suffix}",
             gender=gender,
+            age=age,
             city=f"Test City {name_suffix}",
             place=place,
             guntime=datetime.timedelta(seconds=300),
