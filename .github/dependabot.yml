@@ -1,15 +1,5 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/requirements"
-    schedule:
-      interval: "daily"
-    ignore:
-      - dependency-name: "Django"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
-    commit-message:
-      prefix: "chore"
-      include: scope
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
