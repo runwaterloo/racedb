@@ -30,7 +30,7 @@
         "requirements/requirements-dev.txt",
         "requirements/requirements-test.txt"
       ],
-      "schedule": ["* 9-13 * * 1"],
+      "schedule": ["* 7-13 1-7 * 2"],
       "commitMessagePrefix": "chore(deps):",
       "commitMessageAction": "update",
       "commitMessageExtra": "from {{currentVersion}} to {{newVersion}} [skip build]",
