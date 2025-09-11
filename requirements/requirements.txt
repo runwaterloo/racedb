@@ -10,4 +10,4 @@ gspread==6.2.1
 gunicorn==23.0.0
 mysqlclient==2.2.7
 PyYAML==6.0.2
-whitenoise==6.9.0
+whitenoise==6.10.0
