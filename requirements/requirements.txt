@@ -4,10 +4,10 @@ django-redis==6.0.0
 django-slack==5.19.0
 Django==5.2.6
 djangorestframework==3.16.1
-drf-nested-routers==0.94.2
+drf-nested-routers==0.95.0
 flickrapi==2.4.0
 gspread==6.2.1
 gunicorn==23.0.0
 mysqlclient==2.2.7
 PyYAML==6.0.2
-whitenoise==6.9.0
+whitenoise==6.10.0
