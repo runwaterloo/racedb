@@ -179,8 +179,8 @@ def test_event_isrwfirst(create_category, create_event, create_result, create_rw
 @pytest.mark.django_db
 def test_filter_results_by_category(create_event, create_category, create_result):
     event = create_event()
-    cat_female = create_category(name_suffix="TestCatF", is_masters=False)
-    cat_masters = create_category(name_suffix="TestCatM", is_masters=True)
+    cat_female = create_category(name_suffix="F", is_masters=False)
+    cat_masters = create_category(name_suffix="M", is_masters=True)
     # Create results with different genders and ages
     r1 = create_result(event=event, category=cat_female, gender="F", age=25, place=1)
     r2 = create_result(event=event, category=cat_masters, gender="M", age=45, place=2)
