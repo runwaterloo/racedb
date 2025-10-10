@@ -1,15 +1,15 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.20.0
+    rev: v3.21.0
     hooks:
       - id: pyupgrade
         exclude: ^migrations/
   -   repo: https://github.com/adamchainz/django-upgrade
-      rev: 1.28.0
+      rev: 1.29.0
       hooks:
       -   id: django-upgrade
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.13.2
+    rev: v0.14.0
     hooks:
       - id: ruff
         args: [--fix]  # Optional: automatically fix problems on commit
