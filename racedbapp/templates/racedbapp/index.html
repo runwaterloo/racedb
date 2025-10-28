@@ -96,7 +96,7 @@
         </h2>
       </center>
       <div class="col-xs-l col-sm-3 col-md-3 col-lg-2">
-        <center><a href="https://runwaterloo.com/{{ featured_event.race.slug }}/">
+        <center><a href="https://runwaterloo.com/run/{{ featured_event.race.slug }}/">
           <img class="img-responsive upcoming-race"
                src="{% event_logo featured_event %}">
         </img>
@@ -104,7 +104,7 @@
     </div>
     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-2">
       <br>
-      <strong><a href="https://runwaterloo.com/{{ featured_event.race.slug }}/">{{ featured_event.race.name }}</strong></a>
+      <strong><a href="https://runwaterloo.com/run/{{ featured_event.race.slug }}/">{{ featured_event.race.name }}</strong></a>
     <br>
     <br>
     <strong>{{ featured_event.distance.name }}</strong>
@@ -203,7 +203,7 @@
 {% for fe in future_events %}
   <div class="row">
     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-2">
-      <center><a href="https://runwaterloo.com/{{ fe.0.race.slug }}/">
+      <center><a href="https://runwaterloo.com/run/{{ fe.0.race.slug }}/">
         <img class="img-responsive upcoming-race"
              src="{% static "race_logos/"|add:fe.2|add:".png" %}">
       </img>
@@ -211,7 +211,7 @@
   </div>
   <div class="col-xs-3 col-sm-3 col-md-3 col-lg-2">
     <br>
-    <strong><a href="https://runwaterloo.com/{{ fe.0.race.slug }}/">{{ fe.0.race.name }}</strong></a>
+    <strong><a href="https://runwaterloo.com/run/{{ fe.0.race.slug }}/">{{ fe.0.race.name }}</strong></a>
   <br>
   <br>
   <strong>{{ fe.0.distance.name }}</strong>
@@ -273,7 +273,7 @@
 </div>
 </div>
 {% endfor %}
-<center><strong><a href="https://runwaterloo.com/category/run-waterloo-events/">All Future Events</a></strong></center>
+<center><strong><a href="https://runwaterloo.com/runs/">All Future Events</a></strong></center>
 <p></p>
 <!-- END FOURTH ROW -->
 {% endblock content %}
