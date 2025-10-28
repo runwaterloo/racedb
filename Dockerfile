@@ -9,6 +9,7 @@ RUN apk add --no-cache --virtual .build-deps \
      musl-dev && \
     apk add --no-cache \
      curl \
+     postgresql-client \
      mariadb-client \
      mariadb-connector-c-dev && \
     if [ "$INSTALL_DEV" = "1" ]; then \
