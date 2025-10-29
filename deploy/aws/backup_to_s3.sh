@@ -8,11 +8,11 @@ S3_BUCKET=$(grep -E "^S3_PRIVATE_BUCKET\s*=\s*['\"]" /srv/racedb_secrets/secrets
 S3_PREFIX="database_backup/racedb"
 
 TZ="America/Toronto"
-HOUR=$(TZ=$TZ date +%H | sed 's/^0*//')
-MONTHDAY=$(TZ=$TZ date +%d | sed 's/^0*//')
-MONTH=$(TZ=$TZ date +%m | sed 's/^0*//')
-WEEKDAY=$(TZ=$TZ date +%u)
-WEEK=$(TZ=$TZ date +%V)
+HOUR=$(TZ=$TZ date +%-H)
+MONTHDAY=$(TZ=$TZ date +%-d)
+MONTH=$(TZ=$TZ date +%-m)
+WEEKDAY=$(TZ=$TZ date +%-u)
+WEEK=$(TZ=$TZ date +%-V)
 
 upload_to_s3() {
   local key=$1
