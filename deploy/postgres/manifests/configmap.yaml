@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  labels:
+    app: postgres
+data:
+  # the racedb database and user are created by default
+  # the racedbdev database and user are created using the init script below
+  init-db.sql: |
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT FROM pg_user WHERE usename = '${POSTGRES_DEV_USER}') THEN
+            CREATE USER '${POSTGRES_DEV_USER}' WITH PASSWORD '${POSTGRES_DEV_PASSWORD}';
+        END IF;
+        IF NOT EXISTS (SELECT FROM pg_database WHERE datname = '${POSTGRES_DEV_DB}') THEN
+            CREATE DATABASE '${POSTGRES_DEV_DB}' OWNER '${POSTGRES_DEV_USER}';
+        END IF;
+    END
+    $$;
+    GRANT ALL PRIVILEGES ON DATABASE '${POSTGRES_DEV_DB}' TO '${POSTGRES_DEV_USER}';

@@ -76,6 +76,19 @@ if os.getenv("DATABASE", "sqlite3") == "mysql":
             "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
         }
     }
+elif os.getenv("DATABASE", "sqlite3") == "postgres":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME", secrets.DB_NAME),
+            "USER": os.getenv("DB_USER", secrets.DB_USER),
+            "PASSWORD": os.getenv("DB_PASSWORD", secrets.DB_PASSWORD),
+            "HOST": os.getenv(
+                "DB_HOST", secrets.DB_HOST if hasattr(secrets, "DB_HOST") else "postgres"
+            ),
+            "PORT": os.getenv("DB_PORT", "5432"),
+        }
+    }
 else:
     DATABASES = {
         "default": {
