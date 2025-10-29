@@ -51,19 +51,6 @@ spec:
         ports:
         - containerPort: 5432
           name: postgres
-        volumeMounts:
-        - name: postgres-data
-          mountPath: /var/lib/postgresql/data
-          subPath: postgres
-        - name: init-script
-          mountPath: /docker-entrypoint-initdb.d
-      volumes:
-      - name: init-script
-        configMap:
-          name: postgres-config
-          items:
-            - key: init-db.sql
-              path: init-db.sql
         resources:
           requests:
             memory: "256Mi"
@@ -87,6 +74,19 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 60
           timeoutSeconds: 5
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+          subPath: postgres
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: init-script
+        configMap:
+          name: postgres-config
+          items:
+            - key: init-db.sql
+              path: init-db.sql
   volumeClaimTemplates:
   - metadata:
       name: postgres-data
