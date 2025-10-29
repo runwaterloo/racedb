@@ -59,7 +59,7 @@ spec:
             - name: SETTINGS
               value: {{ .Values.racedb.settings }}
             - name: DATABASE
-              value: "mysql"
+              value: "postgres"
             {{- if eq .Values.racedb.settings "dev" }}
             - name: DEBUG
               value: "true"

@@ -55,7 +55,7 @@ spec:
             - name: SETTINGS
               value: {{ .Values.racedb.settings }}
             - name: DATABASE
-              value: "mysql"
+              value: "postgres"
           volumeMounts:
             {{- if .Values.racedb.mountLocal }}
             - mountPath: /srv/racedb
