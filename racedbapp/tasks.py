@@ -179,9 +179,8 @@ def dump_database():
     if WEBHOST == "results.runwaterloo.com":
         logger.info("Dumping database to /tmp/racedb.sql.gz")
         os.system(
-            "mysqldump -h {} -u racedb --password={} --skip-dump-date racedb > /tmp/racedb.sql".format(
-                secrets.DB_HOST, secrets.DB_PASSWORD
-            )
+            "PGPASSWORD='{}' pg_dump -h {} -U racedb -d racedb "
+            "--no-owner --no-acl > /tmp/racedb.sql".format(secrets.DB_PASSWORD, secrets.DB_HOST)
         )
         os.system("gzip -f /tmp/racedb.sql")
     else:
