@@ -7,8 +7,6 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 from django_slack import slack_message
 
-from racedb import secrets
-
 from . import process_photoupdate, view_member
 from .models import Config, Endurathlete, Event, Rwmember, Rwmembertag
 
@@ -172,16 +170,3 @@ def send_email_task(subject, content, recipients):
         fail_silently=False,
     )
     logger.info("Email sent!")
-
-
-@shared_task
-def dump_database():
-    if WEBHOST == "results.runwaterloo.com":
-        logger.info("Dumping database to /tmp/racedb.sql.gz")
-        os.system(
-            "PGPASSWORD='{}' pg_dump -h {} -U racedb -d racedb "
-            "--no-owner --no-acl > /tmp/racedb.sql".format(secrets.DB_PASSWORD, secrets.DB_HOST)
-        )
-        os.system("gzip -f /tmp/racedb.sql")
-    else:
-        logger.info("Not production host, skipping database dump")
