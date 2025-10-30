@@ -26,9 +26,6 @@ jobs:
       - name: Prepare secrets file
         run: cp racedb/secrets.py.sample racedb/secrets.py
 
-      - name: Remove mysqlclient from requirements.txt
-        run: sed -i '/^mysqlclient/d' requirements/requirements.txt
-
       - name: Install test requirements
         run: pip install --root-user-action=ignore -r requirements/requirements-test.txt
 

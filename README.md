@@ -42,16 +42,6 @@ These instructions are based on Docker Desktop in WSL/Ubuntu. Adapt as needed.
 cp racedb/secrets.py.sample racedb/secrets.py
 ```
 
-### Install dependencies
-```bash
-sudo apt update;
-sudo apt install \
-  build-essential \
-  default-libmysqlclient-dev \
-  pkg-config \
-  python3-dev
-```
-
 ###  Setup virtual environmenet
 ```bash
 python3 -m venv .venv;
@@ -82,7 +72,7 @@ pytest
 ```
 
 ### Run tests inside container
-This is closer to production, but slower. It uses a running MariaDB database instead of the
+This is closer to production, but slower. It uses a running PostgreSQL database instead of the
 in memory SQLite that is normally used for tests.
 ```bash
 docker exec racedb-web pytest
