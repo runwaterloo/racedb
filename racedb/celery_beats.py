@@ -22,8 +22,4 @@ CELERY_BEAT_SCHEDULE = {
         "task": "racedbapp.tasks.slack_missing_urls",
         "schedule": crontab(hour="20", minute="0"),
     },
-    "dump_database": {
-        "task": "racedbapp.tasks.dump_database",
-        "schedule": crontab(minute="10"),
-    },
 }

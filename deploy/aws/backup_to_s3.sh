@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-POD=$(kubectl get pods -l "app.kubernetes.io/instance=racedb,app.kubernetes.io/name=racedb,app.kubernetes.io/task=celery" -o jsonpath='{.items[0].metadata.name}')
 LOCAL_FILE="/tmp/racedb.sql.gz"
 S3_BUCKET=$(grep -E "^S3_PRIVATE_BUCKET\s*=\s*['\"]" /srv/racedb_secrets/secrets.py | sed -E "s/.*=\s*['\"]([^'\"]+)['\"].*/\1/")
 S3_PREFIX="database_backup/racedb"
@@ -20,8 +19,9 @@ upload_to_s3() {
   aws s3 cp "$LOCAL_FILE" "s3://${S3_BUCKET}/${key}"
 }
 
-echo "Copying /tmp/racedb.sql.gz from pod $POD to $LOCAL_FILE"
-kubectl cp "$POD:/tmp/racedb.sql.gz" "$LOCAL_FILE"
+# Create dump directly in postgres pod and save to local file
+echo "Creating database dump to $LOCAL_FILE"
+kubectl exec postgres-0 -- pg_dump -U racedb -d racedb --no-owner --no-acl | gzip > "$LOCAL_FILE"
 
 if [ "$HOUR" -eq 0 ]; then
   if [ "$MONTHDAY" -eq 1 ]; then
