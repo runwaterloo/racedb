@@ -65,18 +65,7 @@ TEMPLATES = [
 ]
 
 # --- Database ---
-if os.getenv("DATABASE", "sqlite3") == "mysql":
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": secrets.DB_NAME,
-            "USER": secrets.DB_USER,
-            "PASSWORD": secrets.DB_PASSWORD,
-            "HOST": secrets.DB_HOST,
-            "OPTIONS": {"init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
-        }
-    }
-elif os.getenv("DATABASE", "sqlite3") == "postgres":
+if os.getenv("DATABASE", "sqlite3") == "postgres":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",

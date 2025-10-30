@@ -31,11 +31,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential \
-            docker-compose \
-            default-libmysqlclient-dev \
-            pkg-config \
-            python3-dev
+            docker-compose
 
       - name: Install Python development dependencies
         run: pip install -r requirements/requirements-dev.txt

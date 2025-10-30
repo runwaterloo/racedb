@@ -57,14 +57,6 @@ alloy:
       }
       ///////////////////////////////////////////////////////////////////////////////////
 
-      ///////////////////////////////////////////////////////////////////////////////////
-      // MySQL scraper
-      prometheus.scrape "mysql" {
-        targets    = prometheus.exporter.mysql.rds.targets
-        forward_to = [prometheus.remote_write.grafanacloud.receiver]
-      }
-      ///////////////////////////////////////////////////////////////////////////////////
-
       prometheus.exporter.unix "localhost" {
         procfs_path = "/host/proc"
         sysfs_path  = "/host/sys"
@@ -87,11 +79,6 @@ alloy:
           comm = ["alloy", "celery", "containerd", "containerd-shim", "coredns", "gunicorn", "k3s-server", "metrics-server", "node_exporter", "prometheus-conf", "python", "redis-server", "traefik"]
         }
        }
-
-      prometheus.exporter.mysql "rds" {
-        data_source_name = sys.env("MYSQL_DATA_SOURCE_NAME")
-      }
-
 
       // discovery.kubernetes allows you to find scrape targets from Kubernetes resources.
       // It watches cluster state and ensures targets are continually synced with what is currently running in your cluster.
