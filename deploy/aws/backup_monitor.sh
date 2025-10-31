@@ -26,4 +26,4 @@ LAST_MODIFIED_EPOCH=$(date -d "$LAST_MODIFIED" +%s)
 NOW_EPOCH=$(date +%s)
 AGE=$((NOW_EPOCH - LAST_MODIFIED_EPOCH))
 
-echo "{\"task\": \"backup_monitor\", \"db\": \"mariadb\", \"backup_age_seconds\": $AGE, \"backup_size_bytes\": $SIZE}"
+echo "{\"task\": \"backup_monitor\", \"db\": \"postgres\", \"backup_age_seconds\": $AGE, \"backup_size_bytes\": $SIZE}"

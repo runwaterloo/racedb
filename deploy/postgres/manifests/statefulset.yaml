@@ -33,21 +33,6 @@ spec:
             secretKeyRef:
               name: postgres-secret
               key: password
-        - name: POSTGRES_DEV_DB
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secret
-              key: dev_db
-        - name: POSTGRES_DEV_USER
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secret
-              key: dev_username
-        - name: POSTGRES_DEV_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secret
-              key: dev_password
         ports:
         - containerPort: 5432
           name: postgres
@@ -78,15 +63,6 @@ spec:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
           subPath: postgres
-        - name: init-script
-          mountPath: /docker-entrypoint-initdb.d
-      volumes:
-      - name: init-script
-        configMap:
-          name: postgres-config
-          items:
-            - key: init-db.sql
-              path: init-db.sql
   volumeClaimTemplates:
   - metadata:
       name: postgres-data
