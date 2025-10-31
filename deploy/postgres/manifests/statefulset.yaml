@@ -41,24 +41,31 @@ spec:
             memory: "256Mi"
           limits:
             memory: "1Gi"
+        startupProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - pg_isready -U "$POSTGRES_USER"
+          initialDelaySeconds: 2
+          periodSeconds: 2
+          failureThreshold: 150
         readinessProbe:
           exec:
             command:
-            - pg_isready
-            - -U
-            - $(POSTGRES_USER)
-          initialDelaySeconds: 5
-          periodSeconds: 60
-          timeoutSeconds: 5
+            - sh
+            - -c
+            - pg_isready -U "$POSTGRES_USER"
+          periodSeconds: 30
+          timeoutSeconds: 2
         livenessProbe:
           exec:
             command:
-            - pg_isready
-            - -U
-            - $(POSTGRES_USER)
-          initialDelaySeconds: 30
+            - sh
+            - -c
+            - pg_isready -U "$POSTGRES_USER"
           periodSeconds: 60
-          timeoutSeconds: 5
+          timeoutSeconds: 2
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data

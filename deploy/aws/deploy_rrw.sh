@@ -28,11 +28,20 @@ export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 # restore rrw secrets
 cd ../helm
 ./restore-secrets-rrw.sh
+./restore-secrets-racedb.sh
 
 # deploy traefik
 cd ../traefik
 ./create_cloudflare_secrets.sh
 ./deploy.sh
+
+# deploy postgres
+cd ../postgres
+./create_secret.sh
+./deploy.sh
+./restore_db.sh racedb
+./create_dev_db.sh
+./refresh_dev_db.sh
 
 # get latest tag from gitlab
 LATEST_TAG=$(curl -s https://api.github.com/repos/runwaterloo/racedb/tags | jq -r '.[0].name')
@@ -43,7 +52,6 @@ helm upgrade --install racedb . --values values-rrw.yaml --set image.tag="${LATE
 
 # deploy dev environment
 apt-get -y install python3-pip
-./restore-secrets-racedb.sh
 rm -rf .kube
 helm upgrade --install racedbdev . --values values-racedb.yaml --set image.tag="${LATEST_TAG}"
 
