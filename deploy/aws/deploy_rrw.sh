@@ -37,7 +37,6 @@ cd ../traefik
 
 # deploy postgres
 cd ../postgres
-./create_secret.sh
 ./deploy.sh
 ./restore_db.sh racedb
 ./create_dev_db.sh
