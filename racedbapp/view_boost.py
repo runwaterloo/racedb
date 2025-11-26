@@ -19,6 +19,7 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         "boost_leaderboard_size",
         "boost_max_endurrun",
         "boost_max_events",
+        "boost_max_sport",
         "boost_merit_max",
         "boost_participation_points",
         "boost_pb_points",
@@ -27,6 +28,7 @@ def index(request, year, leaderboard_only=False, standings_only=False):
     config_dict = dict(Config.objects.values_list("name", "value").filter(name__in=config_values))
     max_events = int(config_dict.get("boost_max_events", 0))
     max_endurrun = int(config_dict.get("boost_max_endurrun", 0))
+    max_sport = int(config_dict.get("boost_max_sport", 0))
     leaderboard_size = int(config_dict.get("boost_leaderboard_size", 0))
     nophoto_url = config_dict.get("nophoto_url", "")
     boost_years = get_boost_years()
@@ -78,7 +80,7 @@ def index(request, year, leaderboard_only=False, standings_only=False):
             BResult(i, gender_finishers, config_dict, previous_races)
         )
     for v in battlers.values():
-        v.calculate(max_events, max_endurrun)
+        v.calculate(max_events, max_endurrun, max_sport)
     gender_place_dict = {"F": 0, "M": 0, "NB": 0}
     category_place_dict = {}
     leaders = {"F40-": [], "M40-": [], "F40+": [], "M40+": [], "NB40-": [], "NB40+": []}
@@ -334,9 +336,9 @@ class Battler:
         self.gender_place = 0
         self.category_place = 0
 
-    def calculate(self, max_events, max_endurrun):
+    def calculate(self, max_events, max_endurrun, max_sport):
         self.results = sorted(self.results, key=attrgetter("ep"), reverse=True)
-        events_count = endurrun_count = 0
+        events_count = endurrun_count = sport_count = 0
         for i in self.results:
             if events_count == max_events:
                 break
@@ -346,6 +348,11 @@ class Battler:
                         continue
                     else:
                         endurrun_count += 1
+                elif i.event_race_slug == "sport":
+                    if sport_count == max_sport:
+                        continue
+                    else:
+                        sport_count += 1
                 events_count += 1
                 i.counts = True
                 self.total_points += i.ep
