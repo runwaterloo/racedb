@@ -7,6 +7,7 @@ from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import redirect, render
 
+from racedbapp.shared.shared import set_distance_display_name
 from racedbapp.shared.types import Choice, Filter
 
 from .models import Config, Event, Result, Rwmember, Rwmembertag
@@ -364,8 +365,12 @@ class BResult:
         self.event_id = result.event.id
         self.event_race_short_name = result.event.race.shortname
         self.event_race_slug = result.event.race.slug
-        self.event_distance_name = result.event.distance.name
+        sequel = getattr(result.event, "sequel", None)
+        set_distance_display_name(result.event.distance, sequel)
+        self.event_distance_name = result.event.distance.display_name
         self.event_distance_slug = result.event.distance.slug
+        if sequel:
+            self.event_distance_slug += "/{}".format(sequel.slug)
         self.guntime = result.guntime
         self.gender_place = result.gender_place
         self.gender_finishers = gender_finishers[result.gender][result.event.id]
