@@ -6,6 +6,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min
 from django.shortcuts import get_object_or_404, render
 
+from racedbapp.shared.shared import set_distance_display_name
+
 from . import view_boost
 from .models import Bow, Bowathlete, Config, Event, Race, Result, Rwmember, Samerace
 from .shared import utils
@@ -436,6 +438,8 @@ def get_memberresults(member):
             category_place = Result.objects.filter(
                 event=r.event, category=r.category, place__lte=r.place
             ).count()
+        sequel = getattr(r.event, "sequel", None)
+        set_distance_display_name(r.event.distance, sequel)
         results.append(named_result(r, guntime, gender_place, category_place, chiptime))
         total_distance += r.event.distance.km
     return results, total_distance
