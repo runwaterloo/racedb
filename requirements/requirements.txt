@@ -10,4 +10,4 @@ gspread==6.2.1
 gunicorn==23.0.0
 PyYAML==6.0.3
 whitenoise==6.11.0
-psycopg[binary]==3.3.0
+psycopg[binary]==3.3.2
