@@ -198,7 +198,7 @@
           {% for r in results %}
             <tr>
               <td class="text-left" scope="col">
-                <a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/">{{ r.result.event.date.year }} {{ r.result.event.race.shortname }} {{ r.result.event.distance.name }}</a>
+                <a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/{% if r.result.event.distance.sequel_slug %}{{ r.result.event.distance.sequel_slug }}/{% endif %}">{{ r.result.event.date.year }} {{ r.result.event.race.shortname }} {{ r.result.event.distance.display_name }}</a>
               </td>
               <td class="text-center" scope="col">{{ r.result.place|get_place }}</td>
               <td class="text-center" scope="col">{{ r.result.bib }}</td>
