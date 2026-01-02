@@ -28,7 +28,7 @@ jobs:
         run: pre-commit autoupdate
 
       - name: Commit and create PR
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore(pre-commit): autoupdate hooks"
           branch: pre-commit-autoupdate
