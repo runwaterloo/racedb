@@ -42,6 +42,8 @@ def order_members(members, ordering):
         memberEventDates[result["rwmember"]] = result["oldest_date"]
     if ordering == "date":
         members = sorted(members, key=lambda member: memberEventDates.get(member.id, date.today()))
+    else:
+        members = members.order_by("id")
     return members, memberEventDates
 
 
