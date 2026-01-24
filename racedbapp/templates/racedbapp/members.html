@@ -17,7 +17,7 @@
 {% endblock ogmeta %}
 {% block content %}
   <h3>
-    Members <small><a href="http://www.runwaterloo.com/membership" target="_blank"><i class="fas fa-info-circle"></i></a></small>
+    Members <small><a href="https://www.runwaterloo.com/membership" target="_blank"><i class="fas fa-info-circle"></i></a></small>
   </h3>
   <div class="row">
     <div class="col-xs-12 col-sm-10 col-md-8 col-lg-6">
@@ -71,8 +71,12 @@
               <td class="text-center">{{ m.gender }}</td>
               <td class="text-left">{{ m.city }}</td>
               <td class="text-center">{{ m.joindate.year }}</td>
-              <td class="text-center">{{ member_event_dates|get_date:m.id }}</td>
-              {% if request.GET.ordering == 'date' %}<td class="text-center">{{ members|get_ranking:m }}</td>{% endif %}
+              <td class="text-center">
+                {% if m.first_result_date %}{{ m.first_result_date.year }}{% endif %}
+              </td>
+              {% if request.GET.ordering == 'date' %}
+                <td class="text-center">{{ forloop.counter }}</td>
+              {% endif %}
               {% if m.hasphotos %}
                 {% if m not in no_camera_members %}
                   <td class="text-center">
