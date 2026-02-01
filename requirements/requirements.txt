@@ -7,7 +7,7 @@ djangorestframework==3.16.1
 drf-nested-routers==0.95.0
 flickrapi==2.4.0
 gspread==6.2.1
-gunicorn==24.1.1
+gunicorn==25.0.0
 PyYAML==6.0.3
 whitenoise==6.11.0
 psycopg[binary]==3.3.2
