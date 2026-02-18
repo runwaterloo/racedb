@@ -12,7 +12,6 @@ env:
       secretKeyRef:
         name: cloudflare-secrets
         key: apiToken
-installCRDs: true
 logs:
   access:
     enabled: true
