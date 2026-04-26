@@ -34,7 +34,7 @@ jobs:
 
       - name: Publish Test Report
         if: always()
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         with:
           name: Test results
           path: report.xml
