@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -33,8 +34,22 @@ def test_round_up_none():
 
 
 @pytest.mark.django_db
-def test_event_logo(create_event):
+def test_event_logo_uses_race_slug_when_file_exists(create_event):
     event = create_event()
-    assert event_logo(event) == "/static/race_logos/test-race-a.png"
+    with patch("racedbapp.shared.utils.Path.is_file", return_value=True):
+        assert event_logo(event) == "/static/race_logos/test-race-a.png"
+
+
+@pytest.mark.django_db
+def test_event_logo_falls_back_when_file_missing(create_event):
+    event = create_event()
+    with patch("racedbapp.shared.utils.Path.is_file", return_value=False):
+        assert event_logo(event) == "/static/race_logos/rw-race-logo.png"
+
+
+@pytest.mark.django_db
+def test_event_logo_prefers_custom_logo_url(create_event):
+    event = create_event()
     event.custom_logo_url = "http://example.com/logo.png"
-    assert event_logo(event) == "http://example.com/logo.png"
+    with patch("racedbapp.shared.utils.Path.is_file", return_value=False):
+        assert event_logo(event) == "http://example.com/logo.png"

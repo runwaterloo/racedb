@@ -4,6 +4,7 @@ from django import template
 from django.templatetags.static import static
 
 from ..models import Config, Distance
+from ..shared.utils import get_race_logo_slug
 
 register = template.Library()
 
@@ -114,4 +115,5 @@ def get_default_record_distance_slug(string):
 def event_logo(event):
     if getattr(event, "custom_logo_url", None):
         return event.custom_logo_url
-    return static(f"race_logos/{event.race.slug}.png")
+    safe_slug = get_race_logo_slug(event.race.slug)
+    return static(f"race_logos/{safe_slug}.png")
