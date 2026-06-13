@@ -509,6 +509,7 @@ class Series(models.Model):
     slug = models.SlugField()
     event_ids = models.CharField(max_length=64, help_text="Comma-separated list of event IDs")
     show_records = models.BooleanField(default=True)
+    age_grade_enabled = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("year", "slug")

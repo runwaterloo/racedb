@@ -1,0 +1,29 @@
+{
+  "version": "2025.1",
+  "generated_on": "2026-06-13",
+  "sources": [
+    {
+      "name": "Alan Jones Road Age-Grade Tables (2025)",
+      "surface": "road",
+      "url": "https://github.com/AlanLyttonJones/Age-Grade-Tables",
+      "file": "2025 Files/AgeGrade.zip",
+      "license": "CC0 / public domain",
+      "approved": "2025-01-10 (USATF MLDR)",
+      "notes": "Per-distance factor tables (ages 5-99) + open-class M/F standards. Marathon taken from AgeGrade.42k (42.195 km)."
+    },
+    {
+      "name": "WMA 2023 Rulebook Appendix B one-year age factors",
+      "surface": "track",
+      "url": "https://world-masters-athletics.org/wp-content/uploads/2023/02/2023-WMA-Appendix-B.pdf",
+      "notes": "One-year running age factors for 100m-1500m, ages 30-110; ages 20-29 set to factor 1.0 and the table is floored at age 20."
+    },
+    {
+      "name": "World Athletics outdoor world records (open standards)",
+      "surface": "track",
+      "url": "https://worldathletics.org/records/by-category/world-records",
+      "retrieved": "2026-06-13",
+      "notes": "Standard outdoor record used where a short-track variant also exists."
+    }
+  ],
+  "notes": "Committed CSVs are the runtime source of truth; this manifest is bumped on regeneration. Road wins where a distance exists in both surfaces; track applies below the 1-mile (1609.344 m) road floor."
+}
