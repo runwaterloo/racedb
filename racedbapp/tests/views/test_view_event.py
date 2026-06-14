@@ -3,7 +3,7 @@ import types
 import pytest
 from rest_framework.test import APIClient
 
-from racedbapp.models import Result
+from racedbapp.models import Result, Series
 from racedbapp.shared.types import Filter
 from racedbapp.view_event import (
     annotate_isrwfirst,
@@ -20,6 +20,28 @@ def test_event_endpoint_success(create_event):
     url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
     response = client.get(url)
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_event_endpoint_malformed_series_event_ids(create_event):
+    """A Series with blank/non-numeric tokens in event_ids must not 500 the event page.
+
+    Before hardening, ``int("")`` on an empty token (e.g. a trailing comma)
+    raised ValueError, taking down every event page since the view scans all
+    series. The valid id should still link the series despite the junk tokens.
+    """
+    client = APIClient()
+    event = create_event()
+    Series.objects.create(
+        year=event.date.year,
+        name="Malformed Series",
+        slug="malformed-series",
+        event_ids=f"{event.id}, ,notanumber",
+    )
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+    assert b"malformed-series" in response.content
 
 
 @pytest.mark.django_db
