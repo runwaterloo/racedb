@@ -197,6 +197,7 @@ class SeriesAdmin(admin.ModelAdmin):
         "slug",
         "event_ids",
         "show_records",
+        "age_grade_enabled",
     )
 
 

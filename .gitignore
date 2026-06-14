@@ -16,3 +16,6 @@ htmlcov
 report.xml
 secrets.py
 secrets.yml
+openspec
+.claude
+handoffs

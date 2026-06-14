@@ -93,6 +93,8 @@ def create_result(db, create_event, create_category):
         place=1,
         rwmember=None,
         age=None,
+        athlete=None,
+        guntime=datetime.timedelta(seconds=300),
     ):
         if event is None:
             event = create_event(name_suffix=name_suffix)
@@ -101,12 +103,12 @@ def create_result(db, create_event, create_category):
         return Result.objects.create(
             event=event,
             category=category,
-            athlete=f"Test Athlete {name_suffix}",
+            athlete=athlete if athlete is not None else f"Test Athlete {name_suffix}",
             gender=gender,
             age=age,
             city=f"Test City {name_suffix}",
             place=place,
-            guntime=datetime.timedelta(seconds=300),
+            guntime=guntime,
             rwmember=rwmember,
         )
 
@@ -160,6 +162,81 @@ def create_series(db, create_distance, create_race, create_category, create_even
         return Series.objects.create(**series_defaults)
 
     return _create_series
+
+
+@pytest.fixture
+def create_age_grade_series(
+    db, create_distance, create_race, create_category, create_event, create_result, create_rwmember
+):
+    """A two-event (5K + 10K), age-grade-enabled series.
+
+    Athletes exercise every age-cascade branch and the membership rule:
+      * "Fast Runner"   M, Result.age=30, both events  (fastest -> ranks high)
+      * "Senior Runner" M, Result.age=65, both events  (age factor lifts grade)
+      * "Member Runner" F, no age but Rwmember.year_of_birth=1990, both events
+      * "Unknown Age"   F, no age, no member, both events (open standard, kept)
+      * "Missing Event" M, Result.age=40, FIRST event only (excluded)
+    """
+
+    def _build(**kwargs):
+        race = create_race(name_suffix="ag")
+        distance_5k = create_distance(name_suffix="ag5k", km=5)
+        distance_10k = create_distance(name_suffix="ag10k", km=10)
+        event1 = create_event(race=race, distance=distance_5k, name_suffix="ag5k")
+        event2 = create_event(race=race, distance=distance_10k, name_suffix="ag10k")
+        category = create_category(name_suffix="ag")
+
+        member = create_rwmember(name_suffix="agmember")
+        member.year_of_birth = 1990  # age 35 at the 2025 events
+        member.save()
+
+        def mins(value):
+            return datetime.timedelta(minutes=value)
+
+        athletes = [
+            # (athlete, gender, age, rwmember, 5k time, 10k time | None)
+            ("Fast Runner", "M", 30, None, mins(16), mins(33)),
+            ("Senior Runner", "M", 65, None, mins(22), mins(46)),
+            ("Member Runner", "F", None, member, mins(20), mins(42)),
+            ("Unknown Age", "F", None, None, mins(25), mins(52)),
+            ("Missing Event", "M", 40, None, mins(18), None),
+        ]
+        place = 1
+        for athlete, gender, age, rwmember, t1, t2 in athletes:
+            create_result(
+                event=event1,
+                category=category,
+                athlete=athlete,
+                gender=gender,
+                age=age,
+                rwmember=rwmember,
+                place=place,
+                guntime=t1,
+            )
+            if t2 is not None:
+                create_result(
+                    event=event2,
+                    category=category,
+                    athlete=athlete,
+                    gender=gender,
+                    age=age,
+                    rwmember=rwmember,
+                    place=place,
+                    guntime=t2,
+                )
+            place += 1
+
+        series_defaults = dict(
+            year=2025,
+            name="Age Grade Series",
+            slug="age-grade-series",
+            event_ids=f"{event1.id},{event2.id}",
+            age_grade_enabled=True,
+        )
+        series_defaults.update(kwargs)
+        return Series.objects.create(**series_defaults)
+
+    return _build
 
 
 @pytest.fixture
