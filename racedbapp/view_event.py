@@ -113,7 +113,10 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
     series = []
     all_series = Series.objects.all().order_by("year")
     for s in all_series:
-        if event.id in [int(x.strip()) for x in s.event_ids.split(",")]:
+        event_ids = [
+            int(x.strip()) for x in s.event_ids.split(",") if x.strip().isdigit()
+        ]
+        if event.id in event_ids:
             series.append(s)
     process_post(request)
     race_logo_slug = utils.get_race_logo_slug(event.race.slug)
