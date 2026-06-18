@@ -9,12 +9,12 @@ repos:
       hooks:
       -   id: django-upgrade
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.15.16
+    rev: v0.15.17
     hooks:
       - id: ruff
         args: [--fix]  # Optional: automatically fix problems on commit
   - repo: https://github.com/Riverside-Healthcare/djlint
-    rev: v1.39.0
+    rev: v1.39.2
     hooks:
       - id: djlint
         name: djlint lint
