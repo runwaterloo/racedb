@@ -1,4 +1,5 @@
 from datetime import timedelta
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -53,3 +54,22 @@ def test_event_logo_prefers_custom_logo_url(create_event):
     event.custom_logo_url = "http://example.com/logo.png"
     with patch("racedbapp.shared.utils.Path.is_file", return_value=False):
         assert event_logo(event) == "http://example.com/logo.png"
+
+
+def test_event_logo_uses_race_slug_for_relay_view_model():
+    # The relay view passes a flattened EventV with `race_slug` and no `.race`.
+    event = SimpleNamespace(race_slug="test-race-a")
+    with patch("racedbapp.shared.utils.Path.is_file", return_value=True):
+        assert event_logo(event) == "/static/race_logos/test-race-a.png"
+
+
+def test_event_logo_relay_view_model_falls_back_when_file_missing():
+    event = SimpleNamespace(race_slug="does-not-exist")
+    with patch("racedbapp.shared.utils.Path.is_file", return_value=False):
+        assert event_logo(event) == "/static/race_logos/rw-race-logo.png"
+
+
+def test_event_logo_falls_back_when_no_race_info():
+    # Neither a `.race` relation nor a `race_slug` attribute is present.
+    event = SimpleNamespace()
+    assert event_logo(event) == "/static/race_logos/rw-race-logo.png"
