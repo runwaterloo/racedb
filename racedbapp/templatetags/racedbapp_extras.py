@@ -115,5 +115,9 @@ def get_default_record_distance_slug(string):
 def event_logo(event):
     if getattr(event, "custom_logo_url", None):
         return event.custom_logo_url
-    safe_slug = get_race_logo_slug(event.race.slug)
+    # Some views (e.g. relay) pass a flattened view-model without a `.race`
+    # relation but with a `race_slug`; fall back to that before giving up.
+    race = getattr(event, "race", None)
+    slug = race.slug if race else getattr(event, "race_slug", None)
+    safe_slug = get_race_logo_slug(slug)
     return static(f"race_logos/{safe_slug}.png")
