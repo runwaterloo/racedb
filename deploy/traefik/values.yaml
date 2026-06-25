@@ -12,14 +12,16 @@ env:
       secretKeyRef:
         name: cloudflare-secrets
         key: apiToken
-logs:
-  access:
-    enabled: true
-    format: json
-    fields:
-      headers:
-        names:
-          Referer: keep
+log:
+  format: json
+accessLog:
+  enabled: true
+  format: json
+  fields:
+    defaultMode: keep
+  headers:
+    names:
+      Referer: keep
 persistence:
   existingClaim: traefik-pvc
   enabled: true
