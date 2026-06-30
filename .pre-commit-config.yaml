@@ -5,16 +5,16 @@ repos:
       - id: pyupgrade
         exclude: ^migrations/
   -   repo: https://github.com/adamchainz/django-upgrade
-      rev: 1.30.0
+      rev: 1.31.1
       hooks:
       -   id: django-upgrade
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.15.18
+    rev: v0.15.20
     hooks:
       - id: ruff
         args: [--fix]  # Optional: automatically fix problems on commit
   - repo: https://github.com/Riverside-Healthcare/djlint
-    rev: v1.39.2
+    rev: v1.39.5
     hooks:
       - id: djlint
         name: djlint lint
