@@ -14,7 +14,7 @@ repos:
       - id: ruff
         args: [--fix]  # Optional: automatically fix problems on commit
   - repo: https://github.com/Riverside-Healthcare/djlint
-    rev: v1.40.3
+    rev: v1.40.4
     hooks:
       - id: djlint
         name: djlint lint
