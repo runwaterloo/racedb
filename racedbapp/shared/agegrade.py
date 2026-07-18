@@ -15,9 +15,13 @@ Distance resolution:
     * Road wins where a distance exists on both surfaces. The track tables apply
       only below the 1-mile (1609.344 m) road floor.
     * A distance matching a committed anchor uses that anchor's factor directly.
-    * Otherwise the factor (and open standard) are interpolated between the two
-      nearest anchors using **log-distance weighting** ``u = ln(d/d_lo) /
-      ln(d_hi/d_lo)`` and ``age_standard = open_interp / factor_interp``.
+    * Otherwise the standard is interpolated between the two nearest anchors,
+      each quantity on the scale it actually varies with: the per-age
+      **factor** with log-distance weighting ``u = ln(d/d_lo) / ln(d_hi/d_lo)``
+      (Alan Jones' scheme — factors depend on relative distance), and the
+      **open standard** with linear-distance weighting (time grows ~linearly
+      with absolute distance; log weighting overstates it by up to ~17% in the
+      wide mile→5 km gap). Then ``age_standard = open_interp / factor_interp``.
     * A distance outside the committed-anchor span raises ``ValueError``.
 """
 
@@ -146,8 +150,11 @@ def standard_seconds(distance_m, gender, age, default_gender_table=DEFAULT_GENDE
             surface.factor_at(table_gender, d_lo, age) * (1 - u)
             + surface.factor_at(table_gender, d_hi, age) * u
         )
+        # Time scales ~linearly with distance, so the open standard must use a
+        # linear-distance weight, not the factor's log-distance weight.
+        v = (distance_m - d_lo) / (d_hi - d_lo)
         open_seconds = (
-            surface.open[(table_gender, d_lo)] * (1 - u) + surface.open[(table_gender, d_hi)] * u
+            surface.open[(table_gender, d_lo)] * (1 - v) + surface.open[(table_gender, d_hi)] * v
         )
     return open_seconds / factor
 

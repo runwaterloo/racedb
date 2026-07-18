@@ -28,10 +28,17 @@ age (factor `1.0`) resolves to the committed open standard with no sentinel row.
 - Factors are four decimal places, matching the published tables.
 - Road wins where a distance exists on both surfaces; the track tables apply
   only **below the 1-mile (1609.344 m) road floor**.
-- Non-anchor distances are resolved by **log-distance interpolation of the
-  factor** between the two nearest anchors — Alan Jones' verified 2025 scheme,
-  which reproduces his published per-distance tables to ≈0.00005 (vs ≈0.0008 for
-  linear-distance interpolation).
+- Non-anchor distances are resolved by interpolating between the two nearest
+  anchors, each quantity on the scale it varies with:
+  - The per-age **factor** uses **log-distance interpolation** — Alan Jones'
+    verified 2025 scheme, which reproduces his published per-distance tables to
+    ≈0.00005 (vs ≈0.0008 for linear-distance interpolation).
+  - The **open standard** uses **linear-distance interpolation** — time grows
+    ~linearly with distance, so log-distance weighting overstates interpolated
+    times (by ~17% at 3 km in the wide mile→5 km gap, the bug behind
+    inflated e-60 2026 age grades). Linear-distance reconstructs each committed
+    sub-marathon anchor from its neighbours to within ~1.2%, and matches
+    independent calculators (runbundle) on the interpolated open standard.
 
 ## Sources
 
