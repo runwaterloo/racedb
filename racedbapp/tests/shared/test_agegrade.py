@@ -1,10 +1,13 @@
+import csv
 import math
+import os
 
 import pytest
 
 from racedbapp.shared import agegrade
 
 MILE_M = 1609.344
+MARATHON_M = 42195.0
 
 # Published open-class standards (seconds) from the committed reference data.
 OPEN_5K_M = 769.0  # 12:49
@@ -21,6 +24,23 @@ def _factor(distance_m, gender, age):
     return agegrade.standard_seconds(distance_m, gender, None) / agegrade.standard_seconds(
         distance_m, gender, age
     )
+
+
+def _committed_road_opens(gender):
+    """Committed road open standards as ``[(distance_m, open_seconds), ...]``.
+
+    Read straight from the versioned CSV so interpolation tests compare the
+    implementation against the committed ground truth, never against the
+    implementation's own output.
+    """
+    path = os.path.join(agegrade.DATA_DIR, "road_open_standards.csv")
+    with open(path, newline="") as fh:
+        rows = [
+            (float(row["distance_m"]), float(row["open_seconds"]))
+            for row in csv.DictReader(fh)
+            if row["gender"] == gender
+        ]
+    return sorted(rows)
 
 
 # --------------------------------------------------------------------------- #
@@ -76,18 +96,61 @@ def test_log_distance_interpolation_reproduces_published_intermediate():
     assert abs(lin_interp - published_8k) > 1e-4  # linear-distance is worse
 
 
-def test_api_interpolates_between_bracketing_anchors():
-    # 125 km is not an anchor; the 100 km and 150 km anchors are adjacent (no
-    # committed anchor lies between them), so they bracket it.
-    distance = 125000.0
-    d_lo, d_hi = 100000.0, 150000.0
-    o_lo = agegrade.standard_seconds(d_lo, "M", None)
-    o_hi = agegrade.standard_seconds(d_hi, "M", None)
-    f_lo = _factor(d_lo, "M", 50)
-    f_hi = _factor(d_hi, "M", 50)
-    u = math.log(distance / d_lo) / math.log(d_hi / d_lo)
-    expected = (o_lo * (1 - u) + o_hi * u) / (f_lo * (1 - u) + f_hi * u)
-    assert agegrade.standard_seconds(distance, "M", 50) == pytest.approx(expected, rel=1e-9)
+# --------------------------------------------------------------------------- #
+# Open-standard interpolation, validated against ground truth
+#
+# These tests never compare the implementation against its own formula. The
+# ground truths are (a) the committed anchor standards themselves, (b) the
+# physical shape of world-record performances (pace slows as distance grows),
+# and (c) an independent calculator (runbundle.com) built on the same
+# Alan Jones 2025 tables.
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("gender", ["M", "F"])
+def test_open_interpolation_reconstructs_committed_anchors(gender):
+    # Leave-one-out: drop each sub-marathon interior anchor and predict its
+    # committed open standard by linear-distance interpolation between its
+    # neighbours. Worst case is ~1.2% (M marathon from 30 km and 50 km); the
+    # log-distance weighting this replaced missed the M 5 km anchor by +8%.
+    opens = _committed_road_opens(gender)
+    for (d_lo, o_lo), (d_mid, o_mid), (d_hi, o_hi) in zip(opens, opens[1:], opens[2:]):
+        if d_mid > MARATHON_M:
+            break  # ultra anchors are too sparse for a meaningful bound
+        v = (d_mid - d_lo) / (d_hi - d_lo)
+        predicted = o_lo * (1 - v) + o_hi * v
+        assert predicted == pytest.approx(o_mid, rel=0.015), (gender, d_mid)
+
+
+@pytest.mark.parametrize("gender", ["M", "F"])
+def test_open_standard_pace_never_speeds_up_with_distance(gender):
+    # World-best pace per km only slows as the distance grows. The log-distance
+    # bug violated this: it gave a 3 km open standard of 8:45 (2:55/km) versus
+    # 2:34/km at 5 km. Sample every anchor and every inter-anchor midpoint.
+    anchors = [d for d, _ in _committed_road_opens(gender)]
+    samples = sorted(
+        anchors + [math.sqrt(lo * hi) for lo, hi in zip(anchors, anchors[1:])]
+    )
+    paces = [agegrade.standard_seconds(d, gender, None) / d for d in samples]
+    for (d, slower), (d_prev, faster) in zip(
+        zip(samples[1:], paces[1:]), zip(samples, paces)
+    ):
+        assert slower >= faster * (1 - 1e-9), (gender, d_prev, d)
+
+
+def test_3k_open_standard_matches_independent_calculator():
+    # runbundle.com/tools/age-grading-calculator (same Alan Jones 2025 road
+    # tables) reports a 7:29.3 (449.3 s) open-class standard for 3 km road,
+    # consistent with the 7:20.67 track 3000 m world record. The log-distance
+    # bug produced 8:44.8 here.
+    assert agegrade.standard_seconds(3000, "M", None) == pytest.approx(449.3, abs=1.0)
+
+
+def test_3k_age_grade_matches_independent_calculator():
+    # Regression for the e-60 2026 series: M68 running 3 km in 11:50 scored
+    # 99.37 under the log-distance bug. runbundle reports 85.35 for the same
+    # inputs; we get ~85.1 (runbundle interpolates the age factor linearly,
+    # we keep Jones' log-distance factor scheme — a ~0.3 point difference).
+    grade = agegrade.age_grade(3000, "M", 68, 11 * 60 + 50)
+    assert 84.0 < grade < 86.0
 
 
 # --------------------------------------------------------------------------- #
