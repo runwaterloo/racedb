@@ -33,7 +33,7 @@ These instructions are based on Docker Desktop in WSL/Ubuntu. Adapt as needed.
 
 ### Clone the repo
    ```bash
-   git clone git@gitlab.com:sl70176/racedb.git;
+   git clone git@github.com:runwaterloo/racedb.git;
    cd racedb
    ```
 
