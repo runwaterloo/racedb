@@ -9,7 +9,7 @@ from operator import attrgetter
 from django.core.cache import cache
 from django.shortcuts import render
 
-from . import config, view_endurrun, view_member, view_recap
+from . import config, view_endurrun, view_event, view_member, view_recap
 from .models import Config, Endurraceresult, Event, Relay, Result, Rwmember
 from .shared import shared, utils
 
@@ -23,8 +23,8 @@ MemberInfoContext = namedtuple(
 )
 RecapContext = namedtuple(
     "RecapContext",
-    ["results", "event", "type", "distances", "race_logo_slug"],
-    defaults=(None, None, None, None),
+    ["results", "event", "type", "distances", "race_logo_slug", "series"],
+    defaults=(None, None, None, None, None, None),
 )
 FeaturedEventContext = namedtuple(
     "FeaturedEventContext",
@@ -53,6 +53,7 @@ def index(request):
         "recap_event": recap_context.event,
         "recap_race_logo_slug": recap_context.race_logo_slug,
         "recap_results": recap_context.results,
+        "recap_series": recap_context.series,
         "memberinfo": member_info_context,
         "featured_event": featured_event_context.event,
         "featured_race_logo_slug": featured_event_context.race_logo_slug,
@@ -75,7 +76,13 @@ def get_recap_context(asofdate):
     recap_event = get_recap_event(last_race_day_events, recap_type, distances)
     race_logo_slug = utils.get_race_logo_slug(recap_event.race.slug)
     recap_results = get_recap_results(recap_event, recap_type)
-    return RecapContext(recap_results, recap_event, recap_type, distances, race_logo_slug)
+    if recap_type == "combined":
+        recap_series = view_event.get_series(year=recap_event.date.year, race=recap_event.race)
+    else:
+        recap_series = view_event.get_series(event=recap_event)
+    return RecapContext(
+        recap_results, recap_event, recap_type, distances, race_logo_slug, recap_series
+    )
 
 
 def get_last_race_day_events(allResults, asofdate):

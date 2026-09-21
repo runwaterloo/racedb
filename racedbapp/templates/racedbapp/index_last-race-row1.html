@@ -18,6 +18,14 @@
           &nbsp;&nbsp;<a href="https://www.flickr.com/photos/runwaterloo/albums/{{ recap_event.flickrsetid }}"
    target="_blank"><i class="fas fa-camera"></i></a>
         {% endif %}
+        {% if recap_series|length == 1 %}
+          &nbsp;&nbsp;<a href="/series/{{ recap_series.0.slug }}/?year={{ recap_series.0.year }}">{{ recap_series.0.name }}</a>
+        {% elif recap_series|length > 1 %}
+          &nbsp;&nbsp;Series:
+          {% for series in recap_series %}
+            {% if not forloop.first %}| {% endif %}<a href="/series/{{ series.slug }}/?year={{ series.year }}">{{ series.name }}</a>
+          {% endfor %}
+        {% endif %}
       </small>
     </h2>
     <h3>{{ recap_event.race.name }}</h3>
