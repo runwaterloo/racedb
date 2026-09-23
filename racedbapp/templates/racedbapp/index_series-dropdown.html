@@ -1,12 +1,12 @@
 {% if recap_series|length > 0 %}
-  <li class="inactive">
-    <select style="border: 0px;
-                   background-color: white"
-            onchange="location = this.options[this.selectedIndex].value;">
-      <option value="#">Series</option>
-      {% for series in recap_series %}
-        <option value="/series/{{ series.slug }}/?year={{ series.year }}">{{ series.year }} {{ series.name }}</option>
-      {% endfor %}
-    </select>
+  <li>
+    <a href="#" class="series-dropdown">
+      <select onchange="location = this.options[this.selectedIndex].value;">
+        <option value="#">Series</option>
+        {% for series in recap_series %}
+          <option value="/series/{{ series.slug }}/?year={{ series.year }}">{{ series.year }} {{ series.name }}</option>
+        {% endfor %}
+      </select>
+    </a>
   </li>
 {% endif %}

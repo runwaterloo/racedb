@@ -7,6 +7,18 @@
     margin: 0px !important;
 }
 
+.pagination .series-dropdown {
+  padding: 0px 12px;
+}
+
+.pagination .series-dropdown select {
+  height: 32px;
+  padding: 0px 18px 0px 0px;
+  color: #337ab7;
+  background-color: transparent;
+  border: 0px;
+}
+
 .starter-template {
             padding: 60px 0px;
                     text-align: left;
