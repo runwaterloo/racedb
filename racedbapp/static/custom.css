@@ -8,15 +8,29 @@
 }
 
 .pagination .series-dropdown {
-  padding: 0px 12px;
+  position: relative;
 }
 
 .pagination .series-dropdown select {
-  height: 32px;
-  padding: 0px 18px 0px 0px;
-  color: #337ab7;
+  height: 20px;
+  padding: 0px 16px 0px 0px;
+  color: inherit;
   background-color: transparent;
   border: 0px;
+  outline: 0px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.pagination .series-dropdown::after {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  margin-top: -2px;
+  border-top: 4px solid currentColor;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  content: "";
 }
 
 .starter-template {
