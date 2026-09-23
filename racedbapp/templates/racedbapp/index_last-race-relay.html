@@ -9,6 +9,7 @@
         {% for i in distances %}
           <li><a href="/event/{{ recap_event.date.year }}/{{ recap_event.race.slug }}/{{ i.slug }}/">{{ i }}</a></li>
         {% endfor %}
+        {% include "racedbapp/index_series-dropdown.html" %}
       </ul>
       {% if recap_results|length > 4 %}
         <table class="table table-condensed">
