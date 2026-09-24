@@ -35,8 +35,7 @@ def test_view_recap_includes_series_dropdown(create_series):
     assert "<select" in content
     assert '<option value="#">Series</option>' in content
     assert (
-        f'<option value="/series/{series.slug}/?year={series.year}">'
-        f"{series.year} {series.name}</option>"
+        f'<option value="/series/{series.slug}/?year={series.year}">{series.name}</option>'
     ) in content
 
 
@@ -49,8 +48,7 @@ def test_view_recap_series_dropdown_shows_name_only(create_series):
     content = response.content.decode()
 
     assert (
-        f'<option value="/series/{series.slug}/?year={series.year}">'
-        f"{series.name}</option>"
+        f'<option value="/series/{series.slug}/?year={series.year}">{series.name}</option>'
     ) in content
 
 
@@ -65,8 +63,7 @@ def test_view_recap_includes_series_for_any_listed_event(create_series):
     content = response.content.decode()
 
     assert (
-        f'<option value="/series/{series.slug}/?year={series.year}">'
-        f"{series.year} {series.name}</option>"
+        f'<option value="/series/{series.slug}/?year={series.year}">{series.name}</option>'
     ) in content
 
 
@@ -87,11 +84,11 @@ def test_view_recap_includes_multiple_series_in_dropdown(create_series):
     assert content.count('<option value="/series/') == 2
     assert (
         f'<option value="/series/{first_series.slug}/?year={first_series.year}">'
-        f"{first_series.year} {first_series.name}</option>"
+        f"{first_series.name}</option>"
     ) in content
     assert (
         f'<option value="/series/{second_series.slug}/?year={second_series.year}">'
-        f"{second_series.year} {second_series.name}</option>"
+        f"{second_series.name}</option>"
     ) in content
 
 
