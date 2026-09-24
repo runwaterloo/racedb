@@ -76,10 +76,7 @@ def get_recap_context(asofdate):
     recap_event = get_recap_event(last_race_day_events, recap_type, distances)
     race_logo_slug = utils.get_race_logo_slug(recap_event.race.slug)
     recap_results = get_recap_results(recap_event, recap_type)
-    if recap_type == "combined":
-        recap_series = view_event.get_series(year=recap_event.date.year, race=recap_event.race)
-    else:
-        recap_series = view_event.get_series(event=recap_event)
+    recap_series = view_event.get_series(events=last_race_day_events)
     return RecapContext(
         recap_results, recap_event, recap_type, distances, race_logo_slug, recap_series
     )
