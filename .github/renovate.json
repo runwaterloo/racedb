@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "enabledManagers": [
-    "docker",
+    "dockerfile",
     "github-actions",
     "docker-compose",
     "helm-values",
@@ -9,11 +9,11 @@
     "pre-commit"
   ],
   "timezone": "America/Toronto",
-  "schedule": ["0 9 1-7 * 2"],
+  "schedule": ["* 9-10 1-7 * 2"],
   "packageRules": [
     {
       "matchManagers": [
-        "docker",
+        "dockerfile",
         "github-actions",
         "docker-compose",
         "helm-values",
@@ -22,9 +22,7 @@
       ],
       "groupName": "monthly dependency update",
       "groupSlug": "monthly-dependency-update",
-      "commitMessagePrefix": "chore(deps):",
-      "commitMessageAction": "update",
-      "prTitle": "chore(deps): monthly dependency update"
+      "commitMessagePrefix": "chore(deps):"
     }
   ]
 }
