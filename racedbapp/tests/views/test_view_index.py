@@ -41,6 +41,22 @@ def test_view_recap_includes_series_dropdown(create_series):
 
 
 @pytest.mark.django_db
+def test_view_recap_includes_series_for_any_listed_event(create_series):
+    series = create_series()
+    series.event_ids = series.event_ids.split(",", 1)[0]
+    series.save()
+    client = APIClient()
+
+    response = client.get("/?asofdate=2025-01-01")
+    content = response.content.decode()
+
+    assert (
+        f'<option value="/series/{series.slug}/?year={series.year}">'
+        f"{series.year} {series.name}</option>"
+    ) in content
+
+
+@pytest.mark.django_db
 def test_view_recap_includes_multiple_series_in_dropdown(create_series):
     first_series = create_series()
     second_series = Series.objects.create(
