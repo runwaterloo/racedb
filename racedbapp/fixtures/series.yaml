@@ -13,3 +13,17 @@
     name: Test Series 2
     slug: test-series-2
     event_ids: "1,2,3"
+- model: racedbapp.series
+  pk: 3
+  fields:
+    year: 2023
+    name: Test Series 3
+    slug: test-series-3
+    event_ids: "12,23"
+- model: racedbapp.series
+  pk: 4
+  fields:
+    year: 2023
+    name: Test Series 4
+    slug: test-series-4
+    event_ids: "12,22"

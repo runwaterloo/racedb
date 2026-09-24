@@ -176,3 +176,11 @@
     city: Kitchener
     medals: none
     sequel: 1
+- model: racedbapp.event
+  pk: 23
+  fields:
+    race: 2
+    distance: 1
+    date: 2023-10-22
+    city: Waterloo
+    medals: none
