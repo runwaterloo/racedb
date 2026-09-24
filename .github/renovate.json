@@ -1,41 +1,28 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "enabledManagers": ["docker-compose", "helm-values", "pip_requirements"],
+  "enabledManagers": [
+    "dockerfile",
+    "github-actions",
+    "docker-compose",
+    "helm-values",
+    "pip_requirements",
+    "pre-commit"
+  ],
   "timezone": "America/Toronto",
+  "schedule": ["* 9-10 1-7 * 2"],
   "packageRules": [
     {
-      "matchPackageNames": ["redis"],
-      "matchManagers": ["docker-compose", "helm-values"],
-      "groupName": "redis image updates",
-      "commitMessagePrefix": "chore(deps):",
-      "commitMessageAction": "update",
-      "commitMessageExtra": "from {{currentVersion}} to {{newVersion}}"
-    },
-    {
-      "matchManagers": ["pip_requirements"],
-      "matchPackageNames": ["Django"],
-      "matchUpdateTypes": ["patch"]
-    },
-    {
-      "matchManagers": ["pip_requirements"],
-      "matchFileNames": ["requirements/requirements.txt"],
-      "schedule": ["* 9-13 * * *"],
-      "commitMessagePrefix": "chore(deps):",
-      "commitMessageAction": "update",
-      "commitMessageExtra": "from {{currentVersion}} to {{newVersion}}"
-    },
-    {
-      "matchManagers": ["pip_requirements"],
-      "matchFileNames": [
-        "requirements/requirements-dev.txt",
-        "requirements/requirements-test.txt"
+      "matchManagers": [
+        "dockerfile",
+        "github-actions",
+        "docker-compose",
+        "helm-values",
+        "pip_requirements",
+        "pre-commit"
       ],
-      "schedule": ["* 7-13 1-7 * 2"],
-      "commitMessagePrefix": "chore(deps):",
-      "commitMessageAction": "update",
-      "commitMessageExtra": "from {{currentVersion}} to {{newVersion}} [skip build]",
-      "groupName": "test/dev dependencies",
-      "groupSlug": "test-dev-dependencies"
+      "groupName": "monthly dependency update",
+      "groupSlug": "monthly-dependency-update",
+      "commitMessagePrefix": "chore(deps):"
     }
   ]
 }
