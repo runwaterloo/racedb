@@ -23,6 +23,7 @@
 }
 
 .pagination .series-dropdown::after {
+  pointer-events: none;
   position: absolute;
   top: 50%;
   right: 10px;
