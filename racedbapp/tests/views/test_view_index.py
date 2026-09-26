@@ -30,7 +30,7 @@ def test_view_endpoint_success(create_category, create_event, create_result):
 
 
 @pytest.mark.django_db
-def test_upcoming_event_winner_heading_uses_most_recent_previous_event_year(
+def test_event_winner_headings_use_most_recent_previous_event(
     create_event, monkeypatch
 ):
     older_event = create_event(date=datetime.date(2020, 1, 1))
@@ -59,10 +59,18 @@ def test_upcoming_event_winner_heading_uses_most_recent_previous_event_year(
 
     content = render_to_string(
         "racedbapp/index.html",
-        {"future_events": [(upcoming_event, event_data, "test-race")]},
+        {
+            "featured_event": upcoming_event,
+            "featured_event_data": event_data,
+            "future_events": [(upcoming_event, event_data, "test-race")],
+        },
     )
 
     assert f"<th>{previous_event.date.year} Winner</th>" in content
+    assert (
+        f'href="/event/{previous_event.date.year}/{previous_event.race.slug}/'
+        f'{previous_event.distance.slug}/">{previous_event.date.year}</a> Winner'
+    ) in content
 
 
 @pytest.mark.django_db
