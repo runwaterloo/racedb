@@ -1,4 +1,8 @@
+import datetime
+from types import SimpleNamespace
+
 import pytest
+from django.template.loader import render_to_string
 from rest_framework.test import APIClient
 
 from racedbapp.models import Series
@@ -22,6 +26,29 @@ def test_view_endpoint_success(create_category, create_event, create_result):
     url = "/"
     response = client.get(url)
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_upcoming_event_winner_heading_uses_previous_year(create_event):
+    upcoming_event = create_event(date=datetime.date.today() + datetime.timedelta(days=30))
+    winner = SimpleNamespace(
+        demographic="Female",
+        last_year_winning_member=None,
+        last_year_winning_athlete="Previous Winner",
+        last_year_winning_time=datetime.timedelta(minutes=20),
+        record_member=None,
+        record_athlete="Record Holder",
+        record_time=datetime.timedelta(minutes=19),
+        record_year=2024,
+        event=upcoming_event,
+    )
+
+    content = render_to_string(
+        "racedbapp/index.html",
+        {"future_events": [(upcoming_event, [winner], "test-race")]},
+    )
+
+    assert f"<th>{upcoming_event.date.year - 1} Winner</th>" in content
 
 
 @pytest.mark.django_db
