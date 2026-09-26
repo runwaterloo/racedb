@@ -7,6 +7,33 @@
     margin: 0px !important;
 }
 
+.pagination .series-dropdown {
+  position: relative;
+}
+
+.pagination .series-dropdown select {
+  height: 20px;
+  padding: 0px 16px 0px 0px;
+  color: inherit;
+  background-color: transparent;
+  border: 0px;
+  outline: 0px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.pagination .series-dropdown::after {
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  margin-top: -2px;
+  border-top: 4px solid currentColor;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  content: "";
+}
+
 .starter-template {
             padding: 60px 0px;
                     text-align: left;

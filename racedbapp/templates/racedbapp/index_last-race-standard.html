@@ -21,12 +21,13 @@
             </a>
           </li>
         {% endfor %}
+        {% include "racedbapp/index_series-dropdown.html" %}
       </ul>
       <table class="table">
         <tr class="info">
           <th>Place</th>
-          <th colspan=2>Female</th>
-          <th colspan=2>Male</th>
+          <th colspan="2">Female</th>
+          <th colspan="2">Male</th>
         </tr>
         {% for r in recap_results %}
           <tr>

@@ -45,6 +45,25 @@ def test_event_endpoint_malformed_series_event_ids(create_event):
 
 
 @pytest.mark.django_db
+def test_event_endpoint_excludes_series_for_other_event(create_event, create_distance, create_race):
+    client = APIClient()
+    race = create_race()
+    event = create_event(race=race)
+    other_event = create_event(race=race, distance=create_distance(name_suffix="other"))
+    Series.objects.create(
+        year=other_event.date.year,
+        name="Other Event Series",
+        slug="other-event-series",
+        event_ids=str(other_event.id),
+    )
+
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    response = client.get(url)
+
+    assert b"other-event-series" not in response.content
+
+
+@pytest.mark.django_db
 def test_event_endpoint_missing():
     client = APIClient()
     url = "/event/2025/fake-race/fake-event/"

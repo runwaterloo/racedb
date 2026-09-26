@@ -39,6 +39,26 @@ from .shared import shared, utils
 named_split = namedtuple("ns", ["split_num", "split_time"])
 
 
+def get_series(event=None, events=None, year=None, race=None):
+    series = []
+    all_series = Series.objects.all().order_by("year")
+    event_ids = {current_event.id for current_event in events} if events is not None else set()
+    for current_series in all_series:
+        series_event_ids = [
+            int(x.strip()) for x in current_series.event_ids.split(",") if x.strip().isdigit()
+        ]
+        if event is not None and event.id in series_event_ids:
+            series.append(current_series)
+        elif events is not None and event_ids.intersection(series_event_ids):
+            series.append(current_series)
+        elif event is None and year is not None and race is not None:
+            if Event.objects.filter(
+                id__in=series_event_ids, date__year=year, race_id=race.id
+            ).exists():
+                series.append(current_series)
+    return series
+
+
 def index(request, year, race_slug, distance_slug, sequel_slug=None):
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
     page = get_page(qstring)
@@ -110,14 +130,7 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
         x.guntime.microseconds for x in all_results if x.guntime.microseconds != 0
     }
     ad = get_ad()
-    series = []
-    all_series = Series.objects.all().order_by("year")
-    for s in all_series:
-        event_ids = [
-            int(x.strip()) for x in s.event_ids.split(",") if x.strip().isdigit()
-        ]
-        if event.id in event_ids:
-            series.append(s)
+    series = get_series(event=event)
     process_post(request)
     race_logo_slug = utils.get_race_logo_slug(event.race.slug)
     context = {
