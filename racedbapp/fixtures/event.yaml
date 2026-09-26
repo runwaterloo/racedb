@@ -184,3 +184,11 @@
     date: 2023-10-22
     city: Waterloo
     medals: none
+- model: racedbapp.event
+  pk: 24
+  fields:
+    race: 2
+    distance: 2
+    date: 2026-10-18
+    city: Waterloo
+    medals: none
