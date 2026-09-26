@@ -275,6 +275,7 @@ def get_event_data(event):
     for i in featured_event_records:
         row = UpcomingEvent()
         row.event = event
+        row.previous_event_year = previous_event.date.year
         row.demographic = i.place
         row.record_athlete = i.athlete
         row.record_member = i.member

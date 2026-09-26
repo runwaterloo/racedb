@@ -5,6 +5,7 @@ import pytest
 from django.template.loader import render_to_string
 from rest_framework.test import APIClient
 
+from racedbapp import view_index
 from racedbapp.models import Series
 
 
@@ -29,26 +30,41 @@ def test_view_endpoint_success(create_category, create_event, create_result):
 
 
 @pytest.mark.django_db
-def test_upcoming_event_winner_heading_uses_previous_year(create_event):
-    upcoming_event = create_event(date=datetime.date.today() + datetime.timedelta(days=30))
-    winner = SimpleNamespace(
-        demographic="Female",
-        last_year_winning_member=None,
-        last_year_winning_athlete="Previous Winner",
-        last_year_winning_time=datetime.timedelta(minutes=20),
-        record_member=None,
-        record_athlete="Record Holder",
-        record_time=datetime.timedelta(minutes=19),
-        record_year=2024,
-        event=upcoming_event,
+def test_upcoming_event_winner_heading_uses_most_recent_previous_event_year(
+    create_event, monkeypatch
+):
+    older_event = create_event(date=datetime.date(2020, 1, 1))
+    previous_event = create_event(
+        date=datetime.date(2022, 1, 1), race=older_event.race, distance=older_event.distance
     )
+    upcoming_event = create_event(
+        date=datetime.date(2030, 1, 1), race=older_event.race, distance=older_event.distance
+    )
+    record = SimpleNamespace(
+        place="Female",
+        athlete="Record Holder",
+        member=None,
+        guntime=datetime.timedelta(minutes=19),
+        year=2019,
+    )
+    previous_winner = SimpleNamespace(
+        female_athlete="Previous Winner",
+        female_member_slug=None,
+        female_time=datetime.timedelta(minutes=20),
+    )
+    monkeypatch.setattr(view_index, "get_recap_results_standard", lambda event: [previous_winner])
+    monkeypatch.setattr(
+        view_index.shared, "get_race_records", lambda *args, **kwargs: [record]
+    )
+
+    event_data = view_index.get_event_data(upcoming_event)
 
     content = render_to_string(
         "racedbapp/index.html",
-        {"future_events": [(upcoming_event, [winner], "test-race")]},
+        {"future_events": [(upcoming_event, event_data, "test-race")]},
     )
 
-    assert f"<th>{upcoming_event.date.year - 1} Winner</th>" in content
+    assert f"<th>{previous_event.date.year} Winner</th>" in content
 
 
 @pytest.mark.django_db
