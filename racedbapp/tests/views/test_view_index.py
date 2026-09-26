@@ -30,9 +30,7 @@ def test_view_endpoint_success(create_category, create_event, create_result):
 
 
 @pytest.mark.django_db
-def test_event_winner_headings_use_most_recent_previous_event(
-    create_event, monkeypatch
-):
+def test_event_winner_headings_use_most_recent_previous_event(create_event, monkeypatch):
     older_event = create_event(date=datetime.date(2020, 1, 1))
     previous_event = create_event(
         date=datetime.date(2022, 1, 1), race=older_event.race, distance=older_event.distance
