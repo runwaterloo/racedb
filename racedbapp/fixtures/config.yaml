@@ -1,0 +1,5 @@
+- model: racedbapp.config
+  pk: 1
+  fields:
+    name: homepage_featured_event_id
+    value: "24"
