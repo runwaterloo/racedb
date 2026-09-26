@@ -53,9 +53,7 @@ def test_upcoming_event_winner_heading_uses_most_recent_previous_event_year(
         female_time=datetime.timedelta(minutes=20),
     )
     monkeypatch.setattr(view_index, "get_recap_results_standard", lambda event: [previous_winner])
-    monkeypatch.setattr(
-        view_index.shared, "get_race_records", lambda *args, **kwargs: [record]
-    )
+    monkeypatch.setattr(view_index.shared, "get_race_records", lambda *args, **kwargs: [record])
 
     event_data = view_index.get_event_data(upcoming_event)
 
