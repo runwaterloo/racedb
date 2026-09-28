@@ -1,7 +1,13 @@
+import datetime
+from types import SimpleNamespace
+
 import pytest
+from django.template.loader import render_to_string
+from django.test import Client
 from rest_framework.test import APIClient
 
-from racedbapp.models import Series
+from racedbapp import view_index
+from racedbapp.models import Config, Series
 
 
 @pytest.mark.django_db
@@ -22,6 +28,71 @@ def test_view_endpoint_success(create_category, create_event, create_result):
     url = "/"
     response = client.get(url)
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_featured_event_without_previous_event_uses_unlinked_year_heading(create_event):
+    event = create_event(date=datetime.date.today() + datetime.timedelta(days=30))
+    Config.objects.bulk_create([Config(name="homepage_featured_event_id", value=str(event.id))])
+    client = Client(raise_request_exception=False)
+
+    response = client.get(f"/?asofdate={event.date.isoformat()}")
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert f"<th>{event.date.year - 1} Winner</th>" in content
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("with_sequel", [False, True])
+def test_event_winner_headings_use_most_recent_previous_event(
+    create_event, create_sequel, monkeypatch, with_sequel
+):
+    older_event = create_event(date=datetime.date(2020, 1, 1))
+    previous_event = create_event(
+        date=datetime.date(2022, 1, 1),
+        race=older_event.race,
+        distance=older_event.distance,
+        sequel=create_sequel() if with_sequel else None,
+    )
+    upcoming_event = create_event(
+        date=datetime.date(2030, 1, 1), race=older_event.race, distance=older_event.distance
+    )
+    record = SimpleNamespace(
+        place="Female",
+        athlete="Record Holder",
+        member=None,
+        guntime=datetime.timedelta(minutes=19),
+        year=2019,
+    )
+    previous_winner = SimpleNamespace(
+        female_athlete="Previous Winner",
+        female_member_slug=None,
+        female_time=datetime.timedelta(minutes=20),
+    )
+    monkeypatch.setattr(view_index, "get_recap_results_standard", lambda event: [previous_winner])
+    monkeypatch.setattr(view_index.shared, "get_race_records", lambda *args, **kwargs: [record])
+
+    event_data = view_index.get_event_data(upcoming_event)
+
+    content = render_to_string(
+        "racedbapp/index.html",
+        {
+            "featured_event": upcoming_event,
+            "featured_event_data": event_data,
+            "future_events": [(upcoming_event, event_data, "test-race")],
+        },
+    )
+
+    upcoming_section = content.split("<strong>UPCOMING EVENTS</strong>", 1)[1].split(
+        "All Future Events", 1
+    )[0]
+    sequel_path = f"{previous_event.sequel.slug}/" if previous_event.sequel else ""
+    expected_event_link = (
+        f'href="/event/{previous_event.date.year}/{previous_event.race.slug}/'
+        f'{previous_event.distance.slug}/{sequel_path}">{previous_event.date.year}</a> Winner'
+    )
+    assert expected_event_link in upcoming_section
 
 
 @pytest.mark.django_db
