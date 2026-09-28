@@ -267,6 +267,8 @@ def get_event_data(event):
         .order_by("-date")
         .first()
     )
+    if previous_event is None:
+        return None
     previous_event_recap = get_recap_results_standard(previous_event)
     featured_event_records = shared.get_race_records(
         event.race, event.distance, individual_only=True

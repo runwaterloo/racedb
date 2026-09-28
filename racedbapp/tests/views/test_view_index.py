@@ -3,10 +3,11 @@ from types import SimpleNamespace
 
 import pytest
 from django.template.loader import render_to_string
+from django.test import Client
 from rest_framework.test import APIClient
 
 from racedbapp import view_index
-from racedbapp.models import Series
+from racedbapp.models import Config, Series
 
 
 @pytest.mark.django_db
@@ -27,6 +28,19 @@ def test_view_endpoint_success(create_category, create_event, create_result):
     url = "/"
     response = client.get(url)
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_featured_event_without_previous_event_uses_unlinked_year_heading(create_event):
+    event = create_event(date=datetime.date.today() + datetime.timedelta(days=30))
+    Config.objects.bulk_create([Config(name="homepage_featured_event_id", value=str(event.id))])
+    client = Client(raise_request_exception=False)
+
+    response = client.get(f"/?asofdate={event.date.isoformat()}")
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert f"<th>{event.date.year - 1} Winner</th>" in content
 
 
 @pytest.mark.django_db
