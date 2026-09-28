@@ -44,10 +44,16 @@ def test_featured_event_without_previous_event_uses_unlinked_year_heading(create
 
 
 @pytest.mark.django_db
-def test_event_winner_headings_use_most_recent_previous_event(create_event, monkeypatch):
+@pytest.mark.parametrize("with_sequel", [False, True])
+def test_event_winner_headings_use_most_recent_previous_event(
+    create_event, create_sequel, monkeypatch, with_sequel
+):
     older_event = create_event(date=datetime.date(2020, 1, 1))
     previous_event = create_event(
-        date=datetime.date(2022, 1, 1), race=older_event.race, distance=older_event.distance
+        date=datetime.date(2022, 1, 1),
+        race=older_event.race,
+        distance=older_event.distance,
+        sequel=create_sequel() if with_sequel else None,
     )
     upcoming_event = create_event(
         date=datetime.date(2030, 1, 1), race=older_event.race, distance=older_event.distance
@@ -78,11 +84,15 @@ def test_event_winner_headings_use_most_recent_previous_event(create_event, monk
         },
     )
 
-    assert f"<th>{previous_event.date.year} Winner</th>" in content
-    assert (
+    upcoming_section = content.split("<strong>UPCOMING EVENTS</strong>", 1)[1].split(
+        "All Future Events", 1
+    )[0]
+    sequel_path = f"{previous_event.sequel.slug}/" if previous_event.sequel else ""
+    expected_event_link = (
         f'href="/event/{previous_event.date.year}/{previous_event.race.slug}/'
-        f'{previous_event.distance.slug}/">{previous_event.date.year}</a> Winner'
-    ) in content
+        f'{previous_event.distance.slug}/{sequel_path}">{previous_event.date.year}</a> Winner'
+    )
+    assert expected_event_link in upcoming_section
 
 
 @pytest.mark.django_db

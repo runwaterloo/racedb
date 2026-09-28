@@ -238,7 +238,18 @@
         <table class="table table-condensed">
           <tr class="info">
             <th>Demographic</th>
-            <th>{{ fe.1.0.previous_event_year }} Winner</th>
+            {% with previous_event=fe.1.0.previous_event %}
+              {% if previous_event %}
+                {% if previous_event.sequel %}
+                  {% url 'event' previous_event.date.year previous_event.race.slug previous_event.distance.slug previous_event.sequel.slug as previous_event_url %}
+                {% else %}
+                  {% url 'event' previous_event.date.year previous_event.race.slug previous_event.distance.slug as previous_event_url %}
+                {% endif %}
+                <th><a href="{{ previous_event_url }}">{{ previous_event.date.year }}</a> Winner</th>
+              {% else %}
+                <th>{{ fe.1.0.previous_event_year }} Winner</th>
+              {% endif %}
+            {% endwith %}
             <th>Time</th>
             <th>Record Holder</th>
             <th>Time</th>
