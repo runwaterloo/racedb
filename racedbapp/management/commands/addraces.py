@@ -320,6 +320,7 @@ class Command(BaseCommand):
             # Process PBs
             info = "Processed PBs for {} ({})".format(event, event.id)
             logger.info(info)
+            # Import events sharing a distance and date in chronological order.
             process_rwpbs(e)
         if len(endurrace_years) > 0:
             slack_results = process_endurrace(set(endurrace_years), slack_results)
@@ -579,10 +580,10 @@ def process_rwpbs(event):
         .values_list("rwmember_id", flat=True)
     )
     previous_results = Result.objects.filter(
-        event__date__lt=event.date,
+        event__date__lte=event.date,
         event__distance=event.distance,
         rwmember_id__in=members,
-    ).order_by("event__date")
+    ).exclude(event=event).order_by("event__date", "event__id")
     for i in previous_results:
         if i.rwmember_id in rwpbs:
             if i.guntime < rwpbs[i.rwmember_id]:
@@ -593,7 +594,9 @@ def process_rwpbs(event):
         event__date__gte=event.date,
         event__distance=event.distance,
         rwmember_id__in=members,
-    ).order_by("event__date")
+    ).exclude(event__date=event.date, event__id__lt=event.id).order_by(
+        "event__date", "event__id"
+    )
     for i in future_results:
         i.isrwpb = False
         if i.event.distance.slug != "roughly-five" and i.event.id not in pb_exclude_events:

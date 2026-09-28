@@ -1,3 +1,4 @@
+import datetime
 import types
 from unittest import mock
 
@@ -8,7 +9,9 @@ from racedbapp.management.commands.addraces import (
     get_extra_dict,
     get_member,
     get_results_from_google,
+    process_rwpbs,
 )
+from racedbapp.membership import update_membership
 from racedbapp.models import Result
 
 
@@ -65,6 +68,90 @@ def test_get_member_logic():
     assert get_member(event, result, membership) is None  # Excluded
     # Not found
     assert get_member(event, {"athlete": "Bob", "place": 1}, membership) is None
+
+
+def test_process_rwpbs_same_day_events_preserves_prior_pb(
+    create_distance,
+    create_race,
+    create_event,
+    create_category,
+    create_rwmember,
+    create_result,
+    create_sequel,
+):
+    distance = create_distance(km=5)
+    race = create_race()
+    event_date = datetime.date(2026, 1, 1)
+    first_event = create_event(date=event_date, race=race, distance=distance)
+    second_event = create_event(
+        date=event_date,
+        race=race,
+        distance=distance,
+        sequel=create_sequel(),
+        name_suffix="second",
+    )
+    category = create_category()
+    slower_member = create_rwmember(name_suffix="slower")
+    faster_member = create_rwmember(name_suffix="faster")
+
+    slower_first = create_result(
+        event=first_event,
+        category=category,
+        athlete=slower_member.name,
+        rwmember=slower_member,
+        guntime=datetime.timedelta(minutes=25),
+    )
+    faster_first = create_result(
+        event=first_event,
+        category=category,
+        athlete=faster_member.name,
+        rwmember=faster_member,
+        place=2,
+        guntime=datetime.timedelta(minutes=25),
+    )
+    process_rwpbs(first_event)
+    slower_first.refresh_from_db()
+    faster_first.refresh_from_db()
+    assert slower_first.isrwpb is True
+    assert faster_first.isrwpb is True
+
+    slower_second = create_result(
+        event=second_event,
+        category=category,
+        athlete=slower_member.name,
+        rwmember=slower_member,
+        guntime=datetime.timedelta(minutes=26),
+    )
+    faster_second = create_result(
+        event=second_event,
+        category=category,
+        athlete=faster_member.name,
+        rwmember=faster_member,
+        place=2,
+        guntime=datetime.timedelta(minutes=24),
+    )
+
+    process_rwpbs(second_event)
+
+    slower_first.refresh_from_db()
+    faster_first.refresh_from_db()
+    slower_second.refresh_from_db()
+    faster_second.refresh_from_db()
+    assert slower_first.isrwpb is True
+    assert faster_first.isrwpb is True
+    assert slower_second.isrwpb is False
+    assert faster_second.isrwpb is True
+
+    update_membership(slower_member)
+    update_membership(faster_member)
+    slower_first.refresh_from_db()
+    faster_first.refresh_from_db()
+    slower_second.refresh_from_db()
+    faster_second.refresh_from_db()
+    assert slower_first.isrwpb is True
+    assert faster_first.isrwpb is True
+    assert slower_second.isrwpb is False
+    assert faster_second.isrwpb is True
 
 
 def test_get_results_from_google():
