@@ -579,23 +579,29 @@ def process_rwpbs(event):
         .filter(event=event, rwmember__isnull=False)
         .values_list("rwmember_id", flat=True)
     )
-    previous_results = Result.objects.filter(
-        event__date__lte=event.date,
-        event__distance=event.distance,
-        rwmember_id__in=members,
-    ).exclude(event=event).order_by("event__date", "event__id")
+    previous_results = (
+        Result.objects.filter(
+            event__date__lte=event.date,
+            event__distance=event.distance,
+            rwmember_id__in=members,
+        )
+        .exclude(event=event)
+        .order_by("event__date", "event__id")
+    )
     for i in previous_results:
         if i.rwmember_id in rwpbs:
             if i.guntime < rwpbs[i.rwmember_id]:
                 rwpbs[i.rwmember_id] = i.guntime
         else:
             rwpbs[i.rwmember_id] = i.guntime
-    future_results = Result.objects.filter(
-        event__date__gte=event.date,
-        event__distance=event.distance,
-        rwmember_id__in=members,
-    ).exclude(event__date=event.date, event__id__lt=event.id).order_by(
-        "event__date", "event__id"
+    future_results = (
+        Result.objects.filter(
+            event__date__gte=event.date,
+            event__distance=event.distance,
+            rwmember_id__in=members,
+        )
+        .exclude(event__date=event.date, event__id__lt=event.id)
+        .order_by("event__date", "event__id")
     )
     for i in future_results:
         i.isrwpb = False

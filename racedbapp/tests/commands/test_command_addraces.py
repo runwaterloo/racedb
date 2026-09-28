@@ -163,8 +163,8 @@ def test_get_results_from_google():
         mock_ws_team = mock.Mock()
         mock_ws_ind.get_all_records.return_value = [{"a": 1}]
         mock_ws_team.get_all_records.return_value = [{"b": 2}]
-        mock_sh.worksheet.side_effect = (
-            lambda name: mock_ws_ind if name == "individual" else mock_ws_team
+        mock_sh.worksheet.side_effect = lambda name: (
+            mock_ws_ind if name == "individual" else mock_ws_team
         )
         mock_sh.worksheets.return_value = [
             types.SimpleNamespace(title="individual"),
