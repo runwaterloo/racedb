@@ -10,6 +10,7 @@ from racedbapp.view_event import (
     filter_results_by_category,
     get_category_filter,
     get_division_count,
+    get_event_json,
 )
 
 
@@ -79,6 +80,22 @@ def test_event_endpoint_sequel(create_event, create_sequel):
     url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/{event.sequel.slug}/"
     response = client.get(url)
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_event_json_flickr_search_string_includes_sequel(
+    create_event, create_race, create_distance, create_sequel
+):
+    race = create_race()
+    race.slug = "sport"
+    race.save()
+    distance = create_distance()
+    distance.slug = "10-km"
+    distance.save()
+    sequel = create_sequel(slug="stage-4-doubleheader")
+    event = create_event(date="2026-01-01", race=race, distance=distance, sequel=sequel)
+
+    assert get_event_json(event).flickrsearchstr == "2026sport10kmstage4doubleheader"
 
 
 @pytest.mark.django_db
