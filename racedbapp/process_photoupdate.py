@@ -86,9 +86,7 @@ def get_events(qsdate):
         day = now.day
         month_ago = today - timedelta(days=31)
         two_years_ago = today - timedelta(days=730)
-        events = list(
-            Event.objects.filter(date__gte=month_ago).exclude(flickrsetid=None)
-        )
+        events = list(Event.objects.filter(date__gte=month_ago).exclude(flickrsetid=None))
         if hour in range(6):
             months = {
                 0: (1, 2, 3),
@@ -112,9 +110,7 @@ def get_events(qsdate):
             all_anniversary_events = Event.objects.filter(
                 date__lt=two_years_ago, date__day=day
             ).exclude(flickrsetid=None)
-            anniversary_events = [
-                x for x in all_anniversary_events if x.date.year % 6 == hour
-            ]
+            anniversary_events = [x for x in all_anniversary_events if x.date.year % 6 == hour]
             events = events + past_two_years_events + anniversary_events
         else:
             logger.info("Auto checking events past month")
@@ -154,39 +150,25 @@ def update_event_tags(events):
         mtagnums = [x.lstrip("m") for x in tags if ismtag(x)]
         oldtags = Phototag.objects.filter(event=event).values_list("tag", flat=True)
         if len(tags) == 0:
-            logger.info(
-                "No tags found for {} ({}). No changes made.".format(event, event.id)
-            )
+            logger.info("No tags found for {} ({}). No changes made.".format(event, event.id))
         elif list(event_ntags) == list(oldtags):
-            logger.info(
-                "{} tags unchanged for {} ({})".format(
-                    len(event_ntags), event, event.id
-                )
-            )
+            logger.info("{} tags unchanged for {} ({})".format(len(event_ntags), event, event.id))
         else:
             dbtags = []
             for t in event_ntags:
                 dbtags.append(Phototag(event=event, tag=t))
             Phototag.objects.filter(event=event).delete()
             Phototag.objects.bulk_create(dbtags)
-            logger.info(
-                "{} tags processed for {} ({})".format(
-                    len(event_ntags), event, event.id
-                )
-            )
+            logger.info("{} tags processed for {} ({})".format(len(event_ntags), event, event.id))
         nophotomembers = list(
-            Rwmember.objects.filter(active=True, hasphotos=False).values_list(
-                "id", flat=True
-            )
+            Rwmember.objects.filter(active=True, hasphotos=False).values_list("id", flat=True)
         )
         for m in mtagnums:
             if int(m) in nophotomembers:
                 member = Rwmember.objects.get(id=m)
                 member.hasphotos = True
                 member.save()
-                logger.info(
-                    "Set hasphotos to true for member {} ({})".format(member, m)
-                )
+                logger.info("Set hasphotos to true for member {} ({})".format(member, m))
         results.append(
             named_result(
                 event,
@@ -203,10 +185,13 @@ def update_event_tags(events):
 
 def get_event_photos(event):
     photos = []
+    search_tag = "{}{}{}".format(event.date.year, event.race.slug, event.distance.slug)
+    if event.sequel:
+        search_tag += event.sequel.slug
     photos_page1 = flickr.photos.search(
         user_id=runwaterloo_flickr_id,
         tag_mode="all",
-        tags="{}{}{}".format(event.date.year, event.race.slug, event.distance.slug),
+        tags=search_tag,
         per_page=photos_per_page,
         extras="tags",
     )
@@ -219,7 +204,7 @@ def get_event_photos(event):
         photos_pageX = flickr.photos.search(
             user_id=runwaterloo_flickr_id,
             tag_mode="all",
-            tags="{}{}{}".format(event.date.year, event.race.slug, event.distance.slug),
+            tags=search_tag,
             per_page=photos_per_page,
             page=page,
             extras="tags",
@@ -265,8 +250,7 @@ def do_tags(photos, event):
             newtags = flickr.photos.addtags(photo_id=i[0], tags=i[1])
         except Exception as e:
             logger.error(
-                "Unable to add tags to "
-                "https://www.flickr.com/photos/runwaterloo/{}/".format(i[0])
+                "Unable to add tags to https://www.flickr.com/photos/runwaterloo/{}/".format(i[0])
             )
             logger.error("flickrapi.exceptions.FlickrError: {}".format(e))
         else:
@@ -290,9 +274,9 @@ def get_bib2member(event):
         if member:
             bib2member[r.bib] = member.id
     if member_assumption:
-        membersasof = Rwmember.objects.filter(
-            active=True, joindate__lte=event.date
-        ).values_list("id", flat=True)
+        membersasof = Rwmember.objects.filter(active=True, joindate__lte=event.date).values_list(
+            "id", flat=True
+        )
         for m in membersasof:
             bib2member[str(m)] = m
     return bib2member
