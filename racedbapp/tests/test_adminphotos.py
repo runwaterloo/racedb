@@ -38,4 +38,4 @@ def test_adminphotos_distinguishes_sequel_event(
         in content
     )
     assert 'href="/event/2025/test-race-adminphotos/test-distance-adminphotos/stage-two"' in content
-    assert ">2025 Race Short Test Distance adminphotos stage-two</a>" in content
+    assert ">2025 Race Short Stage Two</a>" in content
