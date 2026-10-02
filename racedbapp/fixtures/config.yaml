@@ -3,3 +3,8 @@
   fields:
     name: homepage_featured_event_id
     value: "24"
+- model: racedbapp.config
+  pk: 2
+  fields:
+    name: notifykey
+    value: "notifykey"
