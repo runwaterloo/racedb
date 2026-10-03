@@ -123,7 +123,10 @@ if os.getenv("SETTINGS", "none") == "prod":
 elif os.getenv("SETTINGS", "none") == "dev":
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": "redis://racedbdev-redis:6379/1",
+            "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+            "TIMEOUT": 5,
         }
     }
     CELERY_BROKER_URL = "redis://racedbdev-redis:6379"
@@ -142,7 +145,9 @@ else:
     }
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-snowflake",
+            "TIMEOUT": 5,
         }
     }
 
