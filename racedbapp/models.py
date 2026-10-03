@@ -60,7 +60,7 @@ class ResultQuerySet(models.QuerySet):
             femaletime = topfemale.guntime
             female_member_slug = None
             female_member = topfemale.rwmember
-            if female_member:
+            if female_member and female_member.active:
                 female_member_slug = female_member.slug
             topfemale_athlete = topfemale.athlete
         else:
@@ -69,7 +69,7 @@ class ResultQuerySet(models.QuerySet):
             maletime = topmale.guntime
             male_member_slug = None
             male_member = topmale.rwmember
-            if male_member:
+            if male_member and male_member.active:
                 male_member_slug = male_member.slug
             topmale_athlete = topmale.athlete
         else:
