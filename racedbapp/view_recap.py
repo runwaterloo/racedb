@@ -52,7 +52,7 @@ def index(request, year, race_slug, distance_slug, individual_only=False):
             male_result = results.get(place=male_prime.place)
             male_member_slug = None
             male_member = male_result.rwmember
-            if male_member:
+            if male_member and male_member.active:
                 male_member_slug = male_member.slug
             female_prime = Prime.objects.filter(event=event, gender="F").order_by("time", "place")[
                 :1
@@ -60,7 +60,7 @@ def index(request, year, race_slug, distance_slug, individual_only=False):
             female_result = results.get(place=female_prime.place)
             female_member_slug = None
             female_member = female_result.rwmember
-            if female_member:
+            if female_member and female_member.active:
                 female_member_slug = female_member.slug
             hill_results.append(
                 namediresult(
@@ -104,10 +104,12 @@ def get_individual_results(event, results, hasmasters, distance_slug, year=False
             female_member_slug = None
             if distance_slug != "combined":
                 female_member = female_results[i - 1].rwmember
+                if female_member and female_member.active:
+                    female_member_slug = female_member.slug
             else:
                 female_member = get_member_endurrace(female_results[i - 1], membership)
-            if female_member:
-                female_member_slug = female_member.slug
+                if female_member:
+                    female_member_slug = female_member.slug
             female_athlete = female_results[i - 1].athlete
         else:
             female_athlete = female_time = female_member_slug = None
@@ -117,10 +119,12 @@ def get_individual_results(event, results, hasmasters, distance_slug, year=False
             male_member_slug = None
             if distance_slug != "combined":
                 male_member = male_results[i - 1].rwmember
+                if male_member and male_member.active:
+                    male_member_slug = male_member.slug
             else:
                 male_member = get_member_endurrace(male_results[i - 1], membership)
-            if male_member:
-                male_member_slug = male_member.slug
+                if male_member:
+                    male_member_slug = male_member.slug
             male_athlete = male_results[i - 1].athlete
         else:
             male_athlete = male_time = male_member_slug = None
