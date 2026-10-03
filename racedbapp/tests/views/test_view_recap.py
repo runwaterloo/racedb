@@ -9,20 +9,20 @@ from racedbapp.models import Prime, Result
 def baden_road_recap_with_inactive_member(
     create_category, create_event, create_race, create_distance, create_result, create_rwmember
 ):
-    race = create_race(name_suffix="inactive-recap")
+    race = create_race(name_suffix="inactive")
     race.slug = "baden-road-races"
     race.save()
-    distance = create_distance(name_suffix="inactive-recap")
+    distance = create_distance(name_suffix="inactive")
     distance.slug = "7-mi"
     distance.save()
     event = create_event(
-        name_suffix="inactive-recap",
+        name_suffix="inactive",
         date="2025-01-01",
         race=race,
         distance=distance,
     )
-    category = create_category(name_suffix="inactive-recap", is_masters=True)
-    member = create_rwmember(name_suffix="inactive-recap", active=False)
+    category = create_category(name_suffix="inact", is_masters=True)
+    member = create_rwmember(name_suffix="inactive", active=False)
     female_result = create_result(
         event=event, category=category, gender="F", place=1, rwmember=member
     )
