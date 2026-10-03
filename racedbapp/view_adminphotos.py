@@ -4,6 +4,7 @@ from django.db.models import Count
 from django.shortcuts import redirect, render
 
 from .models import Config, Event, Phototag
+from .shared.shared import set_distance_display_name
 
 
 def index(request):
@@ -32,6 +33,7 @@ def index(request):
         except Exception:
             num_tags = 0
         pct = "{:.1%}".format(num_tags / num_results)
+        set_distance_display_name(e.distance, e.sequel)
         events.append(named_event(e, num_results, num_tags, pct))
     context = {"events": events, "notifykey": notifykey}
     return render(request, "racedbapp/adminphotos.html", context)
