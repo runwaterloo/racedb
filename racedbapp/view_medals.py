@@ -1,19 +1,27 @@
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 
-from .models import Event, Result
-from .shared import utils
+from .models import Event, Result, Sequel
+from .shared import shared, utils
 
 
-def index(request, year, race_slug, distance_slug):
+def index(request, year, race_slug, distance_slug, sequel_slug=None):
+    if sequel_slug:
+        sequel = get_object_or_404(Sequel, slug=sequel_slug)
+    else:
+        sequel = None
     try:
         event = Event.objects.select_related().get(
-            race__slug=race_slug, distance__slug=distance_slug, date__icontains=year
+            race__slug=race_slug,
+            distance__slug=distance_slug,
+            date__icontains=year,
+            sequel=sequel,
         )
     except Exception:
         raise Http404("Matching event not found")
     else:
         event_results = Result.objects.filter(event=event)
+    shared.set_distance_display_name(event.distance, sequel)
     guntimes_have_microseconds = {
         x.guntime.microseconds for x in event_results if x.guntime.microseconds != 0
     }

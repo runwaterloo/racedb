@@ -38,3 +38,9 @@ def test_medals_endpoint_sequel(create_event, create_sequel, create_category, cr
     )
     response = client.get(url)
     assert response.status_code == 200
+    event_url = (
+        f"/event/{event.date.year}/{event.race.slug}/"
+        f"{event.distance.slug}/{event.sequel.slug}/"
+    )
+    assert f'href="{event_url}"'.encode() in response.content
+    assert sequel.name.encode() in response.content
