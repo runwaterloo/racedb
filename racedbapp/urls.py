@@ -76,7 +76,12 @@ urlpatterns = [
     re_path(r"^race_slugs", view_race_slugs.index, name="race_slugs"),
     re_path(r"^race/(?P<race_slug>.*)/(?P<distance_slug>.*)/$", view_race.index, name="race"),
     re_path(
-        r"^medals/(?P<year>[0-9]{4})/(?P<race_slug>[^/]+)/(?P<distance_slug>[^/]+)(?:/(?P<sequel_slug>(?!team$)[^/]+))?/$",
+        r"^medals/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/(?P<sequel_slug>(?!team$)[^/]+)/$",
+        view_medals.index,
+        name="medals",
+    ),
+    re_path(
+        r"^medals/(?P<year>[0-9]{4})/(?P<race_slug>.*)/(?P<distance_slug>.*)/$",
         view_medals.index,
         name="medals",
     ),
