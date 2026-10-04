@@ -39,31 +39,26 @@ def test_medals_endpoint_sequel(create_event, create_sequel, create_category, cr
         create_event, create_sequel, create_category, create_result
     )
 
-    url = (
-        f"/medals/{event.date.year}/{event.race.slug}/"
-        f"{event.distance.slug}/{event.sequel.slug}/"
-    )
+    url = f"/medals/{event.date.year}/{event.race.slug}/{event.distance.slug}/{event.sequel.slug}/"
     response = client.get(url)
     assert response.status_code == 200
     event_url = (
-        f"/event/{event.date.year}/{event.race.slug}/"
-        f"{event.distance.slug}/{event.sequel.slug}/"
+        f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/{event.sequel.slug}/"
     )
     assert f'href="{event_url}"'.encode() in response.content
     assert sequel.name.encode() in response.content
 
 
 @pytest.mark.django_db
-def test_medals_endpoint_invalid_sequel(create_event, create_sequel, create_category, create_result):
+def test_medals_endpoint_invalid_sequel(
+    create_event, create_sequel, create_category, create_result
+):
     client = APIClient()
     event, sequel = make_sequel_medal_event(
         create_event, create_sequel, create_category, create_result
     )
 
-    url = (
-        f"/medals/{event.date.year}/{event.race.slug}/"
-        f"{event.distance.slug}/not-a-real-sequel/"
-    )
+    url = f"/medals/{event.date.year}/{event.race.slug}/{event.distance.slug}/not-a-real-sequel/"
     response = client.get(url)
     assert response.status_code == 404
 
