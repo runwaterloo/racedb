@@ -158,7 +158,6 @@ class Config(models.Model):
 
 
 class Distance(models.Model):
-    prename = models.CharField(max_length=25)
     name = models.CharField(max_length=25, unique=True)
     slug = models.SlugField(unique=True)
     km = models.DecimalField(max_digits=9, decimal_places=5)
