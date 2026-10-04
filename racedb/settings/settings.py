@@ -76,6 +76,8 @@ if os.getenv("DATABASE", "sqlite3") == "postgres":
                 "DB_HOST", secrets.DB_HOST if hasattr(secrets, "DB_HOST") else "postgres"
             ),
             "PORT": os.getenv("DB_PORT", "5432"),
+            "CONN_MAX_AGE": 60,
+            "CONN_HEALTH_CHECKS": True,
         }
     }
 else:
