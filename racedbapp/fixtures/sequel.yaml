@@ -9,3 +9,8 @@
   fields:
     name: Another Sequel
     slug: another-sequel
+- model: racedbapp.sequel
+  pk: 3
+  fields:
+    name: Uphill Mile
+    slug: uphill

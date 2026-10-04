@@ -192,3 +192,12 @@
     date: 2026-10-18
     city: Waterloo
     medals: none
+- model: racedbapp.event
+  pk: 25
+  fields:
+    race: 1
+    distance: 1
+    date: 2023-06-04
+    city: Kitchener
+    medals: standard
+    sequel: 3
