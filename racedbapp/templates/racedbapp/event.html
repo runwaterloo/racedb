@@ -29,9 +29,9 @@
   <div class="row">
     <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
       <h3>
-        {% if page == 'Wheelchair' %}
+        {% if page == "Wheelchair" %}
           Wheelchair Results
-        {% elif page == 'Hill Sprint' %}
+        {% elif page == "Hill Sprint" %}
           Hill Sprint Results
         {% else %}
           Results:
@@ -52,96 +52,97 @@
    target="_blank"><i class="fas fa-camera"></i></a>
         {% endif %}
         {% if event.youtube_id %}
-          &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}" target="_blank"><i class="fas fa-video"></i></span></a>
-        {% endif %}
-      </p>
-      <ul class="pagination pagination-sm">
-        {% for p in pages %}
-          <li class="{{ p.active }}">
-            <a href="{{ p.href }}">{{ p.label }}</a>
-          </li>
-        {% endfor %}
-        {% if series|length == 1 %}
-          <li class="inactive">
-            <a href="/series/{{ series.0.slug }}/?year={{ series.0.year }}">Series</a>
-          </li>
-        {% elif series|length > 1 %}
-          <li class="inactive">
-            <a href="#">
-              <select style="border: 0px;
-                             background-color: white"
-                      onchange="location = this.options[this.selectedIndex].value;">
-                <option value="#">Series</option>
-                {% for s in series %}
-                  <option value="/series/{{ s.slug }}/?year={{ s.year }}">{{ s.year }} {{ s.name }}</option>
+          &nbsp;&nbsp;<a href="https://youtu.be/{{ event.youtube_id }}"
+   target="_blank"><i class="fas fa-video"></i></span></a>
+      {% endif %}
+    </p>
+    <ul class="pagination pagination-sm">
+      {% for p in pages %}
+        <li class="{{ p.active }}">
+          <a href="{{ p.href }}">{{ p.label }}</a>
+        </li>
+      {% endfor %}
+      {% if series|length == 1 %}
+        <li class="inactive">
+          <a href="/series/{{ series.0.slug }}/?year={{ series.0.year }}">Series</a>
+        </li>
+      {% elif series|length > 1 %}
+        <li class="inactive">
+          <a href="#">
+            <select style="border: 0px;
+                           background-color: white"
+                    onchange="location = this.options[this.selectedIndex].value;">
+              <option value="#">Series</option>
+              {% for s in series %}
+                <option value="/series/{{ s.slug }}/?year={{ s.year }}">{{ s.year }} {{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+    <!-- Filter table -->
+    {% if page != "Wheelchair" %}
+      <table class="table table-bordered table-condensed">
+        <thead>
+          <tr class="info">
+            <th class="text-center">Year</th>
+            <th class="text-center">Distance</th>
+            <th class="text-center">Filter</th>
+            {% if filters.division_filter %}<th class="text-center">Division</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-center">
+              <select onchange="location = this.options[this.selectedIndex].value;">
+                <option>{{ filters.year_filter.current }}</option>
+                {% for yc in filters.year_filter.choices %}
+                  <option value="{{ yc.url }}">{{ yc.name }}</option>
                 {% endfor %}
               </select>
-            </a>
-          </li>
-        {% endif %}
-      </ul>
-      <!-- Filter table -->
-      {% if page != 'Wheelchair' %}
-        <table class="table table-bordered table-condensed">
-          <thead>
-            <tr class="info">
-              <th class="text-center">Year</th>
-              <th class="text-center">Distance</th>
-              <th class="text-center">Filter</th>
-              {% if filters.division_filter %}<th class="text-center">Division</th>{% endif %}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
+            </td>
+            <td class="text-center">
+              <select onchange="location = this.options[this.selectedIndex].value;">
+                <option>{{ filters.distance_filter.current }}</option>
+                {% for dc in filters.distance_filter.choices %}
+                  <option value="{{ dc.url }}">{{ dc.name }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td class="text-center">
+              <select onchange="location = this.options[this.selectedIndex].value;">
+                <option>{{ filters.category_filter.current }}</option>
+                {% for cc in filters.category_filter.choices %}
+                  <option value="{{ cc.url }}">{{ cc.name }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            {% if filters.division_filter %}
               <td class="text-center">
                 <select onchange="location = this.options[this.selectedIndex].value;">
-                  <option>{{ filters.year_filter.current }}</option>
-                  {% for yc in filters.year_filter.choices %}
-                    <option value="{{ yc.url }}">{{ yc.name }}</option>
-                  {% endfor %}
-                </select>
-              </td>
-              <td class="text-center">
-                <select onchange="location = this.options[this.selectedIndex].value;">
-                  <option>{{ filters.distance_filter.current }}</option>
-                  {% for dc in filters.distance_filter.choices %}
+                  <option>{{ filters.division_filter.current }}</option>
+                  {% for dc in filters.division_filter.choices %}
                     <option value="{{ dc.url }}">{{ dc.name }}</option>
                   {% endfor %}
                 </select>
               </td>
-              <td class="text-center">
-                <select onchange="location = this.options[this.selectedIndex].value;">
-                  <option>{{ filters.category_filter.current }}</option>
-                  {% for cc in filters.category_filter.choices %}
-                    <option value="{{ cc.url }}">{{ cc.name }}</option>
-                  {% endfor %}
-                </select>
-              </td>
-              {% if filters.division_filter %}
-                <td class="text-center">
-                  <select onchange="location = this.options[this.selectedIndex].value;">
-                    <option>{{ filters.division_filter.current }}</option>
-                    {% for dc in filters.division_filter.choices %}
-                      <option value="{{ dc.url }}">{{ dc.name }}</option>
-                    {% endfor %}
-                  </select>
-                </td>
-              {% endif %}
-            </tr>
-          </tbody>
-        </table>
-      {% endif %}
-      <!-- End Filter Table -->
+            {% endif %}
+          </tr>
+        </tbody>
+      </table>
+    {% endif %}
+    <!-- End Filter Table -->
+  </div>
+  <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+    <div style="padding-top: 20px; padding-bottom: 20px">
+      <a href="https://runwaterloo.com/{{ event.date.year }}-{{ event.race.slug }}">
+        <img class="img-rounded pull-right"
+             src="{% event_logo event %}"
+             height="170">
+      </a>
     </div>
-    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
-      <div style="padding-top: 20px; padding-bottom: 20px">
-        <a href="https://runwaterloo.com/{{ event.date.year }}-{{ event.race.slug }}">
-          <img class="img-rounded pull-right"
-               src="{% event_logo event %}"
-               height="170">
-        </a>
-      </div>
-    </div>
+  </div>
   </div>
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
@@ -162,7 +163,7 @@
         <div class="col-xs-6">
           {% if event.medals != "none" %}
             <button type="button" class="btn-secondary">
-              <a href="/medals/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/"
+              <a href="/medals/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/{% if event.sequel %}{{ event.sequel.slug }}/{% endif %}"
                  style="color:inherit;
                         text-decoration: none">Award Winners</a>
             </button>
@@ -288,7 +289,7 @@
                 <td class="text-center">{{ r.age }}</td>
               {% endif %}
               {% if hasdivision %}
-                {% if r.division != 'Guest' %}
+                {% if r.division != "Guest" %}
                   <td class="text-left">
                     <a href="/endurrun/{{ r.division|lower }}/?year={{ event.date.year }}">{{ r.division }}</a>
                   </td>
@@ -306,7 +307,7 @@
               {% endif %}
               <td class="text-left">{{ r.city }}</td>
               {% for s in r.splits %}
-                {% if s.split_time != 'None' %}
+                {% if s.split_time != "None" %}
                   {% if splits_have_microseconds %}
                     <td class="text-center">{{ s.split_time|show_str_decimal }}</td>
                   {% else %}

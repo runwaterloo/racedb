@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 
 from racedbapp.models import Result, Series
 from racedbapp.shared.types import Filter
+from racedbapp.tests.views.test_view_medals import make_sequel_medal_event
 from racedbapp.view_event import (
     annotate_isrwfirst,
     filter_results_by_category,
@@ -80,6 +81,23 @@ def test_event_endpoint_sequel(create_event, create_sequel):
     url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/{event.sequel.slug}/"
     response = client.get(url)
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_event_endpoint_sequel_medals_link(
+    create_event, create_sequel, create_category, create_result
+):
+    client = APIClient()
+    event, _sequel = make_sequel_medal_event(
+        create_event, create_sequel, create_category, create_result
+    )
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/{event.sequel.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+    medals_url = (
+        f"/medals/{event.date.year}/{event.race.slug}/{event.distance.slug}/{event.sequel.slug}/"
+    )
+    assert f'href="{medals_url}"'.encode() in response.content
 
 
 @pytest.mark.django_db
