@@ -34,11 +34,11 @@
           {{ event.date.year }}
           {{ event.race.shortname }}
           {{ extra_name }}
-          {{ event.distance.name }}
+          {{ event.distance.display_name }}
         </small>
       </h3>
       <p>
-        <i>Disclaimer: Awards may differ from category place on the <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/">event results</a> because they are awarded without duplication. For male and female, the top three overall and then the top three masters are removed from other categories. To claim the medal after the race, check <a target="_blank" href="https://runwaterloo.com/{{ event.race.slug }}">here</a>.</i>
+        <i>Disclaimer: Awards may differ from category place on the <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/{% if event.sequel %}{{ event.sequel.slug }}/{% endif %}">event results</a> because they are awarded without duplication. For male and female, the top three overall and then the top three masters are removed from other categories. To claim the medal after the race, check <a target="_blank" href="https://runwaterloo.com/{{ event.race.slug }}">here</a>.</i>
       </p>
     </div>
   </div>
@@ -58,7 +58,7 @@
         </div>
         <!-- end search input -->
         <button type="button" class="btn-secondary">
-          <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/"
+          <a href="/event/{{ event.date.year }}/{{ event.race.slug }}/{{ event.distance.slug }}/{% if event.sequel %}{{ event.sequel.slug }}/{% endif %}"
              style="color:inherit;
                     text-decoration: none"><i class="fas fa-arrow-alt-circle-left"></i> Back to results</a>
         </button>
