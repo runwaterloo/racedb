@@ -1,5 +1,5 @@
 -r requirements-test.txt
-django-debug-toolbar==7.1.1
+django-debug-toolbar==8.0.0
 djlint==1.44.2
 pre-commit==4.6.2
 ruff==0.16.5
