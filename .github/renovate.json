@@ -12,6 +12,7 @@
   "schedule": ["* 9-10 1-7 * 2"],
   "packageRules": [
     {
+      "matchUpdateTypes": ["minor", "patch", "digest"],
       "matchManagers": [
         "dockerfile",
         "github-actions",
