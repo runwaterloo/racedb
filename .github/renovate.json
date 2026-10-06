@@ -21,6 +21,15 @@
         "pip_requirements",
         "pre-commit"
       ],
+      "matchPackagePatterns": ["^(?i)(python|django)$"],
+      "groupName": "monthly dependency update",
+      "groupSlug": "monthly-dependency-update",
+      "commitMessagePrefix": "chore(deps):"
+    },
+    {
+      "matchUpdateTypes": ["patch", "digest"],
+      "matchManagers": ["pip_requirements", "dockerfile"],
+      "matchPackagePatterns": ["^(?i)(python|django)$"],
       "groupName": "monthly dependency update",
       "groupSlug": "monthly-dependency-update",
       "commitMessagePrefix": "chore(deps):"
