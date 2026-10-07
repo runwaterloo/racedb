@@ -3,6 +3,7 @@ from django.views.generic.base import RedirectView
 
 from . import (
     view_adminphotos,
+    view_art,
     view_boost,
     view_bow,
     view_bowrecap,
@@ -37,6 +38,7 @@ from . import (
 urlpatterns = [
     path("", view_index.index, name="index"),
     re_path(r"^adminphotos", view_adminphotos.index, name="adminphotos"),
+    re_path(r"^art", view_art.index, name="art"),
     re_path(
         r"^bowrecap/(?P<bow_slug>.*)/after/(?P<phase>.*)$",
         view_bowrecap.index,
