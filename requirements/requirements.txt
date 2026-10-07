@@ -6,8 +6,8 @@ Django==6.0.8
 djangorestframework==3.18.1
 drf-nested-routers==0.95.3
 flickrapi==2.4.0
-gspread==6.2.1
 google-api-python-client==2.201.0
+gspread==6.2.1
 gunicorn==26.2.0
 PyYAML==6.0.3
 whitenoise==6.12.0
