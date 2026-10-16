@@ -171,7 +171,7 @@ alloy:
         // like "Traceback (most recent call last):" and "AttributeError: ..." —
         // they don't start with a timestamp, so they get joined to the entry above.
         stage.multiline {
-          match = "^(?:\\[\\d{4}-\\d{2}-\\d{2}|\\d{4}-\\d{2}-\\d{2}[T ]|\\d{1,2}:\\d{2}:\\d{2}|[IWEF]\\d{4}|===|---)"
+          match = "^(?:\\[?\\d{4}-\\d{2}-\\d{2}|ts=|time=|\\{|\\[[A-Z]|\\d+:[MC] |\\d{1,2}:\\d{2}:\\d{2}|[IWEF]\\d{4})"
           max_lines = 200
           max_wait_time = "3s"
         }
