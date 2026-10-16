@@ -6,8 +6,10 @@ import logging
 
 import gspread
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from racedbapp import tasks
+from racedbapp.exceptions import ResultImportError
 from racedbapp.models import (
     Category,
     Distance,
@@ -103,6 +105,14 @@ class Command(BaseCommand):
                 return
             google_results = get_results_from_google(event.resultsurl)
             for result in google_results["individual"]:
+                try:
+                    validate_individual_row(result)
+                except ValueError as exc:
+                    raise ResultImportError(
+                        "Problem with individual results for {} {} {} (Event {}): {}".format(
+                            year, race.name, distance.name, event.id, exc
+                        )
+                    )
                 if "athlete" not in result:
                     result["athlete"] = result["name"]
                 extra_dict = get_extra_dict(result)
@@ -281,6 +291,14 @@ class Command(BaseCommand):
 
             # Process team results
             if google_results["team"]:
+                problems = validate_team_rows(google_results["team"])
+                if problems:
+                    message = "Problem with team results for {} {} {} (Event {}):\n".format(
+                        year, race.name, distance.name, event.id
+                    )
+                    message += "\n".join("  - {}".format(i) for i in problems)
+                    message += "\nIndividual results for this event were processed successfully."
+                    raise ResultImportError(message)
                 teamresults = []
                 for result in google_results["team"]:
                     team_category_id = Teamcategory.objects.get(name=result["team_category"]).id
@@ -306,9 +324,10 @@ class Command(BaseCommand):
                     )
                     teamresults.append(newteamresult)
                 # Delete any existing team results for this event
-                Teamresult.objects.filter(event_id=event.id).delete()
-                for teamresult in teamresults:
-                    teamresult.save()
+                with transaction.atomic():
+                    Teamresult.objects.filter(event_id=event.id).delete()
+                    for teamresult in teamresults:
+                        teamresult.save()
                 info = "{} team results processed for {} {} {} (Event {})".format(
                     len(teamresults), year, race.name, distance.name, event.id
                 )
@@ -331,6 +350,90 @@ class Command(BaseCommand):
         info = "Process complete"
         logger.info(info)
         self.stdout.write("Process complete!")
+
+
+
+def validate_individual_row(result):
+    """Validate one individual result row, raising ValueError if bad.
+
+    Rows with a non-numeric place that is not DQ/DNF/DNS are skipped
+    downstream, so they are not an error here.
+    """
+    place = result["place"]
+    if str(place) not in ("DQ", "DNF", "DNS"):
+        try:
+            int(place)
+        except (ValueError, TypeError):
+            pass  # skipped downstream, not an error
+    for timefield in ("guntime", "chiptime"):
+        if timefield in result and result[timefield]:
+            try:
+                maketimedelta(result[timefield])
+            except ValueError:
+                raise ValueError(
+                    "athlete {}: invalid {}: {}".format(
+                        result.get("athlete", result.get("name", "unknown")),
+                        timefield,
+                        result[timefield],
+                    )
+                )
+    if "age" in result and result["age"]:
+        try:
+            int(result["age"])
+        except ValueError:
+            raise ValueError(
+                "athlete {}: invalid age: {}".format(
+                    result.get("athlete", result.get("name", "unknown")),
+                    result["age"],
+                )
+            )
+
+
+def validate_team_rows(rows):
+    """Validate team result rows. Returns a list of problem strings.
+
+    Checks: team_category exists, athlete_time parses, team_place is
+    an integer, and every category that has counts=TRUE rows has at
+    least one row with team_place == 1 (issue #365).
+    """
+    problems = []
+    category_names = set(Teamcategory.objects.values_list("name", flat=True))
+    categories_with_counts = set()
+    categories_with_place_1 = set()
+    for row in rows:
+        label = str(row.get("team_category", ""))
+        team_name = str(row.get("team_name", ""))
+        if label not in category_names:
+            problems.append(
+                "team {}: unknown team category: {}".format(team_name, label)
+            )
+            continue
+        try:
+            maketimedelta(row["athlete_time"])
+        except ValueError:
+            problems.append(
+                "team {}: invalid athlete_time: {}".format(
+                    team_name, row["athlete_time"]
+                )
+            )
+        try:
+            team_place = int(row["team_place"])
+        except (ValueError, TypeError):
+            problems.append(
+                "team {}: invalid team_place: {}".format(
+                    team_name, row["team_place"]
+                )
+            )
+            team_place = None
+        if str(row.get("counts", "")).upper() == "TRUE":
+            categories_with_counts.add(label)
+            if team_place == 1:
+                categories_with_place_1.add(label)
+    for label in sorted(categories_with_counts - categories_with_place_1):
+        problems.append(
+            "team category {}: no result with team_place of 1".format(label)
+        )
+    return problems
 
 
 def maketimedelta(strtime):
