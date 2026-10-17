@@ -215,6 +215,7 @@ class TeamcategoryAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "slug",
+        "counts",
     )
 
 

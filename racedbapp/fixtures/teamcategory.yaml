@@ -5,9 +5,11 @@
     name: Open
     slug: open
     sortorder: 1
+    counts: 5
 - model: racedbapp.teamcategory
   pk: 2
   fields:
     name: Spouse
     slug: spouse
     sortorder: 2
+    counts: 2

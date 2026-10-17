@@ -194,6 +194,14 @@ class Teamcategory(models.Model):
     slug = models.SlugField(unique=True)
     objects = TeamcategoryQuerySet.as_manager()
     sortorder = models.IntegerField()
+    counts = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Number of individual results that count toward the team result. "
+            "If null, use the counts column on the results sheet."
+        ),
+    )
 
     class Meta:
         ordering = ("sortorder",)
