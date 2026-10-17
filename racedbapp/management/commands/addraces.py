@@ -306,13 +306,12 @@ class Command(BaseCommand):
                     with transaction.atomic():
                         Teamresult.objects.filter(event_id=event.id).delete()
                         try:
-                            bib_warnings = process_bib_team_results(
-                                google_results["team"], event
-                            )
+                            bib_warnings = process_bib_team_results(google_results["team"], event)
                         except ResultImportError as exc:
-                            message = str(
-                                exc
-                            ) + "\nIndividual results for this event were processed successfully."
+                            message = (
+                                str(exc)
+                                + "\nIndividual results for this event were processed successfully."
+                            )
                             raise ResultImportError(message)
                     info = "team results processed (bib mode) for {} {} {} (Event {})".format(
                         year, race.name, distance.name, event.id
@@ -388,7 +387,6 @@ class Command(BaseCommand):
         self.stdout.write("Process complete!")
 
 
-
 def validate_individual_row(result):
     """Validate one individual result row, raising ValueError if bad.
 
@@ -440,35 +438,25 @@ def validate_team_rows(rows):
         label = str(row.get("team_category", ""))
         team_name = str(row.get("team_name", ""))
         if label not in category_names:
-            problems.append(
-                "team {}: unknown team category: {}".format(team_name, label)
-            )
+            problems.append("team {}: unknown team category: {}".format(team_name, label))
             continue
         try:
             maketimedelta(row["athlete_time"])
         except ValueError:
             problems.append(
-                "team {}: invalid athlete_time: {}".format(
-                    team_name, row["athlete_time"]
-                )
+                "team {}: invalid athlete_time: {}".format(team_name, row["athlete_time"])
             )
         try:
             team_place = int(row["team_place"])
         except (ValueError, TypeError):
-            problems.append(
-                "team {}: invalid team_place: {}".format(
-                    team_name, row["team_place"]
-                )
-            )
+            problems.append("team {}: invalid team_place: {}".format(team_name, row["team_place"]))
             team_place = None
         if str(row.get("counts", "")).upper() == "TRUE":
             categories_with_counts.add(label)
             if team_place == 1:
                 categories_with_place_1.add(label)
     for label in sorted(categories_with_counts - categories_with_place_1):
-        problems.append(
-            "team category {}: no result with team_place of 1".format(label)
-        )
+        problems.append("team category {}: no result with team_place of 1".format(label))
     return problems
 
 
@@ -867,8 +855,11 @@ def process_bib_team_results(rows, event):
             raise ResultImportError(
                 "Problem with team results for {} {} (Event {}):\n"
                 "team category {}: counts must be an integer > 0 (got: {})".format(
-                    event.race.name, event.distance.name, event.id,
-                    label, category.counts,
+                    event.race.name,
+                    event.distance.name,
+                    event.id,
+                    label,
+                    category.counts,
                 )
             )
         counts_by_category[label] = category.counts
@@ -880,15 +871,16 @@ def process_bib_team_results(rows, event):
             raise ResultImportError(
                 "Problem with team results for {} {} (Event {}):\n"
                 "duplicate bib {} in category {}".format(
-                    event.race.name, event.distance.name, event.id,
-                    row["bib"], row["team_category"],
+                    event.race.name,
+                    event.distance.name,
+                    event.id,
+                    row["bib"],
+                    row["team_category"],
                 )
             )
         bib_seen[key] = True
     # join bibs to individual results
-    individual_by_bib = {
-        r.bib.strip(): r for r in Result.objects.filter(event_id=event.id)
-    }
+    individual_by_bib = {r.bib.strip(): r for r in Result.objects.filter(event_id=event.id)}
     pending = []
     grouped = {}
     for row in rows:
@@ -916,8 +908,12 @@ def process_bib_team_results(rows, event):
                 raise ResultImportError(
                     "Problem with team results for {} {} (Event {}):\n"
                     "bib {} on team {} ({}): matched individual with no guntime".format(
-                        event.race.name, event.distance.name, event.id,
-                        bib, team_name, label,
+                        event.race.name,
+                        event.distance.name,
+                        event.id,
+                        bib,
+                        team_name,
+                        label,
                     )
                 )
             runners.append(
@@ -952,15 +948,11 @@ def process_bib_team_results(rows, event):
                     "counting_runners": [
                         {
                             "place": r["place"],
-                            "guntime_seconds": int(
-                                r["guntime"].total_seconds()
-                            ),
+                            "guntime_seconds": r["guntime"].total_seconds(),
                         }
                         for r in counting
                     ],
-                    "guntime_total": sum(
-                        int(r["guntime"].total_seconds()) for r in counting
-                    ),
+                    "guntime_total": sum(r["guntime"].total_seconds() for r in counting),
                 }
             )
         for (pending_label, team_name, _), team_place in zip(
