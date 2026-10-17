@@ -270,7 +270,11 @@ def test_bib_mode_counts_must_be_positive_integer(notifykey, create_event, creat
         team=[team_row()],
     )
     assert response.status_code == 422
-    assert "counts must be an integer > 0" in response.content.decode()
+    body = response.content.decode()
+    # Django escapes > in HTML output
+    assert "counts must be an integer" in body
+    assert "&gt; 0" in body
+    assert "Import Partial Success" in body
     assert Teamresult.objects.filter(event=event).count() == 0
 
 

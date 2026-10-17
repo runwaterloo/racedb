@@ -87,8 +87,11 @@ def test_notify_success_returns_200_with_counts(
     row = individual_row(category=category.name)
     response = import_results(event, individual=[row], team=[])
     assert response.status_code == 200
-    assert "1 results processed" in response.content.decode()
-    assert "Process complete" in response.content.decode()
+    body = response.content.decode()
+    assert "1 results processed" in body
+    assert "Process complete" in body
+    assert "Import Success" in body
+    assert "badge-green" in body
 
 
 @pytest.mark.django_db
@@ -103,6 +106,8 @@ def test_notify_invalid_team_data_returns_422_with_message(
     body = response.content.decode()
     assert "No Such Category" in body
     assert "Individual results" in body  # individuals did import
+    assert "Import Partial Success" in body  # team error, individuals saved
+    assert "badge-yellow" in body
     assert Result.objects.filter(event=event).count() == 1
     assert Teamresult.objects.filter(event=event).count() == 0
 
@@ -168,5 +173,8 @@ def test_notify_individual_all_or_nothing(notifykey, create_event, create_catego
     bad_row = individual_row(place=2, athlete="Bad Runner", guntime="not-a-time")
     response = import_results(event, individual=[good_row, bad_row])
     assert response.status_code == 422
-    assert "not-a-time" in response.content.decode()
+    body = response.content.decode()
+    assert "not-a-time" in body
+    assert "Import Failed" in body  # individuals failed, nothing partial
+    assert "badge-red" in body
     assert Result.objects.filter(event=event).count() == 0

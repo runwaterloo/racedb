@@ -312,7 +312,9 @@ class Command(BaseCommand):
                                 str(exc)
                                 + "\nIndividual results for this event were processed successfully."
                             )
-                            raise ResultImportError(message)
+                            error = ResultImportError(message)
+                            error.partial = True
+                            raise error
                     teamresult_count = Teamresult.objects.filter(event_id=event.id).count()
                     info = "{} team results processed (bib mode) for {} {} {} (Event {})".format(
                         teamresult_count,
@@ -336,7 +338,9 @@ class Command(BaseCommand):
                         message += (
                             "\nIndividual results for this event were processed successfully."
                         )
-                        raise ResultImportError(message)
+                        error = ResultImportError(message)
+                        error.partial = True
+                        raise error
                     teamresults = []
                     for result in google_results["team"]:
                         team_category_id = Teamcategory.objects.get(name=result["team_category"]).id
