@@ -2,6 +2,8 @@
 from pathlib import Path
 from unittest import mock
 
+import datetime
+
 from django.core.management import call_command
 
 from racedbapp.management.commands.addraces import (
@@ -102,10 +104,9 @@ def test_full_import_from_fixture_csvs(db):
     )
     event = Event.objects.get(pk=26)
     assert event.race.name == "Import Test Race"
-    # Import Test 5 KM is the second most recent real-world event,
-    # just behind the featured event (pk 24, 2026-10-18)
-    recent = Event.objects.filter(date__lte="2026-10-18").order_by("-date")
-    assert [e.pk for e in recent[:2]] == [24, 26]
+    # Import Test 5 KM sits between the 2023 Waterloo Classic (2023-06-18)
+    # and the 2023 Fall Classic (2023-10-22)
+    assert event.date == datetime.date(2023, 8, 19)
 
     with _mock_requests(), mock.patch(
         "racedbapp.management.commands.addraces.tasks.clear_cache.delay"
