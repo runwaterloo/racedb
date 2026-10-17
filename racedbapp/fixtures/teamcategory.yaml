@@ -1,0 +1,13 @@
+---
+- model: racedbapp.teamcategory
+  pk: 1
+  fields:
+    name: Open
+    slug: open
+    sortorder: 1
+- model: racedbapp.teamcategory
+  pk: 2
+  fields:
+    name: Spouse
+    slug: spouse
+    sortorder: 2

@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 """parseresults.py - Race result parsing utility."""
 
+import csv
 import datetime
+import io
 import logging
+import os
+import re
+from urllib.parse import quote
 
 import gspread
+import requests
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -303,11 +309,13 @@ class Command(BaseCommand):
                 for result in google_results["team"]:
                     team_category_id = Teamcategory.objects.get(name=result["team_category"]).id
                     athlete_time = maketimedelta(result["athlete_time"])
-                    if result["counts"] == "TRUE":
+                    # counts/estimated arrive as "TRUE"/"FALSE" strings via
+                    # gspread, and as real booleans via the public CSV fetch.
+                    if str(result["counts"]).upper() == "TRUE":
                         result_counts = True
                     else:
                         result_counts = False
-                    if result["estimated"] == "TRUE":
+                    if str(result["estimated"]).upper() == "TRUE":
                         result_estimated = True
                     else:
                         result_estimated = False
@@ -346,7 +354,7 @@ class Command(BaseCommand):
         #     tasks.slack_results_update.delay(slack_results)
         info = "Clearing cache"
         logger.info(info)
-        tasks.clear_cache.delay()
+        tasks.safe_enqueue(tasks.clear_cache)
         info = "Process complete"
         logger.info(info)
         self.stdout.write("Process complete!")
@@ -711,20 +719,72 @@ def process_rwpbs(event):
 
 
 def get_results_from_google(url):
-    """Grab results from a Google Sheet"""
-    gc = gspread.service_account("/root/google_service_account.json")
-    sh = gc.open_by_url(url)
+    """Grab results from a Google Sheet
+
+    Uses the production service account when available; otherwise falls
+    back to the public gviz endpoint, so local testing needs no secrets.
+    """
+    service_account_path = "/root/google_service_account.json"
+    if os.path.exists(service_account_path):
+        gc = gspread.service_account(service_account_path)
+        sh = gc.open_by_url(url)
+        results = {
+            "individual": {},
+            "team": {},
+        }
+        worksheet = sh.worksheet("individual")
+        results["individual"] = worksheet.get_all_records()
+        worksheet_list = [x.title for x in sh.worksheets()]
+        if "team" in worksheet_list:
+            worksheet = sh.worksheet("team")
+            results["team"] = worksheet.get_all_records()
+        return results
     results = {
-        "individual": {},
-        "team": {},
+        "individual": fetch_public_sheet(url, "individual"),
+        "team": fetch_public_sheet(url, "team"),
     }
-    worksheet = sh.worksheet("individual")
-    results["individual"] = worksheet.get_all_records()
-    worksheet_list = [x.title for x in sh.worksheets()]
-    if "team" in worksheet_list:
-        worksheet = sh.worksheet("team")
-        results["team"] = worksheet.get_all_records()
     return results
+
+
+def fetch_public_sheet(url, worksheet_name):
+    """Fetch a public Google Sheet tab anonymously via the gviz CSV endpoint
+
+    Values are coerced to match gspread's get_all_records():
+    "1" -> 1, "TRUE" -> True, everything else stays a string.
+    """
+    match = re.search(r"/d/([a-zA-Z0-9_-]+)", url)
+    if not match:
+        raise ValueError(f"Could not extract sheet id from url: {url}")
+    sheet_id = match.group(1)
+    gviz_url = (
+        "https://docs.google.com/spreadsheets/d/"
+        f"{sheet_id}/gviz/tq?tqx=out:csv&sheet={quote(worksheet_name)}"
+    )
+    response = requests.get(gviz_url, timeout=30)
+    response.raise_for_status()
+    rows = list(csv.reader(io.StringIO(response.text)))
+    if not rows:
+        return []
+    headers = rows[0]
+    records = []
+    for row in rows[1:]:
+        record = {}
+        for i, header in enumerate(headers):
+            if i >= len(row):
+                break
+            value = row[i]
+            if value == "TRUE":
+                value = True
+            elif value == "FALSE":
+                value = False
+            else:
+                try:
+                    value = int(value)
+                except ValueError:
+                    pass
+            record[header] = value
+        records.append(record)
+    return records
 
 
 def get_extra_dict(result):

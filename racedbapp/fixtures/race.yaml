@@ -1,5 +1,11 @@
 ---
 - model: racedbapp.race
+  pk: 6
+  fields:
+    name: Import Test Race
+    shortname: Import Test
+    slug: import-test-race
+- model: racedbapp.race
   pk: 1
   fields:
     name: Waterloo 10 KM Classic

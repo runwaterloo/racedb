@@ -18,7 +18,7 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
 
 from racedbapp.shared.types import Choice, Filter
-from racedbapp.tasks import send_email_task
+from racedbapp.tasks import safe_enqueue, send_email_task
 
 from .models import (
     Config,
@@ -836,7 +836,7 @@ def process_post(request):
         )
         body += "{}\n\n".format(message_text)
         body += url
-        send_email_task.delay(subject, body, recipients)
+        safe_enqueue(send_email_task, subject, body, recipients)
 
 
 def get_ad():
