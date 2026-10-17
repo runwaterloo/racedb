@@ -1,3 +1,4 @@
+import datetime
 import json
 import random
 
@@ -63,6 +64,22 @@ class Command(BaseCommand):
                 active=active,
                 hasphotos=hasphotos,
             )
+
+        # deterministic import-test member, created after the auto-generated ones
+        Rwmember.objects.update_or_create(
+            name="Import Test Member 1",
+            defaults={
+                "slug": "import-test-member-1",
+                "gender": "M",
+                "year_of_birth": 1980,
+                "city": "Waterloo",
+                "joindate": datetime.date(2010, 1, 1),
+                "photourl": "",
+                "altname": "",
+                "active": True,
+                "hasphotos": False,
+            },
+        )
 
         self.stdout.write(
             self.style.SUCCESS(f"Successfully generated {num_members} fake Rwmember entries")

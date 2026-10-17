@@ -201,3 +201,12 @@
     city: Kitchener
     medals: standard
     sequel: 3
+- model: racedbapp.event
+  pk: 26
+  fields:
+    race: 6
+    distance: 2
+    date: 2026-10-16
+    city: Waterloo
+    medals: none
+    resultsurl: https://docs.google.com/spreadsheets/d/1Jww6IcDbJb9b-SrjOc55J640QNPL749BRIdtOETtnFg/edit

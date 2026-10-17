@@ -69,7 +69,11 @@ def test_get_member_logic():
 
 def test_get_results_from_google():
     # Patch gspread and worksheet methods
-    with mock.patch("racedbapp.management.commands.addraces.gspread") as mock_gspread:
+    with mock.patch(
+        "racedbapp.management.commands.addraces.gspread"
+    ) as mock_gspread, mock.patch(
+        "racedbapp.management.commands.addraces.os.path.exists", return_value=True
+    ):
         mock_gc = mock.Mock()
         mock_sh = mock.Mock()
         mock_ws_ind = mock.Mock()
