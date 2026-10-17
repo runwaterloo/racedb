@@ -1,8 +1,7 @@
 """Tests for the public (secret-free) Google Sheet fetch path."""
+import datetime
 from pathlib import Path
 from unittest import mock
-
-import datetime
 
 from django.core.management import call_command
 
@@ -149,7 +148,8 @@ def test_team_import_accepts_gspread_string_booleans(db):
         "teamcategory",
     )
     event = Event.objects.get(pk=26)
-    import csv, io
+    import csv
+    import io
 
     fake_results = {
         tab: list(csv.DictReader(io.StringIO(_fixture(tab))))
