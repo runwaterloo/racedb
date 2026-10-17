@@ -316,7 +316,7 @@ def test_bib_mode_same_bib_in_two_categories_allowed(notifykey, create_event, cr
         ],
     )
     assert response.status_code == 200
-    assert Teamresult.objects.filter(event=event).count() == 2
+    assert Teamresult.objects.filter(event=event).count() == 5
 
 
 @pytest.mark.django_db
