@@ -309,11 +309,13 @@ class Command(BaseCommand):
                 for result in google_results["team"]:
                     team_category_id = Teamcategory.objects.get(name=result["team_category"]).id
                     athlete_time = maketimedelta(result["athlete_time"])
-                    if result["counts"] == "TRUE":
+                    # counts/estimated arrive as "TRUE"/"FALSE" strings via
+                    # gspread, and as real booleans via the public CSV fetch.
+                    if str(result["counts"]).upper() == "TRUE":
                         result_counts = True
                     else:
                         result_counts = False
-                    if result["estimated"] == "TRUE":
+                    if str(result["estimated"]).upper() == "TRUE":
                         result_estimated = True
                     else:
                         result_estimated = False

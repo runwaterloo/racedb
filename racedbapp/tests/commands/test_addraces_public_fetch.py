@@ -130,3 +130,31 @@ def test_full_import_from_fixture_csvs(db):
         )
     )
     assert places[0] == 1 and places[1] == 3
+
+
+def test_team_import_accepts_gspread_string_booleans(db):
+    """Prod path (gspread) yields counts/estimated as \"TRUE\" strings; team
+    import must treat them the same as the boolean True the public fetch gives."""
+    call_command("flush", interactive=False)
+    call_command(
+        "loaddata", "race", "distance", "sequel", "event", "series", "config",
+        "teamcategory",
+    )
+    event = Event.objects.get(pk=26)
+    import csv, io
+
+    fake_results = {
+        tab: list(csv.DictReader(io.StringIO(_fixture(tab))))
+        for tab in ("individual", "team")
+    }
+    with mock.patch(
+        "racedbapp.management.commands.addraces.get_results_from_google",
+        return_value=fake_results,
+    ), mock.patch(
+        "racedbapp.management.commands.addraces.tasks.clear_cache.delay"
+    ):
+        call_command("addraces", event_id=event.id)
+    team = Teamresult.objects.filter(event=event)
+    assert team.count() == 35
+    assert team.filter(counts=True).count() == 35
+    assert team.filter(estimated=True).count() == 0
