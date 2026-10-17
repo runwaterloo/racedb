@@ -302,10 +302,17 @@ def test_bib_mode_same_bib_in_two_categories_allowed(notifykey, create_event, cr
     make_categories()
     response = import_results(
         event,
-        individual=[individual_row()],
+        individual=[
+            individual_row(bib="101", place=1, athlete="R1"),
+            individual_row(bib="102", place=2, athlete="R2"),
+            individual_row(bib="103", place=3, athlete="R3"),
+        ],
         team=[
             team_row(bib="101", team_name="Team 1", team_category="Open"),
+            team_row(bib="102", team_name="Team 1", team_category="Open"),
+            team_row(bib="103", team_name="Team 1", team_category="Open"),
             team_row(bib="101", team_name="Team 1", team_category="Spouse"),
+            team_row(bib="102", team_name="Team 1", team_category="Spouse"),
         ],
     )
     assert response.status_code == 200
