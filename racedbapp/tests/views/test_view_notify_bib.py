@@ -296,6 +296,23 @@ def test_bib_mode_duplicate_bib_in_category_is_hard_error(notifykey, create_even
 
 
 @pytest.mark.django_db
+def test_bib_mode_same_bib_in_two_categories_allowed(notifykey, create_event, create_category):
+    """The same bib may appear in more than one team category."""
+    event = create_event()
+    make_categories()
+    response = import_results(
+        event,
+        individual=[individual_row()],
+        team=[
+            team_row(bib="101", team_name="Team 1", team_category="Open"),
+            team_row(bib="101", team_name="Team 1", team_category="Spouse"),
+        ],
+    )
+    assert response.status_code == 200
+    assert Teamresult.objects.filter(event=event).count() == 2
+
+
+@pytest.mark.django_db
 def test_bib_mode_old_team_results_replaced(notifykey, create_event, create_category):
     """A successful bib-mode import replaces existing team results."""
     event = create_event()
