@@ -154,6 +154,9 @@ else:
     }
 
 # --- Celery ---
+# Default broker for SETTINGS=min (local docker compose): the compose redis.
+# prod/dev set their own CELERY_BROKER_URL above.
+CELERY_BROKER_URL = "redis://racedb-redis:6379"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"

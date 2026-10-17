@@ -5,7 +5,7 @@ from datetime import datetime
 from django.http import Http404, HttpResponse
 
 from .models import Config
-from .tasks import photoupdate
+from .tasks import photoupdate, safe_enqueue
 
 logger = logging.getLogger(__name__)
 
@@ -30,5 +30,5 @@ def index(request):
         except ValueError:
             logger.warning("invalid date format")
             raise Http404("Invalid date format, should be YYYY-MM-DD")
-    photoupdate.delay(request_date=request_date)
+    safe_enqueue(photoupdate, request_date=request_date)
     return HttpResponse("Photo update request received")

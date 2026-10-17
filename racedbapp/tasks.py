@@ -15,6 +15,28 @@ logger = logging.getLogger(__name__)
 WEBHOST = os.getenv("WEBHOST", "http://localhost")
 
 
+def safe_enqueue(task, *args, **kwargs):
+    """Enqueue a Celery task, tolerating an unreachable broker.
+
+    Local dev often runs without a broker (SETTINGS=min has no
+    CELERY_BROKER_URL, so Celery defaults to RabbitMQ on localhost).
+    Queueing failures should degrade to a log line, not break the
+    request or import that triggered them.
+    """
+    task_name = getattr(task, "name", str(task))
+    try:
+        result = task.delay(*args, **kwargs)
+        logger.info("Enqueued task {}".format(task_name))
+        return result
+    except Exception:
+        logger.warning(
+            "Could not enqueue task {} (broker unavailable?) - continuing".format(
+                task_name
+            )
+        )
+        return None
+
+
 @shared_task
 def heartbeat():
     os.system("touch /srv/racedb/.heartbeat")

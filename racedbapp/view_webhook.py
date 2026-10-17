@@ -20,7 +20,7 @@ def index(request):
     if gitlabtoken == notifykey:
         response = "Hook received"
         logger.info(response)
-        tasks.webhook.delay()
+        tasks.safe_enqueue(tasks.webhook)
     else:
         response = "Invalid hook (bad or missing token)"
         logger.warning(response)

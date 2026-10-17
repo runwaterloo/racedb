@@ -13,6 +13,6 @@ def index(request):
     response = {"result": "fail", "message": "correct notification key not sent"}
     if "notifykey" in qstring:
         if qstring["notifykey"][0] == notifykey:
-            tasks.clear_cache.delay()
+            tasks.safe_enqueue(tasks.clear_cache)
             response = {"result": "Success", "message": "Cache cleared"}
     return JsonResponse(response)
