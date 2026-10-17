@@ -313,8 +313,13 @@ class Command(BaseCommand):
                                 + "\nIndividual results for this event were processed successfully."
                             )
                             raise ResultImportError(message)
-                    info = "team results processed (bib mode) for {} {} {} (Event {})".format(
-                        year, race.name, distance.name, event.id
+                    teamresult_count = Teamresult.objects.filter(event_id=event.id).count()
+                    info = "{} team results processed (bib mode) for {} {} {} (Event {})".format(
+                        teamresult_count,
+                        year,
+                        race.name,
+                        distance.name,
+                        event.id,
                     )
                     logger.info(info)
                     self.stdout.write("  {}".format(info))
