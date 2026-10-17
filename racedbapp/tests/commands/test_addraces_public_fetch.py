@@ -115,8 +115,8 @@ def test_full_import_from_fixture_csvs(db):
 
     individual = Result.objects.filter(event=event)
     team = Teamresult.objects.filter(event=event)
-    assert individual.count() == 40  # 35 team athletes + 5 independent runners
-    assert team.count() == 35
+    assert individual.count() == 40  # 36 team athletes + 5 independent runners
+    assert team.count() == 36
     top = individual.order_by("place").first()
     assert top.athlete == "Open 1 Runner 1"
     import datetime as _dt
@@ -130,6 +130,14 @@ def test_full_import_from_fixture_csvs(db):
         )
     )
     assert places[0] == 1 and places[1] == 3
+    # fixture athlete renamed to match the auto-created Rwmember
+    assert Result.objects.filter(event=event, athlete="Import Test Member 1").exists()
+    # one runner appears on both an Open and a Spouse team
+    dual = Teamresult.objects.filter(event=event, athlete_name="Spouse 1 Runner 1")
+    assert sorted(dual.values_list("team_category__name", flat=True)) == [
+        "Open",
+        "Spouse",
+    ]
 
 
 def test_team_import_accepts_gspread_string_booleans(db):
@@ -155,6 +163,6 @@ def test_team_import_accepts_gspread_string_booleans(db):
     ):
         call_command("addraces", event_id=event.id)
     team = Teamresult.objects.filter(event=event)
-    assert team.count() == 35
-    assert team.filter(counts=True).count() == 35
+    assert team.count() == 36
+    assert team.filter(counts=True).count() == 36
     assert team.filter(estimated=True).count() == 0
