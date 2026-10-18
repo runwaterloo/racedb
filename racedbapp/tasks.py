@@ -195,7 +195,10 @@ def warm_cache():
             logger.info("Warmed %s -> %s", url, response.status_code)
     else:
         for url in WARM_URLS:
-            full_url = urllib.parse.urljoin(WEBHOST, url)
+            host = WEBHOST
+            if not host.startswith(("http://", "https://")):
+                host = "https://" + host
+            full_url = urllib.parse.urljoin(host, url)
             logger.info("Warming cache: %s", full_url)
             try:
                 response = requests.get(full_url, timeout=30)
