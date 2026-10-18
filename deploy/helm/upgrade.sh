@@ -22,7 +22,8 @@ helm upgrade --install "$DEPLOYMENT" . \
 sleep 5
 POD=$(kubectl get pods -l app.kubernetes.io/instance=racedb,app.kubernetes.io/name=racedb,app.kubernetes.io/task=web \
     --field-selector=status.phase=Running \
-    -o jsonpath='{.items[?(@.status.containerStatuses[0].ready==true)].metadata.name}' | awk '{print $1}')
+    -o jsonpath='{range .items[*]}{.status.containerStatuses[0].ready}{"|"}{.metadata.deletionTimestamp}{"|"}{.metadata.name}{"\n"}{end}' \
+    | awk -F'|' '$1=="true" && $2==""{print $3; exit}')
 if [ -n "$POD" ]; then
     echo "Running python manage.py clear_cache in pod $POD"
     kubectl exec "$POD" -- python manage.py clear_cache
