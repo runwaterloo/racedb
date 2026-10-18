@@ -158,5 +158,10 @@ def test_index_view_renders_once_and_caches(
     response2 = client.get("/")
     assert response1.status_code == 200
     assert response2.status_code == 200
-    assert response2.content == response1.content
+    # When the debug toolbar is enabled it appends per-request content
+    # (data-request-id, panels) to each response AFTER the view returns,
+    # so the raw bytes differ between requests even on a cache hit.
+    # Compare only the page itself, before the toolbar's block.
+    marker = b'<div id="djDebug"'
+    assert response2.content.split(marker)[0] == response1.content.split(marker)[0]
     assert len(render_count) == 1
