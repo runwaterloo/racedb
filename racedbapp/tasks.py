@@ -1,10 +1,12 @@
 import logging
 import os
+import urllib
 from datetime import date, timedelta
 
 from celery import shared_task
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.test import Client
 from django_slack import slack_message
 
 from . import process_photoupdate, view_member
@@ -30,9 +32,7 @@ def safe_enqueue(task, *args, **kwargs):
         return result
     except Exception:
         logger.warning(
-            "Could not enqueue task {} (broker unavailable?) - continuing".format(
-                task_name
-            )
+            "Could not enqueue task {} (broker unavailable?) - continuing".format(task_name)
         )
         return None
 
@@ -178,6 +178,35 @@ def slack_missing_urls():
 def clear_cache():
     logger.info("Clearing cache")
     cache.clear()
+    safe_enqueue(warm_cache)
+
+
+@shared_task
+def warm_cache():
+    """Fetch hot URLs so the next visitors get cache hits, not cold renders."""
+    config_qs = Config.objects.filter(name="cache_warm_urls")
+    if config_qs.exists():
+        raw_urls = config_qs[0].value
+    else:
+        raw_urls = "/"
+    urls = [u.strip() for u in raw_urls.split(",") if u.strip()]
+    if WEBHOST == "http://localhost":
+        client = Client()
+        for url in urls:
+            logger.info("Warming cache: %s", url)
+            response = client.get(url)
+            logger.info("Warmed %s -> %s", url, response.status_code)
+    else:
+        import requests
+
+        for url in urls:
+            full_url = urllib.parse.urljoin(WEBHOST, url)
+            logger.info("Warming cache: %s", full_url)
+            try:
+                response = requests.get(full_url, timeout=90)
+                logger.info("Warmed %s -> %s", full_url, response.status_code)
+            except requests.RequestException as e:
+                logger.warning("Failed to warm %s: %s", full_url, e)
 
 
 @shared_task
