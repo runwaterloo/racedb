@@ -211,6 +211,36 @@ alloy:
       ////////////////////////////////////////////////////////////////////////////////////
 
       ///////////////////////////////////////////////////////////////////////////////////
+      // Discover and scrape redis_exporter from the racedb redis pod sidecar.
+      // Only the prod redis (instance=racedb) is scraped; the dev redis
+      // (racedbdev) has no exporter sidecar enabled by default.
+      discovery.relabel "redis_pods" {
+      targets = discovery.kubernetes.pod.targets
+        rule {
+          action        = "keep"
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance", "__meta_kubernetes_pod_label_app_kubernetes_io_task"]
+          regex         = "racedb;redis"
+        }
+        rule {
+          action        = "keep"
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          regex         = "redis-exporter"
+        }
+        rule {
+          action        = "replace"
+          source_labels = ["__meta_kubernetes_pod_ip"]
+          target_label  = "__address__"
+          replacement   = "$1:9121"
+        }
+      }
+      prometheus.scrape "redis" {
+        targets    = discovery.relabel.redis_pods.output
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+        job_name   = "redis"
+      }
+      ////////////////////////////////////////////////////////////////////////////////////
+
+      ///////////////////////////////////////////////////////////////////////////////////
       // Send the underlying host journal logs to Loki
       loki.source.journal "host_journal" {
         path        = "/host/journal"

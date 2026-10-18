@@ -7,3 +7,6 @@ ingress:
   host: results.runwaterloo.com
   apiHost: api.runwaterloo.com
 webReplicaCount: 2
+redis:
+  exporter:
+    enabled: true
