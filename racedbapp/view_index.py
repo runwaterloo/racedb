@@ -11,7 +11,7 @@ from django.shortcuts import render
 
 from . import config, view_endurrun, view_event, view_member, view_recap
 from .models import Config, Endurraceresult, Event, Relay, Result, Rwmember
-from .shared import shared, utils
+from .shared import cache_lock, shared, utils
 
 EventContext = namedtuple("EventContext", ["date", "city"], defaults=(None, None))
 RaceContext = namedtuple("RaceContext", ["name", "shortname", "slug"], defaults=(None, None, None))
@@ -36,13 +36,20 @@ FeaturedEventContext = namedtuple(
 def index(request):
     cache_key = "index.{}".format(request.META["QUERY_STRING"])
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
+    if "asofdate" in qstring:
+        return _render_index(request)
+    # Cached path: render at most once even under concurrent load
+    # (single-flight), otherwise each request does its own cold render.
+    return cache_lock.get_or_render(cache_key, lambda: _render_index(request))
+
+
+def _render_index(request):
+    """Render the full index page (expensive; only called on cache miss)."""
+    cache_key = "index.{}".format(request.META["QUERY_STRING"])
+    qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     asofdate = None
     if "asofdate" in qstring:
         asofdate = qstring["asofdate"][0]
-    else:
-        cached_html = cache.get(cache_key)
-        if cached_html:
-            return cached_html  # return the page immediately if it's cached
     recap_context = get_recap_context(asofdate)
     member_info_context = get_memberinfo()
     featured_event_context = get_featured_event_context()
@@ -62,7 +69,8 @@ def index(request):
         "notification": notification,
     }
     html = render(request, "racedbapp/index.html", context)
-    cache.set(cache_key, html)
+    if "asofdate" not in qstring:
+        cache.set(cache_key, html)
     return html
 
 
