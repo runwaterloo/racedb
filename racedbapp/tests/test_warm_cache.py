@@ -50,3 +50,19 @@ def test_clear_cache_enqueues_warm_cache():
         tasks.clear_cache()
     assert cache.get("index.") is None
     mock_enqueue.assert_called_once_with(tasks.warm_cache)
+
+
+@pytest.mark.django_db
+def test_warm_cache_adds_scheme_to_bare_host():
+    """A WEBHOST without a scheme gets https:// prefixed in warm_cache."""
+    with (
+        patch.object(tasks, "WEBHOST", "results.runwaterloo.com"),
+        patch(
+            "racedbapp.tasks.requests.get", return_value=MagicMock(status_code=200)
+        ) as mocked_get,
+    ):
+        tasks.warm_cache()
+    mocked_get.assert_called_once()
+    mocked_get.assert_called_once()
+    url = mocked_get.call_args[0][0]
+    assert url == "https://results.runwaterloo.com/"
