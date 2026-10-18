@@ -3,6 +3,7 @@ from io import StringIO
 
 from django.core.management import call_command
 from django.http import HttpResponse
+from django.shortcuts import render
 
 from .exceptions import ResultImportError
 from .models import Config
@@ -24,8 +25,28 @@ def index(request):
                 else:
                     call_command("addraces", stdout=output)
             except ResultImportError as exc:
-                return HttpResponse(str(exc), status=422, content_type="text/plain")
-            return HttpResponse(output.getvalue(), content_type="text/plain")
+                if getattr(exc, "partial", False):
+                    context = {
+                        "header": "Import Partial Success",
+                        "badge_class": "yellow",
+                        "status": 422,
+                        "output": str(exc),
+                    }
+                else:
+                    context = {
+                        "header": "Import Failed",
+                        "badge_class": "red",
+                        "status": 422,
+                        "output": str(exc),
+                    }
+                return render(request, "racedbapp/notify_result.html", context, status=422)
+            context = {
+                "header": "Import Success",
+                "badge_class": "green",
+                "status": 200,
+                "output": output.getvalue(),
+            }
+            return render(request, "racedbapp/notify_result.html", context)
         else:
             return HttpResponse("Correct notification key not sent")
     else:

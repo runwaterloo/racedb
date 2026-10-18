@@ -32,6 +32,10 @@ from racedbapp.models import (
     Teamresult,
 )
 from racedbapp.shared import shared
+from racedbapp.shared.team_bib import (
+    assign_counts_and_order,
+    compute_team_places,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -297,52 +301,84 @@ class Command(BaseCommand):
 
             # Process team results
             if google_results["team"]:
-                problems = validate_team_rows(google_results["team"])
-                if problems:
-                    message = "Problem with team results for {} {} {} (Event {}):\n".format(
-                        year, race.name, distance.name, event.id
+                if "bib" in google_results["team"][0]:
+                    # bib mode: compute everything from individual results
+                    with transaction.atomic():
+                        Teamresult.objects.filter(event_id=event.id).delete()
+                        try:
+                            bib_warnings = process_bib_team_results(google_results["team"], event)
+                        except ResultImportError as exc:
+                            message = (
+                                str(exc)
+                                + "\nIndividual results for this event were processed successfully."
+                            )
+                            error = ResultImportError(message)
+                            error.partial = True
+                            raise error
+                    teamresult_count = Teamresult.objects.filter(event_id=event.id).count()
+                    info = "{} team results processed (bib mode) for {} {} {} (Event {})".format(
+                        teamresult_count,
+                        year,
+                        race.name,
+                        distance.name,
+                        event.id,
                     )
-                    message += "\n".join("  - {}".format(i) for i in problems)
-                    message += "\nIndividual results for this event were processed successfully."
-                    raise ResultImportError(message)
-                teamresults = []
-                for result in google_results["team"]:
-                    team_category_id = Teamcategory.objects.get(name=result["team_category"]).id
-                    athlete_time = maketimedelta(result["athlete_time"])
-                    # counts/estimated arrive as "TRUE"/"FALSE" strings via
-                    # gspread, and as real booleans via the public CSV fetch.
-                    if str(result["counts"]).upper() == "TRUE":
-                        result_counts = True
-                    else:
-                        result_counts = False
-                    if str(result["estimated"]).upper() == "TRUE":
-                        result_estimated = True
-                    else:
-                        result_estimated = False
-                    newteamresult = Teamresult(
-                        event_id=event.id,
-                        team_category_id=team_category_id,
-                        team_place=result["team_place"],
-                        team_name=result["team_name"],
-                        athlete_team_place=result["athlete_team_place"],
-                        athlete_time=athlete_time,
-                        athlete_name=result["athlete_name"],
-                        counts=result_counts,
-                        estimated=result_estimated,
-                    )
-                    teamresults.append(newteamresult)
-                # Delete any existing team results for this event
-                with transaction.atomic():
-                    Teamresult.objects.filter(event_id=event.id).delete()
-                    for teamresult in teamresults:
-                        teamresult.save()
-                info = "{} team results processed for {} {} {} (Event {})".format(
-                    len(teamresults), year, race.name, distance.name, event.id
-                )
-                logger.info(info)
-                self.stdout.write("  {}".format(info))
-                if len(teamresults) > 0:
-                    slack_results.append(info)
+                    logger.info(info)
+                    self.stdout.write("  {}".format(info))
+                    for warning in bib_warnings:
+                        self.stdout.write("  Warning: {}".format(warning))
+                    logger.warning("; ".join(bib_warnings))
+                else:
+                    problems = validate_team_rows(google_results["team"])
+                    if problems:
+                        message = "Problem with team results for {} {} {} (Event {}):\n".format(
+                            year, race.name, distance.name, event.id
+                        )
+                        message += "\n".join("  - {}".format(i) for i in problems)
+                        message += (
+                            "\nIndividual results for this event were processed successfully."
+                        )
+                        error = ResultImportError(message)
+                        error.partial = True
+                        raise error
+                    teamresults = []
+                    for result in google_results["team"]:
+                        team_category_id = Teamcategory.objects.get(name=result["team_category"]).id
+                        athlete_time = maketimedelta(result["athlete_time"])
+                        # counts/estimated arrive as "TRUE"/"FALSE" strings via
+                        # gspread, and as real booleans via the public CSV fetch.
+                        if str(result["counts"]).upper() == "TRUE":
+                            result_counts = True
+                        else:
+                            result_counts = False
+                        if str(result["estimated"]).upper() == "TRUE":
+                            result_estimated = True
+                        else:
+                            result_estimated = False
+                        newteamresult = Teamresult(
+                            event_id=event.id,
+                            team_category_id=team_category_id,
+                            team_place=result["team_place"],
+                            team_name=result["team_name"],
+                            athlete_team_place=result["athlete_team_place"],
+                            athlete_time=athlete_time,
+                            athlete_name=result["athlete_name"],
+                            counts=result_counts,
+                            estimated=result_estimated,
+                        )
+                        teamresults.append(newteamresult)
+                        # Delete any existing team results for this event
+                        with transaction.atomic():
+                            Teamresult.objects.filter(event_id=event.id).delete()
+                            for teamresult in teamresults:
+                                teamresult.save()
+                        info = "{} team results processed for {} {} {} (Event {})".format(
+                            len(teamresults), year, race.name, distance.name, event.id
+                        )
+                        logger.info(info)
+                        self.stdout.write("  {}".format(info))
+                        if len(teamresults) > 0:
+                            slack_results.append(info)
 
             # Process PBs
             info = "Processed PBs for {} ({})".format(event, event.id)
@@ -358,7 +394,6 @@ class Command(BaseCommand):
         info = "Process complete"
         logger.info(info)
         self.stdout.write("Process complete!")
-
 
 
 def validate_individual_row(result):
@@ -412,35 +447,25 @@ def validate_team_rows(rows):
         label = str(row.get("team_category", ""))
         team_name = str(row.get("team_name", ""))
         if label not in category_names:
-            problems.append(
-                "team {}: unknown team category: {}".format(team_name, label)
-            )
+            problems.append("team {}: unknown team category: {}".format(team_name, label))
             continue
         try:
             maketimedelta(row["athlete_time"])
         except ValueError:
             problems.append(
-                "team {}: invalid athlete_time: {}".format(
-                    team_name, row["athlete_time"]
-                )
+                "team {}: invalid athlete_time: {}".format(team_name, row["athlete_time"])
             )
         try:
             team_place = int(row["team_place"])
         except (ValueError, TypeError):
-            problems.append(
-                "team {}: invalid team_place: {}".format(
-                    team_name, row["team_place"]
-                )
-            )
+            problems.append("team {}: invalid team_place: {}".format(team_name, row["team_place"]))
             team_place = None
         if str(row.get("counts", "")).upper() == "TRUE":
             categories_with_counts.add(label)
             if team_place == 1:
                 categories_with_place_1.add(label)
     for label in sorted(categories_with_counts - categories_with_place_1):
-        problems.append(
-            "team category {}: no result with team_place of 1".format(label)
-        )
+        problems.append("team category {}: no result with team_place of 1".format(label))
     return problems
 
 
@@ -799,3 +824,163 @@ def get_extra_dict(result):
         elif "split" in k:
             extra_dict[k] = v
     return extra_dict
+
+
+def process_bib_team_results(rows, event):
+    """Process team results in bib mode (team tab has a bib column).
+
+    Team tab carries only bib, team_name, team_category (extra columns
+    are ignored). All Teamresult fields are computed from the event's
+    individual results joined on bib. Returns a list of warnings.
+
+    Hard errors (abort all team processing, individuals unaffected):
+    - unknown team category
+    - Teamcategory.counts is None, not an integer, or <= 0
+    - duplicate bib within the same team category
+    - matched individual has a place but no guntime
+    """
+    warnings = []
+    category_names = set(Teamcategory.objects.values_list("name", flat=True))
+    errors = []
+    for row in rows:
+        label = str(row.get("team_category", ""))
+        if label not in category_names:
+            errors.append(
+                "bib {}: unknown team category: {} (valid: {})".format(
+                    row.get("bib"), label, ", ".join(sorted(category_names))
+                )
+            )
+    if errors:
+        raise ResultImportError(
+            "Problem with team results for {} {} (Event {}):\n{}".format(
+                event.race.name, event.distance.name, event.id, "\n".join(errors)
+            )
+        )
+    # counts per category must be an integer > 0
+    counts_by_category = {}
+    for label in {str(row["team_category"]) for row in rows}:
+        category = Teamcategory.objects.get(name=label)
+        if category.counts is None or category.counts <= 0:
+            raise ResultImportError(
+                "Problem with team results for {} {} (Event {}):\n"
+                "team category {}: counts must be an integer > 0 (got: {})".format(
+                    event.race.name,
+                    event.distance.name,
+                    event.id,
+                    label,
+                    category.counts,
+                )
+            )
+        counts_by_category[label] = category.counts
+    # duplicate bibs within the same category are a hard error
+    bib_seen = {}
+    for row in rows:
+        key = (str(row["team_category"]), str(row["bib"]).strip())
+        if key in bib_seen:
+            raise ResultImportError(
+                "Problem with team results for {} {} (Event {}):\n"
+                "duplicate bib {} in category {}".format(
+                    event.race.name,
+                    event.distance.name,
+                    event.id,
+                    row["bib"],
+                    row["team_category"],
+                )
+            )
+        bib_seen[key] = True
+    # join bibs to individual results
+    individual_by_bib = {r.bib.strip(): r for r in Result.objects.filter(event_id=event.id)}
+    pending = []
+    grouped = {}
+    for row in rows:
+        key = (str(row["team_category"]), str(row["team_name"]).strip())
+        grouped.setdefault(key, []).append(str(row["bib"]).strip())
+    for (label, team_name), bibs in grouped.items():
+        runners = []
+        for bib in bibs:
+            individual = individual_by_bib.get(bib)
+            if individual is None:
+                warnings.append(
+                    "bib {} on team {} ({}): not found in individual results - row skipped".format(
+                        bib, team_name, label
+                    )
+                )
+                continue
+            if individual.place >= 990000:
+                warnings.append(
+                    "bib {} on team {} ({}): matched a non-finisher - row skipped".format(
+                        bib, team_name, label
+                    )
+                )
+                continue
+            if individual.guntime is None:
+                raise ResultImportError(
+                    "Problem with team results for {} {} (Event {}):\n"
+                    "bib {} on team {} ({}): matched individual with no guntime".format(
+                        event.race.name,
+                        event.distance.name,
+                        event.id,
+                        bib,
+                        team_name,
+                        label,
+                    )
+                )
+            runners.append(
+                {
+                    "place": individual.place,
+                    "guntime": individual.guntime,
+                    "athlete_name": individual.athlete,
+                }
+            )
+        if not runners:
+            continue
+        counts = counts_by_category[label]
+        if len(runners) < counts:
+            warnings.append(
+                "team {} ({}): only {} counting-eligible finishers ({} required) - team skipped".format(
+                    team_name, label, len(runners), counts
+                )
+            )
+            continue
+        ordered = assign_counts_and_order(runners, counts=counts)
+        pending.append((label, team_name, ordered))
+    # compute team places per category in one pass
+    places_by_team = {}
+    for label in sorted({p[0] for p in pending}):
+        teams = []
+        for pending_label, team_name, ordered in pending:
+            if pending_label != label:
+                continue
+            counting = [r for r in ordered if r["counts"]]
+            teams.append(
+                {
+                    "counting_runners": [
+                        {
+                            "place": r["place"],
+                            "guntime_seconds": r["guntime"].total_seconds(),
+                        }
+                        for r in counting
+                    ],
+                    "guntime_total": sum(r["guntime"].total_seconds() for r in counting),
+                }
+            )
+        for (pending_label, team_name, _), team_place in zip(
+            [p for p in pending if p[0] == label], compute_team_places(teams)
+        ):
+            places_by_team[(pending_label, team_name)] = team_place
+    team_categories = {tc.name: tc for tc in Teamcategory.objects.all()}
+    for label, team_name, ordered in pending:
+        team_category = team_categories[label]
+        for athlete_team_place, runner in enumerate(ordered, start=1):
+            Teamresult(
+                event_id=event.id,
+                team_category=team_category,
+                team_place=places_by_team[(label, team_name)],
+                team_name=team_name,
+                athlete_team_place=athlete_team_place,
+                athlete_time=runner["guntime"],
+                athlete_name=runner["athlete_name"],
+                counts=runner["counts"],
+                estimated=False,
+            ).save()
+    return warnings
