@@ -23,6 +23,16 @@ spec:
         ports:
         - containerPort: 6379
         imagePullPolicy: IfNotPresent
+{{- if .Values.redis.exporter.enabled }}
+      - name: redis-exporter
+        image: "{{ .Values.redis.exporter.image.repository }}:{{ .Values.redis.exporter.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        args:
+        - "--redis.addr=redis://localhost:6379"
+        ports:
+        - name: http-metrics
+          containerPort: 9121
+{{- end }}
 ---
 apiVersion: v1
 kind: Service

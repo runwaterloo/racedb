@@ -109,7 +109,7 @@ STORAGES = {
 if os.getenv("SETTINGS", "none") == "prod":
     CACHES = {
         "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
+            "BACKEND": "racedbapp.shared.instrumented_cache.InstrumentedRedisCache",
             "LOCATION": "redis://racedb-redis:6379/1",
             "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
             "TIMEOUT": None,
@@ -125,7 +125,7 @@ if os.getenv("SETTINGS", "none") == "prod":
 elif os.getenv("SETTINGS", "none") == "dev":
     CACHES = {
         "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
+            "BACKEND": "racedbapp.shared.instrumented_cache.InstrumentedRedisCache",
             "LOCATION": "redis://racedbdev-redis:6379/1",
             "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
             "TIMEOUT": 5,
