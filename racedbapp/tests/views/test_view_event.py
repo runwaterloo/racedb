@@ -1,11 +1,13 @@
 import datetime
 import types
+from unittest import mock
 
 import django.utils
 import pytest
 from django.core.cache import cache
 from rest_framework.test import APIClient
 
+from racedbapp import view_event
 from racedbapp.models import Config, Result, Series
 from racedbapp.shared.types import Filter
 from racedbapp.tests.views.test_view_medals import make_sequel_medal_event
@@ -456,10 +458,16 @@ def test_event_view_caches_response(create_event):
     client = APIClient()
     event = create_event(date=django.utils.timezone.localdate() - datetime.timedelta(days=3))
     url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
-    first = client.get(url)
-    assert first.status_code == 200
     cache_key = f"event.{event.id}."
-    assert cache.get(cache_key) is not None
-    second = client.get(url)
-    assert second.status_code == 200
-    assert second.content == first.content
+    cache.delete(cache_key)
+    with mock.patch(
+        "racedbapp.view_event._render_event", wraps=view_event._render_event
+    ) as render_mock:
+        first = client.get(url)
+        assert first.status_code == 200
+        assert render_mock.call_count == 1
+        assert cache.get(cache_key) is not None
+        second = client.get(url)
+        assert second.status_code == 200
+        assert render_mock.call_count == 1
+        assert second.content == first.content
