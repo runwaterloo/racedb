@@ -1,9 +1,12 @@
+import datetime
 import types
 
+import django.utils
 import pytest
+from django.core.cache import cache
 from rest_framework.test import APIClient
 
-from racedbapp.models import Result, Series
+from racedbapp.models import Config, Result, Series
 from racedbapp.shared.types import Filter
 from racedbapp.tests.views.test_view_medals import make_sequel_medal_event
 from racedbapp.view_event import (
@@ -379,3 +382,84 @@ def test_get_category_filter_parametrized(
         else:
             for c in f.choices:
                 assert "division=A" in c.url or "filter=" in c.url
+
+
+@pytest.mark.django_db
+def test_event_cacheable_recent_past_event(create_event):
+    """A past event within the window is cacheable."""
+    from racedbapp.view_event import _is_cacheable
+
+    event = create_event(date=django.utils.timezone.localdate() - datetime.timedelta(days=3))
+    request = types.SimpleNamespace(method="GET")
+    assert _is_cacheable(event, request) is True
+
+
+@pytest.mark.django_db
+def test_event_not_cacheable_future_event(create_event):
+    """A future event is never cached, even within the window."""
+    from racedbapp.view_event import _is_cacheable
+
+    event = create_event(date=django.utils.timezone.localdate() + datetime.timedelta(days=1))
+    request = types.SimpleNamespace(method="GET")
+    assert _is_cacheable(event, request) is False
+
+
+@pytest.mark.django_db
+def test_event_not_cacheable_older_than_window(create_event):
+    """An event older than the configured window is not cached."""
+    from racedbapp.view_event import _is_cacheable
+
+    event = create_event(date="2025-01-01")
+    Config.objects.create(name="event_cache_days", value="7")
+    request = types.SimpleNamespace(method="GET")
+    assert _is_cacheable(event, request) is False
+
+
+@pytest.mark.django_db
+def test_event_cache_window_config_default(create_event):
+    """Missing config defaults the window to 30 days."""
+    from racedbapp.view_event import _get_event_cache_days
+
+    assert _get_event_cache_days() == 30
+
+
+@pytest.mark.django_db
+def test_event_cache_window_config_override(create_event):
+    """A valid config value overrides the default window."""
+    from racedbapp.view_event import _get_event_cache_days
+
+    Config.objects.create(name="event_cache_days", value="7")
+    assert _get_event_cache_days() == 7
+
+
+@pytest.mark.django_db
+def test_event_cache_window_config_zero_disables(create_event):
+    """Config value 0 disables event caching entirely."""
+    from racedbapp.view_event import _get_event_cache_days
+
+    Config.objects.create(name="event_cache_days", value="0")
+    assert _get_event_cache_days() == 0
+
+
+@pytest.mark.django_db
+def test_event_cache_window_config_invalid_falls_back(create_event):
+    """An invalid config value falls back to the 30 day default."""
+    from racedbapp.view_event import _get_event_cache_days
+
+    Config.objects.create(name="event_cache_days", value="notanumber")
+    assert _get_event_cache_days() == 30
+
+
+@pytest.mark.django_db
+def test_event_view_caches_response(create_event):
+    """Second request for the same event is served from cache."""
+    client = APIClient()
+    event = create_event(date=django.utils.timezone.localdate() - datetime.timedelta(days=3))
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    first = client.get(url)
+    assert first.status_code == 200
+    cache_key = f"event.{event.id}."
+    assert cache.get(cache_key) is not None
+    second = client.get(url)
+    assert second.status_code == 200
+    assert second.content == first.content
