@@ -16,6 +16,7 @@ from django.db.models import (
 )
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 
 from racedbapp.shared.types import Choice, Filter
 from racedbapp.tasks import safe_enqueue, send_email_task
@@ -34,7 +35,7 @@ from .models import (
     Split,
     Wheelchairresult,
 )
-from .shared import shared, utils
+from .shared import cache_lock, shared, utils
 
 named_split = namedtuple("ns", ["split_num", "split_time"])
 
@@ -59,11 +60,27 @@ def get_series(event=None, events=None, year=None, race=None):
     return series
 
 
+def _get_event_cache_days():
+    """Days in the past an event stays cacheable. 0 disables; default 30."""
+    value = shared.get_config_value_or_false("event_cache_days")
+    if not value:
+        return 30
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 30
+
+
+def _is_cacheable(event, request):
+    days = _get_event_cache_days()
+    if days <= 0 or request.method != "GET":
+        return False
+    days_ago = (timezone.localdate() - event.date).days
+    return 1 <= days_ago <= days
+
+
 def index(request, year, race_slug, distance_slug, sequel_slug=None):
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
-    page = get_page(qstring)
-    category = get_category(qstring)
-    division = get_division(qstring)
     if sequel_slug:
         sequel = get_object_or_404(Sequel, slug=sequel_slug)
     else:
@@ -77,6 +94,20 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
         )
     except Exception:
         raise Http404("Matching event not found")
+    # Cached path: past events within the config window render at most once
+    # even under concurrent load (single-flight lock in cache_lock)
+    if _is_cacheable(event, request):
+        cache_key = "event.{}.{}".format(event.id, request.META["QUERY_STRING"])
+        return cache_lock.get_or_render(
+            cache_key, lambda: _render_event(request, event, sequel, qstring)
+        )
+    return _render_event(request, event, sequel, qstring)
+
+
+def _render_event(request, event, sequel, qstring):
+    page = get_page(qstring)
+    category = get_category(qstring)
+    division = get_division(qstring)
     shared.set_distance_display_name(event.distance, sequel)
     races = shared.create_samerace_list(event.race)
     team_categories = shared.get_team_categories(event)

@@ -8,6 +8,7 @@
             <div class="modal-body">
               <form action="." method="post">
               {% csrf_token %}
+              {# NOTE: this modal has no trigger anywhere on the site (legacy). If you enable it, be aware the event view (#376) caches the full rendered page for events in the past 30 days, and the cached HTML contains a CSRF token that only matches the first visitor's csrftoken cookie. Enablement will need per-request token injection on cached responses (e.g. placeholder-swap), or excluding this fragment from the cache. #}
                 <div class="form-group">
                   <label for="user_name" class="control-label">Full name:</label>
                   <input type="text" class="form-control" id="user_name" name="user_name">
