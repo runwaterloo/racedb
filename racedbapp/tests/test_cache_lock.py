@@ -37,7 +37,7 @@ def make_render_func(calls, result="html", delay=0):
 
 class TestGetOrRender:
     def test_returns_cached_value_without_rendering(self, unique_key):
-        cache.set(unique_key, "cached_html")
+        cache_lock.set(unique_key, "cached_html")
         calls = []
         result = cache_lock.get_or_render(unique_key, make_render_func(calls))
         assert result == "cached_html"
@@ -47,7 +47,7 @@ class TestGetOrRender:
         calls = []
         result = cache_lock.get_or_render(unique_key, make_render_func(calls, "html1"))
         assert result == "html1"
-        assert cache.get(unique_key) == "html1"
+        assert cache_lock.get(unique_key) == "html1"
         # second call must be served from cache, not re-rendered
         result2 = cache_lock.get_or_render(unique_key, make_render_func(calls, "html2"))
         assert result2 == "html1"
@@ -83,7 +83,7 @@ class TestGetOrRender:
         thread = threading.Thread(target=waiter)
         thread.start()
         time.sleep(0.3)  # let the waiter block on the held lock
-        cache.set(unique_key, "warm_html")
+        cache_lock.set(unique_key, "warm_html")
         cache.delete(holder)
         thread.join(timeout=10)
         assert results[0] == "warm_html"
@@ -165,3 +165,45 @@ def test_index_view_renders_once_and_caches(
     marker = b'<div id="djDebug"'
     assert response2.content.split(marker)[0] == response1.content.split(marker)[0]
     assert len(render_count) == 1
+
+
+class TestGeneration:
+    def test_bump_invalidates_entries(self, unique_key):
+        cache_lock.set(unique_key, "old_html")
+        assert cache_lock.get(unique_key) == "old_html"
+        cache_lock.bump_generation()
+        assert cache_lock.get(unique_key) is None
+
+    def test_render_started_before_bump_is_ignored_after(self, unique_key):
+        # the race this design exists to fix: a render that started before a
+        # bump must not re-cache itself over newer content
+        old_generation = cache_lock._current_generation()
+        cache_lock.set(unique_key, "old_html")
+        cache_lock.bump_generation()
+        # simulate the in-flight render finishing after the bump
+        cache.set(unique_key, (old_generation, "stale_render"), 3600)
+        calls = []
+        result = cache_lock.get_or_render(unique_key, make_render_func(calls, "fresh_html"))
+        assert result == "fresh_html"
+        assert len(calls) == 1
+
+    def test_bump_is_atomic_and_monotonic(self, unique_key):
+        start = cache_lock._current_generation()
+        cache_lock.bump_generation()
+        cache_lock.bump_generation()
+        assert cache_lock._current_generation() == start + 2
+
+    def test_unstamped_entries_are_treated_as_misses(self, unique_key):
+        # entries written without a generation stamp can never be hits
+        cache.set(unique_key, "raw_value")
+        calls = []
+        result = cache_lock.get_or_render(unique_key, make_render_func(calls, "stamped"))
+        assert result == "stamped"
+        assert cache_lock.get(unique_key) == "stamped"
+
+    def test_set_stamps_with_current_generation(self, unique_key):
+        cache_lock.bump_generation()
+        cache_lock.set(unique_key, "value")
+        stored = cache.get(unique_key)
+        assert isinstance(stored, tuple)
+        assert stored[0] == cache_lock._current_generation()

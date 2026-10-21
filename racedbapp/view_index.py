@@ -6,7 +6,6 @@ from collections import namedtuple
 from datetime import datetime
 from operator import attrgetter
 
-from django.core.cache import cache
 from django.shortcuts import render
 
 from . import config, view_endurrun, view_event, view_member, view_recap
@@ -45,7 +44,6 @@ def index(request):
 
 def _render_index(request):
     """Render the full index page (expensive; only called on cache miss)."""
-    cache_key = "index.{}".format(request.META["QUERY_STRING"])
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     asofdate = None
     if "asofdate" in qstring:
@@ -69,8 +67,6 @@ def _render_index(request):
         "notification": notification,
     }
     html = render(request, "racedbapp/index.html", context)
-    if "asofdate" not in qstring:
-        cache.set(cache_key, html)
     return html
 
 
