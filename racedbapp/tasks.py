@@ -55,8 +55,10 @@ def webhook():
     os.system("git pull https://gitlab.com/sl70176/racedb.git")
     logging.info("Updating pip requirements")
     os.system("pip install -r requirements.txt")
-    logging.info("Bumping cache generation")
-    cache_lock.bump_generation()
+    # clear_cache bumps the generation and warms hot pages; the warm task
+    # survives the .restart (queued in RabbitMQ, redelivered on startup) so
+    # post-deploy visitors hit warm cache, not cold renders.
+    safe_enqueue(clear_cache)
     logging.info("Touching .restart")
     os.system("touch .restart")
 
