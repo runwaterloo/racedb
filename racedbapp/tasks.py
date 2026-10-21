@@ -7,11 +7,15 @@ import requests
 from celery import shared_task
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.db import connection
 from django.test import Client
+from django.utils import timezone
 from django_slack import slack_message
 
 from . import process_photoupdate, view_member
 from .models import Config, Endurathlete, Event, Rwmember, Rwmembertag
+from .shared import cache_lock
+from .shared.shared import get_config_value_or_false
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +55,111 @@ def webhook():
     os.system("git pull https://gitlab.com/sl70176/racedb.git")
     logging.info("Updating pip requirements")
     os.system("pip install -r requirements.txt")
-    logging.info("Clearing cache")
-    cache.clear()
+    logging.info("Bumping cache generation")
+    cache_lock.bump_generation()
     logging.info("Touching .restart")
     os.system("touch .restart")
 
+
+CACHE_WATCHER_STATE_KEY = "cache_watcher.fingerprint"
+CACHE_WATCHER_LAST_RUN_KEY = "cache_watcher.last_run"
+
+
+@shared_task
+def db_cache_watcher():
+    """Bump the cache generation when the DB changes (fixes #387).
+
+    Every minute, compare a pg_stat fingerprint of racedbapp_* table change
+    counters against the previous run. A difference means the DB changed,
+    which the signals-based invalidation cannot always see (e.g. photoupdate
+    adding photo tags), so bump the cache generation.
+
+    Config knobs:
+    - cache_watcher_dry_run (default true): log what would happen, don't bump
+    - cache_watcher_debug: log the fingerprint comparison when nothing changed
+    - cache_watcher_interval_seconds (default 60): check frequency; beat
+      fires every minute and the task no-ops when not yet due
+    """
+    now = timezone.now().timestamp()
+    last_run = cache.get(CACHE_WATCHER_LAST_RUN_KEY)
+    if last_run is not None:
+        interval = _watcher_config_float("cache_watcher_interval_seconds", 60.0)
+        if now - last_run < interval:
+            return
+    cache.set(CACHE_WATCHER_LAST_RUN_KEY, now, None)
+    current = _get_fingerprint()
+    if current is None:
+        return
+    previous = cache.get(CACHE_WATCHER_STATE_KEY)
+    cache.set(CACHE_WATCHER_STATE_KEY, current, None)
+    if previous is None:
+        logger.info("cache watcher: first run, storing fingerprint (no bump)")
+        return
+    if current == previous:
+        if _watcher_config_bool("cache_watcher_debug", False):
+            logger.debug("cache watcher: no DB changes, fingerprint unchanged")
+        return
+    deltas = _fingerprint_deltas(previous, current)
+    if _watcher_config_bool("cache_watcher_dry_run", True):
+        logger.info("cache watcher: DRY RUN, would bump cache generation: %s", deltas)
+    else:
+        logger.info("cache watcher: DB changed, bumping cache generation: %s", deltas)
+        cache_lock.bump_generation()
+
+
+def _get_fingerprint():
+    """Return {table: (ins, upd, del)} from pg_stat_user_tables, or None.
+
+    None means "cannot fingerprint" (non-postgres, e.g. sqlite in tests):
+    the watcher then does nothing, so local dev and tests are unaffected.
+    """
+    if connection.vendor != "postgresql":
+        return None
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT relname, n_tup_ins, n_tup_upd, n_tup_del "
+                "FROM pg_stat_user_tables WHERE relname LIKE 'racedbapp_%'"
+            )
+            rows = cursor.fetchall()
+    except Exception:
+        logger.exception("cache watcher: fingerprint query failed")
+        return None
+    return {row[0]: (row[1], row[2], row[3]) for row in rows}
+
+
+def _fingerprint_deltas(previous, current):
+    deltas = {}
+    for table, counters in current.items():
+        prev = previous.get(table)
+        if prev is None:
+            deltas[table] = "new table, counters {}".format(counters)
+            continue
+        delta = tuple(c - p for c, p in zip(counters, prev))
+        if any(delta):
+            deltas[table] = delta
+    for table in previous:
+        if table not in current:
+            deltas[table] = "table gone"
+    return deltas
+
+
+def _watcher_config_bool(name, default):
+    value = get_config_value_or_false(name)
+    if value is False:
+        return default
+    return value.strip().lower() in ("true", "1", "yes")
+
+
+def _watcher_config_float(name, default):
+    value = get_config_value_or_false(name)
+    if value is False:
+        return default
+    try:
+        return float(value)
+    except ValueError:
+        logger.warning("cache watcher: invalid %s=%r, using %s", name, value, default)
+        return default
 
 @shared_task
 def photoupdate(request_date=None, force=False):
@@ -179,8 +283,13 @@ def slack_missing_urls():
 
 @shared_task
 def clear_cache():
-    logger.info("Clearing cache")
-    cache.clear()
+    """Invalidate all generation-stamped cache entries, then warm hot pages.
+
+    Kept for the notifykey endpoint and addraces; does a generation bump,
+    not a cache.clear().
+    """
+    logger.info("Bumping cache generation")
+    cache_lock.bump_generation()
     safe_enqueue(warm_cache)
 
 
