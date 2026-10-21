@@ -112,6 +112,12 @@ There are different workflows that may execute depending on the situation.
 ## Configurable Options
 The following options can be configured in Configs in the Django admin site.
 
+**cache_watcher_debug**: If set, log the cache watcher's fingerprint comparison when nothing changed (see [docs/caching.md](docs/caching.md)).
+
+**cache_watcher_dry_run**: If set, the cache watcher logs what it would do without actually invalidating the cache (see [docs/caching.md](docs/caching.md)).
+
+**cache_watcher_interval_seconds**: How often the cache watcher checks the database for changes, in seconds. Default is 60 (see [docs/caching.md](docs/caching.md)).
+
 **email_from_address**: Address that emails will be sent from.
 
 **email_to_address**: Address that emails will be sent to.
@@ -125,7 +131,7 @@ endurrun_same_name: Bob Smith;Bobby Smith;Robert Smith
 
 **endurrun_stats_min_finishes**: Minimum number of finishes to be included in the ENDURrun finishers section of the ENDURrun Stats view (`/endurrun/stats/`)
 
-**event_cache_days**: Number of days an event view stays cacheable after the event date (event views are only cached for events in the past). Default is 30. Set to 0 to disable event view caching.
+**event_cache_days**: Number of days an event view stays cacheable after the event date (event views are only cached for events in the past). Default is 30. Set to 0 to disable event view caching. See [docs/caching.md](docs/caching.md) for how caching and invalidation work.
 
 **featured_member_id_next**: Member ID to be used next time `update_featured_member_id()` is executed. This will only work for active members with a profile photo. Once used this option will be unset.
 
