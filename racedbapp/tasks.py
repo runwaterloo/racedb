@@ -28,7 +28,8 @@ def safe_enqueue(task, *args, **kwargs):
     """Enqueue a Celery task, tolerating an unreachable broker.
 
     Local dev often runs without a broker (SETTINGS=min has no
-    CELERY_BROKER_URL, so Celery defaults to RabbitMQ on localhost).
+    CELERY_BROKER_URL, so Celery would default to RabbitMQ on localhost
+    if a task were enqueued; production broker is Redis).
     Queueing failures should degrade to a log line, not break the
     request or import that triggered them.
     """
@@ -56,8 +57,8 @@ def webhook():
     logging.info("Updating pip requirements")
     os.system("pip install -r requirements.txt")
     # clear_cache bumps the generation and warms hot pages; the warm task
-    # survives the .restart (queued in RabbitMQ, redelivered on startup) so
-    # post-deploy visitors hit warm cache, not cold renders.
+    # survives the .restart (queued in the Redis broker, redelivered after
+    # startup) so post-deploy visitors hit warm cache, not cold renders.
     safe_enqueue(clear_cache)
     logging.info("Touching .restart")
     os.system("touch .restart")
