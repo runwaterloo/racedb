@@ -1,0 +1,38 @@
+name: Bug report
+description: Something is broken or not working as expected
+type: Bug
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, and what did you see instead? Include the URL or page where it happened.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: when
+    attributes:
+      label: When did it start / what changed?
+      description: Roughly when did you first see this, and was there a recent change or action before it appeared?
+    validations:
+      required: false
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: If you can, list the steps that reliably show the problem.
+    validations:
+      required: false
+  - type: checkboxes
+    id: hard-refresh
+    attributes:
+      label: Troubleshooting
+      options:
+        - label: I tried a hard refresh (Ctrl/Cmd+Shift+R)
