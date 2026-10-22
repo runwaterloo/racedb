@@ -1,0 +1,27 @@
+name: Feature request
+description: Something new you'd like to see
+type: Feature
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Describe the idea
+      description: What are you trying to do that you can't? What should it do instead? Mention the page or area if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: mockup
+    attributes:
+      label: Mockup / screenshot
+      description: Paste a link to a mockup, screenshot, or sketch (optional). You can drag images straight into this box.
+    validations:
+      required: false
+  - type: dropdown
+    id: importance
+    attributes:
+      label: How important is this?
+      options:
+        - Nice to have
+        - Must have
+    validations:
+      required: true
