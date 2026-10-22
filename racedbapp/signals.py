@@ -26,4 +26,4 @@ def model_post_delete(sender, **kwargs):
 def config_post_save(sender, **kwargs):
     if kwargs.get("raw"):
         return
-    tasks.safe_enqueue(tasks.clear_cache)
+    tasks.safe_enqueue(tasks.clear_cache, source="config_save")

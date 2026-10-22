@@ -22,7 +22,7 @@ def bumps(monkeypatch):
     import racedbapp.tasks as tasks
 
     seen = []
-    monkeypatch.setattr(tasks.cache_lock, "bump_generation", lambda: seen.append(1))
+    monkeypatch.setattr(tasks.cache_lock, "bump_generation", lambda source: seen.append(source))
     return seen
 
 
@@ -76,7 +76,7 @@ def test_changed_fingerprint_bumps_when_not_dry_run(fingerprint, bumps, monkeypa
     db_cache_watcher()
     fingerprint["value"] = {"racedbapp_event": (11, 6, 2)}
     db_cache_watcher()
-    assert bumps == [1]
+    assert bumps == ["watcher"]
 
 
 def test_interval_throttle_skips_run(fingerprint, bumps, monkeypatch):

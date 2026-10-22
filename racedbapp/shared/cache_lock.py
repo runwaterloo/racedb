@@ -23,7 +23,7 @@ Generation-based invalidation:
   in the cache under GENERATION_KEY. A cached entry is a hit only if its
   generation matches the current one; stale-generation entries are treated
   exactly like misses and expire naturally (ENTRY_TTL_SECONDS).
-- Invalidating the cache means calling bump_generation(). It does NOT delete
+- Invalidating the cache means calling bump_generation(source). It does NOT delete
   entries, so a render that started before the bump stores an old generation
   and is ignored on read — cache.clear() while renders are in flight was the
   way stale pages could be re-cached and live forever.
@@ -38,10 +38,13 @@ single-flight lock keys live outside this scheme, and both are private to
 this module.
 """
 
+import logging
 import time
 import uuid
 
 from django.core.cache import cache
+
+logger = logging.getLogger(__name__)
 
 LOCK_TTL_SECONDS = 120  # auto-release if a renderer dies; > WAIT_TIMEOUT_SECONDS
 WAIT_TIMEOUT_SECONDS = 60  # how long waiters wait before rendering themselves
@@ -77,16 +80,23 @@ def set(cache_key, value):
     cache.set(cache_key, (generation, value), ENTRY_TTL_SECONDS)
 
 
-def bump_generation():
+def bump_generation(source):
     """Invalidate all generation-stamped cache entries.
+
+    source is required (a short string like "watcher", "addraces",
+    "webhook") so every bump in the logs is attributable. There are no
+    mystery callers: invalidation paths in this repo all pass one.
 
     Does not delete anything: old entries become unreadable (stale
     generation) and expire on their own TTL.
     """
+    if not source or not isinstance(source, str):
+        raise ValueError("bump_generation requires a source string")
     # cache.add only succeeds if the key does not exist yet, so this is
     # atomic: create at 2 (initial generation is 1), otherwise increment.
     if not cache.add(GENERATION_KEY, 2, GENERATION_TTL_SECONDS):
         cache.incr(GENERATION_KEY)
+    logger.info("cache bump: gen=%s source=%s", _current_generation(), source)
 
 
 def _entry_is_current(cached):

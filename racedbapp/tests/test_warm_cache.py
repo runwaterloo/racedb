@@ -47,7 +47,7 @@ def test_clear_cache_enqueues_warm_cache():
     from django.core.cache import cache
 
     with patch.object(tasks, "safe_enqueue") as mock_enqueue:
-        tasks.clear_cache()
+        tasks.clear_cache(source="test")
     assert cache.get("index.") is None
     mock_enqueue.assert_called_once_with(tasks.warm_cache)
 
@@ -66,3 +66,9 @@ def test_warm_cache_adds_scheme_to_bare_host():
     mocked_get.assert_called_once()
     url = mocked_get.call_args[0][0]
     assert url == "https://results.runwaterloo.com/"
+
+
+def test_clear_cache_requires_source():
+    # clear_cache feeds the generation-bump log line; a source is mandatory
+    with pytest.raises(TypeError):
+        tasks.clear_cache()

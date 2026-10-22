@@ -10,4 +10,4 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.WARNING("clear_cache is deprecated; use bump_cache_generation")
         )
-        clear_cache()
+        clear_cache(source="command")

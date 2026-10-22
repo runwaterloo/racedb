@@ -7,4 +7,4 @@ class Command(BaseCommand):
     help = "Invalidate all generation-stamped cache entries and warm hot pages"
 
     def handle(self, *args, **options):
-        clear_cache()
+        clear_cache(source="command")

@@ -171,7 +171,7 @@ class TestGeneration:
     def test_bump_invalidates_entries(self, unique_key):
         cache_lock.set(unique_key, "old_html")
         assert cache_lock.get(unique_key) == "old_html"
-        cache_lock.bump_generation()
+        cache_lock.bump_generation(source="test")
         assert cache_lock.get(unique_key) is None
 
     def test_render_started_before_bump_is_ignored_after(self, unique_key):
@@ -179,7 +179,7 @@ class TestGeneration:
         # bump must not re-cache itself over newer content
         old_generation = cache_lock._current_generation()
         cache_lock.set(unique_key, "old_html")
-        cache_lock.bump_generation()
+        cache_lock.bump_generation(source="test")
         # simulate the in-flight render finishing after the bump
         cache.set(unique_key, (old_generation, "stale_render"), 3600)
         calls = []
@@ -189,8 +189,8 @@ class TestGeneration:
 
     def test_bump_is_atomic_and_monotonic(self, unique_key):
         start = cache_lock._current_generation()
-        cache_lock.bump_generation()
-        cache_lock.bump_generation()
+        cache_lock.bump_generation(source="test")
+        cache_lock.bump_generation(source="test")
         assert cache_lock._current_generation() == start + 2
 
     def test_unstamped_entries_are_treated_as_misses(self, unique_key):
@@ -202,8 +202,21 @@ class TestGeneration:
         assert cache_lock.get(unique_key) == "stamped"
 
     def test_set_stamps_with_current_generation(self, unique_key):
-        cache_lock.bump_generation()
+        cache_lock.bump_generation(source="test")
         cache_lock.set(unique_key, "value")
         stored = cache.get(unique_key)
         assert isinstance(stored, tuple)
         assert stored[0] == cache_lock._current_generation()
+
+
+def test_bump_generation_requires_source():
+    # every bump must be attributable; a bare call is a programming error
+    with pytest.raises(TypeError):
+        cache_lock.bump_generation()
+
+
+def test_bump_generation_rejects_empty_source():
+    with pytest.raises(ValueError):
+        cache_lock.bump_generation("")
+    with pytest.raises(ValueError):
+        cache_lock.bump_generation(None)
