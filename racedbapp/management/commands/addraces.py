@@ -390,7 +390,7 @@ class Command(BaseCommand):
         #     tasks.slack_results_update.delay(slack_results)
         info = "Clearing cache"
         logger.info(info)
-        tasks.safe_enqueue(tasks.clear_cache)
+        tasks.safe_enqueue(tasks.clear_cache, source="addraces")
         info = "Process complete"
         logger.info(info)
         self.stdout.write("Process complete!")

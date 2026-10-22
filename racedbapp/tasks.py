@@ -59,7 +59,7 @@ def webhook():
     # clear_cache bumps the generation and warms hot pages; the warm task
     # survives the .restart (queued in the Redis broker, redelivered after
     # startup) so post-deploy visitors hit warm cache, not cold renders.
-    safe_enqueue(clear_cache)
+    safe_enqueue(clear_cache, source="webhook")
     logging.info("Touching .restart")
     os.system("touch .restart")
 
@@ -107,7 +107,7 @@ def db_cache_watcher():
         logger.info("cache watcher: DRY RUN, would bump cache generation: %s", deltas)
     else:
         logger.info("cache watcher: DB changed, bumping cache generation: %s", deltas)
-        cache_lock.bump_generation()
+        cache_lock.bump_generation(source="watcher")
 
 
 def _get_fingerprint():
@@ -285,14 +285,16 @@ def slack_missing_urls():
 
 
 @shared_task
-def clear_cache():
+def clear_cache(source):
     """Invalidate all generation-stamped cache entries, then warm hot pages.
 
-    Kept for the notifykey endpoint and addraces; does a generation bump,
-    not a cache.clear().
+    source is required and flows into the generation-bump log line, so
+    every invalidation is attributable (e.g. "watcher", "addraces",
+    "clearcache-view", "webhook", "config_save", "command").
     """
-    logger.info("Bumping cache generation")
-    cache_lock.bump_generation()
+    if not source or not isinstance(source, str):
+        raise ValueError("clear_cache requires a source string")
+    cache_lock.bump_generation(source=source)
     safe_enqueue(warm_cache)
 
 

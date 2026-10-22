@@ -160,6 +160,10 @@ CELERY_BROKER_URL = "redis://racedb-redis:6379"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+# Watcher fires every minute; without this, its task results (celery-task-meta-*)
+# accumulate in Redis at the 24 h default (~1500 keys). Nothing reads them —
+# keep a short TTL so they're only there if someone goes looking.
+CELERY_TASK_RESULT_EXPIRES = 3600
 CELERY_BEAT_SCHEDULE = celery_beats.CELERY_BEAT_SCHEDULE
 
 # --- Logging ---

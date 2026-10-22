@@ -28,7 +28,7 @@ The cache stores each rendered page under its key (for example `index.` or `even
 
 - **Read** (`shared/cache_lock.get_or_render`): read the current generation, fetch the entry. It's a hit only if the entry's stored generation equals the current one. Otherwise it's a miss and the page re-renders.
 - **Render**: render under a single-flight lock (concurrent misses share one render). The finished page is stamped with the generation read *at the start of the render* and stored with a 30-hour TTL.
-- **Invalidate** (`bump_generation()`): increment the counter. No entries are touched, but every entry instantly becomes stale because its generation no longer matches. The next request re-renders and stores the new generation.
+- **Invalidate** (`bump_generation(source)`): increment the counter and log the bump with its source. No entries are touched, but every entry instantly becomes stale because its generation no longer matches. The next request re-renders and stores the new generation.
 
 Why not `cache.clear()`? Clearing has a race: a render that started before the clear can finish after it and write pre-clear content into the now-empty cache, which then reads as a fresh hit for up to its TTL. Stamping entries with the generation read at render start kills that race — a late write is immediately recognized as stale.
 
@@ -71,11 +71,11 @@ If the fingerprint query fails, or the cache backend is not Redis-like (tests us
 
 - All cache reads and writes go through `shared/cache_lock`; entries are always stored as `(generation, value)` with the current generation.
 - Never call `cache.set` or `cache.clear` for page content directly.
-- To invalidate, call `bump_generation()` (or enqueue `clear_cache` if warming is wanted). Never delete entries to invalidate.
+- To invalidate, call `bump_generation(source)` (or enqueue `clear_cache(source=...)` if warming is wanted). `source` is required — a short string identifying the caller (`watcher`, `addraces`, `clearcache-view`, `webhook`, `config_save`, `command`, ...). Never delete entries to invalidate.
 - New cache users don't need their own invalidation wiring — the watcher covers any DB change; only wire an immediate path if seconds matter.
 
 ### Debugging
 
 - `redis-cli -n 1 --scan --pattern '*'` — list cache entries (keys look like `:1:index.`, `:1:event.<id>.<filter>`, plus `cache_generation` and the watcher's state keys).
 - `redis-cli -n 1 GET cache_generation` — the current generation.
-- Logs: `{app="racedb"}` in Loki, search for `cache watcher` (watcher decisions), `Bumping cache generation` and `warm_cache` (invalidation runs).
+- Logs: `{app="racedb"}` in Loki, search for `cache watcher` (watcher decisions), `cache bump` (invalidations — each line carries the source: `cache bump: gen=N source=addraces`) and `warm_cache` (warming runs).
