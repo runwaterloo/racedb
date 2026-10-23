@@ -238,6 +238,30 @@ alloy:
         forward_to = [prometheus.remote_write.grafanacloud.receiver]
         job_name   = "redis"
       }
+      discovery.relabel "postgres_pods" {
+      targets = discovery.kubernetes.pod.targets
+        rule {
+          action        = "keep"
+          source_labels = ["__meta_kubernetes_pod_label_app"]
+          regex         = "postgres"
+        }
+        rule {
+          action        = "keep"
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          regex         = "postgres-exporter"
+        }
+        rule {
+          action        = "replace"
+          source_labels = ["__meta_kubernetes_pod_ip"]
+          target_label  = "__address__"
+          replacement   = "$1:9187"
+        }
+      }
+      prometheus.scrape "postgres" {
+        targets    = discovery.relabel.postgres_pods.output
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+        job_name   = "postgres"
+      }
       ////////////////////////////////////////////////////////////////////////////////////
 
       ///////////////////////////////////////////////////////////////////////////////////

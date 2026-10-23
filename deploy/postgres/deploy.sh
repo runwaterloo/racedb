@@ -4,3 +4,8 @@
 kubectl apply -f ./manifests
 echo "Waiting for Postgres pod to be ready..."
 kubectl wait --for=condition=ready pod/postgres-0 --timeout=180s
+
+# Enable pg_stat_statements (requires the shared_preload_libraries arg in
+# statefulset.yaml, applied above, so the extension can be created on the
+# restarted pod).
+kubectl exec postgres-0 -- psql -U "$(kubectl get secret postgres-secret -o jsonpath='{.data.username}' | base64 -d)" -d "$(kubectl get secret postgres-secret -o jsonpath='{.data.username}' | base64 -d)" -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
