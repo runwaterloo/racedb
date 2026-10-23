@@ -17,6 +17,9 @@ spec:
       containers:
       - name: postgres
         image: postgres:17-alpine
+        args:
+        - -c
+        - shared_preload_libraries=pg_stat_statements
         env:
         - name: POSTGRES_DB
           valueFrom:
@@ -70,6 +73,38 @@ spec:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
           subPath: postgres
+      - name: postgres-exporter
+        image: prometheuscommunity/postgres-exporter:v0.17.1
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: username
+        - name: DATA_SOURCE_NAME
+          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:5432/$(POSTGRES_DB)?sslmode=disable"
+        args:
+        - --collector.stat_statements
+        - --collector.stat_statements.include_query
+        - --collector.stat_statements.limit=20
+        ports:
+        - name: http-metrics
+          containerPort: 9187
+        resources:
+          requests:
+            memory: "32Mi"
+          limits:
+            memory: "64Mi"
   volumeClaimTemplates:
   - metadata:
       name: postgres-data
