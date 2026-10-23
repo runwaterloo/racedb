@@ -95,7 +95,7 @@ spec:
           value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:5432/$(POSTGRES_DB)?sslmode=disable"
         args:
         - --collector.stat_statements
-        - --collector.stat_statements.include_query
+
         - --collector.stat_statements.limit=20
         ports:
         - name: http-metrics
