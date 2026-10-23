@@ -56,6 +56,13 @@ ingress:
   catchall:
     enabled: false
     hostmatch: Hostregexp(`.+`)
+  rateLimit:
+    average: 20
+    period: 1m
+    burst: 50
+    apiAverage: 100
+    apiPeriod: 1m
+    apiBurst: 500
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

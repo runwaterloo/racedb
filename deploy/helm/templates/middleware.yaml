@@ -12,9 +12,7 @@ metadata:
   name: "{{ include "racedb.fullname" . }}-rate-limit"
 spec:
   rateLimit:
-    average: 20
-    period: 1m
-    burst: 50
+    {{- toYaml .Values.ingress.rateLimit | nindent 4 }}
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
@@ -22,6 +20,6 @@ metadata:
   name: "{{ include "racedb.fullname" . }}-rate-limit-api"
 spec:
   rateLimit:
-    average: 100
-    period: 1m
-    burst: 500
+    average: {{ .Values.ingress.rateLimit.apiAverage }}
+    period: {{ .Values.ingress.rateLimit.apiPeriod }}
+    burst: {{ .Values.ingress.rateLimit.apiBurst }}
