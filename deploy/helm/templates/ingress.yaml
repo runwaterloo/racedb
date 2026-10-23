@@ -30,6 +30,7 @@ spec:
         - name: "{{ include "racedb.fullname" . }}"
           port: {{ .Values.service.port}}
       middlewares:
+        - name: "{{ include "racedb.fullname" . }}-rate-limit"
         - name: "{{ include "racedb.fullname" . }}-redirect"
 ---
 apiVersion: traefik.io/v1alpha1
@@ -45,6 +46,8 @@ spec:
       services:
         - name: "{{ include "racedb.fullname" . }}"
           port: {{ .Values.service.port}}
+      middlewares:
+        - name: "{{ include "racedb.fullname" . }}-rate-limit"
   tls:
     certResolver: le
 ---
@@ -61,6 +64,8 @@ spec:
       services:
         - name: "{{ include "racedb.fullname" . }}"
           port: {{ .Values.service.port}}
+      middlewares:
+        - name: "{{ include "racedb.fullname" . }}-rate-limit-api"
   tls:
     certResolver: le
 {{- end }}
