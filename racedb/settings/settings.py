@@ -1,4 +1,5 @@
 import os
+import sys
 
 from django.db.backends.signals import connection_created
 
@@ -235,7 +236,13 @@ REST_FRAMEWORK = {
 # --- Django model defaults ---
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
-ENABLE_DEBUG_TOOLBAR = os.getenv("ENABLE_DEBUG_TOOLBAR", "false") == "true"
+# Skip the debug toolbar under pytest: it injects a random per-request ID into
+# every response, so a response that comes back from the cache differs from the
+# one that was originally rendered.
+ENABLE_DEBUG_TOOLBAR = (
+    os.getenv("ENABLE_DEBUG_TOOLBAR", "false") == "true"
+    and "pytest" not in sys.modules
+)
 
 if ENABLE_DEBUG_TOOLBAR:
     INSTALLED_APPS += ("debug_toolbar",)  # noqa

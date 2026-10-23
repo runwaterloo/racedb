@@ -14,10 +14,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 
-import os
 
 from django.contrib import admin
 from django.urls import include, path, re_path
+
+from racedb.settings.settings import ENABLE_DEBUG_TOOLBAR
 
 urlpatterns = [
     path("", include("django_prometheus.urls")),
@@ -26,7 +27,7 @@ urlpatterns = [
     path("", include("racedbapp.urls")),
 ]
 
-if os.environ.get("ENABLE_DEBUG_TOOLBAR", "false") == "true":
+if ENABLE_DEBUG_TOOLBAR:
     import debug_toolbar
 
     urlpatterns += [
