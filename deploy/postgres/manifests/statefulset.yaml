@@ -96,7 +96,6 @@ spec:
         args:
         - --collector.stat_statements
 
-        - --collector.stat_statements.limit=20
         ports:
         - name: http-metrics
           containerPort: 9187
