@@ -65,6 +65,17 @@ else
       echo "[ERROR] Failed to upgrade racedbdev to ${LATEST_TAG}"
       exit 1
     fi
+    # Re-deploy Postgres so manifest changes take effect (no-op unless the
+    # StatefulSet pod template changed, in which case the pod restarts).
+    if git diff --quiet "$CURRENT_TAG" "$LATEST_TAG" -- ../postgres/; then
+        echo "[INFO] No Postgres manifest changes since $CURRENT_TAG. Skipping."
+    else
+        echo "[INFO] Deploying Postgres"
+        (
+            cd ../postgres && ./deploy.sh
+        ) || echo "[ERROR] Failed to deploy Postgres"
+    fi
+
     echo "INFO: Deploying alloy"
     cd ../alloy
     if ! ./deploy.sh ; then
