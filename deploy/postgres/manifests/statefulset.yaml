@@ -20,6 +20,16 @@ spec:
         args:
         - -c
         - shared_preload_libraries=pg_stat_statements
+        - -c
+        - logging_collector=on
+        - -c
+        - log_destination=jsonlog
+        - -c
+        - log_directory=/var/log/postgresql
+        - -c
+        - log_filename=postgres
+        - -c
+        - log_min_duration_statement=250
         env:
         - name: POSTGRES_DB
           valueFrom:
@@ -73,6 +83,22 @@ spec:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
           subPath: postgres
+        - name: postgres-logs
+          mountPath: /var/log/postgresql
+      - name: postgres-logs-tailer
+        image: alpine:3.20
+        command:
+        - sh
+        - -c
+        - until [ -f /logs/postgres.json ]; do sleep 1; done; exec tail -n +1 -F /logs/postgres.json
+        volumeMounts:
+        - name: postgres-logs
+          mountPath: /logs
+        resources:
+          requests:
+            memory: "8Mi"
+          limits:
+            memory: "16Mi"
       - name: postgres-exporter
         image: prometheuscommunity/postgres-exporter:v0.17.1
         env:
@@ -104,6 +130,10 @@ spec:
             memory: "32Mi"
           limits:
             memory: "64Mi"
+      volumes:
+      - name: postgres-logs
+        emptyDir:
+          sizeLimit: 64Mi
   volumeClaimTemplates:
   - metadata:
       name: postgres-data
