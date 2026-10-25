@@ -27,7 +27,9 @@ spec:
         - -c
         - log_directory=/var/log/postgresql
         - -c
-        - log_filename=postgres
+        - log_filename=postgres-%a
+        - -c
+        - log_truncate_on_rotation=on
         - -c
         - log_min_duration_statement=250
         env:
