@@ -68,7 +68,28 @@ def index(request, year, leaderboard_only=False, standings_only=False):
     for i in included_members:
         battlers[i.id] = Battler(i, year, nophoto_url)
     dbresults = (
-        Result.objects.select_related()
+        Result.objects.select_related(
+            "event__race", "event__distance", "event__sequel"
+        )
+        .only(
+            "id",
+            "gender",
+            "guntime",
+            "gender_place",
+            "isrwpb",
+            "rwmember_id",
+            "event__date",
+            "event__id",
+            "event__race__id",
+            "event__race__shortname",
+            "event__race__slug",
+            "event__distance__id",
+            "event__distance__name",
+            "event__distance__slug",
+            "event__sequel__id",
+            "event__sequel__name",
+            "event__sequel__slug",
+        )
         .filter(
             event__date__range=(first_day, last_day),
             gender_place__isnull=False,
@@ -271,33 +292,34 @@ def get_previous_races(year, included_members):
     first_day = datetime(previous_year, 1, 1).date()
     last_day = datetime(previous_year, 12, 31).date()
     previous_races = {}
-    results = Result.objects.select_related().filter(
-        event__date__range=(first_day, last_day), rwmember_id__in=included_members
+    results = (
+        Result.objects.order_by()
+        .filter(
+            event__date__range=(first_day, last_day), rwmember_id__in=included_members
+        )
+        .values_list("rwmember_id", "event__race_id")
     )
-    for i in results:
-        if i.rwmember_id in previous_races:
-            previous_races[i.rwmember_id].append(i.event.race)
+    for rwmember_id, race_id in results:
+        if rwmember_id in previous_races:
+            previous_races[rwmember_id].add(race_id)
         else:
-            previous_races[i.rwmember_id] = [i.event.race]
+            previous_races[rwmember_id] = {race_id}
     return previous_races
 
 
 def get_gender_finishers(first_day, last_day):
-    gender_finishers = {}
-    for i in ("F", "M"):
-        db = (
-            Event.objects.values("id")
-            .filter(
-                date__range=(first_day, last_day),
-                result__gender=i,
-                result__place__lt=990000,
-            )
-            .annotate(num_finishers=Count("result"))
+    db = (
+        Result.objects.filter(
+            event__date__range=(first_day, last_day),
+            gender__in=["F", "M"],
+            place__lt=990000,
         )
-        thisdict = {}
-        for j in db:
-            thisdict[j["id"]] = j["num_finishers"]
-        gender_finishers[i] = thisdict
+        .values("event_id", "gender")
+        .annotate(num_finishers=Count("id"))
+    )
+    gender_finishers = {"F": {}, "M": {}}
+    for j in db:
+        gender_finishers[j["gender"]][j["event_id"]] = j["num_finishers"]
     return gender_finishers
 
 
@@ -379,7 +401,7 @@ class BResult:
         )
         self.ditto_boost = self.pb_boost = self.classic_boost = 0
         if result.rwmember_id in previous_races:
-            if result.event.race in previous_races[result.rwmember_id]:
+            if result.event.race_id in previous_races[result.rwmember_id]:
                 self.ditto_boost = int(config_dict["boost_ditto_points"])
         if result.isrwpb:
             self.pb_boost = int(config_dict["boost_pb_points"])
