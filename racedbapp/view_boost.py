@@ -271,14 +271,18 @@ def get_previous_races(year, included_members):
     first_day = datetime(previous_year, 1, 1).date()
     last_day = datetime(previous_year, 12, 31).date()
     previous_races = {}
-    results = Result.objects.select_related().filter(
-        event__date__range=(first_day, last_day), rwmember_id__in=included_members
+    results = (
+        Result.objects.order_by()
+        .filter(
+            event__date__range=(first_day, last_day), rwmember_id__in=included_members
+        )
+        .values_list("rwmember_id", "event__race_id")
     )
-    for i in results:
-        if i.rwmember_id in previous_races:
-            previous_races[i.rwmember_id].append(i.event.race)
+    for rwmember_id, race_id in results:
+        if rwmember_id in previous_races:
+            previous_races[rwmember_id].add(race_id)
         else:
-            previous_races[i.rwmember_id] = [i.event.race]
+            previous_races[rwmember_id] = {race_id}
     return previous_races
 
 
@@ -376,7 +380,7 @@ class BResult:
         )
         self.ditto_boost = self.pb_boost = self.classic_boost = 0
         if result.rwmember_id in previous_races:
-            if result.event.race in previous_races[result.rwmember_id]:
+            if result.event.race_id in previous_races[result.rwmember_id]:
                 self.ditto_boost = int(config_dict["boost_ditto_points"])
         if result.isrwpb:
             self.pb_boost = int(config_dict["boost_pb_points"])
