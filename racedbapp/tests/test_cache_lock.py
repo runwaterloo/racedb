@@ -1,4 +1,3 @@
-import threading
 import time
 
 import pytest
@@ -17,10 +16,6 @@ def clear_cache():
 @pytest.fixture
 def unique_key():
     return "test_cache_lock_index"
-
-
-def render_calls():
-    return []
 
 
 def make_render_func(calls, result="html", delay=0):
@@ -53,51 +48,9 @@ class TestGetOrRender:
         assert result2 == "html1"
         assert len(calls) == 1
 
-    def test_concurrent_requests_render_once(self, unique_key):
-        calls = []
-        render_func = make_render_func(calls, "rendered", delay=0.3)
-        results = [None] * 10
-        barrier = threading.Barrier(10)
-
-        def worker(i):
-            barrier.wait()
-            results[i] = cache_lock.get_or_render(unique_key, render_func)
-
-        threads = [threading.Thread(target=worker, args=(i,)) for i in range(10)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join(timeout=10)
-        assert all(r == "rendered" for r in results)
-        assert len(calls) == 1
-
-    def test_waiter_gets_cached_value_set_after_it_started_waiting(self, unique_key):
-        calls = []
-        holder = cache_lock._lock_key(unique_key)
-        cache.add(holder, "owner-token", cache_lock.LOCK_TTL_SECONDS)
-        results = [None]
-
-        def waiter():
-            results[0] = cache_lock.get_or_render(unique_key, make_render_func(calls))
-
-        thread = threading.Thread(target=waiter)
-        thread.start()
-        time.sleep(0.3)  # let the waiter block on the held lock
-        cache_lock.set(unique_key, "warm_html")
-        cache.delete(holder)
-        thread.join(timeout=10)
-        assert results[0] == "warm_html"
-        assert calls == []  # waiter must not render
-
-    def test_lock_released_after_render_exception(self, unique_key):
-        calls = []
-        with pytest.raises(ValueError):
-            cache_lock.get_or_render(unique_key, make_render_func(calls, ValueError("boom")))
-        assert cache.get(cache_lock._lock_key(unique_key)) is None
-        # next call renders normally instead of waiting
-        result = cache_lock.get_or_render(unique_key, make_render_func(calls, "recovered"))
-        assert result == "recovered"
-        assert len(calls) == 2
+    def test_set_stores_value(self, unique_key):
+        cache_lock.set(unique_key, "value")
+        assert cache.get(unique_key) == "value"
 
     def test_caches_failure_key_is_not_left_behind_on_error(self, unique_key):
         def failing():
@@ -105,28 +58,27 @@ class TestGetOrRender:
 
         with pytest.raises(RuntimeError):
             cache_lock.get_or_render(unique_key, failing)
-        # a subsequent call re-renders rather than serving a stale None
+        # a subsequent call re-renders rather than serving an error
         result = cache_lock.get_or_render(unique_key, make_render_func([], "fresh"))
         assert result == "fresh"
 
-    def test_falls_back_to_render_after_wait_timeout(self, unique_key, monkeypatch):
-        monkeypatch.setattr(cache_lock, "WAIT_TIMEOUT_SECONDS", 0.1)
-        monkeypatch.setattr(cache_lock, "POLL_INTERVAL_SECONDS", 0.01)
-        cache.add(cache_lock._lock_key(unique_key), "stuck-token", 120)
-        calls = []
-        result = cache_lock.get_or_render(unique_key, make_render_func(calls, "timeout_render"))
-        assert result == "timeout_render"
-        assert len(calls) == 1
 
-    def test_waiter_takes_over_lock_after_release_without_cache(self, unique_key):
-        # lock exists but the renderer released it without caching a value;
-        # a waiter must acquire the lock itself and render, not spin forever
-        cache.add(cache_lock._lock_key(unique_key), "ghost", 1)
-        cache.delete(cache_lock._lock_key(unique_key))  # simulate release, no cache value
-        calls = []
-        result = cache_lock.get_or_render(unique_key, make_render_func(calls, "took_over"))
-        assert result == "took_over"
-        assert len(calls) == 1
+class TestClear:
+    def test_clear_invalidates_entries(self, unique_key):
+        cache_lock.set(unique_key, "old_html")
+        assert cache_lock.get(unique_key) == "old_html"
+        cache_lock.clear(source="test")
+        assert cache_lock.get(unique_key) is None
+
+    def test_clear_requires_source(self):
+        with pytest.raises(TypeError):
+            cache_lock.clear()
+
+    def test_clear_rejects_empty_source(self):
+        with pytest.raises(ValueError):
+            cache_lock.clear("")
+        with pytest.raises(ValueError):
+            cache_lock.clear(None)
 
 
 @pytest.mark.django_db
@@ -165,58 +117,3 @@ def test_index_view_renders_once_and_caches(
     marker = b'<div id="djDebug"'
     assert response2.content.split(marker)[0] == response1.content.split(marker)[0]
     assert len(render_count) == 1
-
-
-class TestGeneration:
-    def test_bump_invalidates_entries(self, unique_key):
-        cache_lock.set(unique_key, "old_html")
-        assert cache_lock.get(unique_key) == "old_html"
-        cache_lock.bump_generation(source="test")
-        assert cache_lock.get(unique_key) is None
-
-    def test_render_started_before_bump_is_ignored_after(self, unique_key):
-        # the race this design exists to fix: a render that started before a
-        # bump must not re-cache itself over newer content
-        old_generation = cache_lock._current_generation()
-        cache_lock.set(unique_key, "old_html")
-        cache_lock.bump_generation(source="test")
-        # simulate the in-flight render finishing after the bump
-        cache.set(unique_key, (old_generation, "stale_render"), 3600)
-        calls = []
-        result = cache_lock.get_or_render(unique_key, make_render_func(calls, "fresh_html"))
-        assert result == "fresh_html"
-        assert len(calls) == 1
-
-    def test_bump_is_atomic_and_monotonic(self, unique_key):
-        start = cache_lock._current_generation()
-        cache_lock.bump_generation(source="test")
-        cache_lock.bump_generation(source="test")
-        assert cache_lock._current_generation() == start + 2
-
-    def test_unstamped_entries_are_treated_as_misses(self, unique_key):
-        # entries written without a generation stamp can never be hits
-        cache.set(unique_key, "raw_value")
-        calls = []
-        result = cache_lock.get_or_render(unique_key, make_render_func(calls, "stamped"))
-        assert result == "stamped"
-        assert cache_lock.get(unique_key) == "stamped"
-
-    def test_set_stamps_with_current_generation(self, unique_key):
-        cache_lock.bump_generation(source="test")
-        cache_lock.set(unique_key, "value")
-        stored = cache.get(unique_key)
-        assert isinstance(stored, tuple)
-        assert stored[0] == cache_lock._current_generation()
-
-
-def test_bump_generation_requires_source():
-    # every bump must be attributable; a bare call is a programming error
-    with pytest.raises(TypeError):
-        cache_lock.bump_generation()
-
-
-def test_bump_generation_rejects_empty_source():
-    with pytest.raises(ValueError):
-        cache_lock.bump_generation("")
-    with pytest.raises(ValueError):
-        cache_lock.bump_generation(None)

@@ -4,10 +4,7 @@ from racedbapp.tasks import clear_cache
 
 
 class Command(BaseCommand):
-    help = "Deprecated: use bump_cache_generation (cache.clear() was replaced by generation bumps, #387)"
+    help = "Clear the cache and warm hot pages"
 
     def handle(self, *args, **options):
-        self.stdout.write(
-            self.style.WARNING("clear_cache is deprecated; use bump_cache_generation")
-        )
         clear_cache(source="command")

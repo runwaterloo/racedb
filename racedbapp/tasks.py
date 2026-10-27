@@ -56,7 +56,7 @@ def webhook():
     os.system("git pull https://gitlab.com/sl70176/racedb.git")
     logging.info("Updating pip requirements")
     os.system("pip install -r requirements.txt")
-    # clear_cache bumps the generation and warms hot pages; the warm task
+    # clear_cache clears the cache and warms hot pages; the warm task
     # survives the .restart (queued in the Redis broker, redelivered after
     # startup) so post-deploy visitors hit warm cache, not cold renders.
     safe_enqueue(clear_cache, source="webhook")
@@ -70,15 +70,15 @@ CACHE_WATCHER_LAST_RUN_KEY = "cache_watcher.last_run"
 
 @shared_task
 def db_cache_watcher():
-    """Bump the cache generation when the DB changes (fixes #387).
+    """Clear the cache when the DB changes.
 
     Every minute, compare a pg_stat fingerprint of racedbapp_* table change
     counters against the previous run. A difference means the DB changed,
     which the signals-based invalidation cannot always see (e.g. photoupdate
-    adding photo tags), so bump the cache generation.
+    adding photo tags), so clear the cache.
 
     Config knobs:
-    - cache_watcher_dry_run (default true): log what would happen, don't bump
+    - cache_watcher_dry_run (default true): log what would happen, don't clear
     - cache_watcher_debug: log the fingerprint comparison when nothing changed
     - cache_watcher_interval_seconds (default 60): check frequency; beat
       fires every minute and the task no-ops when not yet due
@@ -96,7 +96,7 @@ def db_cache_watcher():
     previous = cache.get(CACHE_WATCHER_STATE_KEY)
     cache.set(CACHE_WATCHER_STATE_KEY, current, None)
     if previous is None:
-        logger.info("cache watcher: first run, storing fingerprint (no bump)")
+        logger.info("cache watcher: first run, storing fingerprint (no clear)")
         return
     if current == previous:
         if _watcher_config_bool("cache_watcher_debug", False):
@@ -104,10 +104,10 @@ def db_cache_watcher():
         return
     deltas = _fingerprint_deltas(previous, current)
     if _watcher_config_bool("cache_watcher_dry_run", True):
-        logger.info("cache watcher: DRY RUN, would bump cache generation: %s", deltas)
+        logger.info("cache watcher: DRY RUN, would clear cache: %s", deltas)
     else:
-        logger.info("cache watcher: DB changed, bumping cache generation: %s", deltas)
-        cache_lock.bump_generation(source="watcher")
+        logger.info("cache watcher: DB changed, clearing cache: %s", deltas)
+        cache_lock.clear(source="watcher")
 
 
 def _get_fingerprint():
@@ -286,15 +286,15 @@ def slack_missing_urls():
 
 @shared_task
 def clear_cache(source):
-    """Invalidate all generation-stamped cache entries, then warm hot pages.
+    """Clear the cache, then warm hot pages.
 
-    source is required and flows into the generation-bump log line, so
-    every invalidation is attributable (e.g. "watcher", "addraces",
+    source is required and flows into the clear log line, so every
+    invalidation is attributable (e.g. "watcher", "addraces",
     "clearcache-view", "webhook", "config_save", "command").
     """
     if not source or not isinstance(source, str):
         raise ValueError("clear_cache requires a source string")
-    cache_lock.bump_generation(source=source)
+    cache_lock.clear(source=source)
     safe_enqueue(warm_cache)
 
 

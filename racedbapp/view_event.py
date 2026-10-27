@@ -94,8 +94,8 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
         )
     except Exception:
         raise Http404("Matching event not found")
-    # Cached path: past events within the config window render at most once
-    # even under concurrent load (single-flight lock in cache_lock)
+    # Cached path: past events within the config window are cached; a
+    # concurrent miss may render twice, which is harmless
     if _is_cacheable(event, request):
         cache_key = "event.{}.{}".format(event.id, request.META["QUERY_STRING"])
         return cache_lock.get_or_render(

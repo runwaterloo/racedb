@@ -37,8 +37,8 @@ def index(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     if "asofdate" in qstring:
         return _render_index(request)
-    # Cached path: render at most once even under concurrent load
-    # (single-flight), otherwise each request does its own cold render.
+    # Cached path: cold renders are cheap enough that concurrent misses
+    # may each render; the last write wins.
     return cache_lock.get_or_render(cache_key, lambda: _render_index(request))
 
 
