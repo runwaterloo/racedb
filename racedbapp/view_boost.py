@@ -283,21 +283,18 @@ def get_previous_races(year, included_members):
 
 
 def get_gender_finishers(first_day, last_day):
-    gender_finishers = {}
-    for i in ("F", "M"):
-        db = (
-            Event.objects.values("id")
-            .filter(
-                date__range=(first_day, last_day),
-                result__gender=i,
-                result__place__lt=990000,
-            )
-            .annotate(num_finishers=Count("result"))
+    db = (
+        Event.objects.values("id", "result__gender")
+        .filter(
+            date__range=(first_day, last_day),
+            result__gender__in=["F", "M"],
+            result__place__lt=990000,
         )
-        thisdict = {}
-        for j in db:
-            thisdict[j["id"]] = j["num_finishers"]
-        gender_finishers[i] = thisdict
+        .annotate(num_finishers=Count("result"))
+    )
+    gender_finishers = {"F": {}, "M": {}}
+    for j in db:
+        gender_finishers[j["result__gender"]][j["id"]] = j["num_finishers"]
     return gender_finishers
 
 
