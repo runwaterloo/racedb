@@ -68,7 +68,28 @@ def index(request, year, leaderboard_only=False, standings_only=False):
     for i in included_members:
         battlers[i.id] = Battler(i, year, nophoto_url)
     dbresults = (
-        Result.objects.select_related()
+        Result.objects.select_related(
+            "event__race", "event__distance", "event__sequel"
+        )
+        .only(
+            "id",
+            "gender",
+            "guntime",
+            "gender_place",
+            "isrwpb",
+            "rwmember_id",
+            "event__date",
+            "event__id",
+            "event__race__id",
+            "event__race__shortname",
+            "event__race__slug",
+            "event__distance__id",
+            "event__distance__name",
+            "event__distance__slug",
+            "event__sequel__id",
+            "event__sequel__name",
+            "event__sequel__slug",
+        )
         .filter(
             event__date__range=(first_day, last_day),
             gender_place__isnull=False,
