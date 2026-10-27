@@ -234,3 +234,22 @@ def test_boost_member_standings_only_uses_cache(
     request = RequestFactory().get("/member/x/")
     standings = vb.index(request, "2025", standings_only=True)
     assert standings  # non-empty standings for the tagged member
+
+
+@pytest.mark.django_db
+def test_boost_leaderboard_only_ignores_member_param(
+    create_f_m_results, create_rwmember, create_result
+):
+    """External systems call leaderboard_only=True; ?member= must not break it."""
+    from django.test import RequestFactory
+
+    import racedbapp.view_boost as vb
+
+    _setup_boost_data(create_f_m_results, create_rwmember, create_result)
+    # Warm the cache the way a first request would.
+    vb.index(RequestFactory().get("/boost/2025/"), "2025")
+    # Bogus ?member= would 404/500 if member matching ran before the return.
+    leaderboard = vb.index(
+        RequestFactory().get("/boost/2025/?member=nobody"), "2025", leaderboard_only=True
+    )
+    assert "Female Under 40" in leaderboard

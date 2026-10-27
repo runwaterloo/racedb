@@ -35,6 +35,12 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         lambda: _compute_boost(year, qs_date),
     )
     standings = [i for i in compute["standings"] if _matches_qs_filter(i, qs_filter)]
+    if standings_only:
+        return standings
+    if leaderboard_only:
+        return compute["leaderboard"]
+    # Member matching runs after the early returns so leaderboard_only /
+    # standings_only callers are never exposed to ?member= errors.
     qs_member = False
     member_results = None
     if "member" in qstring:
@@ -47,10 +53,6 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         for i in standings:
             if i.member_id == qs_member.id:
                 member_results = i
-    if standings_only:
-        return standings
-    if leaderboard_only:
-        return compute["leaderboard"]
 
     def render_boost_page():
         if qs_member:
