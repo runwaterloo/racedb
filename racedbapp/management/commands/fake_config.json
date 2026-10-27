@@ -4,5 +4,19 @@
   "male_probability": 0.48,
   "female_probability": 0.48,
   "nonbinary_probability": 0.04,
-  "member_photo_url": "https://farm5.staticflickr.com/4756/39431555954_fb82cb1a35_o.png"
+  "member_photo_url": "https://farm5.staticflickr.com/4756/39431555954_fb82cb1a35_o.png",
+  "boost_year": 2026,
+  "boost_tagged_fraction": 0.6,
+  "boost_config": {
+    "boost_classic_points": 10,
+    "boost_ditto_points": 10,
+    "boost_leaderboard_size": 10,
+    "boost_max_endurrun": 4,
+    "boost_max_events": 8,
+    "boost_max_sport": 2,
+    "boost_merit_max": 100,
+    "boost_participation_points": 5,
+    "boost_pb_points": 10,
+    "nophoto_url": "https://results.runwaterloo.com/static/nophoto.png"
+  }
 }
