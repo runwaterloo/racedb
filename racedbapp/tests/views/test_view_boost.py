@@ -115,3 +115,122 @@ def test_get_previous_races_empty_for_no_results(create_rwmember):
     member = create_rwmember()
     previous_races = get_previous_races(2025, [member.id])
     assert previous_races == {}
+
+
+@pytest.fixture(autouse=True)
+def clear_boost_cache():
+    """Boost results are cached; tests must not see each other's entries."""
+    from django.core.cache import cache
+
+    cache.clear()
+    yield
+    cache.clear()
+
+
+def _fail_compute(year, qs_date):
+    raise AssertionError("_compute_boost called on a cache hit")
+
+
+def _make_boost_member(create_rwmember, create_result, data, suffix):
+    rwmember = create_rwmember()
+    rwmember.joindate = data["event"].date
+    rwmember.gender = "M"
+    rwmember.year_of_birth = 1990
+    rwmember.tags.add(make_boost_tag_2025())
+    rwmember.save()
+    result = create_result(
+        event=data["event"], rwmember=rwmember, gender="M", place=3, name_suffix=suffix
+    )
+    result.gender_place = 2
+    result.save()
+    return rwmember
+
+
+def _setup_boost_data(create_f_m_results, create_rwmember, create_result):
+    data = create_f_m_results
+    make_boost_config()
+    rwmember = _make_boost_member(create_rwmember, create_result, data, "m3")
+    return data, rwmember
+
+
+@pytest.mark.django_db
+def test_boost_render_cache_hit_skips_compute(
+    create_f_m_results, create_rwmember, create_result, monkeypatch
+):
+    _setup_boost_data(create_f_m_results, create_rwmember, create_result)
+    client = APIClient()
+    first = client.get("/boost/2025/")
+    assert first.status_code == 200
+    # A cached bare-year render must not recompute anything.
+    monkeypatch.setattr("racedbapp.view_boost._compute_boost", _fail_compute)
+    second = client.get("/boost/2025/")
+    assert second.status_code == 200
+    assert second.content == first.content
+
+
+@pytest.mark.django_db
+def test_boost_filter_shares_compute_cache(
+    create_f_m_results, create_rwmember, create_result, monkeypatch
+):
+    data, rwmember = _setup_boost_data(create_f_m_results, create_rwmember, create_result)
+    client = APIClient()
+    warmed = client.get("/boost/2025/")
+    assert warmed.status_code == 200
+    # ?filter= must be a compute-cache hit: the same (year, qs_date) entry,
+    # filtered in Python, with no recompute.
+    monkeypatch.setattr("racedbapp.view_boost._compute_boost", _fail_compute)
+    response = client.get("/boost/2025/?filter=F")
+    assert response.status_code == 200
+    response = client.get("/boost/2025/?filter=M")
+    assert response.status_code == 200
+    # Member pages share the same compute cache.
+    response = client.get(f"/boost/2025/?member={rwmember.slug}")
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_boost_cache_bump_invalidates(
+    create_f_m_results, create_rwmember, create_result, monkeypatch
+):
+    from racedbapp.shared import cache_lock
+
+    _setup_boost_data(create_f_m_results, create_rwmember, create_result)
+    client = APIClient()
+    assert client.get("/boost/2025/").status_code == 200
+
+    import racedbapp.view_boost as vb
+
+    calls = []
+    original = vb._compute_boost
+
+    def counting(year, qs_date):
+        calls.append((year, qs_date))
+        return original(year, qs_date)
+
+    monkeypatch.setattr(vb, "_compute_boost", counting)
+    cache_lock.bump_generation(source="test")
+    response = client.get("/boost/2025/")
+    assert response.status_code == 200
+    assert len(calls) == 1  # recomputed exactly once after the bump
+    # ...and the fresh render is cached again
+    monkeypatch.setattr(vb, "_compute_boost", _fail_compute)
+    assert client.get("/boost/2025/").status_code == 200
+
+
+@pytest.mark.django_db
+def test_boost_member_standings_only_uses_cache(
+    create_f_m_results, create_rwmember, create_result, monkeypatch
+):
+    from django.test import RequestFactory
+
+    import racedbapp.view_boost as vb
+
+    data, rwmember = _setup_boost_data(create_f_m_results, create_rwmember, create_result)
+    client = APIClient()
+    # Warm the compute cache via the boost page.
+    assert client.get("/boost/2025/").status_code == 200
+    monkeypatch.setattr("racedbapp.view_boost._compute_boost", _fail_compute)
+    # The member-view path (standings_only) must hit the same compute cache.
+    request = RequestFactory().get("/member/x/")
+    standings = vb.index(request, "2025", standings_only=True)
+    assert standings  # non-empty standings for the tagged member
