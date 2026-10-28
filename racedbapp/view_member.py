@@ -1,9 +1,10 @@
+from bisect import bisect_right
 from collections import namedtuple
 from datetime import date, timedelta
 from operator import attrgetter
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count, F, Min, Window
+from django.db.models import Count, Min
 from django.shortcuts import get_object_or_404, render
 
 from racedbapp.shared.shared import set_distance_display_name
@@ -423,43 +424,64 @@ def get_minutegroup(result, thresholds):
 def get_place_counts(dbresults):
     """Compute gender_place and category_place for every result in bulk.
 
-    One window-function query replaces the two COUNT() queries per row
-    (the N+1 that made member pages expensive). The default frame with
-    ORDER BY place is RANGE UNBOUNDED PRECEDING TO CURRENT ROW, which
-    includes place ties, matching the original COUNT(place__lte=...)
-    semantics exactly. Place counts deliberately include places >=
-    990000 (e.g. DNF) to match the original per-row COUNT filters.
+    One GROUP BY aggregate returns the number of results at each
+    (event, gender, category, place); cumulative counts (count of places
+    <= p, ties included, matching the original COUNT(place__lte=...)
+    and later the RANGE window frame) are summed in Python per
+    partition. Place counts deliberately include places >= 990000
+    (e.g. DNF) to match the original per-row COUNT filters. This
+    avoids fetching every participant's full result row, which is what
+    made the window-function version slow for members with many events.
     """
     event_ids = list({r.event_id for r in dbresults})
     gender_counts = {}
     category_counts = {}
-    if event_ids:
-        rows = (
-            Result.objects.filter(event_id__in=event_ids)
-            .annotate(
-                gender_count=Window(
-                    Count("id"),
-                    partition_by=["event_id", "gender"],
-                    order_by=F("place").asc(),
-                ),
-                category_count=Window(
-                    Count("id"),
-                    partition_by=["event_id", "category_id"],
-                    order_by=F("place").asc(),
-                ),
-            )
-            .values_list(
-                "event_id",
-                "gender",
-                "place",
-                "category_id",
-                "gender_count",
-                "category_count",
-            )
+    if not event_ids:
+        return gender_counts, category_counts
+    rows = (
+        Result.objects.filter(event_id__in=event_ids)
+        .values("event_id", "gender", "category_id", "place")
+        .annotate(n=Count("id"))
+        .values_list("event_id", "gender", "category_id", "place", "n")
+    )
+    gender_groups = {}
+    category_groups = {}
+    for event_id, gender, category_id, place, n in rows:
+        gender_groups.setdefault((event_id, gender), []).append((place, n))
+        category_groups.setdefault((event_id, category_id), []).append((place, n))
+
+    def cumulative_counts(groups):
+        prefix = {}
+        for key, pairs in groups.items():
+            pairs.sort()
+            total = 0
+            places = []
+            sums = []
+            for place, n in pairs:
+                total += n
+                places.append(place)
+                sums.append(total)
+            prefix[key] = (places, sums)
+        return prefix
+
+    gender_prefix = cumulative_counts(gender_groups)
+    category_prefix = cumulative_counts(category_groups)
+
+    def count_at(prefix, key, place):
+        entry = prefix.get(key)
+        if entry is None:
+            return None
+        places, sums = entry
+        idx = bisect_right(places, place)
+        return sums[idx - 1]
+
+    for r in dbresults:
+        gender_counts[(r.event_id, r.gender, r.place)] = count_at(
+            gender_prefix, (r.event_id, r.gender), r.place
         )
-        for event_id, gender, place, category_id, gender_count, category_count in rows:
-            gender_counts[(event_id, gender, place)] = gender_count
-            category_counts[(event_id, category_id, place)] = category_count
+        category_counts[(r.event_id, r.category_id, r.place)] = count_at(
+            category_prefix, (r.event_id, r.category_id), r.place
+        )
     return gender_counts, category_counts
 
 
