@@ -1,8 +1,8 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponsePermanentRedirect
 
 # Paths unauthenticated users may still reach on the gated QA site:
-# the login page and its static assets, plus "/admin/" itself (exact match)
-# so its redirect to /admin/login/ works in a browser.
+# the login page and its static assets, plus "/admin/" (exact match) so
+# its 302 redirect to /admin/login/ works in a browser.
 ALLOWED_EXACT = ("/admin/",)
 ALLOWED_PREFIXES = ("/admin/login",)
 
@@ -23,6 +23,8 @@ class QaAuthGateMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        if request.path == "/admin":
+            return HttpResponsePermanentRedirect("/admin/")
         if request.path in ALLOWED_EXACT or request.path.startswith(ALLOWED_PREFIXES):
             return self.get_response(request)
 

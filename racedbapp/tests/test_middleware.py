@@ -33,6 +33,14 @@ def test_admin_root_allowed_redirects_to_login(gated_client, user):
 
 
 @pytest.mark.django_db
+def test_admin_no_slash_redirects(gated_client, user):
+    # /admin (no slash) is redirected by the gate itself, before auth
+    response = gated_client.get("/admin")
+    assert response.status_code == 301
+    assert response["Location"] == "/admin/"
+
+
+@pytest.mark.django_db
 def test_admin_login_allowed_unauthenticated(gated_client, user):
     response = gated_client.get("/admin/login/")
     assert response.status_code == 200
