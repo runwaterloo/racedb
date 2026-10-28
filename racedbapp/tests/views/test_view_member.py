@@ -136,3 +136,43 @@ def test_race_win_badge_remaps_old_race_and_avoids_repeat_queries(
     assert badges[0].name == f"Won an overall event at {current_race.name}"
     samerace_queries = [q for q in ctx.captured_queries if "samerace" in q["sql"]]
     assert len(samerace_queries) <= 1
+
+
+@pytest.mark.django_db
+def test_inaugural_badge_batches_race_queries(create_event, create_race, create_rwmember):
+    """Inaugural badges: first-year finish flagged, later years not, and the
+    per-race first-year lookup must be one aggregate query, not one per race."""
+    race = create_race(name_suffix="inaug")
+    member = create_rwmember()
+    category = Category.objects.create(name="Open")
+    first_event = create_event(name_suffix="first", date="2010-01-01", race=race)
+    later_event = create_event(name_suffix="later", date="2020-01-01", race=race)
+    other_race = create_race(name_suffix="other")
+    other_event = create_event(name_suffix="other", date="2015-01-01", race=other_race)
+    for event in (first_event, later_event, other_event):
+        Result.objects.create(
+            event=event,
+            category=category,
+            athlete=f"A {member.slug}",
+            gender="F",
+            city="X",
+            place=1,
+            gender_place=1,
+            guntime=datetime.timedelta(minutes=20),
+            rwmember=member,
+        )
+    results = [
+        type("NR", (), {"result": r, "gender_place": 1})
+        for r in Result.objects.filter(rwmember=member).order_by("-event__date")
+    ]
+    with CaptureQueriesContext(connection) as ctx:
+        badges = view_member.get_inaugural_finishes_badges(results)
+    names = [b.name for b in badges]
+    assert names == [
+        "Finished inaugural Test Race inaug",
+        "Finished inaugural Test Race other",
+    ]
+    event_min_queries = [
+        q for q in ctx.captured_queries if "MIN(" in q["sql"].upper() and "event" in q["sql"]
+    ]
+    assert len(event_min_queries) <= 1

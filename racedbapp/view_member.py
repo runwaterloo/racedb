@@ -156,22 +156,24 @@ def get_wc_finishes_badge(results):
 
 def get_inaugural_finishes_badges(results):
     inaugural_finishes_badges = []
-    current_race_ids = Samerace.objects.values_list("current_race_id", flat=True)
-    old_race_ids = Samerace.objects.values_list("old_race_id", flat=True)
+    current_race_ids = list(Samerace.objects.values_list("current_race_id", flat=True))
+    old_race_ids = set(Samerace.objects.values_list("old_race_id", flat=True))
+    same_races_dict = dict(Samerace.objects.values_list("old_race_id", "current_race_id"))
+    current_races = Race.objects.in_bulk(same_races_dict.values())
     races = Race.objects.exclude(id__in=current_race_ids)
-    race_inaugural_years = {}
-    for race in races:
-        first_year = (
-            Event.objects.filter(race=race).aggregate(min_date=Min("date"))["min_date"].year
-        )
-        race_inaugural_years[race] = first_year
+    first_years = dict(
+        races.annotate(min_date=Min("event__date")).values_list("id", "min_date")
+    )
+    race_inaugural_years = {
+        race: first_years[race.id].year for race in races if race.id in first_years
+    }
     already_have = []
     for r in reversed(results):
         if r.result.event.race in race_inaugural_years:
             if r.result.event.date.year == race_inaugural_years[r.result.event.race]:
                 race = r.result.event.race
                 if race.id in old_race_ids:
-                    race = Samerace.objects.get(old_race_id=race.id).current_race
+                    race = current_races[same_races_dict[race.id]]
                 if r.result.event.race not in already_have:
                     image = utils.get_achievement_image(race.slug, "inaugural")
                     inaugural_finishes_badges.append(
