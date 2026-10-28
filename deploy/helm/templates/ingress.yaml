@@ -11,6 +11,8 @@ spec:
     - match: {{ .Values.ingress.catchall.hostmatch}}
       priority: 1
       kind: Rule
+      middlewares:
+        - name: "{{ include "racedb.fullname" . }}-rate-limit"
       services:
         - name: "{{ include "racedb.fullname" . }}"
           port: {{ .Values.service.port}}
