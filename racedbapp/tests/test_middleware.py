@@ -1,8 +1,11 @@
 import pytest
-from django.test import Client
+from django.test import Client, override_settings
 
-QA_HOST = "racedb.runwaterloo.com"
-PROD_HOST = "results.runwaterloo.com"
+MIDDLEWARE_WITH_GATE = [
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "racedbapp.middleware.QaAuthGateMiddleware",
+]
 
 
 @pytest.fixture
@@ -10,52 +13,63 @@ def user(django_user_model):
     return django_user_model.objects.create_user(username="tester", password="pw")
 
 
+@pytest.fixture
+def gated_client():
+    with override_settings(MIDDLEWARE=MIDDLEWARE_WITH_GATE):
+        yield Client()
+
+
 @pytest.mark.django_db
-def test_qa_host_unauthenticated_gets_401(user):
-    client = Client(HTTP_HOST=QA_HOST)
-    response = client.get("/index/")
+def test_unauthenticated_gets_401(gated_client, user):
+    response = gated_client.get("/index/")
     assert response.status_code == 401
 
 
 @pytest.mark.django_db
-def test_non_gated_host_unaffected(user):
-    client = Client(HTTP_HOST=PROD_HOST)
-    response = client.get("/index/")
+def test_admin_root_allowed_redirects_to_login(gated_client, user):
+    response = gated_client.get("/admin/")
+    assert response.status_code == 302
+    assert "/admin/login/" in response["Location"]
+
+
+@pytest.mark.django_db
+def test_admin_login_allowed_unauthenticated(gated_client, user):
+    response = gated_client.get("/admin/login/")
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_admin_deep_path_gated(gated_client, user):
+    response = gated_client.get("/admin/racedbapp/result/")
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_health_gated(gated_client, user):
+    response = gated_client.get("/health/")
+    assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_authenticated_user_gets_content(gated_client, user):
+    gated_client.login(username="tester", password="pw")
+    response = gated_client.get("/index/")
     assert response.status_code != 401
 
 
 @pytest.mark.django_db
-def test_default_testserver_host_unaffected(user):
+def test_middleware_not_attached_when_settings_not_dev(user):
+    # SETTINGS is unset under pytest: the gate must not be in MIDDLEWARE.
+    from django.conf import settings
+
+    assert "racedbapp.middleware.QaAuthGateMiddleware" not in settings.MIDDLEWARE
     client = Client()
     response = client.get("/index/")
     assert response.status_code != 401
 
 
 @pytest.mark.django_db
-def test_admin_login_allowed_unauthenticated(user):
-    client = Client(HTTP_HOST=QA_HOST)
-    response = client.get("/admin/login/")
-    assert response.status_code == 200
-
-
-@pytest.mark.django_db
-def test_health_gated(user):
-    client = Client(HTTP_HOST=QA_HOST)
-    response = client.get("/health/")
+def test_garbage_session_cookie_still_401(gated_client, user):
+    gated_client.cookies["sessionid"] = "forged-value"
+    response = gated_client.get("/index/")
     assert response.status_code == 401
-
-
-@pytest.mark.django_db
-def test_authenticated_user_gets_content(user):
-    client = Client(HTTP_HOST=QA_HOST)
-    client.login(username="tester", password="pw")
-    response = client.get("/index/")
-    assert response.status_code != 401
-
-
-@pytest.mark.django_db
-def test_authenticated_user_on_prod_unaffected(user):
-    client = Client(HTTP_HOST=PROD_HOST)
-    client.login(username="tester", password="pw")
-    response = client.get("/index/")
-    assert response.status_code != 401

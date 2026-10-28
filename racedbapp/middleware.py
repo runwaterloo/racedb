@@ -1,31 +1,29 @@
-from django.conf import settings
 from django.http import HttpResponse
 
-# Paths on gated hosts that unauthenticated users may still reach.
-ALLOWED_PATH_PREFIXES = (
-    "/admin/login",
-)
+# Paths unauthenticated users may still reach on the gated QA site:
+# the login page and its static assets, plus "/admin/" itself (exact match)
+# so its redirect to /admin/login/ works in a browser.
+ALLOWED_EXACT = ("/admin/",)
+ALLOWED_PREFIXES = ("/admin/login",)
 
 
 class QaAuthGateMiddleware:
     """
-    Reject unauthenticated requests to gated hosts (e.g. the QA site at
-    racedb.runwaterloo.com). Hosts not listed in QA_AUTH_HOSTS are passed
-    through untouched, so production is unaffected. Gated requests that are
-    not on the allowlist and have no authenticated session get a bare 401 —
-    no redirect, so crawlers don't fan out to a login page.
+    Reject unauthenticated requests. Attached only where SETTINGS=dev
+    (racedb.runwaterloo.com, the QA site) via settings.py, so production
+    carries no added per-request cost and no Host detection is needed.
+
+    Requests without a session cookie are rejected without any DB access:
+    SessionMiddleware only loads a session when a cookie is present.
+    Rejections are a bare 401 — no redirect, so crawlers don't fan out to
+    the login page.
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        gated_hosts = getattr(settings, "QA_AUTH_HOSTS", [])
-        if request.get_host() not in gated_hosts:
-            return self.get_response(request)
-
-        path = request.path
-        if path.startswith(ALLOWED_PATH_PREFIXES):
+        if request.path in ALLOWED_EXACT or request.path.startswith(ALLOWED_PREFIXES):
             return self.get_response(request)
 
         if request.user.is_authenticated:

@@ -15,10 +15,6 @@ DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ["*"]
 
-# Hosts gated behind Django auth (QaAuthGateMiddleware): unauthenticated
-# requests get a 401. Production (results.runwaterloo.com) is not listed.
-QA_AUTH_HOSTS = ["racedb.runwaterloo.com"]
-
 # --- Installed apps ---
 INSTALLED_APPS = (
     "django_prometheus",
@@ -44,10 +40,19 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "racedbapp.middleware.QaAuthGateMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
+
+# QA site (racedb.runwaterloo.com) runs SETTINGS=dev: gate it behind Django
+# auth. Attached after AuthenticationMiddleware so request.user is loaded;
+# cookie-less requests still cost no DB access. Prod (SETTINGS=prod) and
+# local dev (SETTINGS=min) are unaffected.
+if os.getenv("SETTINGS", "none") == "dev":
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index("django.contrib.auth.middleware.AuthenticationMiddleware") + 1,
+        "racedbapp.middleware.QaAuthGateMiddleware",
+    )
 
 # --- URL and WSGI ---
 ROOT_URLCONF = "racedb.urls"
