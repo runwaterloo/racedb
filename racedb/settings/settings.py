@@ -15,6 +15,10 @@ DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ["*"]
 
+# Hosts gated behind Django auth (QaAuthGateMiddleware): unauthenticated
+# requests get a 401. Production (results.runwaterloo.com) is not listed.
+QA_AUTH_HOSTS = ["racedb.runwaterloo.com"]
+
 # --- Installed apps ---
 INSTALLED_APPS = (
     "django_prometheus",
@@ -40,6 +44,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "racedbapp.middleware.QaAuthGateMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
