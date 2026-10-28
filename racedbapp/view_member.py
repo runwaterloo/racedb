@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from operator import attrgetter
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Min
+from django.db.models import Count, F, Min, Window
 from django.shortcuts import get_object_or_404, render
 
 from racedbapp.shared.shared import set_distance_display_name
@@ -415,29 +415,68 @@ def get_minutegroup(result, thresholds):
     return thisminutegroup
 
 
+def get_place_counts(dbresults):
+    """Compute gender_place and category_place for every result in bulk.
+
+    One window-function query replaces the two COUNT() queries per row
+    (the N+1 that made member pages expensive). The default frame with
+    ORDER BY place is RANGE UNBOUNDED PRECEDING TO CURRENT ROW, which
+    includes place ties, matching the original COUNT(place__lte=...)
+    semantics exactly. Place counts deliberately include places >=
+    990000 (e.g. DNF) to match the original per-row COUNT filters.
+    """
+    event_ids = list({r.event_id for r in dbresults})
+    gender_counts = {}
+    category_counts = {}
+    if event_ids:
+        rows = (
+            Result.objects.filter(event_id__in=event_ids)
+            .annotate(
+                gender_count=Window(
+                    Count("id"),
+                    partition_by=["event_id", "gender"],
+                    order_by=F("place").asc(),
+                ),
+                category_count=Window(
+                    Count("id"),
+                    partition_by=["event_id", "category_id"],
+                    order_by=F("place").asc(),
+                ),
+            )
+            .values_list(
+                "event_id",
+                "gender",
+                "place",
+                "category_id",
+                "gender_count",
+                "category_count",
+            )
+        )
+        for event_id, gender, place, category_id, gender_count, category_count in rows:
+            gender_counts[(event_id, gender, place)] = gender_count
+            category_counts[(event_id, category_id, place)] = category_count
+    return gender_counts, category_counts
+
+
 def get_memberresults(member):
     results = []
     total_distance = 0
-    dbresults = (
+    dbresults = list(
         Result.objects.select_related()
         .filter(rwmember=member)
         .exclude(place__gte=990000)
         .order_by("-event__date", "-event__distance__km")
     )
-    total_distance = 0
+    gender_counts, category_counts = get_place_counts(dbresults)
     for r in dbresults:
         guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
         chiptime = ""
         if r.chiptime:
             chiptime = r.chiptime - timedelta(microseconds=r.chiptime.microseconds)
-        gender_place = Result.objects.filter(
-            event=r.event, gender=r.gender, place__lte=r.place
-        ).count()
+        gender_place = gender_counts.get((r.event_id, r.gender, r.place))
         category_place = ""
         if r.category.name != "":
-            category_place = Result.objects.filter(
-                event=r.event, category=r.category, place__lte=r.place
-            ).count()
+            category_place = category_counts.get((r.event_id, r.category_id, r.place))
         sequel = getattr(r.event, "sequel", None)
         set_distance_display_name(r.event.distance, sequel)
         results.append(named_result(r, guntime, gender_place, category_place, chiptime))
