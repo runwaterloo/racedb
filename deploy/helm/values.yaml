@@ -55,7 +55,11 @@ ingress:
   enabled: true
   catchall:
     enabled: false
-    hostmatch: Hostregexp(`.+`)
+    # Match any host except the elastic IP and its EC2 hostname: requests to
+    # those are pure scanner traffic, so they fall through to Traefik's own 404.
+    hostmatch: >-
+      !(Host(`52.54.231.139`) || Host(`ec2-52-54-231-139.compute-1.amazonaws.com`))
+      && Hostregexp(`.+`)
   rateLimit:
     average: 20
     period: 1m
