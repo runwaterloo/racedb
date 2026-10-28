@@ -1,9 +1,10 @@
+from bisect import bisect_right
 from collections import namedtuple
 from datetime import date, timedelta
 from operator import attrgetter
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Min
+from django.db.models import Count, Min
 from django.shortcuts import get_object_or_404, render
 
 from racedbapp.shared.shared import set_distance_display_name
@@ -156,22 +157,24 @@ def get_wc_finishes_badge(results):
 
 def get_inaugural_finishes_badges(results):
     inaugural_finishes_badges = []
-    current_race_ids = Samerace.objects.values_list("current_race_id", flat=True)
-    old_race_ids = Samerace.objects.values_list("old_race_id", flat=True)
+    current_race_ids = list(Samerace.objects.values_list("current_race_id", flat=True))
+    old_race_ids = set(Samerace.objects.values_list("old_race_id", flat=True))
+    same_races_dict = dict(Samerace.objects.values_list("old_race_id", "current_race_id"))
+    current_races = Race.objects.in_bulk(same_races_dict.values())
     races = Race.objects.exclude(id__in=current_race_ids)
-    race_inaugural_years = {}
-    for race in races:
-        first_year = (
-            Event.objects.filter(race=race).aggregate(min_date=Min("date"))["min_date"].year
-        )
-        race_inaugural_years[race] = first_year
+    first_years = dict(
+        races.annotate(min_date=Min("event__date")).values_list("id", "min_date")
+    )
+    race_inaugural_years = {
+        race: first_years[race.id].year for race in races if race.id in first_years
+    }
     already_have = []
     for r in reversed(results):
         if r.result.event.race in race_inaugural_years:
             if r.result.event.date.year == race_inaugural_years[r.result.event.race]:
                 race = r.result.event.race
                 if race.id in old_race_ids:
-                    race = Samerace.objects.get(old_race_id=race.id).current_race
+                    race = current_races[same_races_dict[race.id]]
                 if r.result.event.race not in already_have:
                     image = utils.get_achievement_image(race.slug, "inaugural")
                     inaugural_finishes_badges.append(
@@ -310,12 +313,15 @@ def get_pb_badges(member, results):
 def get_race_win_badges(results):
     race_win_badges = []
     races_won = []
+    same_races_dict = dict(Samerace.objects.values_list("old_race_id", "current_race_id"))
+    current_races = Race.objects.in_bulk(same_races_dict.values())
     wins = [x for x in reversed(results) if x.gender_place == 1]
     for w in wins:
-        thisrace = w.result.event.race
-        if len(Samerace.objects.filter(old_race_id=thisrace.id)) == 1:
-            new_race_id = Samerace.objects.get(old_race_id=thisrace.id).current_race_id
-            thisrace = Race.objects.get(id=new_race_id)
+        thisrace_id = w.result.event.race.id
+        if thisrace_id in same_races_dict:
+            thisrace = current_races[same_races_dict[thisrace_id]]
+        else:
+            thisrace = w.result.event.race
         if thisrace not in races_won:
             image = utils.get_achievement_image(thisrace.slug, "event-winner")
             race_win_badges.append(
@@ -415,29 +421,89 @@ def get_minutegroup(result, thresholds):
     return thisminutegroup
 
 
+def get_place_counts(dbresults):
+    """Compute gender_place and category_place for every result in bulk.
+
+    One GROUP BY aggregate returns the number of results at each
+    (event, gender, category, place); cumulative counts (count of places
+    <= p, ties included, matching the original COUNT(place__lte=...)
+    and later the RANGE window frame) are summed in Python per
+    partition. Place counts deliberately include places >= 990000
+    (e.g. DNF) to match the original per-row COUNT filters. This
+    avoids fetching every participant's full result row, which is what
+    made the window-function version slow for members with many events.
+    """
+    event_ids = list({r.event_id for r in dbresults})
+    gender_counts = {}
+    category_counts = {}
+    if not event_ids:
+        return gender_counts, category_counts
+    rows = (
+        Result.objects.filter(event_id__in=event_ids)
+        .values("event_id", "gender", "category_id", "place")
+        .annotate(n=Count("id"))
+        .values_list("event_id", "gender", "category_id", "place", "n")
+    )
+    gender_groups = {}
+    category_groups = {}
+    for event_id, gender, category_id, place, n in rows:
+        gender_groups.setdefault((event_id, gender), []).append((place, n))
+        category_groups.setdefault((event_id, category_id), []).append((place, n))
+
+    def cumulative_counts(groups):
+        prefix = {}
+        for key, pairs in groups.items():
+            pairs.sort()
+            total = 0
+            places = []
+            sums = []
+            for place, n in pairs:
+                total += n
+                places.append(place)
+                sums.append(total)
+            prefix[key] = (places, sums)
+        return prefix
+
+    gender_prefix = cumulative_counts(gender_groups)
+    category_prefix = cumulative_counts(category_groups)
+
+    def count_at(prefix, key, place):
+        entry = prefix.get(key)
+        if entry is None:
+            return None
+        places, sums = entry
+        idx = bisect_right(places, place)
+        return sums[idx - 1]
+
+    for r in dbresults:
+        gender_counts[(r.event_id, r.gender, r.place)] = count_at(
+            gender_prefix, (r.event_id, r.gender), r.place
+        )
+        category_counts[(r.event_id, r.category_id, r.place)] = count_at(
+            category_prefix, (r.event_id, r.category_id), r.place
+        )
+    return gender_counts, category_counts
+
+
 def get_memberresults(member):
     results = []
     total_distance = 0
-    dbresults = (
+    dbresults = list(
         Result.objects.select_related()
         .filter(rwmember=member)
         .exclude(place__gte=990000)
         .order_by("-event__date", "-event__distance__km")
     )
-    total_distance = 0
+    gender_counts, category_counts = get_place_counts(dbresults)
     for r in dbresults:
         guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
         chiptime = ""
         if r.chiptime:
             chiptime = r.chiptime - timedelta(microseconds=r.chiptime.microseconds)
-        gender_place = Result.objects.filter(
-            event=r.event, gender=r.gender, place__lte=r.place
-        ).count()
+        gender_place = gender_counts.get((r.event_id, r.gender, r.place))
         category_place = ""
         if r.category.name != "":
-            category_place = Result.objects.filter(
-                event=r.event, category=r.category, place__lte=r.place
-            ).count()
+            category_place = category_counts.get((r.event_id, r.category_id, r.place))
         sequel = getattr(r.event, "sequel", None)
         set_distance_display_name(r.event.distance, sequel)
         results.append(named_result(r, guntime, gender_place, category_place, chiptime))
