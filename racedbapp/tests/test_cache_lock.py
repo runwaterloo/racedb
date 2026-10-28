@@ -220,3 +220,39 @@ def test_bump_generation_rejects_empty_source():
         cache_lock.bump_generation("")
     with pytest.raises(ValueError):
         cache_lock.bump_generation(None)
+
+
+class TestRenderSpanningBump:
+    """A render that starts before a bump and finishes after it must not
+    poison the cache: its write carries the pre-bump generation and reads
+    as a miss, so the next request re-renders from post-bump data."""
+
+    def test_render_spanning_bump_writes_stale_generation(self, unique_key):
+        captured = {}
+
+        def slow_render():
+            captured["gen"] = cache_lock._current_generation()
+            cache_lock.bump_generation(source="test")  # data changes mid-render
+            return "stale_html"
+
+        calls = []
+        result = cache_lock.get_or_render(unique_key, slow_render)
+        calls.append(1)
+        assert result == "stale_html"  # the renderer's own caller sees its output
+        # the entry on disk is stamped with the pre-bump generation
+        stored = cache.get(unique_key)
+        assert isinstance(stored, tuple)
+        assert stored[0] == captured["gen"]
+        assert stored[0] != cache_lock._current_generation()
+
+    def test_render_spanning_bump_not_served_after(self, unique_key):
+        def slow_render():
+            cache_lock.bump_generation(source="test")
+            return "stale_html"
+
+        cache_lock.get_or_render(unique_key, slow_render)
+        # next request must not get the stale page: it re-renders fresh
+        calls = []
+        result = cache_lock.get_or_render(unique_key, make_render_func(calls, "fresh_html"))
+        assert result == "fresh_html"
+        assert len(calls) == 1
