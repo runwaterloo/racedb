@@ -29,9 +29,9 @@ wait_for_convergence() {
     # during a rollout the total includes terminating old pods, and that
     # number shrinks as they exit -- a stale count would never converge.
     for i in $(seq 1 60); do
-        total=$(kubectl get pods -l app.kubernetes.io/instance=racedb,app.kubernetes.io/name=racedb,app.kubernetes.io/task="$1" \
+        total=$(kubectl get pods -l app.kubernetes.io/instance="$DEPLOYMENT",app.kubernetes.io/name=racedb,app.kubernetes.io/task="$1" \
             --field-selector=status.phase=Running -o json 2>/dev/null | jq '.items | length')
-        found=$(kubectl get pods -l app.kubernetes.io/instance=racedb,app.kubernetes.io/name=racedb,app.kubernetes.io/task="$1" \
+        found=$(kubectl get pods -l app.kubernetes.io/instance="$DEPLOYMENT",app.kubernetes.io/name=racedb,app.kubernetes.io/task="$1" \
             --field-selector=status.phase=Running \
             -o jsonpath='{range .items[*]}{.status.containerStatuses[0].image}{"|"}{.status.containerStatuses[0].ready}{"|"}{.metadata.deletionTimestamp}{"|"}{.metadata.name}{"\n"}{end}' 2>/dev/null \
             | awk -F'|' -v tag="$TAG" \
@@ -50,7 +50,7 @@ wait_for_convergence() {
 if ! wait_for_convergence web; then exit 1; fi
 if ! wait_for_convergence celery; then exit 1; fi
 
-POD=$(kubectl get pods -l app.kubernetes.io/instance=racedb,app.kubernetes.io/name=racedb,app.kubernetes.io/task=web \
+POD=$(kubectl get pods -l app.kubernetes.io/instance="$DEPLOYMENT",app.kubernetes.io/name=racedb,app.kubernetes.io/task=web \
     --field-selector=status.phase=Running \
     -o jsonpath='{range .items[*]}{.status.containerStatuses[0].image}{"|"}{.status.containerStatuses[0].ready}{"|"}{.metadata.deletionTimestamp}{"|"}{.metadata.name}{"\n"}{end}' \
     | awk -F'|' -v tag="$TAG" '$1 ~ (":" tag "$") && $2=="true" && $3==""{print $4; exit}')

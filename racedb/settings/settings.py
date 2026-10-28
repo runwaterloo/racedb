@@ -44,6 +44,16 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
+# QA site (racedb.runwaterloo.com) runs SETTINGS=dev: gate it behind Django
+# auth. Attached after AuthenticationMiddleware so request.user is loaded;
+# cookie-less requests still cost no DB access. Prod (SETTINGS=prod) and
+# local dev (SETTINGS=min) are unaffected.
+if os.getenv("SETTINGS", "none") == "dev":
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index("django.contrib.auth.middleware.AuthenticationMiddleware") + 1,
+        "racedbapp.middleware.QaAuthGateMiddleware",
+    )
+
 # --- URL and WSGI ---
 ROOT_URLCONF = "racedb.urls"
 WSGI_APPLICATION = "racedb.wsgi.application"
