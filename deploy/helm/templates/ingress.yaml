@@ -8,11 +8,9 @@ spec:
   entryPoints:
     - web
   routes:
-    - match: {{ .Values.ingress.catchall.hostmatch}}
+    - match: {{ .Values.ingress.catchall.hostmatch | quote }}
       priority: 1
       kind: Rule
-      middlewares:
-        - name: "{{ include "racedb.fullname" . }}-rate-limit"
       services:
         - name: "{{ include "racedb.fullname" . }}"
           port: {{ .Values.service.port}}
