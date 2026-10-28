@@ -1,10 +1,12 @@
 import datetime
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APIClient
 
 from racedbapp import view_member
-from racedbapp.models import Result
+from racedbapp.models import Category, Result, Samerace
 
 
 @pytest.mark.django_db
@@ -93,3 +95,44 @@ def test_place_counts_match_old_semantics(create_event, create_category, create_
                 event=r.event, category=r.category, place__lte=r.place
             ).count()
             assert category_counts[(r.event_id, r.category_id, r.place)] == old_cp, f"cp {r.id}"
+
+
+@pytest.mark.django_db
+def test_race_win_badge_remaps_old_race_and_avoids_repeat_queries(
+    create_event, create_race, create_rwmember
+):
+    """A win at a race that has a Samerace mapping should credit the current
+    race, and the lookup must happen once, not per win."""
+    old_race = create_race(name_suffix="old")
+    current_race = create_race(name_suffix="current")
+    Samerace.objects.create(old_race=old_race, current_race=current_race)
+    member = create_rwmember()
+    event1 = create_event(name_suffix="w1", race=old_race)
+    event2 = create_event(name_suffix="w2", race=old_race)
+    category = Category.objects.create(name="40-49")
+    for event in (event1, event2):
+        Result.objects.create(
+            event=event,
+            category=category,
+            athlete=f"A {member.slug}",
+            gender="M",
+            city="X",
+            place=1,
+            gender_place=1,
+            guntime=datetime.timedelta(minutes=20),
+            rwmember=member,
+        )
+    view_member.get_race_win_badges.cache_clear() if hasattr(
+        view_member.get_race_win_badges, "cache_clear"
+    ) else None
+    with CaptureQueriesContext(connection) as ctx:
+        badges = view_member.get_race_win_badges(
+            [
+                type("NR", (), {"result": r, "gender_place": 1})
+                for r in Result.objects.filter(rwmember=member)
+            ]
+        )
+    assert len(badges) == 1
+    assert badges[0].name == f"Won an overall event at {current_race.name}"
+    samerace_queries = [q for q in ctx.captured_queries if "samerace" in q["sql"]]
+    assert len(samerace_queries) <= 1

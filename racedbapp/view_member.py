@@ -310,12 +310,15 @@ def get_pb_badges(member, results):
 def get_race_win_badges(results):
     race_win_badges = []
     races_won = []
+    same_races_dict = dict(Samerace.objects.values_list("old_race_id", "current_race_id"))
+    current_races = Race.objects.in_bulk(same_races_dict.values())
     wins = [x for x in reversed(results) if x.gender_place == 1]
     for w in wins:
-        thisrace = w.result.event.race
-        if len(Samerace.objects.filter(old_race_id=thisrace.id)) == 1:
-            new_race_id = Samerace.objects.get(old_race_id=thisrace.id).current_race_id
-            thisrace = Race.objects.get(id=new_race_id)
+        thisrace_id = w.result.event.race.id
+        if thisrace_id in same_races_dict:
+            thisrace = current_races[same_races_dict[thisrace_id]]
+        else:
+            thisrace = w.result.event.race
         if thisrace not in races_won:
             image = utils.get_achievement_image(thisrace.slug, "event-winner")
             race_win_badges.append(
