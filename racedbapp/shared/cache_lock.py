@@ -117,12 +117,19 @@ def _lock_key(cache_key):
 
 
 def _render_under_lock(cache_key, lock_key, lock_token, render_func):
+    # Stamp with the generation captured BEFORE rendering. A bump that
+    # lands mid-render (watcher, data change) must invalidate this entry:
+    # stamping at write time would mark a page built from pre-bump data
+    # as current, and nothing later re-bumps, so the stale page could
+    # live until the 30h TTL. Capturing first makes that write stale-on-
+    # arrival and it is ignored on read.
+    render_generation = _current_generation()
     try:
         value = render_func()
     except Exception:
         _release_lock(lock_key, lock_token)
         raise
-    set(cache_key, value)
+    cache.set(cache_key, (render_generation, value), ENTRY_TTL_SECONDS)
     _release_lock(lock_key, lock_token)
     return value
 
