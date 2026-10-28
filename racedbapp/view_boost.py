@@ -7,6 +7,7 @@ from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import redirect, render
 
+from racedbapp.shared import cache_lock
 from racedbapp.shared.shared import set_distance_display_name
 from racedbapp.shared.types import Choice, Filter
 
@@ -14,6 +15,105 @@ from .models import Config, Event, Result, Rwmember, Rwmembertag
 
 
 def index(request, year, leaderboard_only=False, standings_only=False):
+    boost_years = get_boost_years()
+    if not boost_years:
+        return render(request, "racedbapp/boost.html")
+    if year == "latest":
+        return redirect("/boost/{}/".format(boost_years[0]))
+    else:
+        year = int(year)
+    qstring = parse.parse_qs(request.META["QUERY_STRING"])
+    qs_filter = get_qs_filter(qstring)
+    qs_date = get_qs_date(qstring, year)
+    # Expensive computation (config, gender finishers, previous races,
+    # dbresults, standings) is cached per (year, qs_date) and shared by the
+    # boost and member views. Request-specific bits (qs_filter, qs_member)
+    # are applied afterwards in Python, uncached. Invalidated by
+    # cache_lock.bump_generation like all generation-stamped entries.
+    compute = cache_lock.get_or_render(
+        "boost.compute.{}.{}".format(year, qs_date or "all"),
+        lambda: _compute_boost(year, qs_date),
+    )
+    standings = [i for i in compute["standings"] if _matches_qs_filter(i, qs_filter)]
+    if standings_only:
+        return standings
+    if leaderboard_only:
+        return compute["leaderboard"]
+    # Member matching runs after the early returns so leaderboard_only /
+    # standings_only callers are never exposed to ?member= errors.
+    qs_member = False
+    member_results = None
+    if "member" in qstring:
+        included_members = Rwmember.objects.filter(
+            year_of_birth__isnull=False,
+            tags=compute["boost_tag"],
+            gender__in=["M", "F"],
+        )
+        qs_member = get_qs_member(qstring, included_members)
+        for i in standings:
+            if i.member_id == qs_member.id:
+                member_results = i
+
+    def render_boost_page():
+        if qs_member:
+            context = {
+                "config_dict": compute["config_dict"],
+                "qs_member": qs_member,
+                "member_results": member_results,
+                "year": year,
+            }
+            return render(request, "racedbapp/boost_member.html", context)
+        context = {
+            "leaderboard": compute["leaderboard"],
+            "standings": standings,
+            "standings_filter": get_standings_filter(qs_filter, qs_date, year),
+            "date_filter": get_date_filter(qs_date, year),
+            "qs_date": qs_date,
+            "year": year,
+            "boost_years": boost_years,
+        }
+        return render(request, "racedbapp/boost.html", context)
+
+    if not qs_filter and not qs_date and not qs_member:
+        # Bare /boost/<year>/ is the hottest URL: cache the full render too.
+        return cache_lock.get_or_render(
+            "boost.render.{}".format(year), render_boost_page
+        )
+    return render_boost_page()
+
+
+def get_qs_date(qstring, year):
+    qs_date = ""
+    if "date" in qstring:
+        try:
+            ymd = [int(x) for x in qstring["date"][0].split("-")]
+            qs_date = datetime(*ymd).date()
+        except Exception:
+            raise Http404("Invalid date")
+        else:
+            first_day = datetime(year, 1, 1).date()
+            last_day = datetime(year, 12, 31).date()
+            if not first_day <= qs_date <= last_day:
+                raise Http404("Invalid date")
+    return qs_date
+
+
+def _matches_qs_filter(i, qs_filter):
+    """Filter one standing entry by the ?filter= querystring value."""
+    if qs_filter == "":
+        return True
+    if qs_filter in ("F", "M"):
+        return i.gender == qs_filter
+    return i.category == qs_filter
+
+
+def _compute_boost(year, qs_date):
+    """Compute boost standings for (year, qs_date). Cached as one unit.
+
+    Returns the request-independent pieces: the full unfiltered standings
+    list (with places assigned), the leaderboard, the boost tag, and the
+    config dict. Querystring filtering and member matching happen outside.
+    """
     config_values = (
         "boost_classic_points",
         "boost_ditto_points",
@@ -32,29 +132,10 @@ def index(request, year, leaderboard_only=False, standings_only=False):
     max_sport = int(config_dict.get("boost_max_sport", 0))
     leaderboard_size = int(config_dict.get("boost_leaderboard_size", 0))
     nophoto_url = config_dict.get("nophoto_url", "")
-    boost_years = get_boost_years()
-    if not boost_years:
-        return render(request, "racedbapp/boost.html")
-    if year == "latest":
-        return redirect("/boost/{}/".format(boost_years[0]))
-    else:
-        year = int(year)
     first_day = datetime(year, 1, 1).date()
     last_day = datetime(year, 12, 31).date()
-    qstring = parse.parse_qs(request.META["QUERY_STRING"])
-    qs_filter = get_qs_filter(qstring)
-    qs_date = ""
-    if "date" in qstring:
-        try:
-            ymd = [int(x) for x in qstring["date"][0].split("-")]
-            qs_date = datetime(*ymd).date()
-        except Exception:
-            raise Http404("Invalid date")
-        else:
-            if first_day <= qs_date <= last_day:
-                last_day = qs_date
-            else:
-                raise Http404("Invalid date")
+    if qs_date:
+        last_day = qs_date
     gender_finishers = get_gender_finishers(first_day, last_day)
     boost_tag = get_boost_tag(year)
     included_members = Rwmember.objects.filter(
@@ -62,7 +143,6 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         tags=boost_tag,
         gender__in=["M", "F"],
     )
-    qs_member = get_qs_member(qstring, included_members)
     previous_races = get_previous_races(year, included_members)
     battlers = {}
     for i in included_members:
@@ -125,47 +205,18 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         if i.gender in gender_place_dict:
             if len(leaders[i.category]) < leaderboard_size:
                 leaders[i.category].append(i)
-        if qs_filter != "":
-            if qs_filter in ("F", "M"):
-                if i.gender != qs_filter:
-                    continue
-            else:
-                if i.category != qs_filter:
-                    continue
         standings.append(i)
-        if qs_member:
-            if i.member_id == qs_member.id:
-                member_results = i
-    if standings_only:
-        return standings
     leaderboard = OrderedDict()
     leaderboard["Female Under 40"] = leaders["F40-"]
     leaderboard["Male Under 40"] = leaders["M40-"]
     leaderboard["Female Over 40"] = leaders["F40+"]
     leaderboard["Male Over 40"] = leaders["M40+"]
-    if leaderboard_only:
-        return leaderboard
-    standings_filter = get_standings_filter(qs_filter, qs_date, year)
-    date_filter = get_date_filter(qs_date, year)
-    if qs_member:
-        context = {
-            "config_dict": config_dict,
-            "qs_member": qs_member,
-            "member_results": member_results,
-            "year": year,
-        }
-        return render(request, "racedbapp/boost_member.html", context)
-    else:
-        context = {
-            "leaderboard": leaderboard,
-            "standings": standings,
-            "standings_filter": standings_filter,
-            "date_filter": date_filter,
-            "qs_date": qs_date,
-            "year": year,
-            "boost_years": boost_years,
-        }
-        return render(request, "racedbapp/boost.html", context)
+    return {
+        "config_dict": config_dict,
+        "standings": standings,
+        "leaderboard": leaderboard,
+        "boost_tag": boost_tag,
+    }
 
 
 def get_boost_years():
