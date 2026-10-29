@@ -99,6 +99,69 @@ def bump_generation(source):
     logger.info("cache bump: gen=%s source=%s", _current_generation(), source)
 
 
+def purge_stale_cache():
+    """Delete generation-stamped entries older than the current generation.
+
+    Called after warm_cache so the redis keyspace shows only fresh entries
+    (issue #430): bump_generation() marks entries stale but never deletes
+    them, so without this sweep the keyspace count mixes fresh and stale
+    entries and is not a meaningful instrument.
+
+    Generation-aware: only entries whose stamped generation < current are
+    deleted, so a bump that lands mid-warm purges exactly the orphans.
+    Non-stamped keys (the generation counter, single-flight locks, watcher
+    state) are skipped. Requires a redis backend to enumerate keys; any
+    other backend (locmem in local dev/tests) or redis error just logs and
+    skips — the sweep is observational hygiene, not correctness (stale
+    entries are already unreadable).
+    """
+    connection = _redis_connection()
+    if connection is None:
+        logger.info("cache purge: skipped (no redis backend)")
+        return
+    prefix = cache.make_key("")
+    current_generation = _current_generation()
+    deleted = kept = skipped = 0
+    try:
+        for raw_key in connection.scan_iter():
+            key = raw_key.decode() if isinstance(raw_key, bytes) else raw_key
+            if not key.startswith(prefix):
+                skipped += 1
+                continue
+            name = key[len(prefix) :]
+            cached = cache.get(name)
+            if cached is None:
+                skipped += 1
+                continue
+            if isinstance(cached, tuple) and len(cached) == 2 and cached[0] < current_generation:
+                cache.delete(name)
+                deleted += 1
+            else:
+                kept += 1
+    except Exception:
+        logger.warning(
+            "cache purge: redis error after deleted=%s kept=%s", deleted, kept, exc_info=True
+        )
+        return
+    logger.info(
+        "cache purge: gen=%s deleted=%s kept=%s skipped=%s",
+        current_generation,
+        deleted,
+        kept,
+        skipped,
+    )
+
+
+def _redis_connection():
+    """Return the raw redis connection for the default cache, or None."""
+    try:
+        from django_redis import get_redis_connection
+
+        return get_redis_connection("default")
+    except Exception:
+        return None
+
+
 def _entry_is_current(cached):
     if not isinstance(cached, tuple) or len(cached) != 2:
         return False
