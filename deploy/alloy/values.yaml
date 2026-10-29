@@ -43,18 +43,34 @@ alloy:
       // Process scraper
       prometheus.scrape "processes" {
         targets    = prometheus.exporter.process.processes.targets
-        forward_to = [prometheus.relabel.drop_racedbdev.receiver]
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
       }
       ///////////////////////////////////////////////////////////////////////////////////
 
       ///////////////////////////////////////////////////////////////////////////////////
       // Drop racedbdev metrics at ingest to cut Grafana Cloud cardinality.
-      // Multiple source_labels are OR-ed, so one rule covers all pg labels.
+      // source_labels in a rule are CONCATENATED with ; and matched whole,
+      // so one rule per label — each drops when that label is racedbdev.
       // Logs are unaffected: this only touches the prometheus pipeline.
       prometheus.relabel "drop_racedbdev" {
         forward_to = [prometheus.remote_write.grafanacloud.receiver]
         rule {
-          source_labels = ["datname", "user", "rolname", "usename"]
+          source_labels = ["datname"]
+          regex         = "racedbdev"
+          action        = "drop"
+        }
+        rule {
+          source_labels = ["user"]
+          regex         = "racedbdev"
+          action        = "drop"
+        }
+        rule {
+          source_labels = ["rolname"]
+          regex         = "racedbdev"
+          action        = "drop"
+        }
+        rule {
+          source_labels = ["usename"]
           regex         = "racedbdev"
           action        = "drop"
         }
@@ -72,7 +88,7 @@ alloy:
         targets = [
           {"__address__" = "traefik:9100", "instance" = "traefik"},
         ]
-        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+        forward_to = [prometheus.relabel.drop_racedbdev.receiver]
       }
       ///////////////////////////////////////////////////////////////////////////////////
 
