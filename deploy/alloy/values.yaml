@@ -48,12 +48,47 @@ alloy:
       ///////////////////////////////////////////////////////////////////////////////////
 
       ///////////////////////////////////////////////////////////////////////////////////
+      // Drop racedbdev metrics at ingest to cut Grafana Cloud cardinality.
+      // source_labels in a rule are CONCATENATED with ; and matched whole,
+      // so one rule per label — each drops when that label is racedbdev.
+      // Logs are unaffected: this only touches the prometheus pipeline.
+      prometheus.relabel "drop_racedbdev" {
+        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+        rule {
+          source_labels = ["datname"]
+          regex         = "racedbdev"
+          action        = "drop"
+        }
+        rule {
+          source_labels = ["user"]
+          regex         = "racedbdev"
+          action        = "drop"
+        }
+        rule {
+          source_labels = ["rolname"]
+          regex         = "racedbdev"
+          action        = "drop"
+        }
+        rule {
+          source_labels = ["usename"]
+          regex         = "racedbdev"
+          action        = "drop"
+        }
+        rule {
+          source_labels = ["service"]
+          regex         = ".*racedbdev.*"
+          action        = "drop"
+        }
+      }
+      ///////////////////////////////////////////////////////////////////////////////////
+
+      ///////////////////////////////////////////////////////////////////////////////////
       // Traefik scraper
       prometheus.scrape "traefik" {
         targets = [
           {"__address__" = "traefik:9100", "instance" = "traefik"},
         ]
-        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+        forward_to = [prometheus.relabel.drop_racedbdev.receiver]
       }
       ///////////////////////////////////////////////////////////////////////////////////
 
@@ -259,7 +294,7 @@ alloy:
       }
       prometheus.scrape "postgres" {
         targets    = discovery.relabel.postgres_pods.output
-        forward_to = [prometheus.remote_write.grafanacloud.receiver]
+        forward_to = [prometheus.relabel.drop_racedbdev.receiver]
         job_name   = "postgres"
       }
       ////////////////////////////////////////////////////////////////////////////////////
