@@ -15,6 +15,7 @@ from django_slack import slack_message
 from . import process_photoupdate, view_member
 from .models import Config, Endurathlete, Event, Rwmember, Rwmembertag
 from .shared import cache_lock
+from .shared.cache_lock import purge_stale_cache
 from .shared.shared import get_config_value_or_false
 
 logger = logging.getLogger(__name__)
@@ -163,6 +164,7 @@ def _watcher_config_float(name, default):
     except ValueError:
         logger.warning("cache watcher: invalid %s=%r, using %s", name, value, default)
         return default
+
 
 @shared_task
 def photoupdate(request_date=None, force=False):
@@ -319,6 +321,10 @@ def warm_cache():
                 logger.info("Warmed %s -> %s", full_url, response.status_code)
             except requests.RequestException as e:
                 logger.warning("Failed to warm %s: %s", full_url, e)
+    # Purge entries stale before this warm so the redis keyspace counts
+    # fresh entries only (issue #430). A generation-aware sweep, so entries
+    # rendered during this warm survive even if a bump lands mid-task.
+    purge_stale_cache()
 
 
 @shared_task
