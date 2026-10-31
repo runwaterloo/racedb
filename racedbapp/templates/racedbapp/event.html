@@ -201,16 +201,16 @@
             {% if hill_dict %}<th class="text-center" scope="col">Hill Sprint</th>{% endif %}
             <th class="text-center" scope="col">G</th>
             <th class="text-center" scope="col">GP</th>
-            {% if filters.category_filter.choices|length > 5 %}
+            {% if show_category %}
               <th class="text-center" scope="col">Cat</th>
               <th class="text-center" scope="col">CP</th>
             {% endif %}
-            {% if hasage and filters.category_filter.choices|length <= 5 %}
+            {% if show_age %}
               <th class="text-center" scope="col">Age</th>
             {% endif %}
             {% if hasdivision %}<th class="text-left" scope="col">Division</th>{% endif %}
             <th class="text-center" scope="col">Pace</th>
-            {% if results.0.chiptime %}<th class="text-center" scope="col">Chip Time</th>{% endif %}
+            {% if show_chip %}<th class="text-center" scope="col">Chip Time</th>{% endif %}
             <th class="text-left" scope="col">City</th>
             {% for s in split_headings %}<th class="text-center">{{ s }}</th>{% endfor %}
           </tr>
@@ -281,11 +281,11 @@
               {% if hill_dict %}<td class="text-center">{{ r.prime }}</td>{% endif %}
               <td class="text-center">{{ r.gender }}</td>
               <td class="text-center">{{ r.gender_place }}</td>
-              {% if filters.category_filter.choices|length > 5 %}
+              {% if show_category %}
                 <td class="text-center">{{ r.category }}</td>
                 <td class="text-center">{{ r.category_place }}</td>
               {% endif %}
-              {% if hasage and filters.category_filter.choices|length <= 5 %}
+              {% if show_age %}
                 <td class="text-center">{{ r.age }}</td>
               {% endif %}
               {% if hasdivision %}
@@ -298,7 +298,7 @@
                 {% endif %}
               {% endif %}
               <td class="text-center">{{ r.guntime|get_pace:event.distance.km }}</td>
-              {% if results.0.chiptime %}
+              {% if show_chip %}
                 {% if guntimes_have_microseconds %}
                   <td class="text-center">{{ r.chiptime|round_up }}</td>
                 {% else %}

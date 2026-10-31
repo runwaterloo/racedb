@@ -89,7 +89,7 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
         event = Event.objects.select_related().get(
             race__slug=race_slug,
             distance__slug=distance_slug,
-            date__icontains=year,
+            date__year=int(year),
             sequel=sequel,
         )
     except Exception:
@@ -129,8 +129,11 @@ def _render_event(request, event, sequel, qstring):
         hasage = False
     else:
         all_results = Result.objects.select_related().filter(event=event)
-        all_results = annotate_isrwfirst(all_results)
+        # hasage must run before annotate_isrwfirst: otherwise the EXISTS
+        # subquery annotation bloats what should be a cheap probe query
+        # (issue #436).
         hasage = all_results.hasage(event)
+        all_results = annotate_isrwfirst(all_results)
     event_splits = Split.objects.filter(event=event)
     all_split_microseconds = {x.split_time.microseconds for x in event_splits if x.split_time}
     splits_have_microseconds = [x for x in all_split_microseconds if x != 0]
@@ -164,7 +167,13 @@ def _render_event(request, event, sequel, qstring):
     series = get_series(event=event)
     process_post(request)
     race_logo_slug = utils.get_race_logo_slug(event.race.slug)
+    show_category = len(filters["category_filter"].choices) > 5
+    show_age = hasage and not show_category
+    show_chip = bool(results and results[0].chiptime)
     context = {
+        "show_category": show_category,
+        "show_age": show_age,
+        "show_chip": show_chip,
         "event": event_json,
         "filters": filters,
         "page": page,
@@ -360,7 +369,7 @@ def get_division(qstring):
 def get_distance_filter(event, races):
     events = list(
         Event.objects.select_related()
-        .filter(race__in=races, date__icontains=event.date.year)
+        .filter(race__in=races, date__year=event.date.year)
         .order_by("date", "-distance__km")
     )
     for e in events:
@@ -570,7 +579,9 @@ def get_results(
     masters_place_dict = defaultdict(int)
     category_place_dict = {}
     splits_list = event_splits.values_list("place", "split_num", "split_time")
-    splits_dict = {(a, b): c for a, b, c in splits_list}
+    splits_by_place = {}
+    for a, b, c in splits_list:
+        splits_by_place.setdefault(a, {})[b] = c
     max_splits = False
     if event_splits:
         max_splits = int(event_splits.aggregate(Max("split_num"))["split_num__max"])
@@ -632,11 +643,15 @@ def get_results(
             result_division = r.division
         splits = []
         if event_splits:
+            row_splits = splits_by_place.get(r.place)
             for i in range(1, max_splits + 1):
-                try:
-                    splits.append(named_split(i, get_short_time(splits_dict[(r.place, i)])))
-                except Exception:
-                    splits.append(named_split(i, ""))
+                split_time = row_splits.get(i) if row_splits else None
+                splits.append(
+                    named_split(
+                        i,
+                        get_short_time(split_time) if split_time is not None else "",
+                    )
+                )
         member = shared.get_member(r, membership)
         hasphotos = False
         youtube_url = False
