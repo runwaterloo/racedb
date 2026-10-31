@@ -163,11 +163,11 @@ else:
             "TIMEOUT": 5,
         }
     }
+    # Default broker for SETTINGS=min (local docker compose): the compose
+    # redis. prod/dev set their own CELERY_BROKER_URL above.
+    CELERY_BROKER_URL = "redis://racedb-redis:6379"
 
 # --- Celery ---
-# Default broker for SETTINGS=min (local docker compose): the compose redis.
-# prod/dev set their own CELERY_BROKER_URL above.
-CELERY_BROKER_URL = "redis://racedb-redis:6379"
 # Under pytest, swap in an in-memory broker so safe_enqueue()'s task.delay()
 # succeeds instantly instead of kombu retrying against redis/amqp for ~0.6s
 # per enqueue (Config-save tests were paying this on every Config.create).
