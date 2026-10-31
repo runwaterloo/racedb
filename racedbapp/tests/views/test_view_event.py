@@ -8,7 +8,7 @@ from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from racedbapp import view_event
-from racedbapp.models import Config, Result, Series
+from racedbapp.models import Config, Result, Series, Split
 from racedbapp.shared.types import Filter
 from racedbapp.tests.views.test_view_medals import make_sequel_medal_event
 from racedbapp.view_event import (
@@ -471,3 +471,100 @@ def test_event_view_caches_response(create_event):
         assert second.status_code == 200
         assert render_mock.call_count == 1
         assert second.content == first.content
+
+
+@pytest.mark.django_db
+def test_event_endpoint_404_wrong_year(create_event):
+    """
+    Year lookup must be exact: an event from 2025 must 404 when requested
+    with a different year (guards the sargable date__year lookup).
+    """
+    client = APIClient()
+    event = create_event(date="2025-01-01")
+    url = f"/event/2024/{event.race.slug}/{event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_event_shows_age_column_when_few_categories(create_event, create_category, create_result):
+    """
+    With 5 or fewer category filter choices the table shows the Age column
+    and not Cat/CP.
+    """
+    client = APIClient()
+    event = create_event()
+    category = create_category()
+    create_result(event=event, category=category, gender="F", place=1, age=30)
+    create_result(event=event, category=category, gender="F", place=2, age=31)
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert ">Age</th>" in content
+    assert ">Cat</th>" not in content
+    assert ">CP</th>" not in content
+
+
+@pytest.mark.django_db
+def test_event_shows_category_columns_when_many_categories(
+    create_event, create_category, create_result
+):
+    """
+    With more than 5 category filter choices the table shows Cat/CP and
+    not Age.
+    """
+    client = APIClient()
+    event = create_event()
+    for place, gender in enumerate(("F", "M", "F", "M", "F", "M"), start=1):
+        category = create_category(f"c{place}")
+        create_result(event=event, category=category, gender=gender, place=place)
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert ">Cat</th>" in content
+    assert ">CP</th>" in content
+    assert ">Age</th>" not in content
+
+
+@pytest.mark.django_db
+def test_event_chip_column(create_event, create_category, create_result):
+    """
+    Chip Time column appears only when the first result has a chiptime.
+    """
+    client = APIClient()
+    event = create_event()
+    category = create_category()
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+
+    create_result(event=event, category=category)
+    response = client.get(url)
+    assert response.status_code == 200
+    assert "Chip Time" not in response.content.decode()
+
+    Result.objects.update(chiptime=datetime.timedelta(seconds=290))
+    response = client.get(url)
+    assert response.status_code == 200
+    assert "Chip Time" in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_event_splits_render(create_event, create_category, create_result, settings, tmp_path):
+    """
+    Split times render for places that have them, and a result with a
+    missing split renders an empty cell without error.
+    """
+    client = APIClient()
+    event = create_event()
+    category = create_category()
+    create_result(event=event, category=category, place=1)
+    create_result(event=event, category=category, place=2)
+    Split.objects.create(
+        event=event, place=1, split_num=1, split_time=datetime.timedelta(seconds=100)
+    )
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "1:40" in content
