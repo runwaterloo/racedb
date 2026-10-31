@@ -44,6 +44,15 @@ def test_recap_endpoint_no_results(create_event):
 
 
 @pytest.mark.django_db
+def test_recap_unknown_slug_returns_404(create_event):
+    client = APIClient()
+    event = create_event()
+    url = f"/recap/{event.date.year}/nonexistent-race/{event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
 def test_recap_does_not_link_inactive_members(baden_road_recap_with_inactive_member):
     event = baden_road_recap_with_inactive_member
     response = Client().get(
