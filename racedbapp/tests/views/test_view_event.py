@@ -487,9 +487,7 @@ def test_event_endpoint_404_wrong_year(create_event):
 
 
 @pytest.mark.django_db
-def test_event_shows_age_column_when_few_categories(
-    create_event, create_category, create_result
-):
+def test_event_shows_age_column_when_few_categories(create_event, create_category, create_result):
     """
     With 5 or fewer category filter choices the table shows the Age column
     and not Cat/CP.
@@ -552,9 +550,7 @@ def test_event_chip_column(create_event, create_category, create_result):
 
 
 @pytest.mark.django_db
-def test_event_splits_render(
-    create_event, create_category, create_result, settings, tmp_path
-):
+def test_event_splits_render(create_event, create_category, create_result, settings, tmp_path):
     """
     Split times render for places that have them, and a result with a
     missing split renders an empty cell without error.
@@ -562,7 +558,7 @@ def test_event_splits_render(
     client = APIClient()
     event = create_event()
     category = create_category()
-    result1 = create_result(event=event, category=category, place=1)
+    create_result(event=event, category=category, place=1)
     create_result(event=event, category=category, place=2)
     Split.objects.create(
         event=event, place=1, split_num=1, split_time=datetime.timedelta(seconds=100)
