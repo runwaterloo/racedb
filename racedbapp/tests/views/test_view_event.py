@@ -497,8 +497,8 @@ def test_event_shows_age_column_when_few_categories(
     client = APIClient()
     event = create_event()
     category = create_category()
-    create_result(event=event, category=category, gender="F", place=1)
-    create_result(event=event, category=category, gender="F", place=2)
+    create_result(event=event, category=category, gender="F", place=1, age=30)
+    create_result(event=event, category=category, gender="F", place=2, age=31)
     url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
     response = client.get(url)
     assert response.status_code == 200
