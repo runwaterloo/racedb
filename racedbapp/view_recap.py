@@ -1,5 +1,6 @@
 from collections import namedtuple
 
+from django.http import Http404
 from django.shortcuts import render
 
 from .models import Endurraceresult, Event, Prime, Result, Teamresult
@@ -27,9 +28,12 @@ def index(request, year, race_slug, distance_slug, individual_only=False):
         hasmasters = Endurraceresult.objects.hasmasters(year)
         team_results = []
     else:
-        event = Event.objects.get(
-            race__slug=race_slug, distance__slug=distance_slug, date__icontains=year
-        )
+        try:
+            event = Event.objects.get(
+                race__slug=race_slug, distance__slug=distance_slug, date__icontains=year
+            )
+        except Exception:
+            raise Http404("Matching event not found")
         results = Result.objects.filter(event_id=event.id)
         hasmasters = Result.objects.hasmasters(event)
         team_results = Teamresult.objects.of_event(event)
