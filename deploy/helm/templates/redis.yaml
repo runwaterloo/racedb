@@ -23,6 +23,12 @@ spec:
         ports:
         - containerPort: 6379
         imagePullPolicy: IfNotPresent
+        # volatile-lru evicts only keys with TTLs (cache entries, celery task
+        # meta) and never touches the TTL-less broker queues or cache
+        # generation counter. Alert fires at 80% of maxmemory long before
+        # writes start failing.
+        command: ["redis-server"]
+        args: ["--maxmemory", "256mb", "--maxmemory-policy", "volatile-lru"]
 {{- if .Values.redis.exporter.enabled }}
       - name: redis-exporter
         image: "{{ .Values.redis.exporter.image.repository }}:{{ .Values.redis.exporter.image.tag }}"

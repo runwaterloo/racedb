@@ -179,7 +179,10 @@ CELERY_RESULT_SERIALIZER = "json"
 # Watcher fires every minute; without this, its task results (celery-task-meta-*)
 # accumulate in Redis at the 24 h default (~1500 keys). Nothing reads them —
 # keep a short TTL so they're only there if someone goes looking.
-CELERY_TASK_RESULT_EXPIRES = 3600
+CELERY_RESULT_EXPIRES = 3600  # NOT legacy CELERY_TASK_RESULT_EXPIRES
+# With namespace="CELERY", the legacy name maps onto celery's dead
+# task_result_expires alias, which celery 5 never reads — #395 set it and
+# redis still drifted to ~1500 24h-TTL keys (diagnosed 2026-10-31, #431).
 CELERY_BEAT_SCHEDULE = celery_beats.CELERY_BEAT_SCHEDULE
 
 # --- Logging ---
