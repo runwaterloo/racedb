@@ -2,12 +2,14 @@ import datetime
 from types import SimpleNamespace
 
 import pytest
+from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.test import Client
 from rest_framework.test import APIClient
 
 from racedbapp import view_index
 from racedbapp.models import Config, Series
+from racedbapp.shared import cache_lock
 
 
 @pytest.mark.django_db
@@ -268,3 +270,16 @@ def test_get_event_records_matches_get_race_records(
     # tie between master and open male at 17:00 means 2 rows for males
     males = [r for r in new if r.place in ("Overall Male", "Masters Male")]
     assert {r.athlete for r in males} == {"Fast Master", "Fast Open"}
+
+
+@pytest.mark.django_db
+def test_junk_query_params_share_warm_cache_with_bare_index(create_event):
+    """
+    Only asofdate affects the rendered page. Junk params (e.g. ?author=1)
+    must not create distinct cache keys - they hit the same "index" key.
+    """
+    cache_lock.set("index", HttpResponse("<html>warm</html>"))
+    client = Client(raise_request_exception=False)
+    response = client.get("/?author=1")
+    assert response.status_code == 200
+    assert response.content.decode() == "<html>warm</html>"
