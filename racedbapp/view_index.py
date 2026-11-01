@@ -38,8 +38,6 @@ def index(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     if "asofdate" in qstring:
         return _render_index(request)
-    # Only asofdate affects the rendered page; any other query params are
-    # ignored so arbitrary junk params can't fragment the cache (PR #444).
     return cache_lock.get_or_render("index", lambda: _render_index(request))
 
 
