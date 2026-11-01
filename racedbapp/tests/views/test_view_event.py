@@ -568,3 +568,43 @@ def test_event_splits_render(create_event, create_category, create_result, setti
     assert response.status_code == 200
     content = response.content.decode()
     assert "1:40" in content
+
+
+@pytest.mark.django_db
+def test_event_warm_hit_zero_queries(create_event):
+    """A warm event request is served with zero database queries."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    client = APIClient()
+    event = create_event(date=django.utils.timezone.localdate() - datetime.timedelta(days=3))
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    cache_key = f"event.{event.date.year}.{event.race.slug}.{event.distance.slug}.None."
+    cache.delete(cache_key)
+    first = client.get(url)
+    assert first.status_code == 200
+    with CaptureQueriesContext(connection) as ctx:
+        second = client.get(url)
+    assert second.status_code == 200
+    assert second.content == first.content
+    assert len(ctx) == 0
+
+
+@pytest.mark.django_db
+def test_event_warm_hit_serves_cached_content(create_event):
+    """The pre-check path serves the cached page even if the event row changes."""
+    client = APIClient()
+    event = create_event(date=django.utils.timezone.localdate() - datetime.timedelta(days=3))
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    cache_key = f"event.{event.date.year}.{event.race.slug}.{event.distance.slug}.None."
+    cache.delete(cache_key)
+    first = client.get(url)
+    assert first.status_code == 200
+    # Delete the event: a warm hit must not touch the DB, so it still serves.
+    Result.objects.filter(event=event).delete()
+    from racedbapp.models import Event as EventModel
+
+    EventModel.objects.filter(id=event.id).delete()
+    second = client.get(url)
+    assert second.status_code == 200
+    assert second.content == first.content
