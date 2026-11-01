@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict, namedtuple
 from operator import attrgetter
 from urllib import parse
@@ -36,6 +37,8 @@ from .models import (
     Wheelchairresult,
 )
 from .shared import cache_lock, shared, utils
+
+logger = logging.getLogger(__name__)
 
 named_split = namedtuple("ns", ["split_num", "split_time"])
 
@@ -93,6 +96,7 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
     )
     cached = cache_lock.get(cache_key)
     if cached is not None:
+        logger.info("cache HIT (warm): key=%s", cache_key)
         return cached
     try:
         event = Event.objects.select_related().get(
