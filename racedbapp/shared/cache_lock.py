@@ -58,6 +58,7 @@ def get_or_render(cache_key, render_func):
     """Return the cached value for cache_key, rendering at most once."""
     cached = get(cache_key)
     if cached is not None:
+        logger.info("cache HIT (warm): key=%s", cache_key)
         return cached
     lock_key = _lock_key(cache_key)
     lock_token = str(uuid.uuid4())
@@ -187,6 +188,7 @@ def _render_under_lock(cache_key, lock_key, lock_token, render_func):
     # live until the 30h TTL. Capturing first makes that write stale-on-
     # arrival and it is ignored on read.
     render_generation = _current_generation()
+    render_start = time.monotonic()
     try:
         value = render_func()
     except Exception:
@@ -194,6 +196,11 @@ def _render_under_lock(cache_key, lock_key, lock_token, render_func):
         raise
     cache.set(cache_key, (render_generation, value), ENTRY_TTL_SECONDS)
     _release_lock(lock_key, lock_token)
+    logger.info(
+        "cache MISS (cold render): key=%s render_ms=%.0f",
+        cache_key,
+        (time.monotonic() - render_start) * 1000,
+    )
     return value
 
 
@@ -203,6 +210,7 @@ def _wait_for_cache_or_render(cache_key, lock_key, render_func):
         time.sleep(POLL_INTERVAL_SECONDS)
         cached = get(cache_key)
         if cached is not None:
+            logger.info("cache HIT (waited for another worker): key=%s", cache_key)
             return cached
         if cache.get(lock_key) is None:
             lock_token = str(uuid.uuid4())
