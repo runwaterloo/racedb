@@ -64,14 +64,14 @@ def get_series(event=None, events=None, year=None, race=None):
 
 
 def _get_event_cache_days():
-    """Days in the past an event stays cacheable. 0 disables; default 30."""
+    """Days in the past an event stays cacheable. 0 disables; default 60."""
     value = shared.get_config_value_or_false("event_cache_days")
     if not value:
-        return 30
+        return 60
     try:
         return int(value)
     except (TypeError, ValueError):
-        return 30
+        return 60
 
 
 def _is_cacheable(event, request):

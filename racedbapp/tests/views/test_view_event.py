@@ -422,7 +422,7 @@ def test_event_cache_window_config_default(create_event):
     """Missing config defaults the window to 30 days."""
     from racedbapp.view_event import _get_event_cache_days
 
-    assert _get_event_cache_days() == 30
+    assert _get_event_cache_days() == 60
 
 
 @pytest.mark.django_db
@@ -449,7 +449,7 @@ def test_event_cache_window_config_invalid_falls_back(create_event):
     from racedbapp.view_event import _get_event_cache_days
 
     Config.objects.create(name="event_cache_days", value="notanumber")
-    assert _get_event_cache_days() == 30
+    assert _get_event_cache_days() == 60
 
 
 @pytest.mark.django_db
