@@ -5,7 +5,9 @@ import urllib
 from collections import namedtuple
 from datetime import datetime
 from operator import attrgetter
+from types import SimpleNamespace
 
+from django.db.models import Count
 from django.shortcuts import render
 
 from . import config, view_endurrun, view_event, view_member, view_recap
@@ -260,6 +262,90 @@ def get_featured_event():
     return featured_event
 
 
+def get_event_records(race, distance):
+    """All-time overall + masters records for a race/distance, one query.
+
+    Purpose-built for the upcoming-events table: returns the same
+    namedresult rows the table consumes from
+    shared.get_race_records(individual_only=True), computed in a single
+    pass over one query instead of ~10 category scans with tie-breaker
+    re-queries.
+    """
+    races = shared.create_samerace_list(race)
+    membership = shared.get_membership()
+    # Lightweight tuples, not ORM objects: this scans a race's full
+    # all-time history, so model instantiation for every row dominates
+    # cold-render CPU. Pull only the columns the records need.
+    raw = (
+        Result.objects.filter(
+            event__race__in=races,
+            event__distance=distance,
+            gender__in=("M", "F"),
+        )
+        .exclude(guntime=None)
+        .values_list(
+            "guntime",
+            "athlete",
+            "age",
+            "city",
+            "place",
+            "gender",
+            "category__ismasters",
+            "category__name",
+            "event_id",
+            "event__date",
+            "event__race__slug",
+        )
+    )
+    is_endurrun = race.slug == "endurrun"
+    best = {}  # demographic -> [time, row tuples]
+    for t, athlete, age, city, place, gender, ismasters, cat_name, event_id, event_date, race_slug in raw:
+        if is_endurrun:
+            is_master = age is not None and age >= 40
+        else:
+            is_master = ismasters or (age is not None and age >= 40)
+        demos = [gender]
+        if is_master:
+            demos.append("Masters Male" if gender == "M" else "Masters Female")
+        for demo in demos:
+            current = best.get(demo)
+            if current is None or t < current[0]:
+                best[demo] = [t, [(t, athlete, age, city, place, cat_name, event_id, event_date, race_slug)]]
+            elif t == current[0]:
+                current[1].append((t, athlete, age, city, place, cat_name, event_id, event_date, race_slug))
+    demo_order = ["M", "F", "Masters Male", "Masters Female"]
+    records = []
+    for demo in demo_order:
+        if demo not in best:
+            continue
+        t, tied = best[demo]
+        label = "Overall Male" if demo == "M" else "Overall Female"
+        if demo.startswith("Masters"):
+            label = demo
+        for t, athlete, age, city, place, cat_name, event_id, event_date, race_slug in sorted(
+            tied, key=lambda x: x[7]
+        ):
+            fake = SimpleNamespace(
+                athlete=athlete,
+                place=place,
+                event=SimpleNamespace(id=event_id),
+            )
+            records.append(
+                shared.namedresult(
+                    label,
+                    t,
+                    athlete,
+                    event_date.year,
+                    cat_name,
+                    city,
+                    age,
+                    race_slug,
+                    shared.get_member(fake, membership),
+                )
+            )
+    return records
+
+
 def get_event_data(event):
     if not event:
         return None
@@ -272,9 +358,7 @@ def get_event_data(event):
     if previous_event is None:
         return None
     previous_event_recap = get_recap_results_standard(previous_event)
-    featured_event_records = shared.get_race_records(
-        event.race, event.distance, individual_only=True
-    )
+    featured_event_records = get_event_records(event.race, event.distance)
     event_data = []
     for i in featured_event_records:
         row = UpcomingEvent()
@@ -302,9 +386,22 @@ def get_event_data(event):
 
 
 def get_future_events(event):
+    """Return all upcoming events of the next N races, in date order.
+
+    Two-phase to keep the query count flat: phase 1 walks the (single)
+    future-events query in Python to find the N races, using one batched
+    per-event result count; phase 2 builds the display list from the same
+    in-memory rows, using one batched per-(race, distance) result count.
+    Per-event get_event_data runs only for events that will display.
+    """
     today = datetime.today()
-    future_events = []
-    dbfuture_events = Event.objects.filter(date__gte=today).order_by("date", "-distance__km")
+    dbfuture_events = list(
+        Event.objects.filter(date__gte=today)
+        .select_related("race", "distance")
+        .order_by("date", "-distance__km")
+    )
+    if not dbfuture_events:
+        return []
     upcoming_races_count_object = Config.objects.filter(
         name="homepage_upcoming_races_count"
     ).first()
@@ -312,30 +409,51 @@ def get_future_events(event):
         int(upcoming_races_count_object.value) if upcoming_races_count_object else 5
     )
 
-    exclude_events_objects = Config.objects.filter(name="homepage_upcoming_exclude_events").first()
+    exclude_events_objects = Config.objects.filter(
+        name="homepage_upcoming_exclude_events"
+    ).first()
     exclude_events_str = exclude_events_objects.value.split(",") if exclude_events_objects else []
     exclude_events = [int(x) for x in exclude_events_str]
 
+    # One grouped count instead of one count() per event.
+    result_counts = dict(
+        Result.objects.filter(event_id__in=[i.id for i in dbfuture_events])
+        .values_list("event_id")
+        .annotate(n=Count("id"))
+    )
+
+    # Phase 1: find the first N races, preserving the original semantics:
+    # a race counts as seen only via an event that is not excluded, not the
+    # featured event, and has no results yet.
     races_seen = []
+    races_seen_ids = set()
     for i in dbfuture_events:
-        if i.id in exclude_events:
+        if i.id in exclude_events or i == event:
             continue
-        if len(races_seen) == upcoming_races_count:
-            if i.race not in races_seen:
+        if result_counts.get(i.id, 0) > 0:
+            continue
+        if i.race_id not in races_seen_ids:
+            if len(races_seen) == upcoming_races_count:
                 break
-        if i == event:
+            races_seen.append(i.race)
+            races_seen_ids.add(i.race_id)
+
+    # Phase 2: all no-result events of the chosen races, in original order.
+    # History check is a per-event exists() probe (indexed, early-exit,
+    # <1ms each, at most one per displayed event) instead of one
+    # all-time grouped count over every race's full result history.
+    future_events = []
+    for i in dbfuture_events:
+        if i.race_id not in races_seen_ids:
             continue
-        event_result_count = Result.objects.filter(event=i).count()
-        if event_result_count > 0:
+        if i.id in exclude_events or i == event or result_counts.get(i.id, 0) > 0:
             continue
-        numresults = Result.objects.filter(event__race=i.race, event__distance=i.distance).count()
-        event_data = False
-        if numresults > 0:
-            event_data = get_event_data(i)
+        numresults = Result.objects.filter(
+            event__race_id=i.race_id, event__distance_id=i.distance_id
+        ).exists()
+        event_data = get_event_data(i) if numresults else False
         race_logo_slug = utils.get_race_logo_slug(i.race.slug)
         future_events.append((i, event_data, race_logo_slug))
-        if i.race not in races_seen:
-            races_seen.append(i.race)
     return future_events
 
 

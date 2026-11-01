@@ -93,8 +93,8 @@ def index(request, year, race_slug, distance_slug, individual_only=False):
 def get_individual_results(event, results, hasmasters, distance_slug, year=False):
     membership = get_membership()
     individual_results = []
-    female_results = list(results.filter(gender="F")[0:3])
-    male_results = list(results.filter(gender="M")[0:3])
+    female_results = list(results.select_related("rwmember").filter(gender="F")[0:3])
+    male_results = list(results.select_related("rwmember").filter(gender="M")[0:3])
     for i in range(1, 4):
         if i == 1:
             rank = "1st OA"
