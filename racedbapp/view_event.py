@@ -88,9 +88,6 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
         sequel = get_object_or_404(Sequel, slug=sequel_slug)
     else:
         sequel = None
-    # Cache check first, before the event DB lookup: a warm request is
-    # served with zero database access, like the index view. The key is
-    # slugs instead of event.id, so we don't need the event to find it.
     cache_key = "event.{}.{}.{}.{}.{}".format(
         year, race_slug, distance_slug, sequel_slug, request.META["QUERY_STRING"]
     )
