@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict, namedtuple
 from operator import attrgetter
 from urllib import parse
@@ -37,6 +38,8 @@ from .models import (
 )
 from .shared import cache_lock, shared, utils
 
+logger = logging.getLogger(__name__)
+
 named_split = namedtuple("ns", ["split_num", "split_time"])
 
 
@@ -61,14 +64,14 @@ def get_series(event=None, events=None, year=None, race=None):
 
 
 def _get_event_cache_days():
-    """Days in the past an event stays cacheable. 0 disables; default 30."""
+    """Days in the past an event stays cacheable. 0 disables; default 60."""
     value = shared.get_config_value_or_false("event_cache_days")
     if not value:
-        return 30
+        return 60
     try:
         return int(value)
     except (TypeError, ValueError):
-        return 30
+        return 60
 
 
 def _is_cacheable(event, request):
@@ -85,6 +88,13 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
         sequel = get_object_or_404(Sequel, slug=sequel_slug)
     else:
         sequel = None
+    cache_key = "event.{}.{}.{}.{}.{}".format(
+        year, race_slug, distance_slug, sequel_slug, request.META["QUERY_STRING"]
+    )
+    cached = cache_lock.get(cache_key)
+    if cached is not None:
+        logger.info("cache HIT (warm): key=%s", cache_key)
+        return cached
     try:
         event = Event.objects.select_related().get(
             race__slug=race_slug,
@@ -97,7 +107,6 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
     # Cached path: past events within the config window render at most once
     # even under concurrent load (single-flight lock in cache_lock)
     if _is_cacheable(event, request):
-        cache_key = "event.{}.{}".format(event.id, request.META["QUERY_STRING"])
         return cache_lock.get_or_render(
             cache_key, lambda: _render_event(request, event, sequel, qstring)
         )
