@@ -71,7 +71,7 @@ def test_event_winner_headings_use_most_recent_previous_event(
         female_time=datetime.timedelta(minutes=20),
     )
     monkeypatch.setattr(view_index, "get_recap_results_standard", lambda event: [previous_winner])
-    monkeypatch.setattr(view_index.shared, "get_race_records", lambda *args, **kwargs: [record])
+    monkeypatch.setattr(view_index, "get_event_records", lambda race, distance: [record])
 
     event_data = view_index.get_event_data(upcoming_event)
 
@@ -174,3 +174,97 @@ def test_view_recap_excludes_series_link_for_event_without_series(create_event, 
 
     assert "<select" not in content
     assert '<option value="#">Series</option>' not in content
+
+
+@pytest.mark.django_db
+def test_get_future_events_includes_all_events_of_chosen_races(create_event, monkeypatch):
+    """All no-result events of the first N races show, not just the first per race."""
+    race_a_event1 = create_event(name_suffix="a1", date=datetime.date(2030, 6, 1))
+    race_a = race_a_event1.race
+    event_a2 = create_event(
+        name_suffix="a2", date=datetime.date(2030, 7, 1), race=race_a
+    )
+    event_b = create_event(name_suffix="b", date=datetime.date(2030, 8, 1))
+    monkeypatch.setattr(view_index, "get_event_data", lambda event: False)
+
+    future_events = view_index.get_future_events(event=None)
+
+    event_ids = [i.id for i, _, _ in future_events]
+    assert race_a_event1.id in event_ids
+    assert event_a2.id in event_ids
+    assert event_b.id in event_ids
+    assert len(event_ids) == 3
+
+
+@pytest.mark.django_db
+def test_get_future_events_skips_events_with_results_without_consuming_race_slot(
+    create_event, create_category, create_result, monkeypatch
+):
+    """An event with results is hidden and its race can still be chosen later."""
+    race_a = create_event(name_suffix="a1", date=datetime.date(2030, 6, 1)).race
+    done_event = create_event(
+        name_suffix="a2", date=datetime.date(2030, 7, 1), race=race_a
+    )
+    category = create_category()
+    create_result(event=done_event, category=category)
+    upcoming_event = create_event(
+        name_suffix="a3", date=datetime.date(2030, 9, 1), race=race_a
+    )
+    monkeypatch.setattr(view_index, "get_event_data", lambda event: False)
+
+    future_events = view_index.get_future_events(event=None)
+
+    event_ids = [i.id for i, _, _ in future_events]
+    assert done_event.id not in event_ids
+    assert upcoming_event.id in event_ids
+
+
+@pytest.mark.django_db
+def test_get_future_events_excluded_events_do_not_consume_race_slot(
+    create_event, monkeypatch
+):
+    """Excluded events neither show nor mark their race as seen."""
+    excluded = create_event(name_suffix="ex", date=datetime.date(2030, 6, 1))
+    other = create_event(name_suffix="b", date=datetime.date(2030, 7, 1))
+    Config.objects.bulk_create(
+        [
+            Config(name="homepage_upcoming_exclude_events", value=str(excluded.id)),
+            Config(name="homepage_upcoming_races_count", value="1"),
+        ]
+    )
+    monkeypatch.setattr(view_index, "get_event_data", lambda event: False)
+
+    future_events = view_index.get_future_events(event=None)
+
+    event_ids = [i.id for i, _, _ in future_events]
+    assert excluded.id not in event_ids
+    assert other.id in event_ids
+
+
+@pytest.mark.django_db
+def test_get_event_records_matches_get_race_records(
+    create_event, create_result, create_race, create_distance, create_category
+):
+    """get_event_records must match the subset of get_race_records the
+    index table consumes: same demographics, athletes, times, years."""
+    race = create_race()
+    distance = create_distance()
+    e1 = create_event(race=race, distance=distance, date=datetime.date(2024, 1, 1))
+    e2 = create_event(race=race, distance=distance, date=datetime.date(2025, 1, 1))
+    category = create_category()
+    create_result(event=e1, gender="M", guntime=datetime.timedelta(minutes=17), age=45, category=category, athlete="Fast Master", place=1)
+    create_result(event=e2, gender="M", guntime=datetime.timedelta(minutes=17), age=20, category=category, athlete="Fast Open", place=1)
+    create_result(event=e2, gender="M", guntime=datetime.timedelta(minutes=18), age=50, category=category, place=2)
+    create_result(event=e1, gender="F", guntime=datetime.timedelta(minutes=19), age=42, category=category, place=2)
+    create_result(event=e2, gender="F", guntime=datetime.timedelta(minutes=20), age=20, category=category, place=3)
+
+    new = view_index.get_event_records(race, distance)
+    old = view_index.shared.get_race_records(race, distance, individual_only=True)
+
+    def key(r):
+        return (r.place, r.athlete, r.guntime, r.year)
+
+    assert sorted(map(key, new)) == sorted(map(key, old))
+    # tie between master and open male at 17:00 means 2 rows for males
+    males = [r for r in new if r.place in ("Overall Male", "Masters Male")]
+    assert {r.athlete for r in males} == {"Fast Master", "Fast Open"}

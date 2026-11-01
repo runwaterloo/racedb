@@ -1,4 +1,5 @@
 from collections import namedtuple
+from time import monotonic
 
 from django.db.models import Q
 from django.http import Http404
@@ -323,7 +324,29 @@ def create_samerace_list(race):
     return races
 
 
+_membership_cache = {}
+_membership_ttl_seconds = 60
+
+
 def get_membership(event=False, include_inactive=False):
+    """Build membership lookup dicts, memoized for a short TTL.
+
+    This is called once per recap build (11x per index render), and each
+    build scans all active members plus corrections - identical work
+    every time. A short TTL keeps the whole render consistent while
+    still picking up membership edits within a minute.
+    """
+    key = (event.id if event else None, include_inactive)
+    cached = _membership_cache.get(key)
+    now = monotonic()
+    if cached is not None and now - cached[1] < _membership_ttl_seconds:
+        return cached[0]
+    membership = _build_membership(event, include_inactive)
+    _membership_cache[key] = (membership, now)
+    return membership
+
+
+def _build_membership(event=False, include_inactive=False):
     named_membership = namedtuple("nm", ["names", "includes", "excludes"])
     names = {}
     if include_inactive:
@@ -335,13 +358,17 @@ def get_membership(event=False, include_inactive=False):
         if m.altname != "":
             names[m.altname.lower()] = m
     includes = {}
-    dbinclude = Rwmembercorrection.objects.filter(correction_type="include")
+    dbinclude = Rwmembercorrection.objects.filter(correction_type="include").select_related(
+        "rwmember", "event"
+    )
     if event:
         dbinclude = dbinclude.filter(event=event)
     for i in dbinclude:
         includes["{}-{}".format(i.event.id, i.place)] = i.rwmember
     excludes = {}
-    dbexclude = Rwmembercorrection.objects.filter(correction_type="exclude")
+    dbexclude = Rwmembercorrection.objects.filter(correction_type="exclude").select_related(
+        "rwmember", "event"
+    )
     if event:
         dbexclude = dbexclude.filter(event=event)
     for e in dbexclude:

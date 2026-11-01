@@ -489,7 +489,9 @@ def get_memberresults(member):
     results = []
     total_distance = 0
     dbresults = list(
-        Result.objects.select_related()
+        Result.objects.select_related(
+            "event__race", "event__distance", "event__sequel", "rwmember", "category"
+        )
         .filter(rwmember=member)
         .exclude(place__gte=990000)
         .order_by("-event__date", "-event__distance__km")
