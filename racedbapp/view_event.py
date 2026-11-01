@@ -85,6 +85,15 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
         sequel = get_object_or_404(Sequel, slug=sequel_slug)
     else:
         sequel = None
+    # Cache check first, before the event DB lookup: a warm request is
+    # served with zero database access, like the index view. The key is
+    # slugs instead of event.id, so we don't need the event to find it.
+    cache_key = "eventslugs.{}.{}.{}.{}.{}".format(
+        year, race_slug, distance_slug, sequel_slug, request.META["QUERY_STRING"]
+    )
+    cached = cache_lock.get(cache_key)
+    if cached is not None:
+        return cached
     try:
         event = Event.objects.select_related().get(
             race__slug=race_slug,
@@ -97,7 +106,6 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
     # Cached path: past events within the config window render at most once
     # even under concurrent load (single-flight lock in cache_lock)
     if _is_cacheable(event, request):
-        cache_key = "event.{}.{}".format(event.id, request.META["QUERY_STRING"])
         return cache_lock.get_or_render(
             cache_key, lambda: _render_event(request, event, sequel, qstring)
         )

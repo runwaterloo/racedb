@@ -458,7 +458,7 @@ def test_event_view_caches_response(create_event):
     client = APIClient()
     event = create_event(date=django.utils.timezone.localdate() - datetime.timedelta(days=3))
     url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
-    cache_key = f"event.{event.id}."
+    cache_key = f"eventslugs.{event.date.year}.{event.race.slug}.{event.distance.slug}.None."
     cache.delete(cache_key)
     with mock.patch(
         "racedbapp.view_event._render_event", wraps=view_event._render_event
