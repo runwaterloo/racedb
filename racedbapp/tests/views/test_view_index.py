@@ -283,3 +283,30 @@ def test_junk_query_params_share_warm_cache_with_bare_index(create_event):
     response = client.get("/?author=1")
     assert response.status_code == 200
     assert response.content.decode() == "<html>warm</html>"
+
+
+@pytest.mark.django_db
+def test_asofdate_bypasses_cache(create_category, create_event, create_result):
+    """
+    asofdate requests short-circuit to an uncached render: a poisoned cache
+    entry must not leak into the asofdate response, and the response must
+    not be stored under any index cache key.
+    """
+    event = create_event()
+    category = create_category(name_suffix="a")
+    create_result(event=event, gender="F", category=category, place=1)
+    create_result(event=event, gender="F", category=category, place=3)
+    create_result(event=event, gender="F", category=category, place=5)
+    create_result(event=event, gender="M", category=category, place=2)
+    create_result(event=event, gender="M", category=category, place=4)
+    create_result(event=event, gender="M", category=category, place=6)
+    cache_lock.set("index", HttpResponse("<html>stale</html>"))
+    client = Client(raise_request_exception=False)
+
+    response = client.get("/?asofdate=2025-01-01")
+
+    assert response.status_code == 200
+    assert "stale" not in response.content.decode()
+
+    # The asofdate render must not have overwritten the cache entry.
+    assert cache_lock.get("index").content.decode() == "<html>stale</html>"
