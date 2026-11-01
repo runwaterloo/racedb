@@ -2,12 +2,14 @@ import datetime
 from types import SimpleNamespace
 
 import pytest
+from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.test import Client
 from rest_framework.test import APIClient
 
 from racedbapp import view_index
 from racedbapp.models import Config, Series
+from racedbapp.shared import cache_lock
 
 
 @pytest.mark.django_db
@@ -268,3 +270,43 @@ def test_get_event_records_matches_get_race_records(
     # tie between master and open male at 17:00 means 2 rows for males
     males = [r for r in new if r.place in ("Overall Male", "Masters Male")]
     assert {r.athlete for r in males} == {"Fast Master", "Fast Open"}
+
+
+@pytest.mark.django_db
+def test_junk_query_params_share_warm_cache_with_bare_index(create_event):
+    """
+    Only asofdate affects the rendered page. Junk params (e.g. ?author=1)
+    must not create distinct cache keys - they hit the same "index" key.
+    """
+    cache_lock.set("index", HttpResponse("<html>warm</html>"))
+    client = Client(raise_request_exception=False)
+    response = client.get("/?author=1")
+    assert response.status_code == 200
+    assert response.content.decode() == "<html>warm</html>"
+
+
+@pytest.mark.django_db
+def test_asofdate_bypasses_cache(create_category, create_event, create_result):
+    """
+    asofdate requests short-circuit to an uncached render: a poisoned cache
+    entry must not leak into the asofdate response, and the response must
+    not be stored under any index cache key.
+    """
+    event = create_event()
+    category = create_category(name_suffix="a")
+    create_result(event=event, gender="F", category=category, place=1)
+    create_result(event=event, gender="F", category=category, place=3)
+    create_result(event=event, gender="F", category=category, place=5)
+    create_result(event=event, gender="M", category=category, place=2)
+    create_result(event=event, gender="M", category=category, place=4)
+    create_result(event=event, gender="M", category=category, place=6)
+    cache_lock.set("index", HttpResponse("<html>stale</html>"))
+    client = Client(raise_request_exception=False)
+
+    response = client.get("/?asofdate=2025-01-01")
+
+    assert response.status_code == 200
+    assert "stale" not in response.content.decode()
+
+    # The asofdate render must not have overwritten the cache entry.
+    assert cache_lock.get("index").content.decode() == "<html>stale</html>"

@@ -35,11 +35,10 @@ FeaturedEventContext = namedtuple(
 
 
 def index(request):
-    cache_key = "index.{}".format(request.META["QUERY_STRING"])
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     if "asofdate" in qstring:
         return _render_index(request)
-    return cache_lock.get_or_render(cache_key, lambda: _render_index(request))
+    return cache_lock.get_or_render("index", lambda: _render_index(request))
 
 
 def _render_index(request):
