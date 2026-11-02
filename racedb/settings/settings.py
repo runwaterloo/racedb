@@ -41,6 +41,12 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    # GZip below PrometheusAfterMiddleware so its process_response runs after
+    # the latency metric is recorded: compression cost never shows up in the
+    # latency histograms, and cached responses (created inside the view via
+    # cache_lock) stay uncompressed in Redis. Cuts ~4 GB/day of uncompressed
+    # HTML egress (event pages are ~96% smaller gzipped). (#411)
+    "django.middleware.gzip.GZipMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
