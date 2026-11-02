@@ -41,9 +41,16 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.gzip.GZipMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
+
+# GZipMiddleware is prod-only: dev/QA serve the debug toolbar and it cannot
+# inject panels into gzipped responses, which made the toolbar vanish.
+if os.getenv("SETTINGS", "none") == "prod":
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index("django_prometheus.middleware.PrometheusAfterMiddleware"),
+        "django.middleware.gzip.GZipMiddleware",
+    )
 
 # QA site (racedb.runwaterloo.com) runs SETTINGS=dev: gate it behind Django
 # auth. Attached after AuthenticationMiddleware so request.user is loaded;
