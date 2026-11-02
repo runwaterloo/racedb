@@ -45,6 +45,12 @@ MIDDLEWARE = [
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
+# Pop gzip for local dev (SETTINGS=min): the debug toolbar cannot inject
+# its panels into gzipped responses. QA (SETTINGS=dev) keeps gzip so it
+# mirrors prod, where final testing happens.
+if os.getenv("SETTINGS", "none") == "min":
+    MIDDLEWARE.remove("django.middleware.gzip.GZipMiddleware")
+
 # QA site (racedb.runwaterloo.com) runs SETTINGS=dev: gate it behind Django
 # auth. Attached after AuthenticationMiddleware so request.user is loaded;
 # cookie-less requests still cost no DB access. Prod (SETTINGS=prod) and

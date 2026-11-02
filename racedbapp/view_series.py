@@ -4,7 +4,7 @@ from urllib import parse
 from django.http import Http404
 from django.shortcuts import render
 
-from racedbapp.shared import agegrade
+from racedbapp.shared import agegrade, cache_lock
 from racedbapp.shared.types import Choice, Filter
 
 from .models import Event, Result, Series
@@ -13,6 +13,18 @@ AGE_GRADE_SCORING = "age-grade"
 
 
 def index(request, series_slug):
+    if request.method != "GET":
+        return _render_series(request, series_slug)
+    # Cache every shape (year / filter / scoring) keyed by the raw qstring;
+    # generation-based invalidation in cache_lock handles result changes.
+    cache_key = "series.{}.{}".format(series_slug, request.META["QUERY_STRING"])
+    cached = cache_lock.get(cache_key)
+    if cached is not None:
+        return cached
+    return cache_lock.get_or_render(cache_key, lambda: _render_series(request, series_slug))
+
+
+def _render_series(request, series_slug):
     qstring = parse.parse_qs(request.META["QUERY_STRING"])
     year = False
     all_series = Series.objects.filter(slug=series_slug).order_by("-year")
@@ -36,7 +48,9 @@ def index(request, series_slug):
     for series in all_series:
         event_ids = [x.id for x in series.events]
         # Kept for the category filter below (athlete categories from event one).
-        event1_all_results = Result.objects.filter(event_id=event_ids[0])
+        event1_all_results = Result.objects.filter(event_id=event_ids[0]).select_related(
+            "category", "rwmember"
+        )
         if age_grade:
             results += build_age_grade_results(series, year)
         else:
@@ -140,7 +154,9 @@ def build_age_grade_results(series, year):
     # Seed from the first event.
     first_event = events[0]
     first_distance_m = float(first_event.distance.km) * 1000
-    for result in Result.objects.filter(event_id=first_event.id):
+    for result in Result.objects.filter(event_id=first_event.id).select_related(
+        "category", "rwmember"
+    ):
         ag_result = SeriesAgeGradeResult(result, series.year)
         age = resolve_age(result.age, result.rwmember, first_event.date.year)
         grade = round(

@@ -1,8 +1,16 @@
 import pytest
+from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from racedbapp.models import Result
 from racedbapp.view_series import set_ismaster_from_result
+
+
+@pytest.fixture(autouse=True)
+def _clear_cache():
+    """The view caches responses; a stale hit would replay another test's page."""
+    yield
+    cache.clear()
 
 
 @pytest.mark.django_db
