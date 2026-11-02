@@ -36,7 +36,9 @@ def index(request, series_slug):
     for series in all_series:
         event_ids = [x.id for x in series.events]
         # Kept for the category filter below (athlete categories from event one).
-        event1_all_results = Result.objects.filter(event_id=event_ids[0])
+        event1_all_results = Result.objects.filter(event_id=event_ids[0]).select_related(
+            "category", "rwmember"
+        )
         if age_grade:
             results += build_age_grade_results(series, year)
         else:
@@ -140,7 +142,9 @@ def build_age_grade_results(series, year):
     # Seed from the first event.
     first_event = events[0]
     first_distance_m = float(first_event.distance.km) * 1000
-    for result in Result.objects.filter(event_id=first_event.id):
+    for result in Result.objects.filter(event_id=first_event.id).select_related(
+        "category", "rwmember"
+    ):
         ag_result = SeriesAgeGradeResult(result, series.year)
         age = resolve_age(result.age, result.rwmember, first_event.date.year)
         grade = round(
