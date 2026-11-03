@@ -56,6 +56,10 @@ spec:
               value: {{ .Values.racedb.settings }}
             - name: DATABASE
               value: "postgres"
+            {{- if eq .Values.racedb.tracing "on" }}
+            - name: TRACING
+              value: "on"
+            {{- end }}
           volumeMounts:
             {{- if .Values.racedb.mountLocal }}
             - mountPath: /srv/racedb

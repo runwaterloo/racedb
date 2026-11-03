@@ -1,4 +1,5 @@
 racedb:
+  tracing: "off"
   settings: prod
   threads: 4
 ingress:
