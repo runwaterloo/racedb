@@ -52,8 +52,18 @@ services:
       DATABASE: "postgres"
       SETTINGS: "min"
       DJANGO_SETTINGS_MODULE: "racedb.settings.settings"
+      # Optional: uncomment to export traces to the local tempo stack
+      # (start it first: docker compose -f deploy/local/tracing.yml up -d).
+      # Leave unset to write spans to .traces/spans.json instead.
+      # OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
     ports:
       - "8000:8000"
+    networks:
+      - default
+      - tracing
     volumes:
       - ../..:/srv/racedb
       - ../../racedb/secrets.py.sample:/srv/racedb/racedb/secrets.py
+networks:
+  tracing:
+    name: racedb-tracing

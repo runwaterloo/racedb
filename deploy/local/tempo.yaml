@@ -1,0 +1,12 @@
+# Minimal in-memory-ish tempo for local tracing play (throwaway).
+server:
+  http_listen_port: 3200
+distributor:
+  receivers:
+    protocols:
+      http:
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/blocks

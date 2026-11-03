@@ -321,9 +321,17 @@ if os.getenv("TRACING", "off") == "on":
     )
     provider = TracerProvider(resource=resource)
     if _settings == "min":
-        _exporter = ChromeTraceFileExporter(
-            os.getenv("TRACING_FILE", ".traces/spans.json")
-        )
+        if os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"):
+            # e.g. local tempo via deploy/local/tracing.yml
+            _exporter = OTLPSpanExporter(
+                endpoint=os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"],
+                headers=os.getenv("OTEL_EXPORTER_OTLP_HEADERS", ""),
+                timeout=10,
+            )
+        else:
+            _exporter = ChromeTraceFileExporter(
+                os.getenv("TRACING_FILE", ".traces/spans.json")
+            )
     else:
         _exporter = OTLPSpanExporter(
             endpoint=os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"],
