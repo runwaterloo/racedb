@@ -1,4 +1,22 @@
 services:
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_USERS_DEFAULT_THEME=dark
+    ports:
+      - "3300:3000"
+
   postgres:
     image: postgres:17-alpine
     container_name: postgres
@@ -31,6 +49,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      tempo:
+        condition: service_started
     build:
       context: ../..
       dockerfile: Dockerfile
@@ -52,10 +72,8 @@ services:
       DATABASE: "postgres"
       SETTINGS: "min"
       DJANGO_SETTINGS_MODULE: "racedb.settings.settings"
-      # Optional: uncomment to export traces to the local tempo stack
-      # (start it first: docker compose -f deploy/local/tracing.yml up -d).
-      # Leave unset to write spans to .traces/spans.json instead.
-      # OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
+      # Tracing: export spans to the bundled tempo stack below.
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
     ports:
       - "8000:8000"
     networks:
@@ -67,3 +85,6 @@ services:
 networks:
   tracing:
     name: racedb-tracing
+
+volumes:
+  tempo-data:
