@@ -7,6 +7,7 @@ ui.perfetto.dev opens natively via drag-and-drop. Used for local dev
 
 import json
 import logging
+import os
 
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -30,6 +31,7 @@ class ChromeTraceFileExporter(SpanExporter):
     def __init__(self, path):
         self.path = path
         # Truncate on startup so a new run starts a fresh trace file.
+        os.makedirs(os.path.dirname(os.path.abspath(self.path)), exist_ok=True)
         with open(self.path, "w"):
             pass
 
