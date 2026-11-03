@@ -41,10 +41,10 @@ services:
       dockerfile: Dockerfile
       args:
       - INSTALL_DEV=1
-    command: '/bin/sh -c '' python ./manage.py collectstatic --noinput; python ./manage.py
-      migrate --noinput; export DJANGO_SUPERUSER_PASSWORD=admin; python ./manage.py
-      createsuperuser --noinput --username admin --email admin@example.com; python
-      ./manage.py runserver 0.0.0.0:8000''
+    command: '/bin/sh -c '' python ./manage.py collectstatic --noinput; TRACING=off
+      python ./manage.py migrate --noinput; export DJANGO_SUPERUSER_PASSWORD=admin;
+      TRACING=off python ./manage.py createsuperuser --noinput --username admin --email
+      admin@example.com; python ./manage.py runserver 0.0.0.0:8000''
 
       '
     container_name: racedb-web
