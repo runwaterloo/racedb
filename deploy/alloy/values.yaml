@@ -376,3 +376,20 @@ controller:
         port: 4318
         protocol: TCP
         targetPort: 4318
+
+extraObjects:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: alloy-otlp
+      namespace: default
+      labels:
+        app.kubernetes.io/name: alloy
+    spec:
+      selector:
+        app.kubernetes.io/name: alloy
+      ports:
+        - name: otlp-http
+          port: 4318
+          protocol: TCP
+          targetPort: 4318
