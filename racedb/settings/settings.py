@@ -301,7 +301,7 @@ if os.getenv("TRACING") == "on":
     # In-cluster Alloy OTLP receiver (Alloy authenticates to Grafana Cloud
     # Tempo, so no credentials here). Not a secret: worthless outside the
     # cluster. Hardcoded so deployments need no secrets.py entry.
-    _OTLP_ENDPOINT = "http://alloy:4318"
+    _OTLP_ENDPOINT = "http://alloy-otlp:4318"
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
