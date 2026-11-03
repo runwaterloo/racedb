@@ -292,14 +292,12 @@ def activate_foreign_keys(sender, connection, **kwargs):
 connection_created.connect(activate_foreign_keys)
 
 
-# OpenTelemetry tracing spike. Django + psycopg auto-instrumentation: one
-# root span per request, one child span per SQL query. Exporter by
-# environment: Chrome Trace JSON file (open in ui.perfetto.dev) for local
-# dev, Grafana Cloud OTLP for prod/dev.
-if os.getenv("SETTINGS", "none") == "min":
-    # Local dev convenience: traces on by default; unset to disable.
-    os.environ.setdefault("TRACING", "on")
-if os.getenv("TRACING", "off") == "on":
+# OpenTelemetry tracing spike. Kubernetes deployments only (QA + prod):
+# when TRACING=on is set (via helm), spans go to Grafana Cloud OTLP.
+# Endpoint and headers (including the access token) come from secrets.py,
+# since the token is a secret. Local dev has no tracing: the debug toolbar
+# covers it, and traces only pay off against deployed environments.
+if os.getenv("TRACING") == "on":
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
@@ -310,33 +308,25 @@ if os.getenv("TRACING", "off") == "on":
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-    from racedb.tracing import ChromeTraceFileExporter
-
-    _settings = os.getenv("SETTINGS", "none")
+    _endpoint = getattr(secrets, "OTEL_EXPORTER_OTLP_ENDPOINT", None)
+    _headers = getattr(secrets, "OTEL_EXPORTER_OTLP_HEADERS", "")
+    if not _endpoint:
+        raise RuntimeError("TRACING=on but secrets.py has no OTEL_EXPORTER_OTLP_ENDPOINT")
     resource = Resource.create(
         {
             "service.name": "racedb",
-            "deployment.environment": _settings,
+            "deployment.environment": os.getenv("SETTINGS", "none"),
         }
     )
     provider = TracerProvider(resource=resource)
-    if _settings == "min":
-        # Local dev: Chrome Trace JSON file, one file per request. Drag
-        # onto ui.perfetto.dev to view. Tempo/Grafana is a qa/prod thing.
-        _exporter = ChromeTraceFileExporter(
-            os.getenv("TRACING_FILE", ".traces")
-        )
-    else:
-        _exporter = OTLPSpanExporter(
-            endpoint=os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"],
-            headers=os.environ["OTEL_EXPORTER_OTLP_HEADERS"],
-            timeout=10,
-        )
     # Bounded queue + short timeout: a dead endpoint drops spans after a
     # quick retry and never touches the request path (exporter runs in a
     # background thread; losing traces is fine, hurting users is not).
     provider.add_span_processor(
-        BatchSpanProcessor(_exporter, export_timeout_millis=5000)
+        BatchSpanProcessor(
+            OTLPSpanExporter(endpoint=_endpoint, headers=_headers, timeout=10),
+            export_timeout_millis=5000,
+        )
     )
     trace.set_tracer_provider(provider)
     DjangoInstrumentor().instrument()

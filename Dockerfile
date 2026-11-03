@@ -16,4 +16,4 @@ WORKDIR /srv/racedb
 ENV DJANGO_SETTINGS_MODULE=racedb.settings.settings
 ENV SETTINGS=prod
 COPY racedb/secrets.py.sample racedb/secrets.py
-RUN TRACING=off python manage.py collectstatic --noinput && rm racedb/secrets.py
+RUN python manage.py collectstatic --noinput && rm racedb/secrets.py

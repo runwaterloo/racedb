@@ -19,5 +19,3 @@ secrets.yml
 openspec
 .claude
 handoffs
-.traces
-.traces/
