@@ -319,7 +319,7 @@ if os.getenv("TRACING", "off") == "on":
     provider = TracerProvider(resource=resource)
     if _settings == "min":
         _exporter = ChromeTraceFileExporter(
-            os.getenv("TRACING_FILE", "/tmp/racedb-traces.json")
+            os.getenv("TRACING_FILE", ".traces/spans.json")
         )
     else:
         _exporter = OTLPSpanExporter(
