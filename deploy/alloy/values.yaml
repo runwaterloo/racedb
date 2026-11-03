@@ -327,7 +327,7 @@ alloy:
 
       otelcol.exporter.otlphttp "tempo" {
         client {
-          endpoint = "https://tempo-prod-13-prod-ca-east-0.grafana.net/tempo/otlp"
+          endpoint = "https://tempo-prod-13-prod-ca-east-0.grafana.net/otlp"
           auth     = otelcol.auth.basic.grafanacloud.handler
         }
       }
