@@ -26,25 +26,33 @@ def _attributes(attrs):
 
 
 class ChromeTraceFileExporter(SpanExporter):
-    """Append spans to a JSON file in Chrome Trace Event format."""
+    """Write spans to a JSON file in Chrome Trace Event format.
+
+    The file is a complete {"traceEvents": [...]} document, rewritten on
+    every batch, so ui.perfetto.dev opens it at any point mid-run.
+    """
 
     def __init__(self, path):
         self.path = path
+        self._events = []
         # Truncate on startup so a new run starts a fresh trace file.
         os.makedirs(os.path.dirname(os.path.abspath(self.path)), exist_ok=True)
-        with open(self.path, "w"):
-            pass
+        self._flush_file()
 
     def export(self, spans):
         try:
-            events = [self._event(s) for s in spans if s.start_time and s.end_time]
-            with open(self.path, "a") as f:
-                for e in events:
-                    f.write(json.dumps(e) + "\n")
+            self._events.extend(
+                self._event(s) for s in spans if s.start_time and s.end_time
+            )
+            self._flush_file()
             return SpanExportResult.SUCCESS
         except Exception:
             logger.exception("trace file export failed")
             return SpanExportResult.FAILURE
+
+    def _flush_file(self):
+        with open(self.path, "w") as f:
+            json.dump({"traceEvents": self._events}, f)
 
     def _event(self, span: ReadableSpan):
         ctx = span.get_span_context()
