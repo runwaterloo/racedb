@@ -311,6 +311,33 @@ alloy:
       }
       ///////////////////////////////////////////////////////////////////////////////////
 
+      ///////////////////////////////////////////////////////////////////////////////////
+      // OpenTelemetry traces: receive OTLP from apps, forward to Grafana Cloud
+      // Tempo. Username is the shared stack instance ID (same value as
+      // PROM_USERNAME / LOKI_USERNAME); auth token is GRAFANA_API_TOKEN.
+      // Apps in-cluster export to http://alloy:4318 — no app-side headers.
+      otelcol.receiver.otlp "racedb" {
+        http {
+          endpoint = "0.0.0.0:4318"
+        }
+        output {
+          traces = [otelcol.exporter.otlphttp.tempo.input]
+        }
+      }
+
+      otelcol.exporter.otlphttp "tempo" {
+        client {
+          endpoint = "https://tempo-prod-XX-ca-east-0.grafana.net/otlp"
+          auth     = otelcol.auth.basic.grafanacloud.handler
+        }
+      }
+
+      otelcol.auth.basic "grafanacloud" {
+        username = sys.env("PROM_USERNAME")
+        password = sys.env("GRAFANA_API_TOKEN")
+      }
+      ///////////////////////////////////////////////////////////////////////////////////
+
   envFrom:
     - secretRef:
         name: alloy-secrets
@@ -344,3 +371,8 @@ controller:
       - name: journal
         hostPath:
           path: /var/log/journal
+    extraPorts:
+      - name: otlp-http
+        port: 4318
+        protocol: TCP
+        targetPort: 4318

@@ -294,9 +294,9 @@ connection_created.connect(activate_foreign_keys)
 
 # OpenTelemetry tracing spike. Kubernetes deployments only (QA + prod):
 # when TRACING=on is set (via helm), spans go to Grafana Cloud OTLP.
-# Endpoint and headers (including the access token) come from secrets.py,
-# since the token is a secret. Local dev has no tracing: the debug toolbar
-# covers it, and traces only pay off against deployed environments.
+# The endpoint comes from secrets.py (in-cluster Alloy OTLP receiver;
+# Alloy does the Grafana Cloud auth). Local dev has no tracing: the debug
+# toolbar covers it, and traces only pay off against deployed environments.
 if os.getenv("TRACING") == "on":
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
@@ -312,6 +312,9 @@ if os.getenv("TRACING") == "on":
     _headers = getattr(secrets, "OTEL_EXPORTER_OTLP_HEADERS", "")
     if not _endpoint:
         raise RuntimeError("TRACING=on but secrets.py has no OTEL_EXPORTER_OTLP_ENDPOINT")
+    _exporter_kwargs = {"endpoint": _endpoint, "timeout": 10}
+    if _headers:
+        _exporter_kwargs["headers"] = _headers
     resource = Resource.create(
         {
             "service.name": "racedb",
@@ -324,7 +327,7 @@ if os.getenv("TRACING") == "on":
     # background thread; losing traces is fine, hurting users is not).
     provider.add_span_processor(
         BatchSpanProcessor(
-            OTLPSpanExporter(endpoint=_endpoint, headers=_headers, timeout=10),
+            OTLPSpanExporter(**_exporter_kwargs),
             export_timeout_millis=5000,
         )
     )
