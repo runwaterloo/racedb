@@ -6,6 +6,9 @@ distributor:
     otlp:
       protocols:
         http:
+          # v3 shim receiver defaults to 127.0.0.1; must listen on all
+          # interfaces for containers on the shared network to reach it.
+          endpoint: 0.0.0.0:4318
 storage:
   trace:
     backend: local
