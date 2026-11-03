@@ -294,10 +294,14 @@ connection_created.connect(activate_foreign_keys)
 
 # OpenTelemetry tracing spike. Kubernetes deployments only (QA + prod):
 # when TRACING=on is set (via helm), spans go to Grafana Cloud OTLP.
-# The endpoint comes from secrets.py (in-cluster Alloy OTLP receiver;
-# Alloy does the Grafana Cloud auth). Local dev has no tracing: the debug
-# toolbar covers it, and traces only pay off against deployed environments.
+# Endpoint is hardcoded: the in-cluster Alloy OTLP receiver (Alloy does
+# the Grafana Cloud auth). Local dev has no tracing: the debug toolbar
+# covers it, and traces only pay off against deployed environments.
 if os.getenv("TRACING") == "on":
+    # In-cluster Alloy OTLP receiver (Alloy authenticates to Grafana Cloud
+    # Tempo, so no credentials here). Not a secret: worthless outside the
+    # cluster. Hardcoded so deployments need no secrets.py entry.
+    _OTLP_ENDPOINT = "http://alloy:4318"
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
@@ -308,13 +312,7 @@ if os.getenv("TRACING") == "on":
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-    _endpoint = getattr(secrets, "OTEL_EXPORTER_OTLP_ENDPOINT", None)
-    _headers = getattr(secrets, "OTEL_EXPORTER_OTLP_HEADERS", "")
-    if not _endpoint:
-        raise RuntimeError("TRACING=on but secrets.py has no OTEL_EXPORTER_OTLP_ENDPOINT")
-    _exporter_kwargs = {"endpoint": _endpoint, "timeout": 10}
-    if _headers:
-        _exporter_kwargs["headers"] = _headers
+    _exporter_kwargs = {"endpoint": _OTLP_ENDPOINT, "timeout": 10}
     resource = Resource.create(
         {
             "service.name": "racedb",
