@@ -292,10 +292,13 @@ def activate_foreign_keys(sender, connection, **kwargs):
 connection_created.connect(activate_foreign_keys)
 
 
-# OpenTelemetry tracing spike (settings TRACING=on). Django + psycopg
-# auto-instrumentation: one root span per request, one child span per SQL
-# query. Exporter by environment: Chrome Trace JSON file (open in
-# ui.perfetto.dev) for local dev, Grafana Cloud OTLP for prod/dev.
+# OpenTelemetry tracing spike. Django + psycopg auto-instrumentation: one
+# root span per request, one child span per SQL query. Exporter by
+# environment: Chrome Trace JSON file (open in ui.perfetto.dev) for local
+# dev, Grafana Cloud OTLP for prod/dev.
+if os.getenv("SETTINGS", "none") == "min":
+    # Local dev convenience: traces on by default; unset to disable.
+    os.environ.setdefault("TRACING", "on")
 if os.getenv("TRACING", "off") == "on":
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
