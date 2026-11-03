@@ -290,3 +290,40 @@ def activate_foreign_keys(sender, connection, **kwargs):
 
 
 connection_created.connect(activate_foreign_keys)
+
+
+# OpenTelemetry tracing for k8s deployments: when TRACING=on, spans go
+# to the in-cluster Alloy OTLP receiver, which handles Grafana Cloud
+# auth. The full URL is required: the HTTP exporter kwarg does not
+# append the signal path.
+if os.getenv("TRACING") == "on":
+    _OTLP_ENDPOINT = "http://alloy-otlp:4318/v1/traces"
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+        OTLPSpanExporter,
+    )
+    from opentelemetry.instrumentation.django import DjangoInstrumentor
+    from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    _exporter_kwargs = {"endpoint": _OTLP_ENDPOINT, "timeout": 10}
+    resource = Resource.create(
+        {
+            "service.name": "racedb",
+            "deployment.environment": os.getenv("SETTINGS", "none"),
+        }
+    )
+    provider = TracerProvider(resource=resource)
+    # Bounded queue + short timeout: a dead endpoint drops spans and
+    # never touches the request path.
+    provider.add_span_processor(
+        BatchSpanProcessor(
+            OTLPSpanExporter(**_exporter_kwargs),
+            export_timeout_millis=5000,
+        )
+    )
+    trace.set_tracer_provider(provider)
+    DjangoInstrumentor().instrument()
+    PsycopgInstrumentor().instrument()
