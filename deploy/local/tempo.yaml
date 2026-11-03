@@ -1,10 +1,11 @@
-# Minimal in-memory-ish tempo for local tracing play (throwaway).
+# Minimal tempo for local tracing play (v3.x config format).
 server:
   http_listen_port: 3200
 distributor:
   receivers:
-    protocols:
-      http:
+    otlp:
+      protocols:
+        http:
 storage:
   trace:
     backend: local
