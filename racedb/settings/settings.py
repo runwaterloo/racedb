@@ -290,3 +290,49 @@ def activate_foreign_keys(sender, connection, **kwargs):
 
 
 connection_created.connect(activate_foreign_keys)
+
+
+# OpenTelemetry tracing spike (settings TRACING=on). Django + psycopg
+# auto-instrumentation: one root span per request, one child span per SQL
+# query. Exporter by environment: Chrome Trace JSON file (open in
+# ui.perfetto.dev) for local dev, Grafana Cloud OTLP for prod/dev.
+if os.getenv("TRACING", "off") == "on":
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+        OTLPSpanExporter,
+    )
+    from opentelemetry.instrumentation.django import DjangoInstrumentor
+    from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    from racedb.tracing import ChromeTraceFileExporter
+
+    _settings = os.getenv("SETTINGS", "none")
+    resource = Resource.create(
+        {
+            "service.name": "racedb",
+            "deployment.environment": _settings,
+        }
+    )
+    provider = TracerProvider(resource=resource)
+    if _settings == "min":
+        _exporter = ChromeTraceFileExporter(
+            os.getenv("TRACING_FILE", "/tmp/racedb-traces.json")
+        )
+    else:
+        _exporter = OTLPSpanExporter(
+            endpoint=os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"],
+            headers=os.environ["OTEL_EXPORTER_OTLP_HEADERS"],
+            timeout=10,
+        )
+    # Bounded queue + short timeout: a dead endpoint drops spans after a
+    # quick retry and never touches the request path (exporter runs in a
+    # background thread; losing traces is fine, hurting users is not).
+    provider.add_span_processor(
+        BatchSpanProcessor(_exporter, export_timeout_millis=5000)
+    )
+    trace.set_tracer_provider(provider)
+    DjangoInstrumentor().instrument()
+    PsycopgInstrumentor().instrument()
