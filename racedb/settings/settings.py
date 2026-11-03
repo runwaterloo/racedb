@@ -321,17 +321,11 @@ if os.getenv("TRACING", "off") == "on":
     )
     provider = TracerProvider(resource=resource)
     if _settings == "min":
-        if os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"):
-            # e.g. local tempo via deploy/local/tracing.yml
-            _exporter = OTLPSpanExporter(
-                endpoint=os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"],
-                headers=os.getenv("OTEL_EXPORTER_OTLP_HEADERS", ""),
-                timeout=10,
-            )
-        else:
-            _exporter = ChromeTraceFileExporter(
-                os.getenv("TRACING_FILE", ".traces/spans.json")
-            )
+        # Local dev: Chrome Trace JSON file, one file per request. Drag
+        # onto ui.perfetto.dev to view. Tempo/Grafana is a qa/prod thing.
+        _exporter = ChromeTraceFileExporter(
+            os.getenv("TRACING_FILE", ".traces")
+        )
     else:
         _exporter = OTLPSpanExporter(
             endpoint=os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"],

@@ -1,24 +1,4 @@
 services:
-  tempo:
-    image: grafana/tempo:latest
-    command: ["-config.file=/etc/tempo/tempo.yaml"]
-    volumes:
-      - ./tempo.yaml:/etc/tempo/tempo.yaml:ro
-      - tempo-data:/var/tempo
-    ports:
-      - "3200:3200"
-
-  grafana:
-    image: grafana/grafana:latest
-    environment:
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-      - GF_USERS_DEFAULT_THEME=dark
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-    ports:
-      - "3300:3000"
-
   postgres:
     image: postgres:17-alpine
     container_name: postgres
@@ -27,66 +7,57 @@ services:
       POSTGRES_USER: racedb
       POSTGRES_PASSWORD: CHANGEME
     ports:
-      - "5432:5432"
+    - 5432:5432
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "racedb"]
+      test:
+      - CMD
+      - pg_isready
+      - -U
+      - racedb
       interval: 10s
       timeout: 5s
       retries: 10
-
   redis:
     image: redis:8.0.6-alpine3.21
     container_name: racedb-redis
     ports:
-      - "6379:6379"
+    - 6379:6379
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+      - CMD
+      - redis-cli
+      - ping
       interval: 30s
       timeout: 10s
       retries: 3
-
   racedb-web:
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_started
-      tempo:
-        condition: service_started
     build:
       context: ../..
       dockerfile: Dockerfile
       args:
-        - INSTALL_DEV=1
-    command: >
-      /bin/sh -c '
-      python ./manage.py collectstatic --noinput;
-      python ./manage.py migrate --noinput;
-      export DJANGO_SUPERUSER_PASSWORD=admin;
-      python ./manage.py createsuperuser --noinput --username admin --email admin@example.com;
-      python ./manage.py runserver 0.0.0.0:8000'
+      - INSTALL_DEV=1
+    command: '/bin/sh -c '' python ./manage.py collectstatic --noinput; python ./manage.py
+      migrate --noinput; export DJANGO_SUPERUSER_PASSWORD=admin; python ./manage.py
+      createsuperuser --noinput --username admin --email admin@example.com; python
+      ./manage.py runserver 0.0.0.0:8000''
+
+      '
     container_name: racedb-web
     environment:
       WEBHOST: 127.0.0.1
-      DEBUG: "true"
-      ENABLE_DEBUG_TOOLBAR: "true"
-      STORAGE: "local"
-      DATABASE: "postgres"
-      SETTINGS: "min"
-      DJANGO_SETTINGS_MODULE: "racedb.settings.settings"
-      # Tracing: export spans to the bundled tempo stack below.
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
+      DEBUG: 'true'
+      ENABLE_DEBUG_TOOLBAR: 'true'
+      STORAGE: local
+      DATABASE: postgres
+      SETTINGS: min
+      DJANGO_SETTINGS_MODULE: racedb.settings.settings
     ports:
-      - "8000:8000"
-    networks:
-      - default
-      - tracing
+    - 8000:8000
     volumes:
-      - ../..:/srv/racedb
-      - ../../racedb/secrets.py.sample:/srv/racedb/racedb/secrets.py
-networks:
-  tracing:
-    name: racedb-tracing
-
-volumes:
-  tempo-data:
+    - ../..:/srv/racedb
+    - ../../racedb/secrets.py.sample:/srv/racedb/racedb/secrets.py
