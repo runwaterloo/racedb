@@ -10,6 +10,7 @@ export BUCKET=<private_bucket>
 export GRAFANA_API_TOKEN=<grafana_api_token>
 export LOKI_USERNAME=<loki_username>
 export PROM_USERNAME=<prom_username>
+export TEMPO_USERNAME=<tempo_username>
 echo "<slack_gitlab_webhook>" > /root/SLACK_GITLAB_WEBHOOK
 
 set -x
