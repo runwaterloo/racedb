@@ -1,5 +1,6 @@
 fullnameOverride: racedbdev
 racedb:
+  tracing: "on"
   settings: dev
   secretsVolumePath: /srv/racedb_secrets_dev
   storage: local
