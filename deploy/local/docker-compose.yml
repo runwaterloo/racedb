@@ -75,7 +75,7 @@ services:
       SETTINGS: "min"
       DJANGO_SETTINGS_MODULE: "racedb.settings.settings"
       # Tracing: export spans to the bundled tempo stack below.
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318/otlp
     ports:
       - "8000:8000"
     networks:
