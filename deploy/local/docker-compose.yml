@@ -7,29 +7,24 @@ services:
       POSTGRES_USER: racedb
       POSTGRES_PASSWORD: CHANGEME
     ports:
-    - 5432:5432
+      - "5432:5432"
     healthcheck:
-      test:
-      - CMD
-      - pg_isready
-      - -U
-      - racedb
+      test: ["CMD", "pg_isready", "-U", "racedb"]
       interval: 10s
       timeout: 5s
       retries: 10
+
   redis:
     image: redis:8.0.6-alpine3.21
     container_name: racedb-redis
     ports:
-    - 6379:6379
+      - "6379:6379"
     healthcheck:
-      test:
-      - CMD
-      - redis-cli
-      - ping
+      test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
+
   racedb-web:
     depends_on:
       postgres:
@@ -40,23 +35,25 @@ services:
       context: ../..
       dockerfile: Dockerfile
       args:
-      - INSTALL_DEV=1
-    command: '/bin/sh -c '' python ./manage.py collectstatic --noinput; python ./manage.py migrate --noinput; export DJANGO_SUPERUSER_PASSWORD=admin;
-      python ./manage.py createsuperuser --noinput --username admin --email
-      admin@example.com; python ./manage.py runserver 0.0.0.0:8000''
-
-      '
+        - INSTALL_DEV=1
+    command: >
+      /bin/sh -c '
+      python ./manage.py collectstatic --noinput;
+      python ./manage.py migrate --noinput;
+      export DJANGO_SUPERUSER_PASSWORD=admin;
+      python ./manage.py createsuperuser --noinput --username admin --email admin@example.com;
+      python ./manage.py runserver 0.0.0.0:8000'
     container_name: racedb-web
     environment:
       WEBHOST: 127.0.0.1
-      DEBUG: 'true'
-      ENABLE_DEBUG_TOOLBAR: 'true'
-      STORAGE: local
-      DATABASE: postgres
-      SETTINGS: min
-      DJANGO_SETTINGS_MODULE: racedb.settings.settings
+      DEBUG: "true"
+      ENABLE_DEBUG_TOOLBAR: "true"
+      STORAGE: "local"
+      DATABASE: "postgres"
+      SETTINGS: "min"
+      DJANGO_SETTINGS_MODULE: "racedb.settings.settings"
     ports:
-    - 8000:8000
+      - "8000:8000"
     volumes:
-    - ../..:/srv/racedb
-    - ../../racedb/secrets.py.sample:/srv/racedb/racedb/secrets.py
+      - ../..:/srv/racedb
+      - ../../racedb/secrets.py.sample:/srv/racedb/racedb/secrets.py
