@@ -56,70 +56,71 @@ def _get_race_records(
 ) -> tuple[list, list | dict | None, list | None]:
     if not race:
         return [], None, None
-    membership = get_membership()
-    race = Race.objects.get(id=race.id)
-    races = create_samerace_list(race)
-    if distance.slug == "combined":
-        with tracer.start_as_current_span("records: setup (combined path)"):
-            events = []
-            rawresults = Endurraceresult.objects.all()
-            mrtime = rawresults.filter(gender="M").order_by("guntime")[:1][0].guntime
-            mr = rawresults.filter(gender="M", guntime=mrtime).order_by("year")
-            frtime = rawresults.filter(gender="F").order_by("guntime")[:1][0].guntime
-            fr = rawresults.filter(gender="F", guntime=frtime).order_by("year")
-            try:
-                mmrtime = (
-                    rawresults.filter(gender="M", category__ismasters=True)
-                    .order_by("guntime")[:1][0]
-                    .guntime
-                )
-            except Exception:
-                mmr = False
-            else:
-                mmr = rawresults.filter(gender="M", category__ismasters=True, guntime=mmrtime).order_by(
-                    "year"
-                )
-            try:
-                fmrtime = (
-                    rawresults.filter(gender="F", category__ismasters=True)
-                    .order_by("guntime")[:1][0]
-                    .guntime
-                )
-            except Exception:
-                fmr = False
-            else:
-                fmr = rawresults.filter(gender="F", category__ismasters=True, guntime=fmrtime).order_by(
-                    "year"
-                )
-    else:
-        with tracer.start_as_current_span("records: setup"):
-            distance = Distance.objects.get(id=distance.id)
-            events = Event.objects.filter(race__in=races, distance=distance)
-            if division_choice and division_choice != "All" and race.slug == "endurrun":
-                rawresults = Result.objects.filter(
-                    event__race=race, event__distance=distance, division=division_choice
-                )
-                if division_choice == "Ultimate":
-                    dates = rawresults.values_list("event__date", flat=True).distinct()
-                    years = {x.year for x in dates}
-                    ultimate_finished_all_events = get_ultimate_finished_all_events(years)
-                    results_to_include = []
-                    for r in rawresults:
-                        try:
-                            ultimate_athlete = Endurathlete.objects.get(
-                                name=r.athlete,
-                                division=division_choice,
-                                year=r.event.date.year,
-                            )
-                        except Exception:
-                            continue
-                        if ultimate_finished_all_events[r.event.date.year][ultimate_athlete]:
-                            results_to_include.append(r.id)
-                    rawresults = rawresults.filter(id__in=results_to_include)
-            else:
-                rawresults = Result.objects.filter(event__race__in=races, event__distance=distance)
-            if rawresults.count() == 0:
-                raise Http404("No results found for {}".format(distance))
+    with tracer.start_as_current_span("records: setup"):
+        membership = get_membership()
+        race = Race.objects.get(id=race.id)
+        races = create_samerace_list(race)
+        if distance.slug == "combined":
+            with tracer.start_as_current_span("records: setup (combined path)"):
+                events = []
+                rawresults = Endurraceresult.objects.all()
+                mrtime = rawresults.filter(gender="M").order_by("guntime")[:1][0].guntime
+                mr = rawresults.filter(gender="M", guntime=mrtime).order_by("year")
+                frtime = rawresults.filter(gender="F").order_by("guntime")[:1][0].guntime
+                fr = rawresults.filter(gender="F", guntime=frtime).order_by("year")
+                try:
+                    mmrtime = (
+                        rawresults.filter(gender="M", category__ismasters=True)
+                        .order_by("guntime")[:1][0]
+                        .guntime
+                    )
+                except Exception:
+                    mmr = False
+                else:
+                    mmr = rawresults.filter(gender="M", category__ismasters=True, guntime=mmrtime).order_by(
+                        "year"
+                    )
+                try:
+                    fmrtime = (
+                        rawresults.filter(gender="F", category__ismasters=True)
+                        .order_by("guntime")[:1][0]
+                        .guntime
+                    )
+                except Exception:
+                    fmr = False
+                else:
+                    fmr = rawresults.filter(gender="F", category__ismasters=True, guntime=fmrtime).order_by(
+                        "year"
+                    )
+        else:
+            with tracer.start_as_current_span("records: setup"):
+                distance = Distance.objects.get(id=distance.id)
+                events = Event.objects.filter(race__in=races, distance=distance)
+                if division_choice and division_choice != "All" and race.slug == "endurrun":
+                    rawresults = Result.objects.filter(
+                        event__race=race, event__distance=distance, division=division_choice
+                    )
+                    if division_choice == "Ultimate":
+                        dates = rawresults.values_list("event__date", flat=True).distinct()
+                        years = {x.year for x in dates}
+                        ultimate_finished_all_events = get_ultimate_finished_all_events(years)
+                        results_to_include = []
+                        for r in rawresults:
+                            try:
+                                ultimate_athlete = Endurathlete.objects.get(
+                                    name=r.athlete,
+                                    division=division_choice,
+                                    year=r.event.date.year,
+                                )
+                            except Exception:
+                                continue
+                            if ultimate_finished_all_events[r.event.date.year][ultimate_athlete]:
+                                results_to_include.append(r.id)
+                        rawresults = rawresults.filter(id__in=results_to_include)
+                else:
+                    rawresults = Result.objects.filter(event__race__in=races, event__distance=distance)
+                if rawresults.count() == 0:
+                    raise Http404("No results found for {}".format(distance))
         with tracer.start_as_current_span("records: record winners"):
             mrtime = rawresults.filter(gender="M").order_by("guntime")[:1][0].guntime
             mr = rawresults.filter(gender="M", guntime=mrtime).order_by("event__date")
