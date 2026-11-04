@@ -104,20 +104,26 @@ def _get_race_records(
                 if division_choice and division_choice != "All" and race.slug == "endurrun":
                     rawresults = Result.objects.filter(
                         event__race=race, event__distance=distance, division=division_choice
-                    )
+                    ).select_related("event")
                     if division_choice == "Ultimate":
                         dates = rawresults.values_list("event__date", flat=True).distinct()
                         years = {x.year for x in dates}
                         ultimate_finished_all_events = get_ultimate_finished_all_events(years)
+                        # One query instead of one per result row: fetch
+                        # every Ultimate athlete for the years in play and
+                        # key them by (year, name) for the loop below.
+                        athletes = {
+                            (a.year, a.name): a
+                            for a in Endurathlete.objects.filter(
+                                year__in=years, division=division_choice
+                            )
+                        }
                         results_to_include = []
                         for r in rawresults:
-                            try:
-                                ultimate_athlete = Endurathlete.objects.get(
-                                    name=r.athlete,
-                                    division=division_choice,
-                                    year=r.event.date.year,
-                                )
-                            except Exception:
+                            ultimate_athlete = athletes.get(
+                                (r.event.date.year, r.athlete)
+                            )
+                            if ultimate_athlete is None:
                                 continue
                             if ultimate_finished_all_events[r.event.date.year][ultimate_athlete]:
                                 results_to_include.append(r.id)
