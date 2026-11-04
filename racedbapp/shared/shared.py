@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.http import Http404
 
 from racedbapp.shared.endurrun import get_member_endurrace, get_ultimate_finished_all_events
+from racedbapp.shared.tracing import tracer
 from racedbapp.shared.types import namedresult, namedteamrecord
 
 from ..config import ValidRelayCategories
@@ -41,6 +42,16 @@ def getwinnersdict():
 
 
 def get_race_records(
+    race, distance, division_choice=False, individual_only=False
+) -> tuple[list, list | dict | None, list | None]:
+    if not race:
+        return [], None, None
+    with tracer.start_as_current_span("shared.get_race_records") as span:
+        span.set_attribute("race.slug", race.slug)
+        return _get_race_records(race, distance, division_choice, individual_only)
+
+
+def _get_race_records(
     race, distance, division_choice=False, individual_only=False
 ) -> tuple[list, list | dict | None, list | None]:
     if not race:
@@ -339,11 +350,14 @@ def get_membership(event=False, include_inactive=False):
     key = (event.id if event else None, include_inactive)
     cached = _membership_cache.get(key)
     now = monotonic()
-    if cached is not None and now - cached[1] < _membership_ttl_seconds:
-        return cached[0]
-    membership = _build_membership(event, include_inactive)
-    _membership_cache[key] = (membership, now)
-    return membership
+    with tracer.start_as_current_span("shared.get_membership") as span:
+        if cached is not None and now - cached[1] < _membership_ttl_seconds:
+            span.set_attribute("membership.cache", "hit")
+            return cached[0]
+        span.set_attribute("membership.cache", "miss")
+        membership = _build_membership(event, include_inactive)
+        _membership_cache[key] = (membership, now)
+        return membership
 
 
 def _build_membership(event=False, include_inactive=False):

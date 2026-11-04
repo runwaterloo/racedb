@@ -44,6 +44,8 @@ import uuid
 
 from django.core.cache import cache
 
+from racedbapp.shared.tracing import tracer
+
 logger = logging.getLogger(__name__)
 
 LOCK_TTL_SECONDS = 120  # auto-release if a renderer dies; > WAIT_TIMEOUT_SECONDS
@@ -56,15 +58,20 @@ ENTRY_TTL_SECONDS = 30 * 3600  # 30h safety TTL on cached content
 
 def get_or_render(cache_key, render_func):
     """Return the cached value for cache_key, rendering at most once."""
-    cached = get(cache_key)
-    if cached is not None:
-        logger.info("cache HIT (warm): key=%s", cache_key)
-        return cached
-    lock_key = _lock_key(cache_key)
-    lock_token = str(uuid.uuid4())
-    if cache.add(lock_key, lock_token, LOCK_TTL_SECONDS):
-        return _render_under_lock(cache_key, lock_key, lock_token, render_func)
-    return _wait_for_cache_or_render(cache_key, lock_key, render_func)
+    with tracer.start_as_current_span("cache.get_or_render") as span:
+        span.set_attribute("cache.key", cache_key)
+        cached = get(cache_key)
+        if cached is not None:
+            span.set_attribute("cache.result", "hit")
+            logger.info("cache HIT (warm): key=%s", cache_key)
+            return cached
+        lock_key = _lock_key(cache_key)
+        lock_token = str(uuid.uuid4())
+        if cache.add(lock_key, lock_token, LOCK_TTL_SECONDS):
+            span.set_attribute("cache.result", "rendered")
+            return _render_under_lock(cache_key, lock_key, lock_token, render_func)
+        span.set_attribute("cache.result", "waited")
+        return _wait_for_cache_or_render(cache_key, lock_key, render_func)
 
 
 def get(cache_key):
@@ -190,11 +197,15 @@ def _render_under_lock(cache_key, lock_key, lock_token, render_func):
     render_generation = _current_generation()
     render_start = time.monotonic()
     try:
-        value = render_func()
+        with tracer.start_as_current_span("cache.render") as span:
+            span.set_attribute("cache.key", cache_key)
+            value = render_func()
     except Exception:
         _release_lock(lock_key, lock_token)
         raise
-    cache.set(cache_key, (render_generation, value), ENTRY_TTL_SECONDS)
+    with tracer.start_as_current_span("cache.set") as span:
+        span.set_attribute("cache.key", cache_key)
+        cache.set(cache_key, (render_generation, value), ENTRY_TTL_SECONDS)
     _release_lock(lock_key, lock_token)
     logger.info(
         "cache MISS (cold render): key=%s render_ms=%.0f",
@@ -205,18 +216,23 @@ def _render_under_lock(cache_key, lock_key, lock_token, render_func):
 
 
 def _wait_for_cache_or_render(cache_key, lock_key, render_func):
-    deadline = time.monotonic() + WAIT_TIMEOUT_SECONDS
-    while time.monotonic() < deadline:
-        time.sleep(POLL_INTERVAL_SECONDS)
-        cached = get(cache_key)
-        if cached is not None:
-            logger.info("cache HIT (waited for another worker): key=%s", cache_key)
-            return cached
-        if cache.get(lock_key) is None:
-            lock_token = str(uuid.uuid4())
-            if cache.add(lock_key, lock_token, LOCK_TTL_SECONDS):
-                return _render_under_lock(cache_key, lock_key, lock_token, render_func)
-    return render_func()
+    with tracer.start_as_current_span("cache.wait") as span:
+        span.set_attribute("cache.key", cache_key)
+        deadline = time.monotonic() + WAIT_TIMEOUT_SECONDS
+        while time.monotonic() < deadline:
+            time.sleep(POLL_INTERVAL_SECONDS)
+            cached = get(cache_key)
+            if cached is not None:
+                span.set_attribute("cache.result", "waited-hit")
+                logger.info("cache HIT (waited for another worker): key=%s", cache_key)
+                return cached
+            if cache.get(lock_key) is None:
+                lock_token = str(uuid.uuid4())
+                if cache.add(lock_key, lock_token, LOCK_TTL_SECONDS):
+                    span.set_attribute("cache.result", "timeout-render")
+                    return _render_under_lock(cache_key, lock_key, lock_token, render_func)
+        span.set_attribute("cache.result", "timeout-render")
+        return render_func()
 
 
 def _release_lock(lock_key, lock_token):

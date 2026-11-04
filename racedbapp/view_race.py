@@ -6,6 +6,7 @@ from django.http import Http404
 from django.shortcuts import render
 
 import racedbapp.shared.endurrun
+from racedbapp.shared.tracing import tracer
 from racedbapp.shared.types import Choice, Filter
 
 from .models import Distance, Endurraceresult, Event, Prime, Result
@@ -43,9 +44,12 @@ def index(request, race_slug, distance_slug):
     if not race:
         raise Http404()
     races = shared.create_samerace_list(race)
-    distance_ids = Event.objects.filter(race=race).values_list("distance", flat=True).distinct()
-    distances = Distance.objects.filter(pk__in=set(distance_ids)).order_by("-km")
-    distances = list(distances)
+    with tracer.start_as_current_span("race-view: distance picker"):
+        distance_ids = (
+            Event.objects.filter(race=race).values_list("distance", flat=True).distinct()
+        )
+        distances = Distance.objects.filter(pk__in=set(distance_ids)).order_by("-km")
+        distances = list(distances)
     if distances and race_slug == "endurrun":  # order by stages if endurrun
         distances = [
             distances[3],
@@ -62,26 +66,27 @@ def index(request, race_slug, distance_slug):
         distances = list(reversed(distances))
         distances.insert(0, combined_distance)
     years = []
-    if race and distance_slug == "combined":
-        distance = combined_distance
-        rawresults = Endurraceresult.objects.all()
-        numyears = rawresults.order_by("-year").values_list("year", flat=True).distinct()
-        for y in numyears:
-            years.append(namedyear(y, "endurrace"))
-    else:
-        distance = shared.get_distance_by_slug_or_false(distance_slug)
-        if not distance:
-            raise Http404()
-        rawresults = Result.objects.select_related().filter(
-            event__race__in=races, event__distance=distance
-        )
-        dates = (
-            rawresults.order_by("-event__date")
-            .values_list("event__date", "event__race__slug")
-            .distinct()
-        )
-        for d in dates:
-            years.append(namedyear(d[0].year, d[1]))
+    with tracer.start_as_current_span("race-view: year dropdown"):
+        if race and distance_slug == "combined":
+            distance = combined_distance
+            rawresults = Endurraceresult.objects.all()
+            numyears = rawresults.order_by("-year").values_list("year", flat=True).distinct()
+            for y in numyears:
+                years.append(namedyear(y, "endurrace"))
+        else:
+            distance = shared.get_distance_by_slug_or_false(distance_slug)
+            if not distance:
+                raise Http404()
+            rawresults = Result.objects.select_related().filter(
+                event__race__in=races, event__distance=distance
+            )
+            dates = (
+                rawresults.order_by("-event__date")
+                .values_list("event__date", "event__race__slug")
+                .distinct()
+            )
+            for d in dates:
+                years.append(namedyear(d[0].year, d[1]))
         # dates = rawresults.order_by('-event__date').values_list('event__date', flat=True).distinct()
         # years = sorted([ x.year for x in dates ], reverse=True)
 
@@ -104,45 +109,46 @@ def index(request, race_slug, distance_slug):
     results = results[:50]
     final_results = []
     count = 1
-    membership = shared.get_membership()
-    for result in results:
-        guntime = result.guntime
-        if guntime.total_seconds() >= 35600:
-            continue
-        if distance.slug == "combined":
-            year = result.year
-            extra = [result.fivektime, result.eightktime]
-            age = ""
-        else:
-            year = result.event.date.year
-            extra = False
-            if result.age:
-                age = result.age
-            else:
+    with tracer.start_as_current_span("race-view: top 50 table"):
+        membership = shared.get_membership()
+        for result in results:
+            guntime = result.guntime
+            if guntime.total_seconds() >= 35600:
+                continue
+            if distance.slug == "combined":
+                year = result.year
+                extra = [result.fivektime, result.eightktime]
                 age = ""
-        if race_slug == "endurrace":
-            result_race_slug = "endurrace"
-        else:
-            result_race_slug = result.event.race.slug
-        if distance_slug == "combined":
-            member = racedbapp.shared.endurrun.get_member_endurrace(result, membership)
-        else:
-            member = shared.get_member(result, membership)
-        final_results.append(
-            namedresult(
-                count,
-                guntime,
-                result.athlete,
-                year,
-                result.category,
-                result.city,
-                extra,
-                age,
-                result_race_slug,
-                member,
+            else:
+                year = result.event.date.year
+                extra = False
+                if result.age:
+                    age = result.age
+                else:
+                    age = ""
+            if race_slug == "endurrace":
+                result_race_slug = "endurrace"
+            else:
+                result_race_slug = result.event.race.slug
+            if distance_slug == "combined":
+                member = racedbapp.shared.endurrun.get_member_endurrace(result, membership)
+            else:
+                member = shared.get_member(result, membership)
+            final_results.append(
+                namedresult(
+                    count,
+                    guntime,
+                    result.athlete,
+                    year,
+                    result.category,
+                    result.city,
+                    extra,
+                    age,
+                    result_race_slug,
+                    member,
+                )
             )
-        )
-        count += 1
+            count += 1
     if race and race.slug == "endurrun" and division_choice != "Ultimate":
         choices = [
             Choice(
@@ -238,7 +244,8 @@ def index(request, race_slug, distance_slug):
         "divisions": divisions,
         "division_choice": division_choice,
     }
-    return render(request, "racedbapp/race.html", context)
+    with tracer.start_as_current_span("race-view: template render"):
+        return render(request, "racedbapp/race.html", context)
 
 
 def get_hill_results():
