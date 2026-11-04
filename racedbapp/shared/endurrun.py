@@ -1,4 +1,5 @@
 from racedbapp.models import Config, Endurathlete, Result
+from racedbapp.shared.tracing import tracer
 
 
 def get_member_endurrace(result, membership):
@@ -15,6 +16,11 @@ def get_ultimate_finished_all_events(years):
     based on whether hey have completed (as an Ultimate) the most recent
     event from that year that has any results.
     """
+    with tracer.start_as_current_span("records: ultimate finished-all-events"):
+        return _get_ultimate_finished_all_events(years)
+
+
+def _get_ultimate_finished_all_events(years):
     ultimate_finished_all_events = {}
     for year in years:
         ultimate_finished_all_events[year] = {}
