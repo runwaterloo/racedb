@@ -5,6 +5,7 @@ from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import render
 
+from racedbapp.shared.tracing import tracer
 from racedbapp.shared.types import Choice, Filter
 
 from .models import Distance, Event, Samerace
@@ -12,6 +13,11 @@ from .shared import shared
 
 
 def index(request):
+    with tracer.start_as_current_span("events: view"):
+        return _render(request)
+
+
+def _render(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     events = (
         Event.objects.select_related()
@@ -59,12 +65,34 @@ def index(request):
         distance_id = "All"
         distance_name = "All"
         distancefilter = ""
-    yearfilters = getfilter("year", racefilter, distancefilter, yearfilter_events, year)
-    racefilters = getfilter("race", yearfilter, distancefilter, racefilter_events, race_name)
-    distancefilters = getfilter(
-        "distance", yearfilter, racefilter, distancefilter_events, distance_name
-    )
-    malewinnersdict, femalewinnersdict = shared.getwinnersdict()
+    with tracer.start_as_current_span("events: year dropdown"):
+        yearfilters = getfilter("year", racefilter, distancefilter, yearfilter_events, year)
+    with tracer.start_as_current_span("events: race dropdown"):
+        racefilters = getfilter("race", yearfilter, distancefilter, racefilter_events, race_name)
+    with tracer.start_as_current_span("events: distance dropdown"):
+        distancefilters = getfilter(
+            "distance", yearfilter, racefilter, distancefilter_events, distance_name
+        )
+    with tracer.start_as_current_span("events: winners dicts"):
+        malewinnersdict, femalewinnersdict = shared.getwinnersdict()
+    with tracer.start_as_current_span("events: member dict"):
+        member_dict = shared.get_member_dict()
+    with tracer.start_as_current_span("events: event rows"):
+        namedevents = _build_event_rows(events, femalewinnersdict, malewinnersdict, member_dict)
+    events = namedevents
+    context = {
+        "events": events,
+        "yearfilters": yearfilters,
+        "racefilters": racefilters,
+        "distancefilters": distancefilters,
+        "malewinnersdict": malewinnersdict,
+        "femalewinnersdict": femalewinnersdict,
+    }
+    with tracer.start_as_current_span("events: template render"):
+        return render(request, "racedbapp/events.html", context)
+
+
+def _build_event_rows(events, femalewinnersdict, malewinnersdict, member_dict):
     namedevent = namedtuple(
         "ne",
         [
@@ -81,7 +109,6 @@ def index(request):
             "flickrsetid",
         ],
     )
-    member_dict = shared.get_member_dict()
     namedevents = []
     for e in events:
         femalewinner = femalewinnersdict[e.id]
@@ -110,16 +137,7 @@ def index(request):
                 e.flickrsetid,
             )
         )
-    events = namedevents
-    context = {
-        "events": events,
-        "yearfilters": yearfilters,
-        "racefilters": racefilters,
-        "distancefilters": distancefilters,
-        "malewinnersdict": malewinnersdict,
-        "femalewinnersdict": femalewinnersdict,
-    }
-    return render(request, "racedbapp/events.html", context)
+    return namedevents
 
 
 def getfilter(filtername, filter1, filter2, filter_events, current):
