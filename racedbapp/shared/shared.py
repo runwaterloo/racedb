@@ -1,9 +1,11 @@
-from collections import namedtuple
+from collections import defaultdict, namedtuple
+from datetime import timedelta
 from time import monotonic
 
 from django.db.models import Q
 from django.http import Http404
 
+from racedbapp.shared import utils
 from racedbapp.shared.endurrun import get_member_endurrace, get_ultimate_finished_all_events
 from racedbapp.shared.tracing import tracer
 from racedbapp.shared.types import namedresult, namedteamrecord
@@ -24,6 +26,7 @@ from ..models import (
     Samerace,
     Teamcategory,
     Teamresult,
+    namedtresult,
 )
 from ..view_relay import get_individual_results_dict, get_relay_results, get_team_results
 
@@ -221,9 +224,34 @@ def _get_race_records(
                 .exclude(name="4 Person Relay")
             )
             category_records = {}
-            for event in events:
-                winning_teams = Teamresult.objects.of_event(event)
-                for w in winning_teams:
+            with tracer.start_as_current_span("records: team winners"):
+                grouped = defaultdict(list)
+                rows = Teamresult.objects.filter(
+                    event__in=events, counts=True, team_place=1
+                ).values_list("event_id", "team_category_id", "athlete_time", "team_name")
+                for event_id, team_category_id, athlete_time, team_name in rows:
+                    grouped[(event_id, team_category_id)].append((athlete_time, team_name))
+                event_by_id = {e.id: e for e in events}
+                team_category_by_id = {t.id: t for t in Teamcategory.objects.all()}
+                winning_teams = []
+                for (event_id, team_category_id), values in grouped.items():
+                    times = [v[0] for v in values if v[0] is not None]
+                    if not times:
+                        continue
+                    total = sum(times, timedelta())
+                    avg = total / len(times)
+                    winning_team = min(v[1] for v in values).strip()
+                    winning_teams.append(
+                        namedtresult(
+                            event_by_id[event_id],
+                            team_category_by_id[team_category_id],
+                            len(times),
+                            winning_team,
+                            utils.truncate_time(total),
+                            utils.truncate_time(avg),
+                        )
+                )
+            for w in winning_teams:
                     for t in team_categories:
                         if w.team_category.name == t.name:
                             if t.name in category_records:
