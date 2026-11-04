@@ -341,9 +341,10 @@ alloy:
         trace_statements {
           context = "spanevent"
           statements = [
-            `delete_key(spanevent.attributes, "exception.type") where spanevent.attributes["exception.type"] == "django.http.response.Http404"`,
-            `delete_key(spanevent.attributes, "exception.message") where spanevent.attributes["exception.type"] == "django.http.response.Http404"`,
             `delete_key(spanevent.attributes, "exception.stacktrace") where spanevent.attributes["exception.type"] == "django.http.response.Http404"`,
+            `delete_key(spanevent.attributes, "exception.message") where spanevent.attributes["exception.type"] == "django.http.response.Http404"`,
+            `delete_key(spanevent.attributes, "exception.type")`,
+            `delete_key(spanevent.attributes, "exception.escaped")`,
           ]
         }
 
