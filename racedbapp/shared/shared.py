@@ -99,7 +99,7 @@ def _get_race_records(
                 if division_choice and division_choice != "All" and race.slug == "endurrun":
                     rawresults = Result.objects.filter(
                         event__race=race, event__distance=distance, division=division_choice
-                    )
+                    ).select_related("event")
                     if division_choice == "Ultimate":
                         dates = rawresults.values_list("event__date", flat=True).distinct()
                         years = {x.year for x in dates}
