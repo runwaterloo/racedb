@@ -21,24 +21,47 @@ def get_ultimate_finished_all_events(years):
 
 
 def _get_ultimate_finished_all_events(years):
+    """Return {year: {Endurathlete: finished_last_event_of_year}}.
+
+    Three bulk queries cover all years at once (the per-year approach
+    was ~4 queries x N years of round-trip latency): last event per
+    year, Ultimate finishers of those events, athletes for the years,
+    and nothing else.
+    """
+    if not years:
+        return {}
+    min_year, max_year = min(years), max(years)
+    # Last endurrun event with any results per year (one query over
+    # results ordered newest-first; first hit per year wins).
+    last_event_by_year = {}
+    seen_years = set()
+    result_rows = Result.objects.filter(
+        event__race__slug="endurrun",
+        event__date__year__gte=min_year,
+        event__date__year__lte=max_year,
+    ).order_by("-event__date").values_list("event__date__year", "event_id")
+    for year, event_id in result_rows:
+        if year not in seen_years:
+            seen_years.add(year)
+            last_event_by_year[year] = event_id
+    # Ultimate finishers (place < 990000) of those last events.
+    finishers = set(
+        Result.objects.filter(
+            event_id__in=last_event_by_year.values(), division="Ultimate", place__lt=990000
+        ).values_list("event__date__year", "athlete")
+    )
+    # All Ultimate athletes for the years in play. Athletes in a year
+    # with no endurrun results at all count as finished (the old
+    # per-year code treated "no result_set" that way).
+    athletes = Endurathlete.objects.filter(year__in=years)
     ultimate_finished_all_events = {}
     for year in years:
         ultimate_finished_all_events[year] = {}
-        last_event = False
-        result_set = Result.objects.filter(
-            event__race__slug="endurrun", event__date__year=year
-        ).order_by("-event__date")
-        if result_set:
-            last_event = result_set.first().event
-            last_event_finishers = result_set.filter(
-                event=last_event, division="Ultimate", place__lt=990000
-            ).values_list("athlete", flat=True)
-        ultimate_athletes = Endurathlete.objects.filter(year=year)
-        for athlete in ultimate_athletes:
-            ultimate_finished_all_events[year][athlete] = True
-            if result_set:
-                if athlete.name not in last_event_finishers:
-                    ultimate_finished_all_events[year][athlete] = False
+    for athlete in athletes:
+        finished = True
+        if athlete.year in last_event_by_year:
+            finished = (athlete.year, athlete.name) in finishers
+        ultimate_finished_all_events[athlete.year][athlete] = finished
     return ultimate_finished_all_events
 
 
