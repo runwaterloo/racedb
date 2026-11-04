@@ -29,6 +29,11 @@ from ..view_relay import get_individual_results_dict, get_relay_results, get_tea
 
 
 def getwinnersdict():
+    with tracer.start_as_current_span("shared.getwinnersdict"):
+        return _getwinnersdict()
+
+
+def _getwinnersdict():
     namedwinner = namedtuple("nw", ["athlete", "guntime"])
     malewinners = Result.objects.filter(gender="M", gender_place=1).values_list(
         "event_id", "athlete", "guntime"
