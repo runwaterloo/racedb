@@ -26,7 +26,7 @@ def _get_ultimate_finished_all_events(years):
         ultimate_finished_all_events[year] = {}
         last_event = False
         result_set = Result.objects.filter(
-            event__race__slug="endurrun", event__date__icontains=year
+            event__race__slug="endurrun", event__date__year=year
         ).order_by("-event__date")
         if result_set:
             last_event = result_set.first().event
