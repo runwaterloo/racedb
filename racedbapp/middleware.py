@@ -1,24 +1,5 @@
 from django.http import HttpResponse, HttpResponsePermanentRedirect
 
-from racedbapp.shared.tracing import tracer
-
-
-class TracingMiddleware:
-    """Open one span around the whole middleware chain.
-
-    Attached first (after whitenoise/prometheus-before), so queries made
-    by SessionMiddleware, AuthenticationMiddleware, etc. nest under it
-    instead of appearing as bare root-level SELECTs in traces. The view
-    span becomes its child, keeping the whole tree coherent.
-    """
-
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        with tracer.start_as_current_span("request: middleware chain"):
-            return self.get_response(request)
-
 # Paths unauthenticated users may still reach on the gated QA site:
 # the login page and its static assets, plus "/admin/" (exact match) so
 # its 302 redirect to /admin/login/ works in a browser.

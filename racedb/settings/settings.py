@@ -35,7 +35,6 @@ INSTALLED_APPS = (
 MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django_prometheus.middleware.PrometheusBeforeMiddleware",
-    "racedbapp.middleware.TracingMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
