@@ -321,6 +321,34 @@ alloy:
           endpoint = "0.0.0.0:4318"
         }
         output {
+          traces = [otelcol.processor.transform.clean.input]
+        }
+      }
+
+      // Django raises Http404 internally, which the instrumentation records as
+      // an exception event with ERROR status. A 404 is a normal response, not an
+      // error, so strip its exception attributes and clear the span status.
+      otelcol.processor.transform "clean" {
+        error_mode = "ignore"
+
+        trace_statements {
+          context = "span"
+          statements = [
+            `set(status.code, STATUS_CODE_OK) where attributes["http.response.status_code"] == 404 or attributes["http.status_code"] == 404`,
+          ]
+        }
+
+        trace_statements {
+          context = "spanevent"
+          statements = [
+            `delete_key(spanevent.attributes, "exception.stacktrace") where spanevent.attributes["exception.type"] == "django.http.response.Http404"`,
+            `delete_key(spanevent.attributes, "exception.message") where spanevent.attributes["exception.type"] == "django.http.response.Http404"`,
+            `delete_key(spanevent.attributes, "exception.escaped") where spanevent.attributes["exception.type"] == "django.http.response.Http404"`,
+            `delete_key(spanevent.attributes, "exception.type") where spanevent.attributes["exception.type"] == "django.http.response.Http404"`,
+          ]
+        }
+
+        output {
           traces = [otelcol.exporter.otlp.tempo.input]
         }
       }
