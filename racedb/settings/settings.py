@@ -311,7 +311,7 @@ if os.getenv("TRACING") == "on":
     _exporter_kwargs = {"endpoint": _OTLP_ENDPOINT, "timeout": 10}
     resource = Resource.create(
         {
-            "service.name": "racedb",
+            "service.name": os.getenv("OTEL_SERVICE_NAME", "racedb"),
             "deployment.environment": os.getenv("SETTINGS", "none"),
         }
     )

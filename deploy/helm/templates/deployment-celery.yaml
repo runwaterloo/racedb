@@ -60,6 +60,10 @@ spec:
             - name: TRACING
               value: "on"
             {{- end }}
+            {{- if eq .Values.racedb.tracing "on" }}
+            - name: OTEL_SERVICE_NAME
+              value: {{ .Release.Name }}
+            {{- end }}
           volumeMounts:
             {{- if .Values.racedb.mountLocal }}
             - mountPath: /srv/racedb
