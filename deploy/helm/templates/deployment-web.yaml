@@ -9,6 +9,11 @@ spec:
 {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.webReplicaCount }}
 {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       {{- include "racedb.selectorLabels" . | nindent 6 }}
@@ -23,6 +28,7 @@ spec:
         {{- include "racedb.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/task: web
     spec:
+      terminationGracePeriodSeconds: 40
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -81,16 +87,21 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
-          # {{- if eq .Values.racedb.settings "prod" }}
-          # livenessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: http
-          # readinessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: http
-          # {{- end }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]
+          {{- if eq .Values.racedb.settings "prod" }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 2
+            successThreshold: 1
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
@@ -107,9 +118,6 @@ spec:
             path: "{{ .Values.racedb.secretsVolumePath }}/google_service_account.json"
 
       {{- with .Values.nodeSelector }}
-      strategy:
-        rollingUpdate:
-          maxUnavailable: 0
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
