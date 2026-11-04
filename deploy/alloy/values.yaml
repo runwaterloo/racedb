@@ -346,6 +346,10 @@ alloy:
             `delete_key(spanevent.attributes, "exception.stacktrace") where spanevent.attributes["exception.type"] == "django.http.response.Http404"`,
           ]
         }
+
+        output {
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
       }
 
       otelcol.exporter.otlp "tempo" {
