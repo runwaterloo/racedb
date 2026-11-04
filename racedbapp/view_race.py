@@ -10,10 +10,22 @@ from racedbapp.shared.tracing import tracer
 from racedbapp.shared.types import Choice, Filter
 
 from .models import Distance, Endurraceresult, Event, Prime, Result
-from .shared import shared, utils
+from .shared import cache_lock, shared, utils
 
 
 def index(request, race_slug, distance_slug):
+    if request.method != "GET":
+        return _render_race(request, race_slug, distance_slug)
+    cache_key = "race.{}.{}.{}".format(race_slug, distance_slug, request.META["QUERY_STRING"])
+    cached = cache_lock.get(cache_key)
+    if cached is not None:
+        return cached
+    return cache_lock.get_or_render(
+        cache_key, lambda: _render_race(request, race_slug, distance_slug)
+    )
+
+
+def _render_race(request, race_slug, distance_slug):
     namedyear = namedtuple("ny", ["year", "race_slug"])
     namedresult = namedtuple(
         "nr",
