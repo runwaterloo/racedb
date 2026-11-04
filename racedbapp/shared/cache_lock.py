@@ -78,12 +78,26 @@ def get(cache_key):
     """Read a generation-stamped cache entry; stale/missing means None."""
     with tracer.start_as_current_span("cache.get") as span:
         span.set_attribute("cache.key", cache_key)
-        cached = cache.get(cache_key)
-        if not _entry_is_current(cached):
+        result = _read_entry(cache_key)
+        if result is None:
             span.set_attribute("cache.result", "miss")
             return None
         span.set_attribute("cache.result", "hit")
-        return cached[1]
+        return result
+
+
+def _read_entry(cache_key):
+    """Raw generation-stamped read, no span.
+
+    Used by get() (which adds the span) and by the single-flight waiter,
+    which polls up to ~600 times a minute and must not emit a span per
+    poll or one contended cache miss floods Tempo with hundreds of
+    trivial spans.
+    """
+    cached = cache.get(cache_key)
+    if not _entry_is_current(cached):
+        return None
+    return cached[1]
 
 
 def set(cache_key, value):
@@ -225,7 +239,7 @@ def _wait_for_cache_or_render(cache_key, lock_key, render_func):
         deadline = time.monotonic() + WAIT_TIMEOUT_SECONDS
         while time.monotonic() < deadline:
             time.sleep(POLL_INTERVAL_SECONDS)
-            cached = get(cache_key)
+            cached = _read_entry(cache_key)
             if cached is not None:
                 span.set_attribute("cache.result", "waited-hit")
                 logger.info("cache HIT (waited for another worker): key=%s", cache_key)
