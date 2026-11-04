@@ -76,10 +76,14 @@ def get_or_render(cache_key, render_func):
 
 def get(cache_key):
     """Read a generation-stamped cache entry; stale/missing means None."""
-    cached = cache.get(cache_key)
-    if not _entry_is_current(cached):
-        return None
-    return cached[1]
+    with tracer.start_as_current_span("cache.get") as span:
+        span.set_attribute("cache.key", cache_key)
+        cached = cache.get(cache_key)
+        if not _entry_is_current(cached):
+            span.set_attribute("cache.result", "miss")
+            return None
+        span.set_attribute("cache.result", "hit")
+        return cached[1]
 
 
 def set(cache_key, value):

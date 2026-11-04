@@ -40,10 +40,11 @@ def index(request, race_slug, distance_slug):
     else:
         division_choice = "Ultimate"
     divisions = ["Ultimate", "Sport", "Relay", "Guest", "All"]
-    race = shared.get_race_by_slug_or_false(race_slug)
-    if not race:
-        raise Http404()
-    races = shared.create_samerace_list(race)
+    with tracer.start_as_current_span("race-view: race lookup"):
+        race = shared.get_race_by_slug_or_false(race_slug)
+        if not race:
+            raise Http404()
+        races = shared.create_samerace_list(race)
     with tracer.start_as_current_span("race-view: distance picker"):
         distance_ids = (
             Event.objects.filter(race=race).values_list("distance", flat=True).distinct()
