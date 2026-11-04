@@ -1,13 +1,13 @@
 racedb:
   tracing: "on"
   settings: prod
-  threads: 4
+  threads: 8
 ingress:
   catchall:
     enabled: true
   host: results.runwaterloo.com
   apiHost: api.runwaterloo.com
-webReplicaCount: 2
+webReplicaCount: 1
 redis:
   exporter:
     enabled: true
