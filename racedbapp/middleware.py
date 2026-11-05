@@ -116,8 +116,10 @@ class RequestLoggingMiddleware:
             entry["response_bytes"] = None
 
         if response.status_code >= 500:
+            entry["level"] = "error"
             _reqlog.error(json.dumps(entry))
         else:
+            entry["level"] = "info"
             _reqlog.info(json.dumps(entry))
         return response
 
