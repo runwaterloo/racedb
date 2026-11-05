@@ -109,6 +109,8 @@ class RequestLoggingMiddleware:
             "span_id": span_id,
             "client_ip": client_ip,
             "user": getattr(getattr(request, "user", None), "username", None),
+            "user_agent": (request.META.get("HTTP_USER_AGENT", "") or "-")[:200],
+            "referer": (request.META.get("HTTP_REFERER", "") or "-")[:200],
         }
         try:
             entry["response_bytes"] = len(response.content)
