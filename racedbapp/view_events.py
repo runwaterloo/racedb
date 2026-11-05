@@ -232,6 +232,9 @@ def getfilter(filtername, filter1, filter2, filter_events, current):
         old_names_by_current = {}
         for s in sameraces:
             old_names_by_current.setdefault(s.current_race_id, []).append(s.old_race.name)
+        # Sort like main's race__name ordering (by the event's own race,
+        # before Samerace mapping).
+        filter_events = sorted(filter_events, key=lambda e: e.race.name)
         for e in filter_events:
             if e.race.id in old_to_current:
                 thisrace = old_to_current[e.race.id]
@@ -254,6 +257,8 @@ def getfilter(filtername, filter1, filter2, filter_events, current):
             if thisfilter not in choices:
                 choices.append(thisfilter)
     elif filtername == "distance":
+        # Sort like main's distance__km ordering.
+        filter_events = sorted(filter_events, key=lambda e: e.distance.km)
         for e in filter_events:
             newqs = "{}{}&distance={}".format(filter1, filter2, e.distance.slug)
             if newqs[0] == "&":
