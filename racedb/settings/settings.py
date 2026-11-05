@@ -43,6 +43,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
+    "racedbapp.middleware.RequestLoggingMiddleware",
 ]
 
 # Pop gzip for local dev (SETTINGS=min): the debug toolbar cannot inject
@@ -205,6 +206,7 @@ if os.getenv("SETTINGS", "test") in ("prod", "dev", "min"):
         "loggers": {
             "django": {"handlers": ["console"], "propagate": True, "level": "WARNING"},
             "racedbapp": {"handlers": ["console"], "propagate": False, "level": "DEBUG"},
+            "racedb.request": {"handlers": ["console"], "propagate": False, "level": "INFO"},
         },
     }
 else:
