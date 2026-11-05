@@ -608,3 +608,178 @@ def test_event_warm_hit_serves_cached_content(create_event):
     second = client.get(url)
     assert second.status_code == 200
     assert second.content == first.content
+
+
+@pytest.mark.django_db
+def test_event_endpoint_endurrun_half_marathon(
+    create_event, create_distance, create_race, create_category, create_result
+):
+    """
+    Endurrun events take the hasdivision branch and build the endurrun
+    relay dict from Endurteam rows; the page must render with a team
+    present.
+    """
+    from racedbapp.models import Endurteam
+
+    client = APIClient()
+    race = create_race()
+    race.slug = "endurrun"
+    race.save()
+    distance = create_distance()
+    distance.slug = "half-marathon"
+    distance.save()
+    event = create_event(race=race, distance=distance)
+    category = create_category()
+    create_result(event=event, category=category, place=1)
+    Result.objects.update(division="Ultimate")
+    Endurteam.objects.create(
+        year=event.date.year,
+        name="Team Relay",
+        gender="F",
+        ismasters=False,
+        st1="Relay Runner",
+        st2="",
+        st3="",
+        st4="",
+        st5="",
+        st6="",
+        st7="",
+    )
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/?division=Ultimate"
+    response = client.get(url)
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_event_endpoint_endurrun_extra_name(
+    create_event, create_distance, create_race, create_category, create_result
+):
+    """Endurrun stage distances render their stage name (get_extra_name)."""
+    client = APIClient()
+    race = create_race()
+    race.slug = "endurrun"
+    race.save()
+    distance = create_distance()
+    distance.slug = "half-marathon"
+    distance.save()
+    event = create_event(race=race, distance=distance)
+    create_result(event=event)
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+    assert "Stage" in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_event_post_sends_contact_email(create_event, settings, monkeypatch):
+    """A POST to an event page enqueues the contact-email task, no error."""
+    from racedbapp.view_event import process_post
+
+    Config.objects.create(name="email_to_address", value="info@example.com")
+    enqueued = []
+    monkeypatch.setattr(
+        "racedbapp.view_event.safe_enqueue",
+        lambda task, subject, body, recipients: enqueued.append((subject, body, recipients)),
+    )
+    request = types.SimpleNamespace(
+        method="POST",
+        get_host=lambda: "racedb.runwaterloo.com",
+        get_full_path=lambda: "/event/2026/test-race/test-distance/",
+        POST={
+            "user_name": "Jane Runner",
+            "user_email": "jane@example.com",
+            "message_text": "Hello",
+        },
+    )
+    process_post(request)
+    assert len(enqueued) == 1
+    subject, body, recipients = enqueued[0]
+    assert "Jane Runner" in subject
+    assert "jane@example.com" in recipients
+    assert "info@example.com" in recipients
+    assert "Hello" in body
+
+
+@pytest.mark.django_db
+def test_event_post_skipped_for_get():
+    """process_post is a no-op for GET requests."""
+    from racedbapp.view_event import process_post
+
+    request = types.SimpleNamespace(method="GET", POST={})
+    # must not raise (no DB access, no enqueue)
+    process_post(request)
+
+
+def test_get_short_time():
+    from racedbapp.view_event import get_short_time
+
+    assert get_short_time(datetime.timedelta(seconds=3723)) == "1:02:03"
+    assert get_short_time(datetime.timedelta(seconds=62)) == "1:02"
+    assert get_short_time(datetime.timedelta(seconds=5)) == "5"
+
+
+@pytest.mark.django_db
+def test_event_series_with_events_argument(create_event, create_distance, create_race):
+    """get_series(events=...) links a series whose event_ids intersect the given events."""
+    client = APIClient()
+    race = create_race()
+    event = create_event(race=race)
+    Series.objects.create(
+        year=event.date.year,
+        name="Events Series",
+        slug="events-series",
+        event_ids=str(event.id),
+    )
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+    assert b"events-series" in response.content
+
+
+@pytest.mark.django_db
+def test_event_youtube_timestamps(
+    create_event, create_category, create_result, monkeypatch
+):
+    """
+    With a youtube_id and offset, results inside the video duration get a
+    youtu.be timestamp link and past-the-end results do not.
+    """
+    client = APIClient()
+    event = create_event()
+    event.youtube_id = "abc123"
+    event.youtube_offset_seconds = 10
+    event.save()
+    category = create_category()
+    create_result(event=event, category=category, place=1, guntime=datetime.timedelta(seconds=120))
+    create_result(
+        event=event, category=category, place=2, guntime=datetime.timedelta(seconds=100000)
+    )
+    event.youtube_duration_seconds = 1000
+    event.save()
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "youtu.be/abc123?t=" in content
+
+
+@pytest.mark.django_db
+def test_event_hill_results_page(
+    create_event, create_distance, create_race, create_category, create_result, create_prime
+):
+    """The hill page renders hill sprint results for a race with primes."""
+    client = APIClient()
+    race = create_race()
+    race.slug = "baden-road-races"
+    race.save()
+    distance = create_distance()
+    distance.slug = "7-mi"
+    distance.save()
+    event = create_event(race=race, distance=distance)
+    category = create_category()
+    create_result(event=event, category=category, place=1)
+    create_prime(event=event)
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/?hill=true"
+    response = client.get(url)
+    assert response.status_code == 200
+    assert b"Hill" in response.content
