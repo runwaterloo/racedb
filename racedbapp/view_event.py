@@ -206,7 +206,7 @@ def _render_event(request, event, sequel, qstring):
         "results": results,
         "results_html": render_rows(
             results,
-            event,
+            event_json,
             phototags,
             show_category,
             show_age,
