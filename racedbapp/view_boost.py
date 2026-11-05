@@ -3,7 +3,7 @@ from datetime import datetime
 from operator import attrgetter
 from urllib import parse
 
-from django.db.models import Count
+from django.db.models import Count, Exists, OuterRef
 from django.http import Http404
 from django.shortcuts import redirect, render
 
@@ -297,8 +297,7 @@ def get_date_filter(qs_date, year):
     events = (
         Event.objects.select_related()
         .filter(date__range=(start_date, end_date))
-        .annotate(num_events=Count("result"))
-        .filter(num_events__gte=1)
+        .filter(Exists(Result.objects.filter(event=OuterRef("pk"))))
         .order_by("-date")
     )
     if len(events) == 0:
