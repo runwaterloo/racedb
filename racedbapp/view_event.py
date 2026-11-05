@@ -37,6 +37,7 @@ from .models import (
     Wheelchairresult,
 )
 from .shared import cache_lock, shared, utils
+from .shared.event_rows import render_rows
 from .shared.tracing import tracer
 
 logger = logging.getLogger(__name__)
@@ -203,6 +204,18 @@ def _render_event(request, event, sequel, qstring):
         "page": page,
         "pages": pages,
         "results": results,
+        "results_html": render_rows(
+            results,
+            event,
+            phototags,
+            show_category,
+            show_age,
+            hasdivision,
+            show_chip,
+            guntimes_have_microseconds,
+            splits_have_microseconds,
+            hill_dict,
+        ),
         "hasage": hasage,
         "hasdivision": hasdivision,
         "hill_dict": hill_dict,
