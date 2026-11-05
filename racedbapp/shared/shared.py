@@ -135,63 +135,68 @@ def _get_race_records(
                     rawresults = Result.objects.filter(event__race__in=races, event__distance=distance)
                 if rawresults.count() == 0:
                     raise Http404("No results found for {}".format(distance))
-        with tracer.start_as_current_span("records: record winners"):
-            mrtime = rawresults.filter(gender="M").order_by("guntime")[:1][0].guntime
-            mr = rawresults.filter(gender="M", guntime=mrtime).order_by("event__date")
-            frtime = rawresults.filter(gender="F").order_by("guntime")[:1][0].guntime
-            fr = rawresults.filter(gender="F", guntime=frtime).order_by("event__date")
-            if race.slug != "endurrun":
-                try:
-                    mmrtime = (
-                        rawresults.filter(gender="M")
-                        .filter(Q(category__ismasters=True) | Q(age__gte=40))
-                        .order_by("guntime")[:1][0]
-                        .guntime
-                    )
-                except Exception:
-                    mmr = False
-                else:
-                    mmr = (
-                        rawresults.filter(gender="M", guntime=mmrtime)
-                        .filter(Q(category__ismasters=True) | Q(age__gte=40))
-                        .order_by("event__date")
-                    )
-                try:
-                    fmrtime = (
-                        rawresults.filter(gender="F")
-                        .filter(Q(category__ismasters=True) | Q(age__gte=40))
-                        .order_by("guntime")[:1][0]
-                        .guntime
-                    )
-                except Exception:
-                    fmr = False
-                else:
-                    fmr = (
-                        rawresults.filter(gender="F", guntime=fmrtime)
-                        .filter(Q(category__ismasters=True) | Q(age__gte=40))
-                        .order_by("event__date")
-                    )
-            elif race.slug == "endurrun":
-                try:
-                    mmrtime = (
-                        rawresults.filter(gender="M", age__gte=40).order_by("guntime")[:1][0].guntime
-                    )
-                except Exception:
-                    mmr = False
-                else:
-                    mmr = rawresults.filter(gender="M", age__gte=40, guntime=mmrtime).order_by(
-                        "event__date"
-                    )
-                try:
-                    fmrtime = (
-                        rawresults.filter(gender="F", age__gte=40).order_by("guntime")[:1][0].guntime
-                    )
-                except Exception:
-                    fmr = False
-                else:
-                    fmr = rawresults.filter(gender="F", age__gte=40, guntime=fmrtime).order_by(
-                        "event__date"
-                    )
+        if distance.slug != "combined":
+            # The combined path uses Endurraceresult, which has no event
+            # FK - its winners (mr/fr/mmr/fmr) were already computed in
+            # its own branch above, ordered by year. The shared block
+            # below only applies to Result querysets.
+            with tracer.start_as_current_span("records: record winners"):
+                mrtime = rawresults.filter(gender="M").order_by("guntime")[:1][0].guntime
+                mr = rawresults.filter(gender="M", guntime=mrtime).order_by("event__date")
+                frtime = rawresults.filter(gender="F").order_by("guntime")[:1][0].guntime
+                fr = rawresults.filter(gender="F", guntime=frtime).order_by("event__date")
+                if race.slug != "endurrun":
+                    try:
+                        mmrtime = (
+                            rawresults.filter(gender="M")
+                            .filter(Q(category__ismasters=True) | Q(age__gte=40))
+                            .order_by("guntime")[:1][0]
+                            .guntime
+                        )
+                    except Exception:
+                        mmr = False
+                    else:
+                        mmr = (
+                            rawresults.filter(gender="M", guntime=mmrtime)
+                            .filter(Q(category__ismasters=True) | Q(age__gte=40))
+                            .order_by("event__date")
+                        )
+                    try:
+                        fmrtime = (
+                            rawresults.filter(gender="F")
+                            .filter(Q(category__ismasters=True) | Q(age__gte=40))
+                            .order_by("guntime")[:1][0]
+                            .guntime
+                        )
+                    except Exception:
+                        fmr = False
+                    else:
+                        fmr = (
+                            rawresults.filter(gender="F", guntime=fmrtime)
+                            .filter(Q(category__ismasters=True) | Q(age__gte=40))
+                            .order_by("event__date")
+                        )
+                elif race.slug == "endurrun":
+                    try:
+                        mmrtime = (
+                            rawresults.filter(gender="M", age__gte=40).order_by("guntime")[:1][0].guntime
+                        )
+                    except Exception:
+                        mmr = False
+                    else:
+                        mmr = rawresults.filter(gender="M", age__gte=40, guntime=mmrtime).order_by(
+                            "event__date"
+                        )
+                    try:
+                        fmrtime = (
+                            rawresults.filter(gender="F", age__gte=40).order_by("guntime")[:1][0].guntime
+                        )
+                    except Exception:
+                        fmr = False
+                    else:
+                        fmr = rawresults.filter(gender="F", age__gte=40, guntime=fmrtime).order_by(
+                            "event__date"
+                        )
     with tracer.start_as_current_span("records: individual"):
         records = []
         records += makerecords("Overall Male", mrtime, mr, distance, membership)
