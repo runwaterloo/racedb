@@ -85,9 +85,9 @@ def _get_race_records(
                 except Exception:
                     mmr = False
                 else:
-                    mmr = rawresults.filter(gender="M", category__ismasters=True, guntime=mmrtime).order_by(
-                        "year"
-                    )
+                    mmr = rawresults.filter(
+                        gender="M", category__ismasters=True, guntime=mmrtime
+                    ).order_by("year")
                 try:
                     fmrtime = (
                         rawresults.filter(gender="F", category__ismasters=True)
@@ -97,9 +97,9 @@ def _get_race_records(
                 except Exception:
                     fmr = False
                 else:
-                    fmr = rawresults.filter(gender="F", category__ismasters=True, guntime=fmrtime).order_by(
-                        "year"
-                    )
+                    fmr = rawresults.filter(
+                        gender="F", category__ismasters=True, guntime=fmrtime
+                    ).order_by("year")
         else:
             with tracer.start_as_current_span("records: setup"):
                 distance = Distance.objects.get(id=distance.id)
@@ -123,16 +123,16 @@ def _get_race_records(
                         }
                         results_to_include = []
                         for r in rawresults:
-                            ultimate_athlete = athletes.get(
-                                (r.event.date.year, r.athlete)
-                            )
+                            ultimate_athlete = athletes.get((r.event.date.year, r.athlete))
                             if ultimate_athlete is None:
                                 continue
                             if ultimate_finished_all_events[r.event.date.year][ultimate_athlete]:
                                 results_to_include.append(r.id)
                         rawresults = rawresults.filter(id__in=results_to_include)
                 else:
-                    rawresults = Result.objects.filter(event__race__in=races, event__distance=distance)
+                    rawresults = Result.objects.filter(
+                        event__race__in=races, event__distance=distance
+                    )
                 if rawresults.count() == 0:
                     raise Http404("No results found for {}".format(distance))
         if distance.slug != "combined":
@@ -179,7 +179,9 @@ def _get_race_records(
                 elif race.slug == "endurrun":
                     try:
                         mmrtime = (
-                            rawresults.filter(gender="M", age__gte=40).order_by("guntime")[:1][0].guntime
+                            rawresults.filter(gender="M", age__gte=40)
+                            .order_by("guntime")[:1][0]
+                            .guntime
                         )
                     except Exception:
                         mmr = False
@@ -189,7 +191,9 @@ def _get_race_records(
                         )
                     try:
                         fmrtime = (
-                            rawresults.filter(gender="F", age__gte=40).order_by("guntime")[:1][0].guntime
+                            rawresults.filter(gender="F", age__gte=40)
+                            .order_by("guntime")[:1][0]
+                            .guntime
                         )
                     except Exception:
                         fmr = False
@@ -255,17 +259,17 @@ def _get_race_records(
                             utils.truncate_time(total),
                             utils.truncate_time(avg),
                         )
-                )
+                    )
             for w in winning_teams:
-                    for t in team_categories:
-                        if w.team_category.name == t.name:
-                            if t.name in category_records:
-                                if w.total_time < category_records[t.name][0].total_time:
-                                    category_records[t.name] = [w]
-                                elif w.total_time == category_records[t.name][0].total_time:
-                                    category_records[t.name] += w
-                            else:
+                for t in team_categories:
+                    if w.team_category.name == t.name:
+                        if t.name in category_records:
+                            if w.total_time < category_records[t.name][0].total_time:
                                 category_records[t.name] = [w]
+                            elif w.total_time == category_records[t.name][0].total_time:
+                                category_records[t.name] += w
+                        else:
+                            category_records[t.name] = [w]
             for t in team_categories:
                 if t.name in category_records:
                     for record in category_records[t.name]:
@@ -542,7 +546,7 @@ def get_pages(
         pages.append(
             named_page(
                 "inactive",
-                "/event/{}/{}/{}/team/{}".format(
+                "/event/{}/{}/{}/team/{}/".format(
                     event.date.year, event.race.slug, event.distance.slug, tc.slug
                 ),
                 tc.name,
