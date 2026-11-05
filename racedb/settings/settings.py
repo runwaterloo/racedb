@@ -339,3 +339,23 @@ if os.getenv("TRACING") == "on":
     trace.set_tracer_provider(provider)
     DjangoInstrumentor().instrument()
     PsycopgInstrumentor().instrument()
+
+    # Per-template spans: wrap Template.render so every template render
+    # (base + each include) shows as `template: <name>` nested under
+    # whatever view span is active. Zero functional change; skipped
+    # entirely when TRACING is off. (We wrap the public `render`, not
+    # `_render`: Django's test environment replaces `_render` with its
+    # own instrumentation, which would clobber the patch.)
+    from django.template import base as _template_base
+
+    from racedbapp.shared.tracing import tracer
+
+    def _traced_render(template_self, context):
+        name = getattr(template_self, "name", None) or "<string>"
+        with tracer.start_as_current_span(f"template: {name}"):
+            return template_self._untraced_render(context)
+
+    _template_base.Template._untraced_render = (
+        _template_base.Template.render
+    )
+    _template_base.Template.render = _traced_render
