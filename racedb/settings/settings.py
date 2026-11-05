@@ -201,12 +201,22 @@ if os.getenv("SETTINGS", "test") in ("prod", "dev", "min"):
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
             "simple": {"format": "%(levelname)s %(message)s"},
+            # Raw message, no logging decoration: racedb.request emits
+            # whole-line JSON so Loki parses it as structured logs.
+            "raw": {"format": "%(message)s"},
         },
-        "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "verbose"}},
+        "handlers": {
+            "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
+            "json_console": {"class": "logging.StreamHandler", "formatter": "raw"},
+        },
         "loggers": {
             "django": {"handlers": ["console"], "propagate": True, "level": "WARNING"},
             "racedbapp": {"handlers": ["console"], "propagate": False, "level": "DEBUG"},
-            "racedb.request": {"handlers": ["console"], "propagate": False, "level": "INFO"},
+            "racedb.request": {
+                "handlers": ["json_console"],
+                "propagate": False,
+                "level": "INFO",
+            },
         },
     }
 else:
