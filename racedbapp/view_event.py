@@ -9,7 +9,6 @@ from django.db.models import (
     Count,
     Exists,
     F,
-    Max,
     OuterRef,
     Q,
     Value,
@@ -80,7 +79,9 @@ def _is_cacheable(event, request):
     if days <= 0 or request.method != "GET":
         return False
     days_ago = (timezone.localdate() - event.date).days
-    return 1 <= days_ago <= days
+    # days_ago == 0 (race day) is included: race day is peak traffic and
+    # invalidation on results import keeps entries fresh elsewhere.
+    return 0 <= days_ago <= days
 
 
 def index(request, year, race_slug, distance_slug, sequel_slug=None):
@@ -99,7 +100,9 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
         return cached
     with tracer.start_as_current_span("event: event lookup"):
         try:
-            event = Event.objects.select_related().get(
+            event = Event.objects.select_related(
+                "race", "distance", "sequel", "timer"
+            ).get(
                 race__slug=race_slug,
                 distance__slug=distance_slug,
                 date__year=int(year),
@@ -143,16 +146,18 @@ def _render_event(request, event, sequel, qstring):
         all_results = Wheelchairresult.objects.filter(event=event)
         hasage = False
     else:
-        all_results = Result.objects.select_related().filter(event=event)
+        all_results = Result.objects.select_related("event__race", "event__distance", "event__sequel", "event__timer", "category", "rwmember").filter(event=event)
         # hasage must run before annotate_isrwfirst: otherwise the EXISTS
         # subquery annotation bloats what should be a cheap probe query
         # (issue #436).
         hasage = all_results.hasage(event)
         all_results = annotate_isrwfirst(all_results)
-    event_splits = Split.objects.filter(event=event)
+    # Materialize splits once: truthiness, max, microseconds set, and the
+    # per-place map all derive from this single list (one DB round-trip).
+    event_splits = list(Split.objects.filter(event=event))
     all_split_microseconds = {x.split_time.microseconds for x in event_splits if x.split_time}
     splits_have_microseconds = [x for x in all_split_microseconds if x != 0]
-    results, max_splits = get_results(
+    results, max_splits, guntimes_have_microseconds = get_results(
         event,
         all_results,
         page,
@@ -183,9 +188,6 @@ def _render_event(request, event, sequel, qstring):
         "year_filter": year_filter,
     }
     event_json = get_event_json(event)
-    guntimes_have_microseconds = {
-        x.guntime.microseconds for x in all_results if x.guntime.microseconds != 0
-    }
     with tracer.start_as_current_span("event: ad/series/post"):
         ad = get_ad()
         series = get_series(event=event)
@@ -420,7 +422,7 @@ def get_distance_filter(event, races):
 
 
 def get_year_filter(event, races):
-    rawresults = Result.objects.select_related().filter(
+    rawresults = Result.objects.filter(
         event__race__in=races, event__distance=event.distance
     )
     dates = (
@@ -603,13 +605,13 @@ def get_results(
     gender_place_dict = defaultdict(int)
     masters_place_dict = defaultdict(int)
     category_place_dict = {}
-    splits_list = event_splits.values_list("place", "split_num", "split_time")
     splits_by_place = {}
-    for a, b, c in splits_list:
-        splits_by_place.setdefault(a, {})[b] = c
+    for split in event_splits:
+        splits_by_place.setdefault(split.place, {})[split.split_num] = split.split_time
     max_splits = False
     if event_splits:
-        max_splits = int(event_splits.aggregate(Max("split_num"))["split_num__max"])
+        max_splits = int(max(x.split_num for x in event_splits))
+    guntimes_have_microseconds = set()
     membership = shared.get_membership(event=event)
     has_youtube = False
     if event.youtube_id and event.youtube_offset_seconds is not None:
@@ -654,6 +656,8 @@ def get_results(
         guntime = chiptime = ""
         if r.place < 990000:
             guntime = r.guntime
+            if guntime and guntime.microseconds != 0:
+                guntimes_have_microseconds.add(guntime.microseconds)
             if r.chiptime:
                 chiptime = r.chiptime
         try:
@@ -697,10 +701,7 @@ def get_results(
                         youtube_url = False
         if r.bib in phototags:
             hasphotos = True
-        try:
-            isrwpb = r.isrwpb
-        except Exception:
-            isrwpb = False
+        isrwpb = getattr(r, "isrwpb", False)
         results.append(
             named_result(
                 r.place,
@@ -730,7 +731,7 @@ def get_results(
     results = filter_results(results, category, division)
     if page == "Hill Sprint":
         results = get_hill_results(results, named_result)
-    return results, max_splits
+    return results, max_splits, guntimes_have_microseconds
 
 
 def annotate_isrwfirst(queryset):
