@@ -108,9 +108,8 @@ class RequestLoggingMiddleware:
             "trace_id": trace_id,
             "span_id": span_id,
             "client_ip": client_ip,
-            "user": getattr(getattr(request, "user", None), "username", None),
             "user_agent": (request.META.get("HTTP_USER_AGENT", "") or "-")[:200],
-            "referer": (request.META.get("HTTP_REFERER", "") or "-")[:200],
+            "referer": self._referer(request),
         }
         try:
             entry["response_bytes"] = len(response.content)
@@ -122,3 +121,23 @@ class RequestLoggingMiddleware:
         else:
             _reqlog.info(json.dumps(entry))
         return response
+
+    @staticmethod
+    def _referer(request):
+        """
+        Privacy: full referer URL for same-site hops (valuable for
+        "where did they click next" questions), origin-only for external
+        referers so third-party query strings (e.g. search terms) don't
+        land in logs.
+        """
+        raw = request.META.get("HTTP_REFERER", "") or ""
+        if not raw:
+            return "-"
+        same_site = raw.startswith("https://racedb.runwaterloo.com/") or raw.startswith(
+            "https://results.runwaterloo.com/"
+        )
+        if same_site:
+            return raw[:200]
+        from urllib.parse import urlparse
+
+        return f"{urlparse(raw).scheme}://{urlparse(raw).netloc}"
