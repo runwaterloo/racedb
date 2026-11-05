@@ -53,12 +53,7 @@
   {% for event in events %}
     <tr>
       <td>
-        {% if event.distance.sequel_slug %}
-          {% url 'event' event.year event.race_slug event.distance.slug event.distance.sequel_slug as event_url %}
-        {% else %}
-          {% url 'event' event.year event.race_slug event.distance.slug as event_url %}
-        {% endif %}
-        <a href="{{ event_url }}">{{ event.year }} {{ event.race_name }} {{ event.distance.display_name }}</a>
+        <a href="{{ event.url }}">{{ event.year }} {{ event.race_name }} {{ event.distance.display_name }}</a>
       </td>
       {% if event.femalemember %}
         <td>
