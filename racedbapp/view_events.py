@@ -61,7 +61,7 @@ def _cache_key(qstring):
 def _render(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
     events = (
-        Event.objects.select_related()
+        Event.objects.select_related("race", "distance", "sequel")
         .filter(Exists(Result.objects.filter(event=OuterRef("pk"))))
         .order_by("-date", "-distance__km")
     )
