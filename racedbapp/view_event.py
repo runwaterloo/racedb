@@ -423,12 +423,15 @@ def get_year_filter(event, races):
     # Query Event (few dozen rows) instead of Result (thousands), keeping the
     # original semantics: only years where this race+distance actually had
     # results, mapped to that year's race slug.
+    # Exists() probe instead of result__isnull=False: no event x results
+    # JOIN + DISTINCT (that scan costs ~20ms); the correlated EXISTS stops at
+    # one indexed row check per event.
     dates = (
         Event.objects.filter(
             race__in=races,
             distance=event.distance,
-            result__isnull=False,
         )
+        .filter(Exists(Result.objects.filter(event=OuterRef("pk"))))
         .order_by("-date")
         .values_list("date", "race__slug")
         .distinct()
