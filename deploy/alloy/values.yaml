@@ -164,13 +164,20 @@ alloy:
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
           action = "replace"
-          regex = "web|celery|beat|redis|cronjob-traefik"
+          regex = "web|celery|beat|redis"
           replacement = "racedb"
           target_label = "job"
         }
 
         // The traefik cronjob is a daily cert backup run by the racedb chart;
         // it logs under traefik, not racedb.
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+          action = "replace"
+          regex = "cronjob-traefik"
+          replacement = "traefik"
+          target_label = "job"
+        }
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
           action = "replace"
