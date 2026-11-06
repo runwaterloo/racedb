@@ -21,6 +21,7 @@ from django.utils import timezone
 from racedbapp.shared.types import Choice, Filter
 from racedbapp.tasks import safe_enqueue, send_email_task
 
+from .templatetags.racedbapp_extras import get_pace, get_place, round_up, show_str_decimal
 from .models import (
     Config,
     Durelay,
@@ -176,6 +177,7 @@ def _render_event(request, event, sequel, qstring):
             phototags,
             relay_dict,
             event_splits,
+            splits_have_microseconds,
         )
         split_headings = get_split_headings(event, max_splits)
     hasdivision = False
@@ -572,6 +574,7 @@ def get_results(
     phototags,
     relay_dict,
     event_splits,
+    splits_have_microseconds,
 ):
     named_result = namedtuple(
         "nr",
@@ -598,6 +601,13 @@ def get_results(
             "masters_place",
             "isrwpb",
             "isrwfirst",
+            # display-ready values precomputed here so the template does no
+            # filter calls per cell
+            "place_display",
+            "time_display",
+            "chip_display",
+            "pace",
+            "split_cells",
         ],
     )
     results = []
@@ -614,6 +624,8 @@ def get_results(
         if event_splits:
             max_splits = int(max(x.split_num for x in event_splits))
             empty_splits = [named_split(i, "") for i in range(1, max_splits + 1)]
+            empty_split_cells = [""] * max_splits
+    km = event.distance.km
     guntimes_have_microseconds = set()
     membership = shared.get_membership(event=event)
     with tracer.start_as_current_span("event: build rows"):
@@ -676,12 +688,14 @@ def get_results(
                 else:
                     result_division = r.division
                 splits = []
+                split_cells = []
                 if event_splits:
                     row_splits = splits_by_place.get(r.place)
                     if row_splits is None:
-                        # shared immutable list of empty cells: identical for
-                        # every row without split data (template only reads)
+                        # shared immutable lists: identical for every row
+                        # without split data (template only reads)
                         splits = empty_splits
+                        split_cells = empty_split_cells
                     else:
                         splits = [
                             named_split(
@@ -692,7 +706,19 @@ def get_results(
                                 (i, row_splits.get(i)) for i in range(1, max_splits + 1)
                             )
                         ]
+                        if splits_have_microseconds:
+                            split_cells = [
+                                show_str_decimal(st.split_time)
+                                if st.split_time != ""
+                                else ""
+                                for st in splits
+                            ]
+                        else:
+                            split_cells = [st.split_time for st in splits]
                 member = shared.get_member(r, membership)
+                pace = ""
+                if guntime:
+                    pace = get_pace(guntime, km)
                 hasphotos = False
                 youtube_url = False
                 if has_youtube and r.place < 990000:
@@ -715,34 +741,61 @@ def get_results(
                 isrwpb = getattr(r, "isrwpb", False)
                 results.append(
                     named_result(
-                        r.place,
-                        r.bib,
-                        r.athlete,
-                        relay_team,
-                        r.gender,
-                        gender_place,
-                        r.category.name,
-                        category_place,
-                        age,
-                        result_division,
-                        guntime,
-                        prime,
-                        chiptime,
-                        r.city,
-                        ismasters,
-                        splits,
-                        member,
-                        hasphotos,
-                        youtube_url,
-                        masters_place,
-                        isrwpb,
-                        r.isrwfirst,
+                        place=r.place,
+                        bib=r.bib,
+                        name=r.athlete,
+                        relay_team=relay_team,
+                        gender=r.gender,
+                        gender_place=gender_place,
+                        category=r.category.name,
+                        category_place=category_place,
+                        age=age,
+                        division=result_division,
+                        guntime=guntime,
+                        prime=prime,
+                        chiptime=chiptime,
+                        city=r.city,
+                        ismasters=ismasters,
+                        splits=splits,
+                        member=member,
+                        hasphotos=hasphotos,
+                        youtube_url=youtube_url,
+                        masters_place=masters_place,
+                        isrwpb=isrwpb,
+                        isrwfirst=r.isrwfirst,
+                        place_display="",
+                        time_display="",
+                        chip_display="",
+                        pace=pace,
+                        split_cells=split_cells,
                     )
                 )
     with tracer.start_as_current_span("event: filter results"):
         results = filter_results(results, category, division)
         if page == "Hill Sprint":
             results = get_hill_results(results, named_result)
+    with tracer.start_as_current_span("event: display fields"):
+        # display strings that depend on the complete guntimes set; the
+        # template gets ready-to-print values with no filter calls
+        has_micro = len(guntimes_have_microseconds) > 0
+        out = []
+        for r in results:
+            if r.guntime:
+                time_display = round_up(r.guntime) if has_micro else r.guntime
+            else:
+                time_display = r.guntime
+            if r.chiptime:
+                chip_display = round_up(r.chiptime) if has_micro else r.chiptime
+            else:
+                chip_display = r.chiptime
+            out.append(
+                r._replace(
+                    place_display=get_place(r.place),
+                    time_display=time_display,
+                    chip_display=chip_display,
+                )
+            )
+        results = out
     return results, max_splits, guntimes_have_microseconds
 
 
@@ -830,38 +883,13 @@ def filter_results(results, category, division):
 
 
 def get_hill_results(results, named_result):
-    hill_results = []
     results = [x for x in results if x.prime != ""]
+    hill_results = []
     for i, r in enumerate(results, 1):
         prime = r.prime
         if len(prime) == 4:
             prime = "0{}".format(prime)
-        hill_results.append(
-            named_result(
-                i,
-                r.bib,
-                r.name,
-                r.relay_team,
-                r.gender,
-                r.gender_place,
-                r.category,
-                r.category_place,
-                r.age,
-                r.division,
-                r.guntime,
-                prime,
-                r.chiptime,
-                r.city,
-                r.ismasters,
-                r.splits,
-                r.member,
-                r.hasphotos,
-                r.youtube_url,
-                r.masters_place,
-                r.isrwpb,
-                r.isrwfirst,
-            )
-        )
+        hill_results.append(r._replace(place=i, prime=prime))
     hill_results = sorted(hill_results, key=attrgetter("prime", "place"))
     return hill_results
 

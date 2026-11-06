@@ -218,7 +218,7 @@
         <tbody>
           {% for r in results %}
             <tr>
-              <td class="text-center">{{ r.place|get_place }}</td>
+              <td class="text-center">{{ r.place_display }}</td>
               <td class="text-center">{{ r.bib }}</td>
               <td class="text-left">
                 {% if r.member %}
@@ -273,11 +273,7 @@
                   <td></td>
                 {% endif %}
               {% endif %}
-              {% if guntimes_have_microseconds %}
-                <td class="text-center">{{ r.guntime|round_up }}</td>
-              {% else %}
-                <td class="text-center">{{ r.guntime }}</td>
-              {% endif %}
+<td class="text-center">{{ r.time_display }}</td>
               {% if hill_dict %}<td class="text-center">{{ r.prime }}</td>{% endif %}
               <td class="text-center">{{ r.gender }}</td>
               <td class="text-center">{{ r.gender_place }}</td>
@@ -297,25 +293,13 @@
                   <td class="text-left">{{ r.division }}</td>
                 {% endif %}
               {% endif %}
-              <td class="text-center">{{ r.guntime|get_pace:event.distance.km }}</td>
+              <td class="text-center">{{ r.pace }}</td>
               {% if show_chip %}
-                {% if guntimes_have_microseconds %}
-                  <td class="text-center">{{ r.chiptime|round_up }}</td>
-                {% else %}
-                  <td class="text-center">{{ r.chiptime }}</td>
-                {% endif %}
+<td class="text-center">{{ r.chip_display }}</td>
               {% endif %}
               <td class="text-left">{{ r.city }}</td>
-              {% for s in r.splits %}
-                {% if s.split_time != "None" %}
-                  {% if splits_have_microseconds %}
-                    <td class="text-center">{{ s.split_time|show_str_decimal }}</td>
-                  {% else %}
-                    <td class="text-center">{{ s.split_time }}</td>
-                  {% endif %}
-                {% else %}
-                  <td></td>
-                {% endif %}
+              {% for cell in r.split_cells %}
+                <td class="text-center">{{ cell }}</td>
               {% endfor %}
             </tr>
           {% endfor %}
