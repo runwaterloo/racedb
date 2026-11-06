@@ -1,4 +1,7 @@
 import logging
+from pathlib import Path
+
+import jinja2
 from collections import defaultdict, namedtuple
 from operator import attrgetter
 from urllib import parse
@@ -238,9 +241,47 @@ def _render_event(request, event, sequel, qstring):
             "series": series,
             "race_logo_slug": race_logo_slug,
         }
+    row_flags = {
+        "show_category": show_category,
+        "show_age": show_age,
+        "show_chip": show_chip,
+        "hasdivision": hasdivision,
+        "hill_dict": hill_dict,
+        "show_photos": bool(phototags),
+        "show_youtube": bool(event_json.youtube_id) and event_json.youtube_offset_seconds is not None,
+        "event_distance_name": event_json.distance.name,
+        "flickrsearchstr": event_json.flickrsearchstr,
+        "event_date_year": event.date.year,
+    }
+    with tracer.start_as_current_span("event: render rows (jinja)"):
+        row_template = _get_row_env()
+        rows_html = "".join(
+            row_template.render(r=r, **row_flags) for r in context["results"]
+        )
     with tracer.start_as_current_span("event: template render"):
         html = render(request, "racedbapp/event.html", context).content.decode("utf-8")
+    html = html.replace("<!--ROWS-->", rows_html)
     return HttpResponse(html)
+
+
+_row_env = None
+
+
+def _get_row_env():
+    """Cached Jinja2 Environment for the event row partial.
+
+    Module-level so the template is parsed once per process, not per render.
+    """
+    global _row_env
+    if _row_env is None:
+        env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(
+                Path(__file__).parent / "templates" / "racedbapp"
+            ),
+            autoescape=True,
+        )
+        _row_env = env.get_template("event_row.html.jinja")
+    return _row_env
 
 
 def get_event_json(event):
