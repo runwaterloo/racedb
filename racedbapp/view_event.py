@@ -21,6 +21,7 @@ from django.utils import timezone
 from racedbapp.shared.types import Choice, Filter
 from racedbapp.tasks import safe_enqueue, send_email_task
 
+from .templatetags.racedbapp_extras import get_pace, get_place, round_up, show_str_decimal
 from .models import (
     Config,
     Durelay,
