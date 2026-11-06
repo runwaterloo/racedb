@@ -301,11 +301,8 @@ def _render_event(request, event, sequel, qstring):
         "flickrsearchstr": conditional_escape(event_json.flickrsearchstr),
         "event_date_year": event.date.year,
     }
-    # Constant fragments and per-value caches: photo cells differ only by
-    # bib (digits, no escaping needed) and youtube cells only by URL, so
-    # identical cells across thousands of rows are built once and reused.
-    row_flags["empty_photo"] = "<td></td>"
-    row_flags["empty_youtube"] = "<td></td>"
+    # Per-bib/per-URL caches: photo and youtube cells are identical across
+    # thousands of rows except for the bib/URL, so each is built once.
     row_flags["photo_cells"] = {}
     row_flags["youtube_cells"] = {}
     # NOTE: unorthodox — the entire results table is built as one HTML
@@ -394,16 +391,17 @@ def _build_row_html(r, flags):
         name += '<i class="fa-solid fa-hand-wave fa-icon-firstrace" title="Welcome new RW member!"></i>'
     if r.relay_team:
         name += f'<i class="fas fa-users" title="{_e(r.relay_team)}"></i>'
-    photo_cell = flags["empty_photo"]
-    if show_photos and r.hasphotos:
+    photo_cell = ""
+    if show_photos:
         # bib is a race number (digits): no escaping needed, cached per bib
-        photo_cell = flags["photo_cells"].get(r.bib)
+        if r.hasphotos:
+            photo_cell = flags["photo_cells"].get(r.bib)
         if photo_cell is None:
             photo_cell = (
                 f'<td class="text-center"><a href="https://www.flickr.com/photos/runwaterloo/tags/{flags["flickrsearchstr"]},{r.bib}" target="_blank"><i class="fas fa-camera"></i></a></td>'
             )
             flags["photo_cells"][r.bib] = photo_cell
-    youtube_cell = flags["empty_youtube"]
+    youtube_cell = ""
     if show_youtube and r.youtube_url:
         youtube_cell = flags["youtube_cells"].get(r.youtube_url)
         if youtube_cell is None:
