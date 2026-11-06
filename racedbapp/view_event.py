@@ -279,62 +279,48 @@ def get_event_json(event):
     return event_json
 
 
-def get_masters(event, division):
-    masters = []
-    all_masters = Result.objects.filter(event=event).filter(
-        Q(category__ismasters=True) | Q(age__gte=40)
-    )
-    if division != "All":
-        all_masters = all_masters.filter(division=division)
-    masters_count = all_masters.count()
-    if masters_count > 0:
-        masters.append({"category__name": "Masters", "count": masters_count})
-        female_masters_count = all_masters.filter(gender="F").count()
-        if female_masters_count > 0:
-            masters.append({"category__name": "F-Masters", "count": female_masters_count})
-        male_masters_count = all_masters.filter(gender="M").count()
-        if male_masters_count > 0:
-            masters.append({"category__name": "M-Masters", "count": male_masters_count})
-        nonbinary_masters_count = all_masters.filter(gender="NB").count()
-        if nonbinary_masters_count > 0:
-            masters.append({"category__name": "NB-Masters", "count": nonbinary_masters_count})
-    return masters
-
-
-def get_genders(event, division):
+def get_category_counts(event, division):
+    """Counts for the category filter, in two grouped queries instead of 7:
+    one GROUP BY gender pass for genders + masters (+ totals), one for
+    categories. Returns (genders, masters, categories, total_count)."""
     all_results = Result.objects.filter(event=event)
     if division != "All":
         all_results = all_results.filter(division=division)
-    abbr_genders = (
-        all_results.exclude(gender="")
-        .values("gender")
-        .order_by("gender")
-        .annotate(count=Count("gender"))
+    masters_q = Q(category__ismasters=True) | Q(age__gte=40)
+    gender_counts = (
+        all_results.values("gender")
+        .annotate(
+            count=Count("id"),
+            masters_count=Count("id", filter=masters_q),
+        )
         .order_by("gender")
     )
     genders = []
-    for i in abbr_genders:
-        if i["gender"] == "F":
-            genders.append({"category__name": "Female", "count": i["count"]})
-        elif i["gender"] == "M":
-            genders.append({"category__name": "Male", "count": i["count"]})
-        elif i["gender"] == "NB":
-            genders.append({"category__name": "Nonbinary", "count": i["count"]})
-    return genders
-
-
-def get_categories(event, division):
-    all_results = Result.objects.filter(event=event)
-    if division != "All":
-        all_results = all_results.filter(division=division)
+    masters = []
+    total_count = 0
+    masters_total = 0
+    for g in gender_counts:
+        total_count += g["count"]
+        masters_total += g["masters_count"]
+        if g["gender"] == "F":
+            genders.append({"category__name": "Female", "count": g["count"]})
+        elif g["gender"] == "M":
+            genders.append({"category__name": "Male", "count": g["count"]})
+        elif g["gender"] == "NB":
+            genders.append({"category__name": "Nonbinary", "count": g["count"]})
+        if g["masters_count"] > 0 and g["gender"] in ("F", "M", "NB"):
+            masters.append(
+                {"category__name": f"{g['gender']}-Masters", "count": g["masters_count"]}
+            )
+    if masters_total > 0:
+        masters.insert(0, {"category__name": "Masters", "count": masters_total})
     categories = (
         all_results.exclude(category__name="")
         .values("category__name")
-        .order_by("category")
         .annotate(count=Count("category__name"))
         .order_by("category__name")
     )
-    return categories
+    return genders, masters, categories, total_count
 
 
 def get_divisions(event, category):
@@ -452,13 +438,7 @@ def get_year_filter(event, races):
 
 
 def get_category_filter(event, category, division):
-    all_results = Result.objects.filter(event=event)
-    if division != "All":
-        all_results = all_results.filter(division=division)
-    total_count = all_results.count()
-    genders = get_genders(event, division)
-    masters = get_masters(event, division)
-    categories = get_categories(event, division)
+    genders, masters, categories, total_count = get_category_counts(event, division)
     all_categories = genders + masters + list(categories)
     choices = []
     base_url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
