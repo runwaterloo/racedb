@@ -612,137 +612,140 @@ def get_results(
         ],
     )
     results = []
-    endurrun_relay_dict = get_endurrun_relay_dict(event)
-    gender_place_dict = defaultdict(int)
-    masters_place_dict = defaultdict(int)
-    category_place_dict = {}
-    splits_by_place = {}
-    for split in event_splits:
-        splits_by_place.setdefault(split.place, {})[split.split_num] = split.split_time
-    max_splits = False
-    if event_splits:
-        max_splits = int(max(x.split_num for x in event_splits))
+    with tracer.start_as_current_span("event: relay dict + split map"):
+        endurrun_relay_dict = get_endurrun_relay_dict(event)
+        gender_place_dict = defaultdict(int)
+        masters_place_dict = defaultdict(int)
+        category_place_dict = {}
+        splits_by_place = {}
+        for split in event_splits:
+            splits_by_place.setdefault(split.place, {})[split.split_num] = split.split_time
+        max_splits = False
+        if event_splits:
+            max_splits = int(max(x.split_num for x in event_splits))
     guntimes_have_microseconds = set()
+    membership = shared.get_membership(event=event)
     with tracer.start_as_current_span("event: build rows"):
-        membership = shared.get_membership(event=event)
         has_youtube = False
         if event.youtube_id and event.youtube_offset_seconds is not None:
             has_youtube = True
             LEAD_TIME_SECONDS = 7
             youtube_duration_seconds = event.youtube_duration_seconds
-        for r in all_results:
-            relay_team = False
-            ismasters = False
-            if r.category.ismasters:
-                ismasters = True
-            else:
+        with tracer.start_as_current_span("event: row loop"):
+            for r in all_results:
+                relay_team = False
+                ismasters = False
+                if r.category.ismasters:
+                    ismasters = True
+                else:
+                    if page != "Wheelchair":
+                        if r.age:
+                            if r.age >= 40:
+                                ismasters = True
+                masters_place = False
+                gender_place = ""
+                if r.gender != "":
+                    gender_place_dict[r.gender] += 1
+                    gender_place = gender_place_dict[r.gender]
+                    if ismasters:
+                        masters_place_dict[r.gender] += 1
+                        masters_place = masters_place_dict[r.gender]
+                category_place = ""
+                if r.category.name != "":
+                    if r.category.name in category_place_dict:
+                        category_place_dict[r.category.name] += 1
+                        category_place = category_place_dict[r.category.name]
+                    else:
+                        category_place_dict[r.category.name] = 1
+                        category_place = 1
+                if relay_dict:
+                    if r.place in relay_dict:
+                        relay_team = relay_dict[r.place]
+                elif r.athlete in endurrun_relay_dict:
+                    relay_team = endurrun_relay_dict[r.athlete]
+                age = ""
                 if page != "Wheelchair":
                     if r.age:
-                        if r.age >= 40:
-                            ismasters = True
-            masters_place = False
-            gender_place = ""
-            if r.gender != "":
-                gender_place_dict[r.gender] += 1
-                gender_place = gender_place_dict[r.gender]
-                if ismasters:
-                    masters_place_dict[r.gender] += 1
-                    masters_place = masters_place_dict[r.gender]
-            category_place = ""
-            if r.category.name != "":
-                if r.category.name in category_place_dict:
-                    category_place_dict[r.category.name] += 1
-                    category_place = category_place_dict[r.category.name]
+                        age = r.age
+                guntime = chiptime = ""
+                if r.place < 990000:
+                    guntime = r.guntime
+                    if guntime and guntime.microseconds != 0:
+                        guntimes_have_microseconds.add(guntime.microseconds)
+                    if r.chiptime:
+                        chiptime = r.chiptime
+                try:
+                    prime = hill_dict[r.place]
+                except Exception:
+                    prime = ""
                 else:
-                    category_place_dict[r.category.name] = 1
-                    category_place = 1
-            if relay_dict:
-                if r.place in relay_dict:
-                    relay_team = relay_dict[r.place]
-            elif r.athlete in endurrun_relay_dict:
-                relay_team = endurrun_relay_dict[r.athlete]
-            age = ""
-            if page != "Wheelchair":
-                if r.age:
-                    age = r.age
-            guntime = chiptime = ""
-            if r.place < 990000:
-                guntime = r.guntime
-                if guntime and guntime.microseconds != 0:
-                    guntimes_have_microseconds.add(guntime.microseconds)
-                if r.chiptime:
-                    chiptime = r.chiptime
-            try:
-                prime = hill_dict[r.place]
-            except Exception:
-                prime = ""
-            else:
-                prime = get_short_time(prime)
-            if page == "Wheelchair":
-                result_division = ""
-            else:
-                result_division = r.division
-            splits = []
-            if event_splits:
-                row_splits = splits_by_place.get(r.place)
-                for i in range(1, max_splits + 1):
-                    split_time = row_splits.get(i) if row_splits else None
-                    splits.append(
-                        named_split(
-                            i,
-                            get_short_time(split_time) if split_time is not None else "",
+                    prime = get_short_time(prime)
+                if page == "Wheelchair":
+                    result_division = ""
+                else:
+                    result_division = r.division
+                splits = []
+                if event_splits:
+                    row_splits = splits_by_place.get(r.place)
+                    for i in range(1, max_splits + 1):
+                        split_time = row_splits.get(i) if row_splits else None
+                        splits.append(
+                            named_split(
+                                i,
+                                get_short_time(split_time) if split_time is not None else "",
+                            )
                         )
+                member = shared.get_member(r, membership)
+                hasphotos = False
+                youtube_url = False
+                if has_youtube and r.place < 990000:
+                    video_position_seconds = guntime.total_seconds() - event.youtube_offset_seconds
+                    if video_position_seconds >= 0:
+                        if video_position_seconds > LEAD_TIME_SECONDS:
+                            video_position_seconds -= LEAD_TIME_SECONDS
+                        else:
+                            video_position_seconds = 1
+                        minutes = int(video_position_seconds // 60)
+                        seconds = int(video_position_seconds % 60)
+                        video_position = "{}m{}s".format(minutes, seconds)
+                        youtube_url = "https://youtu.be/{}?t={}".format(event.youtube_id, video_position)
+                        # set youtube_url back to false if past end of video
+                        if youtube_duration_seconds:
+                            if video_position_seconds >= youtube_duration_seconds:
+                                youtube_url = False
+                if r.bib in phototags:
+                    hasphotos = True
+                isrwpb = getattr(r, "isrwpb", False)
+                results.append(
+                    named_result(
+                        r.place,
+                        r.bib,
+                        r.athlete,
+                        relay_team,
+                        r.gender,
+                        gender_place,
+                        r.category.name,
+                        category_place,
+                        age,
+                        result_division,
+                        guntime,
+                        prime,
+                        chiptime,
+                        r.city,
+                        ismasters,
+                        splits,
+                        member,
+                        hasphotos,
+                        youtube_url,
+                        masters_place,
+                        isrwpb,
+                        r.isrwfirst,
                     )
-            member = shared.get_member(r, membership)
-            hasphotos = False
-            youtube_url = False
-            if has_youtube and r.place < 990000:
-                video_position_seconds = guntime.total_seconds() - event.youtube_offset_seconds
-                if video_position_seconds >= 0:
-                    if video_position_seconds > LEAD_TIME_SECONDS:
-                        video_position_seconds -= LEAD_TIME_SECONDS
-                    else:
-                        video_position_seconds = 1
-                    minutes = int(video_position_seconds // 60)
-                    seconds = int(video_position_seconds % 60)
-                    video_position = "{}m{}s".format(minutes, seconds)
-                    youtube_url = "https://youtu.be/{}?t={}".format(event.youtube_id, video_position)
-                    # set youtube_url back to false if past end of video
-                    if youtube_duration_seconds:
-                        if video_position_seconds >= youtube_duration_seconds:
-                            youtube_url = False
-            if r.bib in phototags:
-                hasphotos = True
-            isrwpb = getattr(r, "isrwpb", False)
-            results.append(
-                named_result(
-                    r.place,
-                    r.bib,
-                    r.athlete,
-                    relay_team,
-                    r.gender,
-                    gender_place,
-                    r.category.name,
-                    category_place,
-                    age,
-                    result_division,
-                    guntime,
-                    prime,
-                    chiptime,
-                    r.city,
-                    ismasters,
-                    splits,
-                    member,
-                    hasphotos,
-                    youtube_url,
-                    masters_place,
-                    isrwpb,
-                    r.isrwfirst,
                 )
-            )
-    results = filter_results(results, category, division)
-    if page == "Hill Sprint":
-        results = get_hill_results(results, named_result)
+    with tracer.start_as_current_span("event: filter results"):
+        results = filter_results(results, category, division)
+        if page == "Hill Sprint":
+            results = get_hill_results(results, named_result)
     return results, max_splits, guntimes_have_microseconds
 
 
