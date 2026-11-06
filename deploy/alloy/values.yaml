@@ -133,52 +133,61 @@ alloy:
           target_label = "pod"
         }
 
-        // Default env for pods that carry no env label (traefik, postgres, coredns,
-        // alloy are all prod). The chart's env label overwrites this below.
+        // Default env for pods that aren't part of the racedb chart (traefik,
+        // postgres, coredns, alloy are all prod). The racedbdev rule overwrites
+        // this below.
         rule {
           action = "replace"
           target_label = "env"
           replacement = "prod"
         }
 
-        // Label creation - "env" field from the chart's app.kubernetes.io/env (prod | dev).
-        // regex ".+" so a missing label does not blank the default above.
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_env"]
-          action = "replace"
-          regex = ".+"
-          target_label = "env"
-        }
+        // NOTE: we do NOT read __meta_kubernetes_pod_label_* here. Alloy >= 1.8.0
+        // stopped exposing pod-label metas in this pipeline
+        // (github.com/grafana/alloy/issues/3311), so everything below derives
+        // from the pod NAME, which reliably encodes release, component and env:
+        //   racedb-web-<rs>-<rand>       prod web
+        //   racedbdev-celery-<rs>-<rand> dev  celery
+        //   racedb-cronjob-traefik-...   prod cert-backup cron
 
-        // Label creation - "component" field from the chart's app.kubernetes.io/component
-        // (web | celery | beat | redis | cronjob-traefik)
+        // component = web | celery | beat | redis for the chart's deployments.
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+          source_labels = ["__meta_kubernetes_pod_name"]
           action = "replace"
-          regex = ".+"
+          regex = "racedb(dev)?-(web|celery|beat|redis)-.*"
+          replacement = "$2"
           target_label = "component"
         }
 
-        // job = racedb for all pods from the racedb chart, including the traefik
-        // cert-backup cron (distinguished by component=traefik-cron).
-        // env distinguishes prod (racedb) from dev (racedbdev).
-        // service_name = job, set explicitly: Loki's fallback order prefers
-        // component over job, which would give per-component service names
-        // and merge prod/dev in the service views.
+        // The racedb chart also deploys the traefik cert-backup cronjob.
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+          source_labels = ["__meta_kubernetes_pod_name"]
           action = "replace"
-          regex = "web|celery|beat|redis|cronjob-traefik"
+          regex = "racedb-cronjob-traefik-.*"
+          replacement = "traefik-cron"
+          target_label = "component"
+        }
+
+        // job = racedb for everything the racedb chart deploys, prod and dev;
+        // env distinguishes the two.
+        // service_name = job, set explicitly below: Loki's fallback order prefers
+        // component over job, which would give per-component service names
+        // and split prod/dev in the service views.
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          action = "replace"
+          regex = "racedb(dev)?-.*"
           replacement = "racedb"
           target_label = "job"
         }
 
+        // env=dev for racedbdev pods; the default rule above covers the rest.
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+          source_labels = ["__meta_kubernetes_pod_name"]
           action = "replace"
-          regex = "cronjob-traefik"
-          replacement = "traefik-cron"
-          target_label = "component"
+          regex = "racedbdev-.*"
+          replacement = "dev"
+          target_label = "env"
         }
 
         // Non-chart workloads: static job/component/env. The traefik proxy, postgres,
