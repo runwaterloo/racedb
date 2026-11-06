@@ -95,9 +95,9 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
     )
     with tracer.start_as_current_span("event: cache lookup"):
         cached = cache_lock.get(cache_key)
-    if cached is not None:
-        logger.info("cache HIT (warm): key=%s", cache_key)
-        return cached
+        if cached is not None:
+            logger.info("cache HIT (warm): key=%s", cache_key)
+            return cached
     with tracer.start_as_current_span("event: event lookup"):
         try:
             event = Event.objects.select_related(
@@ -112,7 +112,9 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
             raise Http404("Matching event not found")
     # Cached path: past events within the config window render at most once
     # even under concurrent load (single-flight lock in cache_lock)
-    if _is_cacheable(event, request):
+    with tracer.start_as_current_span("event: cacheability"):
+        cacheable = _is_cacheable(event, request)
+    if cacheable:
         return cache_lock.get_or_render(
             cache_key, lambda: _render_event(request, event, sequel, qstring)
         )
@@ -120,107 +122,110 @@ def index(request, year, race_slug, distance_slug, sequel_slug=None):
 
 
 def _render_event(request, event, sequel, qstring):
-    page = get_page(qstring)
-    category = get_category(qstring)
-    division = get_division(qstring)
-    shared.set_distance_display_name(event.distance, sequel)
-    with tracer.start_as_current_span("event: samerace + team categories"):
-        races = shared.create_samerace_list(event.race)
-        team_categories = shared.get_team_categories(event)
-    with tracer.start_as_current_span("event: hill/relay/phototag/wheelchair dicts"):
-        hill_dict = get_hill_dict(event)
-        relay_dict = get_relay_dict(event)
-        dbphototags = list(Phototag.objects.filter(event=event).values_list("tag", flat=True))
-        phototags = [x for x in dbphototags if x.isdigit()]
-        wheelchair_results = Wheelchairresult.objects.filter(event=event)
-    with tracer.start_as_current_span("event: pages"):
-        pages = shared.get_pages(
-        event,
-        page,
-        team_categories,
-        hill_dict=hill_dict,
-        wheelchair_results=wheelchair_results,
-        relay_dict=relay_dict,
-    )
-    if page == "Wheelchair":
-        # Wheelchairresult has no rwmember FK, so results can never be an
-        # RW member's first event; annotate False so get_results can read it.
-        all_results = Wheelchairresult.objects.filter(event=event).annotate(
-            isrwfirst=Value(False, output_field=BooleanField())
-        )
-        hasage = False
-    else:
-        all_results = Result.objects.select_related("event__race", "event__distance", "event__sequel", "event__timer", "category", "rwmember").filter(event=event)
-        # hasage must run before annotate_isrwfirst: otherwise the EXISTS
-        # subquery annotation bloats what should be a cheap probe query
-        # (issue #436).
-        hasage = all_results.hasage(event)
-        all_results = annotate_isrwfirst(all_results)
-    # Materialize splits once: truthiness, max, microseconds set, and the
-    # per-place map all derive from this single list (one DB round-trip).
-    event_splits = list(Split.objects.filter(event=event))
-    all_split_microseconds = {x.split_time.microseconds for x in event_splits if x.split_time}
-    splits_have_microseconds = [x for x in all_split_microseconds if x != 0]
-    results, max_splits, guntimes_have_microseconds = get_results(
-        event,
-        all_results,
-        page,
-        category,
-        division,
-        hill_dict,
-        phototags,
-        relay_dict,
+    with tracer.start_as_current_span("event: build results"):
+        page = get_page(qstring)
+        category = get_category(qstring)
+        division = get_division(qstring)
+        shared.set_distance_display_name(event.distance, sequel)
+        with tracer.start_as_current_span("event: samerace + team categories"):
+            races = shared.create_samerace_list(event.race)
+            team_categories = shared.get_team_categories(event)
+        with tracer.start_as_current_span("event: hill/relay/phototag/wheelchair dicts"):
+            hill_dict = get_hill_dict(event)
+            relay_dict = get_relay_dict(event)
+            dbphototags = list(Phototag.objects.filter(event=event).values_list("tag", flat=True))
+            phototags = [x for x in dbphototags if x.isdigit()]
+            wheelchair_results = Wheelchairresult.objects.filter(event=event)
+        with tracer.start_as_current_span("event: pages"):
+            pages = shared.get_pages(
+                event,
+                page,
+                team_categories,
+                hill_dict=hill_dict,
+                wheelchair_results=wheelchair_results,
+                relay_dict=relay_dict,
+            )
+        if page == "Wheelchair":
+            # Wheelchairresult has no rwmember FK, so results can never be an
+            # RW member's first event; annotate False so get_results can read it.
+            all_results = Wheelchairresult.objects.filter(event=event).annotate(
+                isrwfirst=Value(False, output_field=BooleanField())
+            )
+            hasage = False
+        else:
+            all_results = Result.objects.select_related("event__race", "event__distance", "event__sequel", "event__timer", "category", "rwmember").filter(event=event)
+            # hasage must run before annotate_isrwfirst: otherwise the EXISTS
+            # subquery annotation bloats what should be a cheap probe query
+            # (issue #436).
+            hasage = all_results.hasage(event)
+            all_results = annotate_isrwfirst(all_results)
+        # Materialize splits once: truthiness, max, microseconds set, and the
+        # per-place map all derive from this single list (one DB round-trip).
+        event_splits = list(Split.objects.filter(event=event))
+        all_split_microseconds = {x.split_time.microseconds for x in event_splits if x.split_time}
+        splits_have_microseconds = [x for x in all_split_microseconds if x != 0]
+        results, max_splits, guntimes_have_microseconds = get_results(
+            event,
+            all_results,
+            page,
+            category,
+            division,
+            hill_dict,
+            phototags,
+            relay_dict,
             event_splits,
         )
-    split_headings = get_split_headings(event, max_splits)
+        split_headings = get_split_headings(event, max_splits)
     hasdivision = False
     if event.race.slug == "endurrun":
         hasdivision = True
-    extra_name = get_extra_name(event)
-    with tracer.start_as_current_span("event: category filter"):
-        category_filter = get_category_filter(event, category, division)
-    with tracer.start_as_current_span("event: distance filter"):
-        distance_filter = get_distance_filter(event, races)
-    with tracer.start_as_current_span("event: division filter"):
-        division_filter = get_division_filter(event, division, category)
-    with tracer.start_as_current_span("event: year filter"):
-        year_filter = get_year_filter(event, races)
-    filters = {
-        "category_filter": category_filter,
-        "distance_filter": distance_filter,
-        "division_filter": division_filter,
-        "year_filter": year_filter,
-    }
-    event_json = get_event_json(event)
+    with tracer.start_as_current_span("event: filters"):
+        with tracer.start_as_current_span("event: category filter"):
+            category_filter = get_category_filter(event, category, division)
+        with tracer.start_as_current_span("event: distance filter"):
+            distance_filter = get_distance_filter(event, races)
+        with tracer.start_as_current_span("event: division filter"):
+            division_filter = get_division_filter(event, division, category)
+        with tracer.start_as_current_span("event: year filter"):
+            year_filter = get_year_filter(event, races)
+        filters = {
+            "category_filter": category_filter,
+            "distance_filter": distance_filter,
+            "division_filter": division_filter,
+            "year_filter": year_filter,
+        }
+        event_json = get_event_json(event)
     with tracer.start_as_current_span("event: ad/series/post"):
         ad = get_ad()
         series = get_series(event=event)
         process_post(request)
-    race_logo_slug = utils.get_race_logo_slug(event.race.slug)
-    show_category = len(filters["category_filter"].choices) > 5
-    show_age = hasage and not show_category
-    show_chip = bool(results and results[0].chiptime)
-    context = {
-        "show_category": show_category,
-        "show_age": show_age,
-        "show_chip": show_chip,
-        "event": event_json,
-        "filters": filters,
-        "page": page,
-        "pages": pages,
-        "results": results,
-        "hasage": hasage,
-        "hasdivision": hasdivision,
-        "hill_dict": hill_dict,
-        "split_headings": split_headings,
-        "extra_name": extra_name,
-        "phototags": phototags,
-        "guntimes_have_microseconds": guntimes_have_microseconds,
-        "splits_have_microseconds": splits_have_microseconds,
-        "ad": ad,
-        "series": series,
-        "race_logo_slug": race_logo_slug,
-    }
+    with tracer.start_as_current_span("event: context"):
+        race_logo_slug = utils.get_race_logo_slug(event.race.slug)
+        extra_name = get_extra_name(event)
+        show_category = len(filters["category_filter"].choices) > 5
+        show_age = hasage and not show_category
+        show_chip = bool(results and results[0].chiptime)
+        context = {
+            "show_category": show_category,
+            "show_age": show_age,
+            "show_chip": show_chip,
+            "event": event_json,
+            "filters": filters,
+            "page": page,
+            "pages": pages,
+            "results": results,
+            "hasage": hasage,
+            "hasdivision": hasdivision,
+            "hill_dict": hill_dict,
+            "split_headings": split_headings,
+            "extra_name": extra_name,
+            "phototags": phototags,
+            "guntimes_have_microseconds": guntimes_have_microseconds,
+            "splits_have_microseconds": splits_have_microseconds,
+            "ad": ad,
+            "series": series,
+            "race_logo_slug": race_logo_slug,
+        }
     with tracer.start_as_current_span("event: template render"):
         html = render(request, "racedbapp/event.html", context).content.decode("utf-8")
     return HttpResponse(html)
