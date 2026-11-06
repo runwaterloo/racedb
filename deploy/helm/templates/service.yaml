@@ -4,7 +4,7 @@ metadata:
   name: "{{ include "racedb.fullname" . }}"
   labels:
     {{- include "racedb.labels" . | nindent 4 }}
-    app.kubernetes.io/task: web
+    app.kubernetes.io/component: web
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -14,4 +14,4 @@ spec:
       name: http
   selector:
     {{- include "racedb.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/task: web
+    app.kubernetes.io/component: web

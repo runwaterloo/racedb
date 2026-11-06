@@ -4,7 +4,7 @@ metadata:
   name: "{{ include "racedb.fullname" . }}-beat"
   labels:
     {{- include "racedb.labels" . | nindent 4 }}
-    app.kubernetes.io/task: beat
+    app.kubernetes.io/component: beat
 spec:
 {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -12,7 +12,7 @@ spec:
   selector:
     matchLabels:
       {{- include "racedb.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/task: beat
+      app.kubernetes.io/component: beat
   template:
     metadata:
     {{- with .Values.podAnnotations }}
@@ -21,7 +21,7 @@ spec:
     {{- end }}
       labels:
         {{- include "racedb.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/task: beat
+        app.kubernetes.io/component: beat
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
