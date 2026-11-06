@@ -126,13 +126,6 @@ alloy:
       discovery.relabel "pod_logs" {
         targets = discovery.kubernetes.pod.targets
 
-        // Label creation - "namespace" field from "__meta_kubernetes_namespace"
-        rule {
-          source_labels = ["__meta_kubernetes_namespace"]
-          action = "replace"
-          target_label = "namespace"
-        }
-
         // Label creation - "pod" field from "__meta_kubernetes_pod_name"
         rule {
           source_labels = ["__meta_kubernetes_pod_name"]
@@ -140,35 +133,110 @@ alloy:
           target_label = "pod"
         }
 
-        // Label creation - "container" field from "__meta_kubernetes_pod_container_name"
+        // Default env for pods that carry no env label (traefik, postgres, coredns,
+        // alloy are all prod). The chart's env label overwrites this below.
         rule {
-          source_labels = ["__meta_kubernetes_pod_container_name"]
           action = "replace"
-          target_label = "container"
+          target_label = "env"
+          replacement = "prod"
         }
 
-        // Label creation -  "app" field from "__meta_kubernetes_pod_label_app_kubernetes_io_name"
+        // Label creation - "env" field from the chart's app.kubernetes.io/env (prod | dev).
+        // regex ".+" so a missing label does not blank the default above.
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_env"]
           action = "replace"
-          target_label = "app"
+          regex = ".+"
+          target_label = "env"
         }
 
-        // Label creation -  "service_name" field from "__meta_kubernetes_pod_label_app_kubernetes_io_instance"
+        // Label creation - "component" field from the chart's app.kubernetes.io/component
+        // (web | celery | beat | redis | cronjob-traefik)
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
           action = "replace"
-          target_label = "service_name"
+          regex = ".+"
+          target_label = "component"
         }
 
-        // Label creation -  "job" field from "__meta_kubernetes_namespace" and "__meta_kubernetes_pod_container_name"
-        // Concatenate values __meta_kubernetes_namespace/__meta_kubernetes_pod_container_name
+        // job = racedb for all pods from the racedb chart. service_name is not set:
+        // Loki derives it from job. env distinguishes prod (racedb) from dev (racedbdev).
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+          action = "replace"
+          regex = "web|celery|beat|redis|cronjob-traefik"
+          replacement = "racedb"
+          target_label = "job"
+        }
+
+        // The traefik cronjob is a daily cert backup run by the racedb chart;
+        // it logs under traefik, not racedb.
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+          action = "replace"
+          regex = "cronjob-traefik"
+          replacement = "traefik-cron"
+          target_label = "component"
+        }
+
+        // Non-chart workloads: static job/component/env. The traefik proxy, postgres,
+        // coredns and alloy itself are not labeled by us, so match on namespace +
+        // container name and hard-code their labels.
         rule {
           source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
           action = "replace"
+          regex = "default;traefik"
+          replacement = "traefik"
           target_label = "job"
-          separator = "/"
-          replacement = "$1"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+          action = "replace"
+          regex = "default;traefik"
+          replacement = "traefik"
+          target_label = "component"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+          action = "replace"
+          regex = "default;postgres"
+          replacement = "postgres"
+          target_label = "job"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+          action = "replace"
+          regex = "default;postgres"
+          replacement = "postgres"
+          target_label = "component"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+          action = "replace"
+          regex = "kube-system;coredns"
+          replacement = "coredns"
+          target_label = "job"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+          action = "replace"
+          regex = "kube-system;coredns"
+          replacement = "coredns"
+          target_label = "component"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+          action = "replace"
+          regex = "default;alloy"
+          replacement = "alloy"
+          target_label = "job"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+          action = "replace"
+          regex = "default;alloy"
+          replacement = "alloy"
+          target_label = "component"
         }
 
         // Label creation - "container" field from "__meta_kubernetes_pod_uid" and "__meta_kubernetes_pod_container_name"
@@ -181,14 +249,6 @@ alloy:
           replacement = "/var/log/pods/*$1/*.log"
         }
 
-        // Label creation -  "container_runtime" field from "__meta_kubernetes_pod_container_id"
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_id"]
-          action = "replace"
-          target_label = "container_runtime"
-          regex = "^(\\S+):\\/\\/.+$"
-          replacement = "$1"
-        }
       }
 
       // loki.source.kubernetes tails logs from Kubernetes containers using the Kubernetes API.
@@ -211,12 +271,6 @@ alloy:
           max_wait_time = "3s"
         }
 
-        stage.static_labels {
-            values = {
-              cluster = "default",
-            }
-        }
-
         forward_to = [loki.write.grafanacloud.receiver]
       }
 
@@ -227,7 +281,7 @@ alloy:
         // Keep only pods with correct labels
         rule {
           action        = "keep"
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance", "__meta_kubernetes_pod_label_app_kubernetes_io_task"]
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance", "__meta_kubernetes_pod_label_app_kubernetes_io_component"]
           regex         = "racedb;web"
         }
         // Set instance label to pod IP
@@ -253,7 +307,7 @@ alloy:
       targets = discovery.kubernetes.pod.targets
         rule {
           action        = "keep"
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance", "__meta_kubernetes_pod_label_app_kubernetes_io_task"]
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance", "__meta_kubernetes_pod_label_app_kubernetes_io_component"]
           regex         = "racedb;redis"
         }
         rule {
@@ -306,6 +360,7 @@ alloy:
         format_as_json = true
         labels = {
           job      = "systemd-journal",
+          env      = "prod",
         }
         forward_to = [loki.write.grafanacloud.receiver]
       }

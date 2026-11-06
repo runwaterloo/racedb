@@ -4,7 +4,7 @@ metadata:
   name: "{{ include "racedb.fullname" . }}-celery"
   labels:
     {{- include "racedb.labels" . | nindent 4 }}
-    app.kubernetes.io/task: celery
+    app.kubernetes.io/component: celery
 spec:
 {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -12,7 +12,7 @@ spec:
   selector:
     matchLabels:
       {{- include "racedb.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/task: celery
+      app.kubernetes.io/component: celery
   template:
     metadata:
     {{- with .Values.podAnnotations }}
@@ -21,7 +21,7 @@ spec:
     {{- end }}
       labels:
         {{- include "racedb.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/task: celery
+        app.kubernetes.io/component: celery
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

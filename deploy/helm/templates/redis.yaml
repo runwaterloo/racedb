@@ -4,18 +4,18 @@ metadata:
   name: "{{ include "racedb.fullname" . }}-redis"
   labels:
     {{- include "racedb.labels" . | nindent 4 }}
-    app.kubernetes.io/task: redis
+    app.kubernetes.io/component: redis
 spec:
   selector:
     matchLabels:
       {{- include "racedb.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/task: redis
+      app.kubernetes.io/component: redis
   replicas: 1
   template:
     metadata:
       labels:
         {{- include "racedb.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/task: redis
+        app.kubernetes.io/component: redis
     spec:
       containers:
       - name: "{{ include "racedb.fullname" . }}-redis"
@@ -46,11 +46,11 @@ metadata:
   name: "{{ include "racedb.fullname" . }}-redis"
   labels:
     {{- include "racedb.labels" . | nindent 4 }}
-    app.kubernetes.io/task: redis
+    app.kubernetes.io/component: redis
 spec:
   ports:
   - port: 6379
     targetPort: 6379
   selector:
     {{- include "racedb.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/task: redis
+    app.kubernetes.io/component: redis
