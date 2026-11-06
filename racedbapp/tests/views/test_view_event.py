@@ -8,7 +8,7 @@ from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from racedbapp import view_event
-from racedbapp.models import Config, Result, Series, Split
+from racedbapp.models import Config, Result, Series, Split, Wheelchairresult
 from racedbapp.shared.types import Filter
 from racedbapp.tests.views.test_view_medals import make_sequel_medal_event
 from racedbapp.view_event import (
@@ -130,6 +130,27 @@ def test_event_multiple_with_sequel(create_distance, create_event, create_race, 
     event1 = create_event(distance=distance, race=race)
     create_event(distance=distance, race=race, sequel=sequel)
     url = f"/event/{event1.date.year}/{event1.race.slug}/{event1.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_event_wheelchair_page_with_results(create_event, create_category):
+    # Regression: wheelchair results lack isrwfirst (no rwmember FK) and
+    # used to 500 when a wheelchair page had results (trace 41d5f16d).
+    client = APIClient()
+    event = create_event()
+    category = create_category("wc")
+    Wheelchairresult.objects.create(
+        event=event,
+        category=category,
+        athlete="Test Wheelchair Athlete",
+        gender="F",
+        city="Test City",
+        place=1,
+        guntime=datetime.timedelta(seconds=300),
+    )
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/?wheelchair=true"
     response = client.get(url)
     assert response.status_code == 200
 

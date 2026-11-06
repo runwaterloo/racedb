@@ -143,7 +143,11 @@ def _render_event(request, event, sequel, qstring):
         relay_dict=relay_dict,
     )
     if page == "Wheelchair":
-        all_results = Wheelchairresult.objects.filter(event=event)
+        # Wheelchairresult has no rwmember FK, so results can never be an
+        # RW member's first event; annotate False so get_results can read it.
+        all_results = Wheelchairresult.objects.filter(event=event).annotate(
+            isrwfirst=Value(False, output_field=BooleanField())
+        )
         hasage = False
     else:
         all_results = Result.objects.select_related("event__race", "event__distance", "event__sequel", "event__timer", "category", "rwmember").filter(event=event)
