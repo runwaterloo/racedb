@@ -5,14 +5,13 @@ from urllib import parse
 
 from django.db.models import (
     BooleanField,
-    Case,
     Count,
     Exists,
     F,
+    Min,
     OuterRef,
     Q,
     Value,
-    When,
 )
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -179,13 +178,12 @@ def _render_event(request, event, sequel, qstring):
                     r["division"] = ""
                     r["isrwpb"] = False
         else:
-            all_results = Result.objects.select_related("event__race", "event__distance", "event__sequel", "event__timer", "category", "rwmember").filter(event=event)
-            # hasage must run before annotate_isrwfirst: otherwise the EXISTS
+            all_results = Result.objects.filter(event=event)
+            # hasage must run before any annotation: otherwise the EXISTS
             # subquery annotation bloats what should be a cheap probe query
             # (issue #436).
             with tracer.start_as_current_span("event: results queryset"):
                 hasage = all_results.hasage(event)
-                all_results = annotate_isrwfirst(all_results)
                 # Materialize plain dicts instead of model instances: the row
                 # loop only reads these fields, and skipping per-object model
                 # instantiation + descriptor access was worth ~250ms per
@@ -202,12 +200,19 @@ def _render_event(request, event, sequel, qstring):
                         "chiptime",
                         "division",
                         "isrwpb",
-                        "isrwfirst",
+                        "rwmember_id",
+                        "rwmember__joindate",
                         "category__name",
                         "category__ismasters",
                         "event_id",
                     )
                 )
+                # isrwfirst in Python instead of a per-row correlated EXISTS
+                # subquery in SQL (saves ~12ms SELECT + plan cost per cold
+                # render): first = member's earliest event dated on/after
+                # their join date, and this event is it. Same-date events
+                # both count as first, matching the old `date <` semantics.
+                _mark_isrwfirst(all_results, event.date)
         # Materialize splits once: truthiness, max, microseconds set, and the
         # per-place map all derive from this single list (one DB round-trip).
         with tracer.start_as_current_span("event: splits"):
@@ -319,6 +324,37 @@ def _render_event(request, event, sequel, qstring):
 def _e(v):
     """HTML-escape a value; empty string for False/None."""
     return conditional_escape(v) if v else ""
+
+
+def _mark_isrwfirst(results, event_date):
+    """Set isrwfirst on result dicts in place: True if this is the member's
+    first event (by date) as a member (event date >= rwmember.joindate).
+
+    Computed in Python with one grouped MIN query instead of a per-row
+    correlated EXISTS subquery in SQL (2026-11-06: ~12ms SELECT per cold
+    render on an 1800-row event). Same-date events both count as first,
+    matching the original `date <` EXISTS semantics.
+    """
+    member_ids = {r["rwmember_id"] for r in results if r["rwmember_id"]}
+    if member_ids:
+        first_dates = dict(
+            Result.objects.filter(
+                rwmember_id__in=member_ids,
+                event__date__gte=F("rwmember__joindate"),
+            )
+            .values("rwmember_id")
+            .annotate(first=Min("event__date"))
+            .values_list("rwmember_id", "first")
+        )
+    else:
+        first_dates = {}
+    for r in results:
+        rid = r["rwmember_id"]
+        r["isrwfirst"] = (
+            rid is not None
+            and event_date >= r["rwmember__joindate"]
+            and first_dates.get(rid) == event_date
+        )
 
 
 def _build_row_html(r, flags):
@@ -1001,24 +1037,6 @@ def get_results(
     return results, max_splits, guntimes_have_microseconds
 
 
-def annotate_isrwfirst(queryset):
-    # Annotate each result with isrwfirst: True if this is the member's first event (by date)
-    # as a member (event date >= rwmember.joindate). False otherwise.
-    earlier_event_exists = queryset.model.objects.filter(
-        rwmember=OuterRef("rwmember"),
-        event__date__lt=OuterRef("event__date"),
-        event__date__gte=OuterRef("rwmember__joindate"),
-    )
-    # Annotate join date for comparison
-    queryset = queryset.annotate(_joindate=F("rwmember__joindate"))
-    return queryset.annotate(
-        isrwfirst=Case(
-            When(rwmember__isnull=True, then=Value(False)),
-            When(event__date__lt=F("_joindate"), then=Value(False)),
-            default=~Exists(earlier_event_exists),
-            output_field=BooleanField(),
-        )
-    )
 
 
 def get_endurrun_relay_dict(event):
