@@ -209,7 +209,14 @@ def _render_event(request, event, sequel, qstring):
         show_category = len(filters["category_filter"].choices) > 5
         show_age = hasage and not show_category
         show_chip = bool(results and results[0].chiptime)
+        # loop-invariant flags: the row loop used to re-resolve these
+        # expressions (event attributes, truthiness of lists) for every row
+        show_youtube = bool(event_json.youtube_id) and event_json.youtube_offset_seconds is not None
         context = {
+            "show_youtube": show_youtube,
+            "show_photos": bool(phototags),
+            "flickrsearchstr": event_json.flickrsearchstr,
+            "event_distance_name": event_json.distance.name,
             "show_category": show_category,
             "show_age": show_age,
             "show_chip": show_chip,

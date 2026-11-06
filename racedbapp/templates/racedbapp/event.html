@@ -192,7 +192,7 @@
                 <i class="fas fa-camera"></i>
               </th>
             {% endif %}
-            {% if event.youtube_id and event.youtube_offset_seconds is not None %}
+            {% if show_youtube %}
               <th class="text-center" scope="col">
                 <i class="fas fa-video"></i>
               </th>
@@ -242,7 +242,7 @@
                 {% endif %}
                 {% if r.isrwpb and r.member %}
                   <i class="fas fa-stopwatch fa-icon-pb"
-                     title="RW PB for the {{ event.distance.name }}"></i>
+                     title="RW PB for the {{ event_distance_name }}"></i>
                 {% endif %}
                 {% if r.isrwfirst %}
                   <i class="fa-solid fa-hand-wave fa-icon-firstrace"
@@ -250,10 +250,10 @@
                 {% endif %}
                 {% if r.relay_team %}<i class="fas fa-users" title="{{ r.relay_team }}"></i>{% endif %}
               </td>
-              {% if phototags %}
+              {% if show_photos %}
                 {% if r.hasphotos %}
                   <td class="text-center">
-                    <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ event.flickrsearchstr }},{{ r.bib }}"
+                    <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ flickrsearchstr }},{{ r.bib }}"
                        target="_blank">
                       <i class="fas fa-camera"></i>
                     </a>
@@ -262,7 +262,7 @@
                   <td></td>
                 {% endif %}
               {% endif %}
-              {% if event.youtube_id and event.youtube_offset_seconds is not None %}
+              {% if show_youtube %}
                 {% if r.youtube_url %}
                   <td class="text-center">
                     <a href="{{ r.youtube_url }}" target="_blank">
