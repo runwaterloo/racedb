@@ -393,20 +393,25 @@ def _build_row_html(r, flags):
         name += f'<i class="fas fa-users" title="{_e(r.relay_team)}"></i>'
     photo_cell = ""
     if show_photos:
-        # bib is a race number (digits): no escaping needed, cached per bib
         if r.hasphotos:
+            # bib is a race number (digits): no escaping needed, cached per bib
             photo_cell = flags["photo_cells"].get(r.bib)
-        if photo_cell is None:
-            photo_cell = (
-                f'<td class="text-center"><a href="https://www.flickr.com/photos/runwaterloo/tags/{flags["flickrsearchstr"]},{r.bib}" target="_blank"><i class="fas fa-camera"></i></a></td>'
-            )
-            flags["photo_cells"][r.bib] = photo_cell
+            if photo_cell is None:
+                photo_cell = (
+                    f'<td class="text-center"><a href="https://www.flickr.com/photos/runwaterloo/tags/{flags["flickrsearchstr"]},{r.bib}" target="_blank"><i class="fas fa-camera"></i></a></td>'
+                )
+                flags["photo_cells"][r.bib] = photo_cell
+        else:
+            photo_cell = "<td></td>"
     youtube_cell = ""
-    if show_youtube and r.youtube_url:
-        youtube_cell = flags["youtube_cells"].get(r.youtube_url)
-        if youtube_cell is None:
-            youtube_cell = f'<td class="text-center"><a href="{conditional_escape(r.youtube_url)}" target="_blank"><i class="fas fa-video"></i></a></td>'
-            flags["youtube_cells"][r.youtube_url] = youtube_cell
+    if show_youtube:
+        if r.youtube_url:
+            youtube_cell = flags["youtube_cells"].get(r.youtube_url)
+            if youtube_cell is None:
+                youtube_cell = f'<td class="text-center"><a href="{conditional_escape(r.youtube_url)}" target="_blank"><i class="fas fa-video"></i></a></td>'
+                flags["youtube_cells"][r.youtube_url] = youtube_cell
+        else:
+            youtube_cell = "<td></td>"
     if hill_dict:
         prime_cell = f'<td class="text-center">{_e(r.prime)}</td>'
     else:
