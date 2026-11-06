@@ -427,7 +427,6 @@ def get_year_filter(event, races):
         Event.objects.filter(
             race__in=races,
             distance=event.distance,
-            date__lt=f"{event.date.year}-01-01",
             result__isnull=False,
         )
         .order_by("-date")
@@ -437,6 +436,8 @@ def get_year_filter(event, races):
     choices = []
     for d in dates:
         year = d[0].year
+        if year == event.date.year:
+            continue
         choices.append(Choice(year, "/event/{}/{}/{}/".format(year, d[1], event.distance.slug)))
     year_filter = Filter(event.date.year, choices)
     return year_filter
