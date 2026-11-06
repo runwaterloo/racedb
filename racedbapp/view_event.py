@@ -166,6 +166,17 @@ def _render_event(request, event, sequel, qstring):
         # per-place map all derive from this single list (one DB round-trip).
         with tracer.start_as_current_span("event: splits"):
             event_splits = list(Split.objects.filter(event=event))
+        # TEMP PROBE (event-perf-loop-probe): measure raw attribute access on
+        # the results queryset to locate unaccounted time in the row loop. REMOVE.
+        import time as _probe_time
+        with tracer.start_as_current_span("event: PROBE attribute access"):
+            for _r in all_results:
+                _ = (_r.place, _r.bib, _r.athlete, _r.age, _r.city, _r.gender, _r.category,
+                     _r.division, _r.guntime, _r.chiptime, _r.isrwpb,
+                     _r.isrwfirst, _r.event.id, _r.category.name, _r.rwmember_id)
+        with tracer.start_as_current_span("event: PROBE queryset iteration"):
+            for _r in all_results:
+                pass
         all_split_microseconds = {x.split_time.microseconds for x in event_splits if x.split_time}
         splits_have_microseconds = [x for x in all_split_microseconds if x != 0]
         results, max_splits, guntimes_have_microseconds = get_results(
