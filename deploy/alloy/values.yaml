@@ -159,25 +159,18 @@ alloy:
           target_label = "component"
         }
 
-        // job = racedb for all pods from the racedb chart. service_name is not set:
-        // Loki derives it from job. env distinguishes prod (racedb) from dev (racedbdev).
+        // job = racedb for all pods from the racedb chart, including the traefik
+        // cert-backup cron (distinguished by component=traefik-cron).
+        // service_name is not set: Loki derives it from job. env distinguishes
+        // prod (racedb) from dev (racedbdev).
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
           action = "replace"
-          regex = "web|celery|beat|redis"
+          regex = "web|celery|beat|redis|cronjob-traefik"
           replacement = "racedb"
           target_label = "job"
         }
 
-        // The traefik cronjob is a daily cert backup run by the racedb chart;
-        // it logs under traefik, not racedb.
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
-          action = "replace"
-          regex = "cronjob-traefik"
-          replacement = "traefik"
-          target_label = "job"
-        }
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
           action = "replace"
