@@ -17,6 +17,7 @@ from django.db.models import (
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
+from django.utils.html import conditional_escape
 
 from racedbapp.shared.types import Choice, Filter
 from racedbapp.tasks import safe_enqueue, send_email_task
@@ -237,9 +238,152 @@ def _render_event(request, event, sequel, qstring):
             "series": series,
             "race_logo_slug": race_logo_slug,
         }
+    row_flags = {
+        "show_category": show_category,
+        "show_age": show_age,
+        "show_chip": show_chip,
+        "hasdivision": hasdivision,
+        "hill_dict": hill_dict,
+        "show_photos": bool(phototags),
+        "show_youtube": bool(event_json.youtube_id) and event_json.youtube_offset_seconds is not None,
+        "event_distance_name": conditional_escape(event_json.distance.name),
+        "flickrsearchstr": conditional_escape(event_json.flickrsearchstr),
+        "event_date_year": event.date.year,
+    }
+    # NOTE: unorthodox — the entire results table is built as one HTML
+    # string in Python and dropped into the page with |safe, instead of
+    # being rendered by the template. Rationale: the DTL row loop was the
+    # dominant cost of cold event-page renders (~500-700ms of template
+    # lookups for 1800+ rows); building rows in Python with
+    # conditional_escape cut that to ~130ms. ALL result data passes
+    # through conditional_escape/_e in _build_row_html and
+    # _build_table_html, so the |safe substitution is safe as long as
+    # every value added there is escaped. The 5 golden event pages
+    # (see rrw docs) guard this output byte-for-byte. If you add a cell,
+    # add it in _build_row_html AND the golden files, not the template.
+    row_flags["phototags"] = bool(phototags)
+    with tracer.start_as_current_span("event: render table (python)"):
+        rows_html = "".join(_build_row_html(r, row_flags) for r in context["results"])
+        context["results_table"] = _build_table_html(rows_html, row_flags, split_headings)
     with tracer.start_as_current_span("event: template render"):
         html = render(request, "racedbapp/event.html", context).content.decode("utf-8")
     return HttpResponse(html)
+
+
+def _e(v):
+    """HTML-escape a value; empty string for False/None."""
+    return conditional_escape(v) if v else ""
+
+
+def _build_row_html(r, flags):
+    """Prebuilt-HTML variant of the event results row.
+
+    All interpolated values are escaped via conditional_escape; flags are
+    render-invariant and precomputed. Mirrors event.html's row markup.
+    """
+    show_category = flags["show_category"]
+    show_age = flags["show_age"]
+    show_chip = flags["show_chip"]
+    hasdivision = flags["hasdivision"]
+    hill_dict = flags["hill_dict"]
+    show_photos = flags["show_photos"]
+    show_youtube = flags["show_youtube"]
+    name = _e(r.name)
+    if r.member:
+        name = f'<a href="/member/{conditional_escape(r.member.slug)}/">{name}</a>'
+    if r.gender_place == 1:
+        name += f'<i class="fas fa-trophy fa-icon-1st-oa" title="1st Overall ({_e(r.gender)})"></i>'
+    elif r.gender_place == 2:
+        name += f'<i class="fas fa-medal fa-icon-2nd-oa" title="2nd Overall ({_e(r.gender)})"></i>'
+    elif r.gender_place == 3:
+        name += f'<i class="fas fa-medal fa-icon-3rd-oa" title="3rd Overall ({_e(r.gender)})"></i>'
+    if r.masters_place == 1:
+        name += f'<i class="fas fa-medal fa-icon-1st-master" title="1st Master ({_e(r.gender)})"></i>'
+    if r.isrwpb and r.member:
+        name += f'<i class="fas fa-stopwatch fa-icon-pb" title="RW PB for the {flags["event_distance_name"]}"></i>'
+    if r.isrwfirst:
+        name += '<i class="fa-solid fa-hand-wave fa-icon-firstrace" title="Welcome new RW member!"></i>'
+    if r.relay_team:
+        name += f'<i class="fas fa-users" title="{_e(r.relay_team)}"></i>'
+    cells = []
+    cells.append(f'<td class="text-center">{_e(r.place_display)}</td>')
+    cells.append(f'<td class="text-center">{_e(r.bib)}</td>')
+    cells.append(f'<td class="text-left">{name}</td>')
+    if show_photos:
+        if r.hasphotos:
+            cells.append(
+                f'<td class="text-center"><a href="https://www.flickr.com/photos/runwaterloo/tags/{flags["flickrsearchstr"]},{_e(r.bib)}" target="_blank"><i class="fas fa-camera"></i></a></td>'
+            )
+        else:
+            cells.append("<td></td>")
+    if show_youtube:
+        if r.youtube_url:
+            cells.append(f'<td class="text-center"><a href="{conditional_escape(r.youtube_url)}" target="_blank"><i class="fas fa-video"></i></a></td>')
+        else:
+            cells.append("<td></td>")
+    cells.append(f'<td class="text-center">{_e(r.time_display)}</td>')
+    if hill_dict:
+        cells.append(f'<td class="text-center">{_e(r.prime)}</td>')
+    cells.append(f'<td class="text-center">{_e(r.gender)}</td>')
+    cells.append(f'<td class="text-center">{_e(r.gender_place)}</td>')
+    if show_category:
+        cells.append(f'<td class="text-center">{_e(r.category)}</td>')
+        cells.append(f'<td class="text-center">{_e(r.category_place)}</td>')
+    if show_age:
+        cells.append(f'<td class="text-center">{_e(r.age)}</td>')
+    if hasdivision:
+        if r.division != "Guest":
+            d = conditional_escape(r.division)
+            cells.append(f'<td class="text-left"><a href="/endurrun/{d.lower()}/?year={flags["event_date_year"]}">{d}</a></td>')
+        else:
+            cells.append(f'<td class="text-left">{_e(r.division)}</td>')
+    cells.append(f'<td class="text-center">{_e(r.pace)}</td>')
+    if show_chip:
+        cells.append(f'<td class="text-center">{_e(r.chip_display)}</td>')
+    cells.append(f'<td class="text-left">{_e(r.city)}</td>')
+    for cell in r.split_cells:
+        cells.append(f'<td class="text-center">{cell}</td>')
+    return "<tr>" + "".join(cells) + "</tr>"
+
+
+def _build_table_html(rows, flags, split_headings):
+    """Assemble the entire results table (thead + tbody) as one HTML string.
+
+    Mirrors the results-table markup in event.html. Row cells are assumed
+    pre-escaped by _build_row_html; split_headings are escaped here.
+    """
+    f = flags
+    head = [
+        '<table class="table table-bordered table-condensed table-striped table-hover">',
+        '<thead><tr class="info">',
+        '<th class="text-center" scope="col">#</th>',
+        '<th class="text-center" scope="col">Bib</th>',
+        '<th class="text-left" scope="col">Name</th>',
+    ]
+    if f["phototags"]:
+        head.append('<th class="text-center" scope="col"><i class="fas fa-camera"></i></th>')
+    if f["show_youtube"]:
+        head.append('<th class="text-center" scope="col"><i class="fas fa-video"></i></th>')
+    head.append('<th class="text-center" scope="col">Time</th>')
+    if f["hill_dict"]:
+        head.append('<th class="text-center" scope="col">Hill Sprint</th>')
+    head.append('<th class="text-center" scope="col">G</th>')
+    head.append('<th class="text-center" scope="col">GP</th>')
+    if f["show_category"]:
+        head.append('<th class="text-center" scope="col">Cat</th>')
+        head.append('<th class="text-center" scope="col">CP</th>')
+    if f["show_age"]:
+        head.append('<th class="text-center" scope="col">Age</th>')
+    if f["hasdivision"]:
+        head.append('<th class="text-left" scope="col">Division</th>')
+    head.append('<th class="text-center" scope="col">Pace</th>')
+    if f["show_chip"]:
+        head.append('<th class="text-center" scope="col">Chip Time</th>')
+    head.append('<th class="text-left" scope="col">City</th>')
+    for sh in split_headings:
+        head.append(f'<th class="text-center">{conditional_escape(sh)}</th>')
+    head.append("</tr></thead><tbody>")
+    return "".join(head) + rows + "</tbody></table>"
 
 
 def get_event_json(event):
