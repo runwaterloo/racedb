@@ -251,8 +251,19 @@ def _render_event(request, event, sequel, qstring):
         "flickrsearchstr": conditional_escape(event_json.flickrsearchstr),
         "event_date_year": event.date.year,
     }
+    # NOTE: unorthodox — the entire results table is built as one HTML
+    # string in Python and dropped into the page with |safe, instead of
+    # being rendered by the template. Rationale: the DTL row loop was the
+    # dominant cost of cold event-page renders (~500-700ms of template
+    # lookups for 1800+ rows); building rows in Python with
+    # conditional_escape cut that to ~130ms. ALL result data passes
+    # through conditional_escape/_e in _build_row_html and
+    # _build_table_html, so the |safe substitution is safe as long as
+    # every value added there is escaped. The 5 golden event pages
+    # (see rrw docs) guard this output byte-for-byte. If you add a cell,
+    # add it in _build_row_html AND the golden files, not the template.
     row_flags["phototags"] = bool(phototags)
-    with tracer.start_as_current_span("event: render rows (python)"):
+    with tracer.start_as_current_span("event: render table (python)"):
         rows_html = "".join(_build_row_html(r, row_flags) for r in context["results"])
         context["results_table"] = _build_table_html(rows_html, row_flags, split_headings)
     with tracer.start_as_current_span("event: template render"):
