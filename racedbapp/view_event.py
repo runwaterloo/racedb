@@ -37,6 +37,7 @@ from .models import (
 )
 from .shared import cache_lock, shared, utils
 from .shared.tracing import tracer
+from .templatetags.racedbapp_extras import get_pace, get_place, round_up, show_str_decimal
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +177,7 @@ def _render_event(request, event, sequel, qstring):
             phototags,
             relay_dict,
             event_splits,
+            splits_have_microseconds,
         )
         split_headings = get_split_headings(event, max_splits)
     hasdivision = False
@@ -207,7 +209,14 @@ def _render_event(request, event, sequel, qstring):
         show_category = len(filters["category_filter"].choices) > 5
         show_age = hasage and not show_category
         show_chip = bool(results and results[0].chiptime)
+        # loop-invariant flags: the row loop used to re-resolve these
+        # expressions (event attributes, truthiness of lists) for every row
+        show_youtube = bool(event_json.youtube_id) and event_json.youtube_offset_seconds is not None
         context = {
+            "show_youtube": show_youtube,
+            "show_photos": bool(phototags),
+            "flickrsearchstr": event_json.flickrsearchstr,
+            "event_distance_name": event_json.distance.name,
             "show_category": show_category,
             "show_age": show_age,
             "show_chip": show_chip,
@@ -279,62 +288,48 @@ def get_event_json(event):
     return event_json
 
 
-def get_masters(event, division):
-    masters = []
-    all_masters = Result.objects.filter(event=event).filter(
-        Q(category__ismasters=True) | Q(age__gte=40)
-    )
-    if division != "All":
-        all_masters = all_masters.filter(division=division)
-    masters_count = all_masters.count()
-    if masters_count > 0:
-        masters.append({"category__name": "Masters", "count": masters_count})
-        female_masters_count = all_masters.filter(gender="F").count()
-        if female_masters_count > 0:
-            masters.append({"category__name": "F-Masters", "count": female_masters_count})
-        male_masters_count = all_masters.filter(gender="M").count()
-        if male_masters_count > 0:
-            masters.append({"category__name": "M-Masters", "count": male_masters_count})
-        nonbinary_masters_count = all_masters.filter(gender="NB").count()
-        if nonbinary_masters_count > 0:
-            masters.append({"category__name": "NB-Masters", "count": nonbinary_masters_count})
-    return masters
-
-
-def get_genders(event, division):
+def get_category_counts(event, division):
+    """Counts for the category filter, in two grouped queries instead of 7:
+    one GROUP BY gender pass for genders + masters (+ totals), one for
+    categories. Returns (genders, masters, categories, total_count)."""
     all_results = Result.objects.filter(event=event)
     if division != "All":
         all_results = all_results.filter(division=division)
-    abbr_genders = (
-        all_results.exclude(gender="")
-        .values("gender")
-        .order_by("gender")
-        .annotate(count=Count("gender"))
+    masters_q = Q(category__ismasters=True) | Q(age__gte=40)
+    gender_counts = (
+        all_results.values("gender")
+        .annotate(
+            count=Count("id"),
+            masters_count=Count("id", filter=masters_q),
+        )
         .order_by("gender")
     )
     genders = []
-    for i in abbr_genders:
-        if i["gender"] == "F":
-            genders.append({"category__name": "Female", "count": i["count"]})
-        elif i["gender"] == "M":
-            genders.append({"category__name": "Male", "count": i["count"]})
-        elif i["gender"] == "NB":
-            genders.append({"category__name": "Nonbinary", "count": i["count"]})
-    return genders
-
-
-def get_categories(event, division):
-    all_results = Result.objects.filter(event=event)
-    if division != "All":
-        all_results = all_results.filter(division=division)
+    masters = []
+    total_count = 0
+    masters_total = 0
+    for g in gender_counts:
+        total_count += g["count"]
+        masters_total += g["masters_count"]
+        if g["gender"] == "F":
+            genders.append({"category__name": "Female", "count": g["count"]})
+        elif g["gender"] == "M":
+            genders.append({"category__name": "Male", "count": g["count"]})
+        elif g["gender"] == "NB":
+            genders.append({"category__name": "Nonbinary", "count": g["count"]})
+        if g["masters_count"] > 0 and g["gender"] in ("F", "M", "NB"):
+            masters.append(
+                {"category__name": f"{g['gender']}-Masters", "count": g["masters_count"]}
+            )
+    if masters_total > 0:
+        masters.insert(0, {"category__name": "Masters", "count": masters_total})
     categories = (
         all_results.exclude(category__name="")
         .values("category__name")
-        .order_by("category")
         .annotate(count=Count("category__name"))
         .order_by("category__name")
     )
-    return categories
+    return genders, masters, categories, total_count
 
 
 def get_divisions(event, category):
@@ -405,16 +400,17 @@ def get_division(qstring):
 
 
 def get_distance_filter(event, races):
+    # Only what's needed to build choices: skip full Event/distance model
+    # instantiation (select_related pulled whole rows just to read 4 fields).
     events = list(
-        Event.objects.select_related()
+        Event.objects.select_related("distance", "sequel")
         .filter(race__in=races, date__year=event.date.year)
         .order_by("date", "-distance__km")
     )
-    for e in events:
-        shared.set_distance_display_name(e.distance, getattr(e, "sequel", None))
     choices = []
     for e in events:
-        if e.distance.display_name == event.distance.display_name:
+        display_name = e.sequel.name if e.sequel else e.distance.name
+        if display_name == event.distance.display_name:
             continue
         url = "/event/{}/{}/{}/".format(
             event.date.year,
@@ -423,7 +419,7 @@ def get_distance_filter(event, races):
         )
         if e.sequel:
             url += f"{e.sequel.slug}/"
-        choices.append(Choice(e.distance.display_name, url))
+        choices.append(Choice(display_name, url))
     if event.race.slug == "baden-road-races":
         durelaycount = Durelay.objects.filter(year=event.date.year).count()
         if durelaycount > 0:
@@ -433,12 +429,20 @@ def get_distance_filter(event, races):
 
 
 def get_year_filter(event, races):
-    rawresults = Result.objects.filter(
-        event__race__in=races, event__distance=event.distance
-    )
+    # Query Event (few dozen rows) instead of Result (thousands), keeping the
+    # original semantics: only years where this race+distance actually had
+    # results, mapped to that year's race slug.
+    # Exists() probe instead of result__isnull=False: no event x results
+    # JOIN + DISTINCT (that scan costs ~20ms); the correlated EXISTS stops at
+    # one indexed row check per event.
     dates = (
-        rawresults.order_by("-event__date")
-        .values_list("event__date", "event__race__slug")
+        Event.objects.filter(
+            race__in=races,
+            distance=event.distance,
+        )
+        .filter(Exists(Result.objects.filter(event=OuterRef("pk"))))
+        .order_by("-date")
+        .values_list("date", "race__slug")
         .distinct()
     )
     choices = []
@@ -452,13 +456,7 @@ def get_year_filter(event, races):
 
 
 def get_category_filter(event, category, division):
-    all_results = Result.objects.filter(event=event)
-    if division != "All":
-        all_results = all_results.filter(division=division)
-    total_count = all_results.count()
-    genders = get_genders(event, division)
-    masters = get_masters(event, division)
-    categories = get_categories(event, division)
+    genders, masters, categories, total_count = get_category_counts(event, division)
     all_categories = genders + masters + list(categories)
     choices = []
     base_url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
@@ -583,6 +581,7 @@ def get_results(
     phototags,
     relay_dict,
     event_splits,
+    splits_have_microseconds,
 ):
     named_result = namedtuple(
         "nr",
@@ -609,6 +608,13 @@ def get_results(
             "masters_place",
             "isrwpb",
             "isrwfirst",
+            # display-ready values precomputed here so the template does no
+            # filter calls per cell
+            "place_display",
+            "time_display",
+            "chip_display",
+            "pace",
+            "split_cells",
         ],
     )
     results = []
@@ -621,8 +627,12 @@ def get_results(
         for split in event_splits:
             splits_by_place.setdefault(split.place, {})[split.split_num] = split.split_time
         max_splits = False
+        empty_splits = []
         if event_splits:
             max_splits = int(max(x.split_num for x in event_splits))
+            empty_splits = [named_split(i, "") for i in range(1, max_splits + 1)]
+            empty_split_cells = [""] * max_splits
+    km = event.distance.km
     guntimes_have_microseconds = set()
     membership = shared.get_membership(event=event)
     with tracer.start_as_current_span("event: build rows"):
@@ -685,17 +695,37 @@ def get_results(
                 else:
                     result_division = r.division
                 splits = []
+                split_cells = []
                 if event_splits:
                     row_splits = splits_by_place.get(r.place)
-                    for i in range(1, max_splits + 1):
-                        split_time = row_splits.get(i) if row_splits else None
-                        splits.append(
+                    if row_splits is None:
+                        # shared immutable lists: identical for every row
+                        # without split data (template only reads)
+                        splits = empty_splits
+                        split_cells = empty_split_cells
+                    else:
+                        splits = [
                             named_split(
                                 i,
                                 get_short_time(split_time) if split_time is not None else "",
                             )
-                        )
+                            for i, split_time in (
+                                (i, row_splits.get(i)) for i in range(1, max_splits + 1)
+                            )
+                        ]
+                        if splits_have_microseconds:
+                            split_cells = [
+                                show_str_decimal(st.split_time)
+                                if st.split_time != ""
+                                else ""
+                                for st in splits
+                            ]
+                        else:
+                            split_cells = [st.split_time for st in splits]
                 member = shared.get_member(r, membership)
+                pace = ""
+                if guntime:
+                    pace = get_pace(guntime, km)
                 hasphotos = False
                 youtube_url = False
                 if has_youtube and r.place < 990000:
@@ -718,34 +748,61 @@ def get_results(
                 isrwpb = getattr(r, "isrwpb", False)
                 results.append(
                     named_result(
-                        r.place,
-                        r.bib,
-                        r.athlete,
-                        relay_team,
-                        r.gender,
-                        gender_place,
-                        r.category.name,
-                        category_place,
-                        age,
-                        result_division,
-                        guntime,
-                        prime,
-                        chiptime,
-                        r.city,
-                        ismasters,
-                        splits,
-                        member,
-                        hasphotos,
-                        youtube_url,
-                        masters_place,
-                        isrwpb,
-                        r.isrwfirst,
+                        place=r.place,
+                        bib=r.bib,
+                        name=r.athlete,
+                        relay_team=relay_team,
+                        gender=r.gender,
+                        gender_place=gender_place,
+                        category=r.category.name,
+                        category_place=category_place,
+                        age=age,
+                        division=result_division,
+                        guntime=guntime,
+                        prime=prime,
+                        chiptime=chiptime,
+                        city=r.city,
+                        ismasters=ismasters,
+                        splits=splits,
+                        member=member,
+                        hasphotos=hasphotos,
+                        youtube_url=youtube_url,
+                        masters_place=masters_place,
+                        isrwpb=isrwpb,
+                        isrwfirst=r.isrwfirst,
+                        place_display="",
+                        time_display="",
+                        chip_display="",
+                        pace=pace,
+                        split_cells=split_cells,
                     )
                 )
     with tracer.start_as_current_span("event: filter results"):
         results = filter_results(results, category, division)
         if page == "Hill Sprint":
             results = get_hill_results(results, named_result)
+    with tracer.start_as_current_span("event: display fields"):
+        # display strings that depend on the complete guntimes set; the
+        # template gets ready-to-print values with no filter calls
+        has_micro = len(guntimes_have_microseconds) > 0
+        out = []
+        for r in results:
+            if r.guntime:
+                time_display = round_up(r.guntime) if has_micro else r.guntime
+            else:
+                time_display = r.guntime
+            if r.chiptime:
+                chip_display = round_up(r.chiptime) if has_micro else r.chiptime
+            else:
+                chip_display = r.chiptime
+            out.append(
+                r._replace(
+                    place_display=get_place(r.place),
+                    time_display=time_display,
+                    chip_display=chip_display,
+                )
+            )
+        results = out
     return results, max_splits, guntimes_have_microseconds
 
 
@@ -833,38 +890,13 @@ def filter_results(results, category, division):
 
 
 def get_hill_results(results, named_result):
-    hill_results = []
     results = [x for x in results if x.prime != ""]
+    hill_results = []
     for i, r in enumerate(results, 1):
         prime = r.prime
         if len(prime) == 4:
             prime = "0{}".format(prime)
-        hill_results.append(
-            named_result(
-                i,
-                r.bib,
-                r.name,
-                r.relay_team,
-                r.gender,
-                r.gender_place,
-                r.category,
-                r.category_place,
-                r.age,
-                r.division,
-                r.guntime,
-                prime,
-                r.chiptime,
-                r.city,
-                r.ismasters,
-                r.splits,
-                r.member,
-                r.hasphotos,
-                r.youtube_url,
-                r.masters_place,
-                r.isrwpb,
-                r.isrwfirst,
-            )
-        )
+        hill_results.append(r._replace(place=i, prime=prime))
     hill_results = sorted(hill_results, key=attrgetter("prime", "place"))
     return hill_results
 

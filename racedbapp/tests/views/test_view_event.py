@@ -367,25 +367,22 @@ def test_get_category_filter_parametrized(
         "racedbapp.view_event.Result.objects.filter", lambda *args, **kwargs: mock_results
     )
 
-    # Patch helper functions to return predictable categories
+    # Patch combined counts helper to return predictable categories
     monkeypatch.setattr(
-        "racedbapp.view_event.get_genders",
-        lambda event, division: [
-            {"category__name": "Female", "count": 1},
-        ],
-    )
-    monkeypatch.setattr(
-        "racedbapp.view_event.get_masters",
-        lambda event, division: [
-            {"category__name": "Masters", "count": 1},
-        ],
-    )
-    monkeypatch.setattr(
-        "racedbapp.view_event.get_categories",
-        lambda event, division: [
-            {"category__name": "Cat1", "count": 1},
-            {"category__name": "Cat2", "count": 1},
-        ],
+        "racedbapp.view_event.get_category_counts",
+        lambda event, division: (
+            [
+                {"category__name": "Female", "count": 1},
+            ],
+            [
+                {"category__name": "Masters", "count": 1},
+            ],
+            [
+                {"category__name": "Cat1", "count": 1},
+                {"category__name": "Cat2", "count": 1},
+            ],
+            2,
+        ),
     )
 
     f = get_category_filter(mock_event, category=category, division=division)

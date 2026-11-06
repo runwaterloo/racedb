@@ -192,7 +192,7 @@
                 <i class="fas fa-camera"></i>
               </th>
             {% endif %}
-            {% if event.youtube_id and event.youtube_offset_seconds is not None %}
+            {% if show_youtube %}
               <th class="text-center" scope="col">
                 <i class="fas fa-video"></i>
               </th>
@@ -218,7 +218,7 @@
         <tbody>
           {% for r in results %}
             <tr>
-              <td class="text-center">{{ r.place|get_place }}</td>
+              <td class="text-center">{{ r.place_display }}</td>
               <td class="text-center">{{ r.bib }}</td>
               <td class="text-left">
                 {% if r.member %}
@@ -242,7 +242,7 @@
                 {% endif %}
                 {% if r.isrwpb and r.member %}
                   <i class="fas fa-stopwatch fa-icon-pb"
-                     title="RW PB for the {{ event.distance.name }}"></i>
+                     title="RW PB for the {{ event_distance_name }}"></i>
                 {% endif %}
                 {% if r.isrwfirst %}
                   <i class="fa-solid fa-hand-wave fa-icon-firstrace"
@@ -250,10 +250,10 @@
                 {% endif %}
                 {% if r.relay_team %}<i class="fas fa-users" title="{{ r.relay_team }}"></i>{% endif %}
               </td>
-              {% if phototags %}
+              {% if show_photos %}
                 {% if r.hasphotos %}
                   <td class="text-center">
-                    <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ event.flickrsearchstr }},{{ r.bib }}"
+                    <a href="https://www.flickr.com/photos/runwaterloo/tags/{{ flickrsearchstr }},{{ r.bib }}"
                        target="_blank">
                       <i class="fas fa-camera"></i>
                     </a>
@@ -262,7 +262,7 @@
                   <td></td>
                 {% endif %}
               {% endif %}
-              {% if event.youtube_id and event.youtube_offset_seconds is not None %}
+              {% if show_youtube %}
                 {% if r.youtube_url %}
                   <td class="text-center">
                     <a href="{{ r.youtube_url }}" target="_blank">
@@ -273,11 +273,7 @@
                   <td></td>
                 {% endif %}
               {% endif %}
-              {% if guntimes_have_microseconds %}
-                <td class="text-center">{{ r.guntime|round_up }}</td>
-              {% else %}
-                <td class="text-center">{{ r.guntime }}</td>
-              {% endif %}
+              <td class="text-center">{{ r.time_display }}</td>
               {% if hill_dict %}<td class="text-center">{{ r.prime }}</td>{% endif %}
               <td class="text-center">{{ r.gender }}</td>
               <td class="text-center">{{ r.gender_place }}</td>
@@ -297,25 +293,13 @@
                   <td class="text-left">{{ r.division }}</td>
                 {% endif %}
               {% endif %}
-              <td class="text-center">{{ r.guntime|get_pace:event.distance.km }}</td>
+              <td class="text-center">{{ r.pace }}</td>
               {% if show_chip %}
-                {% if guntimes_have_microseconds %}
-                  <td class="text-center">{{ r.chiptime|round_up }}</td>
-                {% else %}
-                  <td class="text-center">{{ r.chiptime }}</td>
-                {% endif %}
+                <td class="text-center">{{ r.chip_display }}</td>
               {% endif %}
               <td class="text-left">{{ r.city }}</td>
-              {% for s in r.splits %}
-                {% if s.split_time != "None" %}
-                  {% if splits_have_microseconds %}
-                    <td class="text-center">{{ s.split_time|show_str_decimal }}</td>
-                  {% else %}
-                    <td class="text-center">{{ s.split_time }}</td>
-                  {% endif %}
-                {% else %}
-                  <td></td>
-                {% endif %}
+              {% for cell in r.split_cells %}
+                <td class="text-center">{{ cell }}</td>
               {% endfor %}
             </tr>
           {% endfor %}
