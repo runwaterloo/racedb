@@ -391,16 +391,17 @@ def get_division(qstring):
 
 
 def get_distance_filter(event, races):
+    # Only what's needed to build choices: skip full Event/distance model
+    # instantiation (select_related pulled whole rows just to read 4 fields).
     events = list(
-        Event.objects.select_related()
+        Event.objects.select_related("distance", "sequel")
         .filter(race__in=races, date__year=event.date.year)
         .order_by("date", "-distance__km")
     )
-    for e in events:
-        shared.set_distance_display_name(e.distance, getattr(e, "sequel", None))
     choices = []
     for e in events:
-        if e.distance.display_name == event.distance.display_name:
+        display_name = e.sequel.name if e.sequel else e.distance.name
+        if display_name == event.distance.display_name:
             continue
         url = "/event/{}/{}/{}/".format(
             event.date.year,
@@ -409,7 +410,7 @@ def get_distance_filter(event, races):
         )
         if e.sequel:
             url += f"{e.sequel.slug}/"
-        choices.append(Choice(e.distance.display_name, url))
+        choices.append(Choice(display_name, url))
     if event.race.slug == "baden-road-races":
         durelaycount = Durelay.objects.filter(year=event.date.year).count()
         if durelaycount > 0:
