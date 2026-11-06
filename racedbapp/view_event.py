@@ -171,9 +171,21 @@ def _render_event(request, event, sequel, qstring):
         import time as _probe_time
         with tracer.start_as_current_span("event: PROBE attribute access"):
             for _r in all_results:
-                _ = (_r.place, _r.bib, _r.athlete, _r.age, _r.city, _r.gender, _r.category,
-                     _r.division, _r.guntime, _r.chiptime, _r.isrwpb,
-                     _r.isrwfirst, _r.event.id, _r.category.name, _r.rwmember_id)
+                _ = (_r.place, _r.bib, _r.athlete, _r.city, _r.gender,
+                     _r.guntime, _r.chiptime,
+                     _r.isrwfirst, _r.event.id)
+                try:
+                    _ = _r.category.name
+                except AttributeError:
+                    pass
+                try:
+                    _ = _r.division
+                except AttributeError:
+                    pass
+                try:
+                    _ = _r.rwmember_id
+                except AttributeError:
+                    pass
         with tracer.start_as_current_span("event: PROBE queryset iteration"):
             for _r in all_results:
                 pass
