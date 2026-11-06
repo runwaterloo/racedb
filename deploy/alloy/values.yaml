@@ -161,8 +161,10 @@ alloy:
 
         // job = racedb for all pods from the racedb chart, including the traefik
         // cert-backup cron (distinguished by component=traefik-cron).
-        // service_name is not set: Loki derives it from job. env distinguishes
-        // prod (racedb) from dev (racedbdev).
+        // env distinguishes prod (racedb) from dev (racedbdev).
+        // service_name = job, set explicitly: Loki's fallback order prefers
+        // component over job, which would give per-component service names
+        // and merge prod/dev in the service views.
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
           action = "replace"
@@ -237,6 +239,17 @@ alloy:
           regex = "default;alloy"
           replacement = "alloy"
           target_label = "component"
+        }
+
+        // service_name = job on every stream, set AFTER all job rules. Explicit
+        // because Loki's service_name fallback prefers component over job, which
+        // would give per-component service names (web, celery, ...) and merge
+        // prod/dev in the Grafana service views. Same value as job: no extra
+        // cardinality.
+        rule {
+          source_labels = ["job"]
+          action = "replace"
+          target_label = "service_name"
         }
 
         // Label creation - "container" field from "__meta_kubernetes_pod_uid" and "__meta_kubernetes_pod_container_name"
@@ -359,8 +372,9 @@ alloy:
         path        = "/host/journal"
         format_as_json = true
         labels = {
-          job      = "systemd-journal",
-          env      = "prod",
+          job          = "systemd-journal",
+          service_name = "systemd-journal",
+          env          = "prod",
         }
         forward_to = [loki.write.grafanacloud.receiver]
       }
