@@ -420,19 +420,23 @@ def get_distance_filter(event, races):
 
 
 def get_year_filter(event, races):
-    rawresults = Result.objects.filter(
-        event__race__in=races, event__distance=event.distance
-    )
+    # Query Event (few dozen rows) instead of Result (thousands), keeping the
+    # original semantics: only years where this race+distance actually had
+    # results, mapped to that year's race slug.
     dates = (
-        rawresults.order_by("-event__date")
-        .values_list("event__date", "event__race__slug")
+        Event.objects.filter(
+            race__in=races,
+            distance=event.distance,
+            date__lt=f"{event.date.year}-01-01",
+            result__isnull=False,
+        )
+        .order_by("-date")
+        .values_list("date", "race__slug")
         .distinct()
     )
     choices = []
     for d in dates:
         year = d[0].year
-        if year == event.date.year:
-            continue
         choices.append(Choice(year, "/event/{}/{}/{}/".format(year, d[1], event.distance.slug)))
     year_filter = Filter(event.date.year, choices)
     return year_filter
