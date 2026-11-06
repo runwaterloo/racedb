@@ -12,7 +12,7 @@ from racedbapp.models import Config, Result, Series, Split, Wheelchairresult
 from racedbapp.shared.types import Filter
 from racedbapp.tests.views.test_view_medals import make_sequel_medal_event
 from racedbapp.view_event import (
-    annotate_isrwfirst,
+    _mark_isrwfirst,
     filter_results_by_category,
     get_category_filter,
     get_division_count,
@@ -240,7 +240,7 @@ def test_event_endpoint_hilldict(create_event, create_distance, create_race, cre
 @pytest.mark.django_db
 def test_event_isrwfirst(create_category, create_event, create_result, create_rwmember):
     """
-    Test that annotate_isrwfirst correctly annotates:
+    Test that _mark_isrwfirst correctly flags:
     - True for a member's first event (as a member)
     - False for subsequent events
     - False for results with no rwmember
@@ -256,26 +256,24 @@ def test_event_isrwfirst(create_category, create_event, create_result, create_rw
     create_result(event=event3, category=category, place=1, rwmember=rwmember)
 
     ## check event1 ##
-    results = Result.objects.filter(event=event1)
-    annotated_results = annotate_isrwfirst(results)
-    # check that first result has isrwfirst attribue
-    assert hasattr(annotated_results[0], "isrwfirst")
+    results = list(Result.objects.filter(event=event1).values("place", "rwmember_id", "rwmember__joindate"))
+    _mark_isrwfirst(results, event1.date)
     # check that first result (member) has isrwfirst set to False (it's before joindate)
-    assert annotated_results[0].isrwfirst is False
+    assert results[0]["isrwfirst"] is False
     # check that second result (non-member) has isrwfirst set to False
-    assert annotated_results[1].isrwfirst is False
+    assert results[1]["isrwfirst"] is False
 
     ## check event2 ##
-    results = Result.objects.filter(event=event2)
-    annotated_results = annotate_isrwfirst(results)
+    results = list(Result.objects.filter(event=event2).values("place", "rwmember_id", "rwmember__joindate"))
+    _mark_isrwfirst(results, event2.date)
     # check that first result (member) has isrwfirst set to True (it's after joindate)
-    assert annotated_results[0].isrwfirst is True
+    assert results[0]["isrwfirst"] is True
 
     ## check event3 ##
-    results = Result.objects.filter(event=event3)
-    annotated_results = annotate_isrwfirst(results)
+    results = list(Result.objects.filter(event=event3).values("place", "rwmember_id", "rwmember__joindate"))
+    _mark_isrwfirst(results, event3.date)
     # check that first result (member) has isrwfirst set to False (the 1st was event2)
-    assert annotated_results[0].isrwfirst is False
+    assert results[0]["isrwfirst"] is False
 
 
 @pytest.mark.django_db

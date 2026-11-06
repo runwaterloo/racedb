@@ -5,14 +5,13 @@ from urllib import parse
 
 from django.db.models import (
     BooleanField,
-    Case,
     Count,
     Exists,
     F,
+    Min,
     OuterRef,
     Q,
     Value,
-    When,
 )
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
@@ -43,6 +42,10 @@ from .templatetags.racedbapp_extras import get_pace, get_place, round_up, show_s
 logger = logging.getLogger(__name__)
 
 named_split = namedtuple("ns", ["split_num", "split_time"])
+# Lightweight stand-in passed to shared.get_member(): the row loop reads
+# results as plain dicts (model instantiation is too expensive at scale),
+# but get_member() expects .athlete / .event.id attribute access.
+_MemberKey = namedtuple("_MemberKey", ["athlete", "event", "place"])
 
 
 def get_series(event=None, events=None, year=None, race=None):
@@ -154,14 +157,62 @@ def _render_event(request, event, sequel, qstring):
                 isrwfirst=Value(False, output_field=BooleanField())
             )
             hasage = False
+            with tracer.start_as_current_span("event: results queryset"):
+                all_results = list(
+                    all_results.values(
+                        "place",
+                        "bib",
+                        "athlete",
+                        "gender",
+                        "city",
+                        "guntime",
+                        "chiptime",
+                        "category__name",
+                        "category__ismasters",
+                        "event_id",
+                        "isrwfirst",
+                    )
+                )
+                for r in all_results:
+                    r["age"] = None
+                    r["division"] = ""
+                    r["isrwpb"] = False
         else:
-            all_results = Result.objects.select_related("event__race", "event__distance", "event__sequel", "event__timer", "category", "rwmember").filter(event=event)
-            # hasage must run before annotate_isrwfirst: otherwise the EXISTS
+            all_results = Result.objects.filter(event=event)
+            # hasage must run before any annotation: otherwise the EXISTS
             # subquery annotation bloats what should be a cheap probe query
             # (issue #436).
             with tracer.start_as_current_span("event: results queryset"):
                 hasage = all_results.hasage(event)
-                all_results = annotate_isrwfirst(all_results)
+                # Materialize plain dicts instead of model instances: the row
+                # loop only reads these fields, and skipping per-object model
+                # instantiation + descriptor access was worth ~250ms per
+                # 1800-row cold render (2026-11-06 profiling, see worklog).
+                all_results = list(
+                    all_results.values(
+                        "place",
+                        "bib",
+                        "athlete",
+                        "gender",
+                        "age",
+                        "city",
+                        "guntime",
+                        "chiptime",
+                        "division",
+                        "isrwpb",
+                        "rwmember_id",
+                        "rwmember__joindate",
+                        "category__name",
+                        "category__ismasters",
+                        "event_id",
+                    )
+                )
+                # isrwfirst in Python instead of a per-row correlated EXISTS
+                # subquery in SQL (saves ~12ms SELECT + plan cost per cold
+                # render): first = member's earliest event dated on/after
+                # their join date, and this event is it. Same-date events
+                # both count as first, matching the old `date <` semantics.
+                _mark_isrwfirst(all_results, event.date)
         # Materialize splits once: truthiness, max, microseconds set, and the
         # per-place map all derive from this single list (one DB round-trip).
         with tracer.start_as_current_span("event: splits"):
@@ -250,6 +301,10 @@ def _render_event(request, event, sequel, qstring):
         "flickrsearchstr": conditional_escape(event_json.flickrsearchstr),
         "event_date_year": event.date.year,
     }
+    # Per-bib/per-URL caches: photo and youtube cells are identical across
+    # thousands of rows except for the bib/URL, so each is built once.
+    row_flags["photo_cells"] = {}
+    row_flags["youtube_cells"] = {}
     # NOTE: unorthodox — the entire results table is built as one HTML
     # string in Python and dropped into the page with |safe, instead of
     # being rendered by the template. Rationale: the DTL row loop was the
@@ -273,6 +328,37 @@ def _render_event(request, event, sequel, qstring):
 def _e(v):
     """HTML-escape a value; empty string for False/None."""
     return conditional_escape(v) if v else ""
+
+
+def _mark_isrwfirst(results, event_date):
+    """Set isrwfirst on result dicts in place: True if this is the member's
+    first event (by date) as a member (event date >= rwmember.joindate).
+
+    Computed in Python with one grouped MIN query instead of a per-row
+    correlated EXISTS subquery in SQL (2026-11-06: ~12ms SELECT per cold
+    render on an 1800-row event). Same-date events both count as first,
+    matching the original `date <` EXISTS semantics.
+    """
+    member_ids = {r["rwmember_id"] for r in results if r["rwmember_id"]}
+    if member_ids:
+        first_dates = dict(
+            Result.objects.filter(
+                rwmember_id__in=member_ids,
+                event__date__gte=F("rwmember__joindate"),
+            )
+            .values("rwmember_id")
+            .annotate(first=Min("event__date"))
+            .values_list("rwmember_id", "first")
+        )
+    else:
+        first_dates = {}
+    for r in results:
+        rid = r["rwmember_id"]
+        r["isrwfirst"] = (
+            rid is not None
+            and event_date >= r["rwmember__joindate"]
+            and first_dates.get(rid) == event_date
+        )
 
 
 def _build_row_html(r, flags):
@@ -305,45 +391,72 @@ def _build_row_html(r, flags):
         name += '<i class="fa-solid fa-hand-wave fa-icon-firstrace" title="Welcome new RW member!"></i>'
     if r.relay_team:
         name += f'<i class="fas fa-users" title="{_e(r.relay_team)}"></i>'
-    cells = []
-    cells.append(f'<td class="text-center">{_e(r.place_display)}</td>')
-    cells.append(f'<td class="text-center">{_e(r.bib)}</td>')
-    cells.append(f'<td class="text-left">{name}</td>')
+    photo_cell = ""
     if show_photos:
         if r.hasphotos:
-            cells.append(
-                f'<td class="text-center"><a href="https://www.flickr.com/photos/runwaterloo/tags/{flags["flickrsearchstr"]},{_e(r.bib)}" target="_blank"><i class="fas fa-camera"></i></a></td>'
-            )
+            # bib is a race number (digits): no escaping needed, cached per bib
+            photo_cell = flags["photo_cells"].get(r.bib)
+            if photo_cell is None:
+                photo_cell = (
+                    f'<td class="text-center"><a href="https://www.flickr.com/photos/runwaterloo/tags/{flags["flickrsearchstr"]},{r.bib}" target="_blank"><i class="fas fa-camera"></i></a></td>'
+                )
+                flags["photo_cells"][r.bib] = photo_cell
         else:
-            cells.append("<td></td>")
+            photo_cell = "<td></td>"
+    youtube_cell = ""
     if show_youtube:
         if r.youtube_url:
-            cells.append(f'<td class="text-center"><a href="{conditional_escape(r.youtube_url)}" target="_blank"><i class="fas fa-video"></i></a></td>')
+            youtube_cell = flags["youtube_cells"].get(r.youtube_url)
+            if youtube_cell is None:
+                youtube_cell = f'<td class="text-center"><a href="{conditional_escape(r.youtube_url)}" target="_blank"><i class="fas fa-video"></i></a></td>'
+                flags["youtube_cells"][r.youtube_url] = youtube_cell
         else:
-            cells.append("<td></td>")
-    cells.append(f'<td class="text-center">{_e(r.time_display)}</td>')
+            youtube_cell = "<td></td>"
     if hill_dict:
-        cells.append(f'<td class="text-center">{_e(r.prime)}</td>')
-    cells.append(f'<td class="text-center">{_e(r.gender)}</td>')
-    cells.append(f'<td class="text-center">{_e(r.gender_place)}</td>')
+        prime_cell = f'<td class="text-center">{_e(r.prime)}</td>'
+    else:
+        prime_cell = ""
     if show_category:
-        cells.append(f'<td class="text-center">{_e(r.category)}</td>')
-        cells.append(f'<td class="text-center">{_e(r.category_place)}</td>')
+        category_cells = (
+            f'<td class="text-center">{_e(r.category)}</td>'
+            f'<td class="text-center">{_e(r.category_place)}</td>'
+        )
+    else:
+        category_cells = ""
     if show_age:
-        cells.append(f'<td class="text-center">{_e(r.age)}</td>')
+        age_cell = f'<td class="text-center">{_e(r.age)}</td>'
+    else:
+        age_cell = ""
     if hasdivision:
         if r.division != "Guest":
             d = conditional_escape(r.division)
-            cells.append(f'<td class="text-left"><a href="/endurrun/{d.lower()}/?year={flags["event_date_year"]}">{d}</a></td>')
+            division_cell = f'<td class="text-left"><a href="/endurrun/{d.lower()}/?year={flags["event_date_year"]}">{d}</a></td>'
         else:
-            cells.append(f'<td class="text-left">{_e(r.division)}</td>')
-    cells.append(f'<td class="text-center">{_e(r.pace)}</td>')
-    if show_chip:
-        cells.append(f'<td class="text-center">{_e(r.chip_display)}</td>')
-    cells.append(f'<td class="text-left">{_e(r.city)}</td>')
-    for cell in r.split_cells:
-        cells.append(f'<td class="text-center">{cell}</td>')
-    return "<tr>" + "".join(cells) + "</tr>"
+            division_cell = f'<td class="text-left">{_e(r.division)}</td>'
+    else:
+        division_cell = ""
+    chip_cell = f'<td class="text-center">{_e(r.chip_display)}</td>' if show_chip else ""
+    # place/bib/time/pace/splits are generated by this view (digits and
+    # formatted times, no user text); gender/category/city/prime/division
+    # come from the DB and stay escaped.
+    split_html = "".join(f'<td class="text-center">{c}</td>' for c in r.split_cells)
+    # One row per line: keeps the emitted HTML readable (djlint-style page
+    # source) at no measurable join cost.
+    return (
+        f'<tr><td class="text-center">{r.place_display}</td>'
+        f'<td class="text-center">{r.bib}</td>'
+        f'<td class="text-left">{name}</td>'
+        f'{photo_cell}{youtube_cell}'
+        f'<td class="text-center">{r.time_display}</td>'
+        f'{prime_cell}'
+        f'<td class="text-center">{_e(r.gender)}</td>'
+        f'<td class="text-center">{r.gender_place}</td>'
+        f'{category_cells}{age_cell}{division_cell}'
+        f'<td class="text-center">{r.pace}</td>'
+        f'{chip_cell}'
+        f'<td class="text-left">{_e(r.city)}</td>'
+        f'{split_html}</tr>\n'
+    )
 
 
 def _build_table_html(rows, flags, split_headings):
@@ -355,7 +468,8 @@ def _build_table_html(rows, flags, split_headings):
     f = flags
     head = [
         '<table class="table table-bordered table-condensed table-striped table-hover">',
-        '<thead><tr class="info">',
+        '<thead>',
+        '<tr class="info">',
         '<th class="text-center" scope="col">#</th>',
         '<th class="text-center" scope="col">Bib</th>',
         '<th class="text-left" scope="col">Name</th>',
@@ -382,8 +496,8 @@ def _build_table_html(rows, flags, split_headings):
     head.append('<th class="text-left" scope="col">City</th>')
     for sh in split_headings:
         head.append(f'<th class="text-center">{conditional_escape(sh)}</th>')
-    head.append("</tr></thead><tbody>")
-    return "".join(head) + rows + "</tbody></table>"
+    head.append('</tr>\n</thead>\n<tbody>\n')
+    return "\n".join(head) + rows + "</tbody></table>"
 
 
 def get_event_json(event):
@@ -789,47 +903,47 @@ def get_results(
             for r in all_results:
                 relay_team = False
                 ismasters = False
-                if r.category.ismasters:
+                if r["category__ismasters"]:
                     ismasters = True
                 else:
                     if page != "Wheelchair":
-                        if r.age:
-                            if r.age >= 40:
+                        if r["age"]:
+                            if r["age"] >= 40:
                                 ismasters = True
                 masters_place = False
                 gender_place = ""
-                if r.gender != "":
-                    gender_place_dict[r.gender] += 1
-                    gender_place = gender_place_dict[r.gender]
+                if r["gender"] != "":
+                    gender_place_dict[r["gender"]] += 1
+                    gender_place = gender_place_dict[r["gender"]]
                     if ismasters:
-                        masters_place_dict[r.gender] += 1
-                        masters_place = masters_place_dict[r.gender]
+                        masters_place_dict[r["gender"]] += 1
+                        masters_place = masters_place_dict[r["gender"]]
                 category_place = ""
-                if r.category.name != "":
-                    if r.category.name in category_place_dict:
-                        category_place_dict[r.category.name] += 1
-                        category_place = category_place_dict[r.category.name]
+                if r["category__name"] != "":
+                    if r["category__name"] in category_place_dict:
+                        category_place_dict[r["category__name"]] += 1
+                        category_place = category_place_dict[r["category__name"]]
                     else:
-                        category_place_dict[r.category.name] = 1
+                        category_place_dict[r["category__name"]] = 1
                         category_place = 1
                 if relay_dict:
-                    if r.place in relay_dict:
-                        relay_team = relay_dict[r.place]
-                elif r.athlete in endurrun_relay_dict:
-                    relay_team = endurrun_relay_dict[r.athlete]
+                    if r["place"] in relay_dict:
+                        relay_team = relay_dict[r["place"]]
+                elif r["athlete"] in endurrun_relay_dict:
+                    relay_team = endurrun_relay_dict[r["athlete"]]
                 age = ""
                 if page != "Wheelchair":
-                    if r.age:
-                        age = r.age
+                    if r["age"]:
+                        age = r["age"]
                 guntime = chiptime = ""
-                if r.place < 990000:
-                    guntime = r.guntime
+                if r["place"] < 990000:
+                    guntime = r["guntime"]
                     if guntime and guntime.microseconds != 0:
                         guntimes_have_microseconds.add(guntime.microseconds)
-                    if r.chiptime:
-                        chiptime = r.chiptime
+                    if r["chiptime"]:
+                        chiptime = r["chiptime"]
                 try:
-                    prime = hill_dict[r.place]
+                    prime = hill_dict[r["place"]]
                 except Exception:
                     prime = ""
                 else:
@@ -837,11 +951,11 @@ def get_results(
                 if page == "Wheelchair":
                     result_division = ""
                 else:
-                    result_division = r.division
+                    result_division = r["division"]
                 splits = []
                 split_cells = []
                 if event_splits:
-                    row_splits = splits_by_place.get(r.place)
+                    row_splits = splits_by_place.get(r["place"])
                     if row_splits is None:
                         # shared immutable lists: identical for every row
                         # without split data (template only reads)
@@ -866,13 +980,15 @@ def get_results(
                             ]
                         else:
                             split_cells = [st.split_time for st in splits]
-                member = shared.get_member(r, membership)
+                member = shared.get_member(
+                    _MemberKey(r["athlete"], event, r["place"]), membership
+                )
                 pace = ""
                 if guntime:
                     pace = get_pace(guntime, km)
                 hasphotos = False
                 youtube_url = False
-                if has_youtube and r.place < 990000:
+                if has_youtube and r["place"] < 990000:
                     video_position_seconds = guntime.total_seconds() - event.youtube_offset_seconds
                     if video_position_seconds >= 0:
                         if video_position_seconds > LEAD_TIME_SECONDS:
@@ -887,25 +1003,25 @@ def get_results(
                         if youtube_duration_seconds:
                             if video_position_seconds >= youtube_duration_seconds:
                                 youtube_url = False
-                if r.bib in phototags:
+                if r["bib"] in phototags:
                     hasphotos = True
-                isrwpb = getattr(r, "isrwpb", False)
+                isrwpb = r["isrwpb"]
                 results.append(
                     named_result(
-                        place=r.place,
-                        bib=r.bib,
-                        name=r.athlete,
+                        place=r["place"],
+                        bib=r["bib"],
+                        name=r["athlete"],
                         relay_team=relay_team,
-                        gender=r.gender,
+                        gender=r["gender"],
                         gender_place=gender_place,
-                        category=r.category.name,
+                        category=r["category__name"],
                         category_place=category_place,
                         age=age,
                         division=result_division,
                         guntime=guntime,
                         prime=prime,
                         chiptime=chiptime,
-                        city=r.city,
+                        city=r["city"],
                         ismasters=ismasters,
                         splits=splits,
                         member=member,
@@ -913,7 +1029,7 @@ def get_results(
                         youtube_url=youtube_url,
                         masters_place=masters_place,
                         isrwpb=isrwpb,
-                        isrwfirst=r.isrwfirst,
+                        isrwfirst=r["isrwfirst"],
                         place_display="",
                         time_display="",
                         chip_display="",
@@ -950,24 +1066,6 @@ def get_results(
     return results, max_splits, guntimes_have_microseconds
 
 
-def annotate_isrwfirst(queryset):
-    # Annotate each result with isrwfirst: True if this is the member's first event (by date)
-    # as a member (event date >= rwmember.joindate). False otherwise.
-    earlier_event_exists = queryset.model.objects.filter(
-        rwmember=OuterRef("rwmember"),
-        event__date__lt=OuterRef("event__date"),
-        event__date__gte=OuterRef("rwmember__joindate"),
-    )
-    # Annotate join date for comparison
-    queryset = queryset.annotate(_joindate=F("rwmember__joindate"))
-    return queryset.annotate(
-        isrwfirst=Case(
-            When(rwmember__isnull=True, then=Value(False)),
-            When(event__date__lt=F("_joindate"), then=Value(False)),
-            default=~Exists(earlier_event_exists),
-            output_field=BooleanField(),
-        )
-    )
 
 
 def get_endurrun_relay_dict(event):
