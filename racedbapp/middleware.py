@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import time
 
 from django.http import HttpResponse, HttpResponsePermanentRedirect
@@ -55,7 +54,7 @@ class RequestLoggingMiddleware:
 
     Trace linkage: if TRACING=on the OTel Django instrumentation opened
     its span BEFORE middlewares run, so the current span here is the
-    request span and carries trace_id/span_id for Loki<->Tempo joins.
+    request span and carries trace_id for Loki<->Tempo joins.
 
     If tracing is off (TRACING != on) the span context is invalid —
     emit "-" so the JSON keys stay consistent in both modes.
@@ -78,48 +77,39 @@ class RequestLoggingMiddleware:
         try:
             match = resolve(request.path)
             view = match.view_name or "-"
-            kwargs = match.kwargs or {}
         except Exception:
-            view, kwargs = "-", {}
+            view = "-"
 
         span = _trace.get_current_span()
         sc = span.get_span_context() if span else None
         if sc and sc.is_valid:
             trace_id = f"{sc.trace_id:032x}"
-            span_id = f"{sc.span_id:016x}"
         else:
-            trace_id = span_id = "-"
+            trace_id = "-"
 
         xff = request.META.get("HTTP_X_FORWARDED_FOR", "")
         client_ip = xff.split(",")[0].strip() or request.META.get("REMOTE_ADDR", "-")
 
         entry = {
-            "date-time": time.strftime(
-                "%Y-%m-%dT%H:%M:%S", time.gmtime()
-            ),
-            "env": os.getenv("SETTINGS", "none"),
-            "method": request.method,
-            "path": request.path,
-            "qstring": request.META.get("QUERY_STRING", ""),
+            "level": "error" if response.status_code >= 500 else "info",
             "status": response.status_code,
             "duration_ms": duration_ms,
-            "view": view,
-            "view_kwargs": kwargs,
-            "trace_id": trace_id,
-            "span_id": span_id,
+            "path": request.path,
+            "qstring": request.META.get("QUERY_STRING", ""),
             "client_ip": client_ip,
+            "method": request.method,
+            "view": view,
             "user_agent": (request.META.get("HTTP_USER_AGENT", "") or "-")[:200],
+            "trace_id": trace_id,
         }
         try:
             entry["response_bytes"] = len(response.content)
         except Exception:
             entry["response_bytes"] = None
 
-        if response.status_code >= 500:
-            entry["level"] = "error"
+        if entry["level"] == "error":
             _reqlog.error(json.dumps(entry))
         else:
-            entry["level"] = "info"
             _reqlog.info(json.dumps(entry))
         return response
 
