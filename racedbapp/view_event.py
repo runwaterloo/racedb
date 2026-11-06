@@ -610,8 +610,10 @@ def get_results(
         for split in event_splits:
             splits_by_place.setdefault(split.place, {})[split.split_num] = split.split_time
         max_splits = False
+        empty_splits = []
         if event_splits:
             max_splits = int(max(x.split_num for x in event_splits))
+            empty_splits = [named_split(i, "") for i in range(1, max_splits + 1)]
     guntimes_have_microseconds = set()
     membership = shared.get_membership(event=event)
     with tracer.start_as_current_span("event: build rows"):
@@ -676,14 +678,20 @@ def get_results(
                 splits = []
                 if event_splits:
                     row_splits = splits_by_place.get(r.place)
-                    for i in range(1, max_splits + 1):
-                        split_time = row_splits.get(i) if row_splits else None
-                        splits.append(
+                    if row_splits is None:
+                        # shared immutable list of empty cells: identical for
+                        # every row without split data (template only reads)
+                        splits = empty_splits
+                    else:
+                        splits = [
                             named_split(
                                 i,
                                 get_short_time(split_time) if split_time is not None else "",
                             )
-                        )
+                            for i, split_time in (
+                                (i, row_splits.get(i)) for i in range(1, max_splits + 1)
+                            )
+                        ]
                 member = shared.get_member(r, membership)
                 hasphotos = False
                 youtube_url = False
