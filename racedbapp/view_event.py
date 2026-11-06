@@ -43,6 +43,10 @@ from .templatetags.racedbapp_extras import get_pace, get_place, round_up, show_s
 logger = logging.getLogger(__name__)
 
 named_split = namedtuple("ns", ["split_num", "split_time"])
+# Lightweight stand-in passed to shared.get_member(): the row loop reads
+# results as plain dicts (model instantiation is too expensive at scale),
+# but get_member() expects .athlete / .event.id attribute access.
+_MemberKey = namedtuple("_MemberKey", ["athlete", "event", "place"])
 
 
 def get_series(event=None, events=None, year=None, race=None):
@@ -154,6 +158,26 @@ def _render_event(request, event, sequel, qstring):
                 isrwfirst=Value(False, output_field=BooleanField())
             )
             hasage = False
+            with tracer.start_as_current_span("event: results queryset"):
+                all_results = list(
+                    all_results.values(
+                        "place",
+                        "bib",
+                        "athlete",
+                        "gender",
+                        "city",
+                        "guntime",
+                        "chiptime",
+                        "category__name",
+                        "category__ismasters",
+                        "event_id",
+                        "isrwfirst",
+                    )
+                )
+                for r in all_results:
+                    r["age"] = None
+                    r["division"] = ""
+                    r["isrwpb"] = False
         else:
             all_results = Result.objects.select_related("event__race", "event__distance", "event__sequel", "event__timer", "category", "rwmember").filter(event=event)
             # hasage must run before annotate_isrwfirst: otherwise the EXISTS
@@ -162,6 +186,28 @@ def _render_event(request, event, sequel, qstring):
             with tracer.start_as_current_span("event: results queryset"):
                 hasage = all_results.hasage(event)
                 all_results = annotate_isrwfirst(all_results)
+                # Materialize plain dicts instead of model instances: the row
+                # loop only reads these fields, and skipping per-object model
+                # instantiation + descriptor access was worth ~250ms per
+                # 1800-row cold render (2026-11-06 profiling, see worklog).
+                all_results = list(
+                    all_results.values(
+                        "place",
+                        "bib",
+                        "athlete",
+                        "gender",
+                        "age",
+                        "city",
+                        "guntime",
+                        "chiptime",
+                        "division",
+                        "isrwpb",
+                        "isrwfirst",
+                        "category__name",
+                        "category__ismasters",
+                        "event_id",
+                    )
+                )
         # Materialize splits once: truthiness, max, microseconds set, and the
         # per-place map all derive from this single list (one DB round-trip).
         with tracer.start_as_current_span("event: splits"):
@@ -789,47 +835,47 @@ def get_results(
             for r in all_results:
                 relay_team = False
                 ismasters = False
-                if r.category.ismasters:
+                if r["category__ismasters"]:
                     ismasters = True
                 else:
                     if page != "Wheelchair":
-                        if r.age:
-                            if r.age >= 40:
+                        if r["age"]:
+                            if r["age"] >= 40:
                                 ismasters = True
                 masters_place = False
                 gender_place = ""
-                if r.gender != "":
-                    gender_place_dict[r.gender] += 1
-                    gender_place = gender_place_dict[r.gender]
+                if r["gender"] != "":
+                    gender_place_dict[r["gender"]] += 1
+                    gender_place = gender_place_dict[r["gender"]]
                     if ismasters:
-                        masters_place_dict[r.gender] += 1
-                        masters_place = masters_place_dict[r.gender]
+                        masters_place_dict[r["gender"]] += 1
+                        masters_place = masters_place_dict[r["gender"]]
                 category_place = ""
-                if r.category.name != "":
-                    if r.category.name in category_place_dict:
-                        category_place_dict[r.category.name] += 1
-                        category_place = category_place_dict[r.category.name]
+                if r["category__name"] != "":
+                    if r["category__name"] in category_place_dict:
+                        category_place_dict[r["category__name"]] += 1
+                        category_place = category_place_dict[r["category__name"]]
                     else:
-                        category_place_dict[r.category.name] = 1
+                        category_place_dict[r["category__name"]] = 1
                         category_place = 1
                 if relay_dict:
-                    if r.place in relay_dict:
-                        relay_team = relay_dict[r.place]
-                elif r.athlete in endurrun_relay_dict:
-                    relay_team = endurrun_relay_dict[r.athlete]
+                    if r["place"] in relay_dict:
+                        relay_team = relay_dict[r["place"]]
+                elif r["athlete"] in endurrun_relay_dict:
+                    relay_team = endurrun_relay_dict[r["athlete"]]
                 age = ""
                 if page != "Wheelchair":
-                    if r.age:
-                        age = r.age
+                    if r["age"]:
+                        age = r["age"]
                 guntime = chiptime = ""
-                if r.place < 990000:
-                    guntime = r.guntime
+                if r["place"] < 990000:
+                    guntime = r["guntime"]
                     if guntime and guntime.microseconds != 0:
                         guntimes_have_microseconds.add(guntime.microseconds)
-                    if r.chiptime:
-                        chiptime = r.chiptime
+                    if r["chiptime"]:
+                        chiptime = r["chiptime"]
                 try:
-                    prime = hill_dict[r.place]
+                    prime = hill_dict[r["place"]]
                 except Exception:
                     prime = ""
                 else:
@@ -837,11 +883,11 @@ def get_results(
                 if page == "Wheelchair":
                     result_division = ""
                 else:
-                    result_division = r.division
+                    result_division = r["division"]
                 splits = []
                 split_cells = []
                 if event_splits:
-                    row_splits = splits_by_place.get(r.place)
+                    row_splits = splits_by_place.get(r["place"])
                     if row_splits is None:
                         # shared immutable lists: identical for every row
                         # without split data (template only reads)
@@ -866,13 +912,15 @@ def get_results(
                             ]
                         else:
                             split_cells = [st.split_time for st in splits]
-                member = shared.get_member(r, membership)
+                member = shared.get_member(
+                    _MemberKey(r["athlete"], event, r["place"]), membership
+                )
                 pace = ""
                 if guntime:
                     pace = get_pace(guntime, km)
                 hasphotos = False
                 youtube_url = False
-                if has_youtube and r.place < 990000:
+                if has_youtube and r["place"] < 990000:
                     video_position_seconds = guntime.total_seconds() - event.youtube_offset_seconds
                     if video_position_seconds >= 0:
                         if video_position_seconds > LEAD_TIME_SECONDS:
@@ -887,25 +935,25 @@ def get_results(
                         if youtube_duration_seconds:
                             if video_position_seconds >= youtube_duration_seconds:
                                 youtube_url = False
-                if r.bib in phototags:
+                if r["bib"] in phototags:
                     hasphotos = True
-                isrwpb = getattr(r, "isrwpb", False)
+                isrwpb = r["isrwpb"]
                 results.append(
                     named_result(
-                        place=r.place,
-                        bib=r.bib,
-                        name=r.athlete,
+                        place=r["place"],
+                        bib=r["bib"],
+                        name=r["athlete"],
                         relay_team=relay_team,
-                        gender=r.gender,
+                        gender=r["gender"],
                         gender_place=gender_place,
-                        category=r.category.name,
+                        category=r["category__name"],
                         category_place=category_place,
                         age=age,
                         division=result_division,
                         guntime=guntime,
                         prime=prime,
                         chiptime=chiptime,
-                        city=r.city,
+                        city=r["city"],
                         ismasters=ismasters,
                         splits=splits,
                         member=member,
@@ -913,7 +961,7 @@ def get_results(
                         youtube_url=youtube_url,
                         masters_place=masters_place,
                         isrwpb=isrwpb,
-                        isrwfirst=r.isrwfirst,
+                        isrwfirst=r["isrwfirst"],
                         place_display="",
                         time_display="",
                         chip_display="",
