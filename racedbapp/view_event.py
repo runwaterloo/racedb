@@ -389,7 +389,9 @@ def _build_row_html(r, flags):
     cells.append(f'<td class="text-left">{_e(r.city)}</td>')
     for cell in r.split_cells:
         cells.append(f'<td class="text-center">{cell}</td>')
-    return "<tr>" + "".join(cells) + "</tr>"
+    # One row per line: keeps the emitted HTML readable (djlint-style page
+    # source) at no measurable join cost.
+    return "<tr>" + "".join(cells) + "</tr>\n"
 
 
 def _build_table_html(rows, flags, split_headings):
@@ -401,7 +403,8 @@ def _build_table_html(rows, flags, split_headings):
     f = flags
     head = [
         '<table class="table table-bordered table-condensed table-striped table-hover">',
-        '<thead><tr class="info">',
+        '<thead>',
+        '<tr class="info">',
         '<th class="text-center" scope="col">#</th>',
         '<th class="text-center" scope="col">Bib</th>',
         '<th class="text-left" scope="col">Name</th>',
@@ -428,8 +431,8 @@ def _build_table_html(rows, flags, split_headings):
     head.append('<th class="text-left" scope="col">City</th>')
     for sh in split_headings:
         head.append(f'<th class="text-center">{conditional_escape(sh)}</th>')
-    head.append("</tr></thead><tbody>")
-    return "".join(head) + rows + "</tbody></table>"
+    head.append('</tr>\n</thead>\n<tbody>\n')
+    return "\n".join(head) + rows + "</tbody></table>"
 
 
 def get_event_json(event):
