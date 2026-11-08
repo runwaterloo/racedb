@@ -538,7 +538,6 @@ def get_memberresults(member):
             set_distance_display_name(r.event.distance, sequel)
             results.append(named_result(r, guntime, gender_place, category_place, chiptime))
             total_distance += r.event.distance.km
-        return results, total_distance
     return results, total_distance
 
 
