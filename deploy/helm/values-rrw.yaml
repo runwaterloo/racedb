@@ -1,7 +1,7 @@
 racedb:
   tracing: "on"
   settings: prod
-  threads: 8
+  threads: 6
 ingress:
   catchall:
     enabled: true

@@ -91,15 +91,14 @@ class RequestLoggingMiddleware:
         client_ip = xff.split(",")[0].strip() or request.META.get("REMOTE_ADDR", "-")
 
         entry = {
-            "level": "error" if response.status_code >= 500 else "info",
             "status": response.status_code,
             "duration_ms": duration_ms,
             "path": request.path,
             "qstring": request.META.get("QUERY_STRING", ""),
             "client_ip": client_ip,
             "method": request.method,
-            "view": view,
             "user_agent": (request.META.get("HTTP_USER_AGENT", "") or "-")[:200],
+            "view": view,
             "trace_id": trace_id,
         }
         try:
@@ -107,6 +106,7 @@ class RequestLoggingMiddleware:
         except Exception:
             entry["response_bytes"] = None
 
+        entry["level"] = "error" if response.status_code >= 500 else "info"
         if entry["level"] == "error":
             _reqlog.error(json.dumps(entry))
         else:

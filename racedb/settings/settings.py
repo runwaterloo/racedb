@@ -74,7 +74,6 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
-                "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
@@ -95,8 +94,8 @@ if os.getenv("DATABASE", "sqlite3") == "postgres":
                 "DB_HOST", secrets.DB_HOST if hasattr(secrets, "DB_HOST") else "postgres"
             ),
             "PORT": os.getenv("DB_PORT", "5432"),
-            "CONN_MAX_AGE": 60,
-            "CONN_HEALTH_CHECKS": True,
+            "CONN_MAX_AGE": None,
+            "CONN_HEALTH_CHECKS": False,
         }
     }
 else:
