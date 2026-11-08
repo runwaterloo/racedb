@@ -459,34 +459,36 @@ def get_place_counts(dbresults):
     category_counts = {}
     if not event_ids:
         return gender_counts, category_counts
-    rows = (
-        Result.objects.filter(event_id__in=event_ids)
-        .values("event_id", "gender", "category_id", "place")
-        .annotate(n=Count("id"))
-        .values_list("event_id", "gender", "category_id", "place", "n")
-    )
-    gender_groups = {}
-    category_groups = {}
-    for event_id, gender, category_id, place, n in rows:
-        gender_groups.setdefault((event_id, gender), []).append((place, n))
-        category_groups.setdefault((event_id, category_id), []).append((place, n))
+    with tracer.start_as_current_span("member: place counts: query"):
+        rows = list(
+            Result.objects.filter(event_id__in=event_ids)
+            .values("event_id", "gender", "category_id", "place")
+            .annotate(n=Count("id"))
+            .values_list("event_id", "gender", "category_id", "place", "n")
+        )
+    with tracer.start_as_current_span("member: place counts: group"):
+        gender_groups = {}
+        category_groups = {}
+        for event_id, gender, category_id, place, n in rows:
+            gender_groups.setdefault((event_id, gender), []).append((place, n))
+            category_groups.setdefault((event_id, category_id), []).append((place, n))
 
-    def cumulative_counts(groups):
-        prefix = {}
-        for key, pairs in groups.items():
-            pairs.sort()
-            total = 0
-            places = []
-            sums = []
-            for place, n in pairs:
-                total += n
-                places.append(place)
-                sums.append(total)
-            prefix[key] = (places, sums)
-        return prefix
+        def cumulative_counts(groups):
+            prefix = {}
+            for key, pairs in groups.items():
+                pairs.sort()
+                total = 0
+                places = []
+                sums = []
+                for place, n in pairs:
+                    total += n
+                    places.append(place)
+                    sums.append(total)
+                prefix[key] = (places, sums)
+            return prefix
 
-    gender_prefix = cumulative_counts(gender_groups)
-    category_prefix = cumulative_counts(category_groups)
+        gender_prefix = cumulative_counts(gender_groups)
+        category_prefix = cumulative_counts(category_groups)
 
     def count_at(prefix, key, place):
         entry = prefix.get(key)
@@ -496,13 +498,14 @@ def get_place_counts(dbresults):
         idx = bisect_right(places, place)
         return sums[idx - 1]
 
-    for r in dbresults:
-        gender_counts[(r.event_id, r.gender, r.place)] = count_at(
-            gender_prefix, (r.event_id, r.gender), r.place
-        )
-        category_counts[(r.event_id, r.category_id, r.place)] = count_at(
-            category_prefix, (r.event_id, r.category_id), r.place
-        )
+    with tracer.start_as_current_span("member: place counts: lookup"):
+        for r in dbresults:
+            gender_counts[(r.event_id, r.gender, r.place)] = count_at(
+                gender_prefix, (r.event_id, r.gender), r.place
+            )
+            category_counts[(r.event_id, r.category_id, r.place)] = count_at(
+                category_prefix, (r.event_id, r.category_id), r.place
+            )
     return gender_counts, category_counts
 
 
@@ -544,7 +547,7 @@ def get_boost(member, request):
     with tracer.start_as_current_span("member: boost years"):
         boost_years = get_boost_years(member)
     for boost_year in boost_years:
-        with tracer.start_as_current_span("member: boost year") as span:
+        with tracer.start_as_current_span(f"member: boost year {boost_year}") as span:
             span.set_attribute("racedb.boost.year", boost_year)
             boost_year_standings = view_boost.index(request, boost_year, standings_only=True)
             member_boost_standings = [
