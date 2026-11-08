@@ -62,7 +62,7 @@ spec:
             {{- end }}
             {{- if eq .Values.racedb.tracing "on" }}
             - name: OTEL_SERVICE_NAME
-              value: {{ .Release.Name }}
+              value: "racedb"
             {{- end }}
           volumeMounts:
             {{- if .Values.racedb.mountLocal }}

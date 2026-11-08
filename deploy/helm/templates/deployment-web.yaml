@@ -72,7 +72,7 @@ spec:
             {{- end }}
             {{- if eq .Values.racedb.tracing "on" }}
             - name: OTEL_SERVICE_NAME
-              value: {{ .Release.Name }}
+              value: "racedb"
             {{- end }}
             {{- if eq .Values.racedb.settings "dev" }}
             - name: DEBUG
