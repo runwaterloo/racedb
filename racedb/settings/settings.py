@@ -194,9 +194,13 @@ if os.getenv("SETTINGS", "test") in ("prod", "dev", "min"):
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
+        # Per-handler filter: stamps OTel trace_id on every record so the
+        # verbose format can join django logs to middleware JSON + Tempo.
+        "filters": {"trace_id": {"()": "racedb.logfilters.TraceIdFilter"}},
         "formatters": {
             "verbose": {
-                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s]"
+                          " [trace_id=%(trace_id)s] %(message)s",
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
             "simple": {"format": "%(levelname)s %(message)s"},
@@ -205,7 +209,11 @@ if os.getenv("SETTINGS", "test") in ("prod", "dev", "min"):
             "raw": {"format": "%(message)s"},
         },
         "handlers": {
-            "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "verbose",
+                "filters": ["trace_id"],
+            },
             "json_console": {"class": "logging.StreamHandler", "formatter": "raw"},
         },
         "loggers": {

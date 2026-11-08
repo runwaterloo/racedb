@@ -65,7 +65,8 @@ class RequestLoggingMiddleware:
 
     def __call__(self, request):
         from django.urls import resolve
-        from opentelemetry import trace as _trace
+
+        from racedb.logfilters import current_trace_id
 
         start = time.monotonic()
         response = self.get_response(request)
@@ -80,12 +81,7 @@ class RequestLoggingMiddleware:
         except Exception:
             view = "-"
 
-        span = _trace.get_current_span()
-        sc = span.get_span_context() if span else None
-        if sc and sc.is_valid:
-            trace_id = f"{sc.trace_id:032x}"
-        else:
-            trace_id = "-"
+        trace_id = current_trace_id()
 
         xff = request.META.get("HTTP_X_FORWARDED_FOR", "")
         client_ip = xff.split(",")[0].strip() or request.META.get("REMOTE_ADDR", "-")
