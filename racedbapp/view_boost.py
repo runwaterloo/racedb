@@ -360,7 +360,7 @@ def _prebuild_html(standings, leaderboard, qs_date):
     leaderboard_html = OrderedDict()
     for k, v in leaderboard.items():
         leaderboard_html[k] = {
-            "photourl": v[0].photourl,
+            "photourl": v[0].photourl if v else "",
             "rows": "\n".join(
                 _leaderboard_row(n, i, qs_date) for n, i in enumerate(v, 1)
             ),
