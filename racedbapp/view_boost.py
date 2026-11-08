@@ -8,7 +8,6 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 
 from racedbapp.shared import cache_lock
-from racedbapp.shared.shared import set_distance_display_name
 from racedbapp.shared.tracing import tracer
 from racedbapp.shared.types import Choice, Filter
 
@@ -165,22 +164,18 @@ def _compute_boost(year, qs_date):
         Result.objects.select_related(
             "event__race", "event__distance", "event__sequel"
         )
-        .only(
-            "id",
+        .values(
+            "rwmember_id",
             "gender",
             "guntime",
             "gender_place",
             "isrwpb",
-            "rwmember_id",
-            "event__date",
             "event__id",
-            "event__race__id",
+            "event__race_id",
             "event__race__shortname",
             "event__race__slug",
-            "event__distance__id",
             "event__distance__name",
             "event__distance__slug",
-            "event__sequel__id",
             "event__sequel__name",
             "event__sequel__slug",
         )
@@ -193,7 +188,7 @@ def _compute_boost(year, qs_date):
     )
     with tracer.start_as_current_span("boost: results + bresults"):
         for i in dbresults:
-            battlers[i.rwmember_id].results.append(
+            battlers[i["rwmember_id"]].results.append(
                 BResult(i, gender_finishers, config_dict, previous_races)
             )
     with tracer.start_as_current_span("boost: calculate"):
@@ -450,27 +445,32 @@ class Battler:
 
 
 class BResult:
-    def __init__(self, result, gender_finishers, config_dict, previous_races):
-        self.event_id = result.event.id
-        self.event_race_short_name = result.event.race.shortname
-        self.event_race_slug = result.event.race.slug
-        sequel = getattr(result.event, "sequel", None)
-        set_distance_display_name(result.event.distance, sequel)
-        self.event_distance_name = result.event.distance.display_name
-        self.event_distance_slug = result.event.distance.slug
-        if sequel:
-            self.event_distance_slug += "/{}".format(sequel.slug)
-        self.guntime = result.guntime
-        self.gender_place = result.gender_place
-        self.gender_finishers = gender_finishers[result.gender][result.event.id]
+    def __init__(self, r, gender_finishers, config_dict, previous_races):
+        """Built from a .values() dict (see _compute_boost), not model instances."""
+        sequel_name = r["event__sequel__name"]
+        if sequel_name:
+            self.event_distance_name = sequel_name
+            sequel_slug = r["event__sequel__slug"]
+        else:
+            self.event_distance_name = r["event__distance__name"]
+            sequel_slug = None
+        self.event_id = r["event__id"]
+        self.event_race_short_name = r["event__race__shortname"]
+        self.event_race_slug = r["event__race__slug"]
+        self.event_distance_slug = r["event__distance__slug"]
+        if sequel_slug:
+            self.event_distance_slug += "/{}".format(sequel_slug)
+        self.guntime = r["guntime"]
+        self.gender_place = r["gender_place"]
+        self.gender_finishers = gender_finishers[r["gender"]][r["event__id"]]
         self.mp = (1 - (self.gender_place / self.gender_finishers)) * int(
             config_dict["boost_merit_max"]
         )
         self.ditto_boost = self.pb_boost = self.classic_boost = 0
-        if result.rwmember_id in previous_races:
-            if result.event.race_id in previous_races[result.rwmember_id]:
+        if r["rwmember_id"] in previous_races:
+            if r["event__race_id"] in previous_races[r["rwmember_id"]]:
                 self.ditto_boost = int(config_dict["boost_ditto_points"])
-        if result.isrwpb:
+        if r["isrwpb"]:
             self.pb_boost = int(config_dict["boost_pb_points"])
         if self.event_race_slug in ("waterloo-classic", "fall-classic"):
             self.classic_boost = int(config_dict["boost_classic_points"])
