@@ -1,14 +1,15 @@
 from collections import OrderedDict, defaultdict
 from datetime import datetime
+from decimal import ROUND_HALF_UP, Decimal
 from operator import attrgetter
 from urllib import parse
 
 from django.db.models import Count, Exists, OuterRef
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.utils.html import escape
 
 from racedbapp.shared import cache_lock
-from racedbapp.shared.shared import set_distance_display_name
 from racedbapp.shared.tracing import tracer
 from racedbapp.shared.types import Choice, Filter
 
@@ -36,15 +37,14 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         "boost.compute.{}.{}".format(year, qs_date or "all"),
         lambda: _compute_boost(year, qs_date),
     )
-    standings = [i for i in compute["standings"] if _matches_qs_filter(i, qs_filter)]
     if standings_only:
-        return standings
+        return compute["standings"]
     if leaderboard_only:
         return compute["leaderboard"]
-    # Member matching runs after the early returns so leaderboard_only /
-    # standings_only callers are never exposed to ?member= errors.
     qs_member = False
     member_results = None
+    # Member matching runs after the early returns so leaderboard_only /
+    # standings_only callers are never exposed to ?member= errors.
     if "member" in qstring:
         with tracer.start_as_current_span("boost: qs member"):
             included_members = Rwmember.objects.filter(
@@ -53,9 +53,23 @@ def index(request, year, leaderboard_only=False, standings_only=False):
                 gender__in=["M", "F"],
             )
             qs_member = get_qs_member(qstring, included_members)
-            for i in standings:
-                if i.member_id == qs_member.id:
-                    member_results = i
+        if qs_member:
+            member_results = next(
+                (i for i in compute["standings"] if i.member_id == qs_member.id), None
+            )
+            if member_results is None:
+                raise Http404("No boost results for member")
+    standings = [
+        (i, row)
+        for i, row in zip(compute["standings"], compute["standings_rows"])
+        if _matches_qs_filter(i, qs_filter)
+    ]
+    # Filtered views renumber rows (the template used forloop.counter over
+    # the filtered list), so stamp the prebuilt placeholder per position.
+    standings_rows = [
+        row.replace("@@PLACE@@", str(n)) for n, (i, row) in enumerate(standings, 1)
+    ]
+    standings = [i for i, row in standings]
 
     def render_boost_page():
         if qs_member:
@@ -71,8 +85,8 @@ def index(request, year, leaderboard_only=False, standings_only=False):
             standings_filter = get_standings_filter(qs_filter, qs_date, year)
             date_filter = get_date_filter(qs_date, year)
         context = {
-            "leaderboard": compute["leaderboard"],
-            "standings": standings,
+            "leaderboard_html": compute["leaderboard_html"],
+            "standings_rows": "\n".join(standings_rows),
             "standings_filter": standings_filter,
             "date_filter": date_filter,
             "qs_date": qs_date,
@@ -165,22 +179,18 @@ def _compute_boost(year, qs_date):
         Result.objects.select_related(
             "event__race", "event__distance", "event__sequel"
         )
-        .only(
-            "id",
+        .values(
+            "rwmember_id",
             "gender",
             "guntime",
             "gender_place",
             "isrwpb",
-            "rwmember_id",
-            "event__date",
             "event__id",
-            "event__race__id",
+            "event__race_id",
             "event__race__shortname",
             "event__race__slug",
-            "event__distance__id",
             "event__distance__name",
             "event__distance__slug",
-            "event__sequel__id",
             "event__sequel__name",
             "event__sequel__slug",
         )
@@ -193,7 +203,7 @@ def _compute_boost(year, qs_date):
     )
     with tracer.start_as_current_span("boost: results + bresults"):
         for i in dbresults:
-            battlers[i.rwmember_id].results.append(
+            battlers[i["rwmember_id"]].results.append(
                 BResult(i, gender_finishers, config_dict, previous_races)
             )
     with tracer.start_as_current_span("boost: calculate"):
@@ -228,12 +238,134 @@ def _compute_boost(year, qs_date):
     leaderboard["Male Under 40"] = leaders["M40-"]
     leaderboard["Female Over 40"] = leaders["F40+"]
     leaderboard["Male Over 40"] = leaders["M40+"]
+    with tracer.start_as_current_span("boost: prebuild html"):
+        standings_rows, leaderboard_html = _prebuild_html(
+            standings, leaderboard, qs_date
+        )
     return {
         "config_dict": config_dict,
         "standings": standings,
+        "standings_rows": standings_rows,
         "leaderboard": leaderboard,
+        "leaderboard_html": leaderboard_html,
         "boost_tag": boost_tag,
     }
+
+
+def _fmt_points(value, decimals):
+    """Match Django's floatformat: ROUND_HALF_UP, fixed decimals."""
+    q = Decimal(str(value)).quantize(
+        Decimal(1).scaleb(-decimals), rounding=ROUND_HALF_UP
+    )
+    text = "{v:f}".format(v=q)
+    if decimals == 0:
+        text = text.split(".")[0]
+    return text
+
+
+def _standings_row(i, qs_date):
+    """One <tr> of the standings table as prebuilt HTML.
+
+    The place number is a placeholder: filtered views renumber rows
+    (forloop.counter over the filtered list), so the number is stamped in
+    at request time. Everything else is request-independent.
+    """
+    points_fmt = _fmt_points(i.total_points, 0)
+    points_title = _fmt_points(i.total_points, 2)
+    athlete = escape(i.athlete)
+    slug = escape(i.slug)
+    city = escape(i.city)
+    if qs_date == "":
+        total_cell = (
+            '<td class="text-center"><a href="?member={slug}" '
+            'title="{title}">{points}<a></td>'.format(
+                slug=slug, title=points_title, points=points_fmt
+            )
+        )
+    else:
+        total_cell = (
+            '<td class="text-center" title="{title}">{points}</td>'.format(
+                title=points_title, points=points_fmt
+            )
+        )
+    if i.active:
+        athlete_cell = '<a href="/member/{slug}/">{athlete}</a>'.format(
+            slug=slug, athlete=athlete
+        )
+    else:
+        athlete_cell = athlete
+    return (
+        '<tr><td class="text-center">@@PLACE@@</td>'
+        + total_cell
+        + "<td>"
+        + athlete_cell
+        + '</td><td class="text-center">'
+        + escape(i.gender)
+        + '</td><td class="text-center">'
+        + str(i.gender_place)
+        + "</td><td class=\"text-center\">"
+        + escape(i.category)
+        + '</td><td class="text-center">'
+        + str(i.category_place)
+        + "</td><td>"
+        + city
+        + "</td></tr>"
+    )
+
+
+def _leaderboard_row(n, i, qs_date):
+    """One <tr> of a leaderboard mini-table as prebuilt HTML (n = 1..5)."""
+    points_fmt = _fmt_points(i.total_points, 0)
+    points_title = _fmt_points(i.total_points, 2)
+    athlete = escape(i.athlete)
+    slug = escape(i.slug)
+    if qs_date == "":
+        total_cell = (
+            '<td><a href="?member={slug}" '
+            'title="{title}">{points}<a></td>'.format(
+                slug=slug, title=points_title, points=points_fmt
+            )
+        )
+    else:
+        total_cell = '<td title="{title}">{points}</td>'.format(
+            title=points_title, points=points_fmt
+        )
+    if i.active:
+        athlete_cell = '<a href="/member/{slug}/">{athlete}</a>'.format(
+            slug=slug, athlete=athlete
+        )
+    else:
+        athlete_cell = athlete
+    return (
+        "<tr><td class=\"text-center\">"
+        + str(n)
+        + "</td>"
+        + total_cell
+        + "<td>"
+        + athlete_cell
+        + "</td></tr>"
+    )
+
+
+def _prebuild_html(standings, leaderboard, qs_date):
+    """Prebuild the standings rows and leaderboard tables as HTML strings.
+
+    Moved out of the Django template so cold renders skip template CPU for
+    the ~280-row standings table. Slicing for ?filter= happens in the view;
+    rows carry a @@PLACE@@ placeholder that gets renumbered there. Leaderboard
+    rows are numbered 1..N within each mini-table (the template used
+    forloop.counter, not the overall place).
+    """
+    standings_rows = [_standings_row(i, qs_date) for i in standings]
+    leaderboard_html = OrderedDict()
+    for k, v in leaderboard.items():
+        leaderboard_html[k] = {
+            "photourl": v[0].photourl if v else "",
+            "rows": "\n".join(
+                _leaderboard_row(n, i, qs_date) for n, i in enumerate(v, 1)
+            ),
+        }
+    return standings_rows, leaderboard_html
 
 
 def get_boost_years():
@@ -375,9 +507,14 @@ def get_previous_races(year, included_members):
 
 
 def get_gender_finishers(first_day, last_day):
+    # Filter on event_id__in so Postgres drives from the (few) events in
+    # range via the result.event_id FK index, instead of seq-scanning the
+    # whole result table (issue #444).
     db = (
         Result.objects.filter(
-            event__date__range=(first_day, last_day),
+            event_id__in=Event.objects.filter(
+                date__range=(first_day, last_day)
+            ).values("id"),
             gender__in=["F", "M"],
             place__lt=990000,
         )
@@ -450,27 +587,32 @@ class Battler:
 
 
 class BResult:
-    def __init__(self, result, gender_finishers, config_dict, previous_races):
-        self.event_id = result.event.id
-        self.event_race_short_name = result.event.race.shortname
-        self.event_race_slug = result.event.race.slug
-        sequel = getattr(result.event, "sequel", None)
-        set_distance_display_name(result.event.distance, sequel)
-        self.event_distance_name = result.event.distance.display_name
-        self.event_distance_slug = result.event.distance.slug
-        if sequel:
-            self.event_distance_slug += "/{}".format(sequel.slug)
-        self.guntime = result.guntime
-        self.gender_place = result.gender_place
-        self.gender_finishers = gender_finishers[result.gender][result.event.id]
+    def __init__(self, r, gender_finishers, config_dict, previous_races):
+        """Built from a .values() dict (see _compute_boost), not model instances."""
+        sequel_name = r["event__sequel__name"]
+        if sequel_name:
+            self.event_distance_name = sequel_name
+            sequel_slug = r["event__sequel__slug"]
+        else:
+            self.event_distance_name = r["event__distance__name"]
+            sequel_slug = None
+        self.event_id = r["event__id"]
+        self.event_race_short_name = r["event__race__shortname"]
+        self.event_race_slug = r["event__race__slug"]
+        self.event_distance_slug = r["event__distance__slug"]
+        if sequel_slug:
+            self.event_distance_slug += "/{}".format(sequel_slug)
+        self.guntime = r["guntime"]
+        self.gender_place = r["gender_place"]
+        self.gender_finishers = gender_finishers[r["gender"]][r["event__id"]]
         self.mp = (1 - (self.gender_place / self.gender_finishers)) * int(
             config_dict["boost_merit_max"]
         )
         self.ditto_boost = self.pb_boost = self.classic_boost = 0
-        if result.rwmember_id in previous_races:
-            if result.event.race_id in previous_races[result.rwmember_id]:
+        if r["rwmember_id"] in previous_races:
+            if r["event__race_id"] in previous_races[r["rwmember_id"]]:
                 self.ditto_boost = int(config_dict["boost_ditto_points"])
-        if result.isrwpb:
+        if r["isrwpb"]:
             self.pb_boost = int(config_dict["boost_pb_points"])
         if self.event_race_slug in ("waterloo-classic", "fall-classic"):
             self.classic_boost = int(config_dict["boost_classic_points"])
