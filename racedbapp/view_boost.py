@@ -37,6 +37,14 @@ def index(request, year, leaderboard_only=False, standings_only=False):
         "boost.compute.{}.{}".format(year, qs_date or "all"),
         lambda: _compute_boost(year, qs_date),
     )
+    if standings_only:
+        return compute["standings"]
+    if leaderboard_only:
+        return compute["leaderboard"]
+    qs_member = False
+    member_results = None
+    # Member matching runs after the early returns so leaderboard_only /
+    # standings_only callers are never exposed to ?member= errors.
     if "member" in qstring:
         with tracer.start_as_current_span("boost: qs member"):
             included_members = Rwmember.objects.filter(
@@ -45,19 +53,12 @@ def index(request, year, leaderboard_only=False, standings_only=False):
                 gender__in=["M", "F"],
             )
             qs_member = get_qs_member(qstring, included_members)
-    else:
-        qs_member = False
-    member_results = None
-    if qs_member:
-        member_results = next(
-            (i for i in compute["standings"] if i.member_id == qs_member.id), None
-        )
-    if qs_member and member_results is None:
-        raise Http404("No boost results for member")
-    if standings_only:
-        return compute["standings"]
-    if leaderboard_only:
-        return compute["leaderboard"]
+        if qs_member:
+            member_results = next(
+                (i for i in compute["standings"] if i.member_id == qs_member.id), None
+            )
+            if member_results is None:
+                raise Http404("No boost results for member")
     standings = [
         (i, row)
         for i, row in zip(compute["standings"], compute["standings_rows"])
