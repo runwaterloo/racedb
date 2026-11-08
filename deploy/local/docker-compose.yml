@@ -46,7 +46,7 @@ services:
     container_name: racedb-web
     environment:
       WEBHOST: 127.0.0.1
-      DEBUG: "true"
+      DEBUG: "false"
       ENABLE_DEBUG_TOOLBAR: "true"
       STORAGE: "local"
       DATABASE: "postgres"
