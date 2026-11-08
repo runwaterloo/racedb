@@ -337,6 +337,7 @@ class Result(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=["rwmember", "event"]),
+            models.Index(fields=["event", "gender", "place"]),
         ]
         ordering = ("place",)
         unique_together = ("event", "place")
