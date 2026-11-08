@@ -313,8 +313,8 @@ def _standings_row(i, qs_date):
     )
 
 
-def _leaderboard_row(i, qs_date):
-    """One <tr> of a leaderboard mini-table as prebuilt HTML."""
+def _leaderboard_row(n, i, qs_date):
+    """One <tr> of a leaderboard mini-table as prebuilt HTML (n = 1..5)."""
     points_fmt = _fmt_points(i.total_points, 0)
     points_title = _fmt_points(i.total_points, 2)
     athlete = escape(i.athlete)
@@ -338,7 +338,7 @@ def _leaderboard_row(i, qs_date):
         athlete_cell = athlete
     return (
         "<tr><td class=\"text-center\">"
-        + str(i.place)
+        + str(n)
         + "</td>"
         + total_cell
         + "<td>"
@@ -352,12 +352,19 @@ def _prebuild_html(standings, leaderboard, qs_date):
 
     Moved out of the Django template so cold renders skip template CPU for
     the ~280-row standings table. Slicing for ?filter= happens in the view;
-    rows carry a @@PLACE@@ placeholder that gets renumbered there.
+    rows carry a @@PLACE@@ placeholder that gets renumbered there. Leaderboard
+    rows are numbered 1..N within each mini-table (the template used
+    forloop.counter, not the overall place).
     """
     standings_rows = [_standings_row(i, qs_date) for i in standings]
     leaderboard_html = OrderedDict()
     for k, v in leaderboard.items():
-        leaderboard_html[k] = "\n".join(_leaderboard_row(i, qs_date) for i in v)
+        leaderboard_html[k] = {
+            "photourl": v[0].photourl,
+            "rows": "\n".join(
+                _leaderboard_row(n, i, qs_date) for n, i in enumerate(v, 1)
+            ),
+        }
     return standings_rows, leaderboard_html
 
 
