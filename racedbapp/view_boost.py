@@ -65,17 +65,22 @@ def index(request, year, leaderboard_only=False, standings_only=False):
                 "member_results": member_results,
                 "year": year,
             }
-            return render(request, "racedbapp/boost_member.html", context)
+            with tracer.start_as_current_span("boost: render template"):
+                return render(request, "racedbapp/boost_member.html", context)
+        with tracer.start_as_current_span("boost: render filters"):
+            standings_filter = get_standings_filter(qs_filter, qs_date, year)
+            date_filter = get_date_filter(qs_date, year)
         context = {
             "leaderboard": compute["leaderboard"],
             "standings": standings,
-            "standings_filter": get_standings_filter(qs_filter, qs_date, year),
-            "date_filter": get_date_filter(qs_date, year),
+            "standings_filter": standings_filter,
+            "date_filter": date_filter,
             "qs_date": qs_date,
             "year": year,
             "boost_years": boost_years,
         }
-        return render(request, "racedbapp/boost.html", context)
+        with tracer.start_as_current_span("boost: render template"):
+            return render(request, "racedbapp/boost.html", context)
 
     if not qs_filter and not qs_date and not qs_member:
         # Bare /boost/<year>/ is the hottest URL: cache the full render too.
