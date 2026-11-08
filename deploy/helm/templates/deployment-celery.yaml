@@ -61,8 +61,11 @@ spec:
               value: "on"
             {{- end }}
             {{- if eq .Values.racedb.tracing "on" }}
+            # Must match the Loki service_name (the job label) so Tempo's
+            # "Logs for this trace" query finds our streams: prod and dev both
+            # log service_name=racedb. See deploy/alloy/values.yaml job rule.
             - name: OTEL_SERVICE_NAME
-              value: {{ .Release.Name }}
+              value: "racedb"
             {{- end }}
           volumeMounts:
             {{- if .Values.racedb.mountLocal }}
