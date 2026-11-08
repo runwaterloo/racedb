@@ -9,13 +9,15 @@ from django.shortcuts import redirect, render
 
 from racedbapp.shared import cache_lock
 from racedbapp.shared.shared import set_distance_display_name
+from racedbapp.shared.tracing import tracer
 from racedbapp.shared.types import Choice, Filter
 
 from .models import Config, Event, Result, Rwmember, Rwmembertag
 
 
 def index(request, year, leaderboard_only=False, standings_only=False):
-    boost_years = get_boost_years()
+    with tracer.start_as_current_span("boost: boost years"):
+        boost_years = get_boost_years()
     if not boost_years:
         return render(request, "racedbapp/boost.html")
     if year == "latest":
@@ -44,15 +46,16 @@ def index(request, year, leaderboard_only=False, standings_only=False):
     qs_member = False
     member_results = None
     if "member" in qstring:
-        included_members = Rwmember.objects.filter(
-            year_of_birth__isnull=False,
-            tags=compute["boost_tag"],
-            gender__in=["M", "F"],
-        )
-        qs_member = get_qs_member(qstring, included_members)
-        for i in standings:
-            if i.member_id == qs_member.id:
-                member_results = i
+        with tracer.start_as_current_span("boost: qs member"):
+            included_members = Rwmember.objects.filter(
+                year_of_birth__isnull=False,
+                tags=compute["boost_tag"],
+                gender__in=["M", "F"],
+            )
+            qs_member = get_qs_member(qstring, included_members)
+            for i in standings:
+                if i.member_id == qs_member.id:
+                    member_results = i
 
     def render_boost_page():
         if qs_member:
@@ -62,17 +65,22 @@ def index(request, year, leaderboard_only=False, standings_only=False):
                 "member_results": member_results,
                 "year": year,
             }
-            return render(request, "racedbapp/boost_member.html", context)
+            with tracer.start_as_current_span("boost: render template"):
+                return render(request, "racedbapp/boost_member.html", context)
+        with tracer.start_as_current_span("boost: render filters"):
+            standings_filter = get_standings_filter(qs_filter, qs_date, year)
+            date_filter = get_date_filter(qs_date, year)
         context = {
             "leaderboard": compute["leaderboard"],
             "standings": standings,
-            "standings_filter": get_standings_filter(qs_filter, qs_date, year),
-            "date_filter": get_date_filter(qs_date, year),
+            "standings_filter": standings_filter,
+            "date_filter": date_filter,
             "qs_date": qs_date,
             "year": year,
             "boost_years": boost_years,
         }
-        return render(request, "racedbapp/boost.html", context)
+        with tracer.start_as_current_span("boost: render template"):
+            return render(request, "racedbapp/boost.html", context)
 
     if not qs_filter and not qs_date and not qs_member:
         # Bare /boost/<year>/ is the hottest URL: cache the full render too.
@@ -126,7 +134,8 @@ def _compute_boost(year, qs_date):
         "boost_pb_points",
         "nophoto_url",
     )
-    config_dict = dict(Config.objects.values_list("name", "value").filter(name__in=config_values))
+    with tracer.start_as_current_span("boost: config"):
+        config_dict = dict(Config.objects.values_list("name", "value").filter(name__in=config_values))
     max_events = int(config_dict.get("boost_max_events", 0))
     max_endurrun = int(config_dict.get("boost_max_endurrun", 0))
     max_sport = int(config_dict.get("boost_max_sport", 0))
@@ -136,17 +145,22 @@ def _compute_boost(year, qs_date):
     last_day = datetime(year, 12, 31).date()
     if qs_date:
         last_day = qs_date
-    gender_finishers = get_gender_finishers(first_day, last_day)
-    boost_tag = get_boost_tag(year)
-    included_members = Rwmember.objects.filter(
-        year_of_birth__isnull=False,
-        tags=boost_tag,
-        gender__in=["M", "F"],
-    )
-    previous_races = get_previous_races(year, included_members)
+    with tracer.start_as_current_span("boost: gender finishers"):
+        gender_finishers = get_gender_finishers(first_day, last_day)
+    with tracer.start_as_current_span("boost: boost tag"):
+        boost_tag = get_boost_tag(year)
+    with tracer.start_as_current_span("boost: included members"):
+        included_members = Rwmember.objects.filter(
+            year_of_birth__isnull=False,
+            tags=boost_tag,
+            gender__in=["M", "F"],
+        )
+    with tracer.start_as_current_span("boost: previous races"):
+        previous_races = get_previous_races(year, included_members)
     battlers = {}
-    for i in included_members:
-        battlers[i.id] = Battler(i, year, nophoto_url)
+    with tracer.start_as_current_span("boost: battlers"):
+        for i in included_members:
+            battlers[i.id] = Battler(i, year, nophoto_url)
     dbresults = (
         Result.objects.select_related(
             "event__race", "event__distance", "event__sequel"
@@ -177,35 +191,38 @@ def _compute_boost(year, qs_date):
         )
         .order_by("event__date")
     )
-    for i in dbresults:
-        battlers[i.rwmember_id].results.append(
-            BResult(i, gender_finishers, config_dict, previous_races)
-        )
-    for v in battlers.values():
-        v.calculate(max_events, max_endurrun, max_sport)
+    with tracer.start_as_current_span("boost: results + bresults"):
+        for i in dbresults:
+            battlers[i.rwmember_id].results.append(
+                BResult(i, gender_finishers, config_dict, previous_races)
+            )
+    with tracer.start_as_current_span("boost: calculate"):
+        for v in battlers.values():
+            v.calculate(max_events, max_endurrun, max_sport)
     gender_place_dict = {"F": 0, "M": 0, "NB": 0}
     category_place_dict = {}
     leaders = {"F40-": [], "M40-": [], "F40+": [], "M40+": [], "NB40-": [], "NB40+": []}
     standings = []
     count = 1
-    for i in sorted(battlers.values(), key=attrgetter("total_points"), reverse=True):
-        if i.total_points == 0:
-            continue
-        i.place = count
-        count += 1
-        if i.gender in gender_place_dict:
-            gender_place_dict[i.gender] += 1
-            i.gender_place = gender_place_dict[i.gender]
-        if i.category in category_place_dict:
-            category_place_dict[i.category] += 1
-            i.category_place = category_place_dict[i.category]
-        else:
+    with tracer.start_as_current_span("boost: standings"):
+        for i in sorted(battlers.values(), key=attrgetter("total_points"), reverse=True):
+            if i.total_points == 0:
+                continue
+            i.place = count
+            count += 1
             if i.gender in gender_place_dict:
-                i.category_place = category_place_dict[i.category] = 1
-        if i.gender in gender_place_dict:
-            if len(leaders[i.category]) < leaderboard_size:
-                leaders[i.category].append(i)
-        standings.append(i)
+                gender_place_dict[i.gender] += 1
+                i.gender_place = gender_place_dict[i.gender]
+            if i.category in category_place_dict:
+                category_place_dict[i.category] += 1
+                i.category_place = category_place_dict[i.category]
+            else:
+                if i.gender in gender_place_dict:
+                    i.category_place = category_place_dict[i.category] = 1
+            if i.gender in gender_place_dict:
+                if len(leaders[i.category]) < leaderboard_size:
+                    leaders[i.category].append(i)
+            standings.append(i)
     leaderboard = OrderedDict()
     leaderboard["Female Under 40"] = leaders["F40-"]
     leaderboard["Male Under 40"] = leaders["M40-"]

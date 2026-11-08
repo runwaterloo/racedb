@@ -96,8 +96,8 @@ class RequestLoggingMiddleware:
             "path": request.path,
             "qstring": request.META.get("QUERY_STRING", ""),
             "client_ip": client_ip,
-            "method": request.method,
             "user_agent": (request.META.get("HTTP_USER_AGENT", "") or "-")[:200],
+            "method": request.method,
             "view": view,
             "trace_id": trace_id,
         }
