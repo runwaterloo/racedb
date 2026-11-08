@@ -370,18 +370,21 @@ def _prebuild_html(standings, leaderboard, qs_date):
 
 def get_boost_years():
     boost_tags = Rwmembertag.objects.values_list("name", flat=True).filter(name__icontains="boost-")
-    boost_tag_years = [x.split("-")[1] for x in boost_tags]
-    found_year_results = False
-    boost_years = []
-    for i in sorted(boost_tag_years, reverse=True):
-        if i.isdigit():
-            if found_year_results:
-                boost_years.append(int(i))
-            else:
-                year_result_count = Result.objects.filter(event__date__icontains=i).count()
-                if year_result_count > 0:
-                    boost_years.append(int(i))
-                    found_year_results = True
+    boost_tag_years = {int(x.split("-")[1]) for x in boost_tags if x.split("-")[1].isdigit()}
+    # One aggregate for all years: counts per event year for years that have
+    # boost tags. Replaces the old newest-first COUNT-per-year loop (one
+    # LIKE-over-cast-date scan per candidate year).
+    years_with_results = set(
+        Result.objects.filter(event__date__year__in=boost_tag_years)
+        .values_list("event__date__year", flat=True)
+        .distinct()
+    )
+    boost_years = sorted(boost_tag_years, reverse=True)
+    for i in boost_years:
+        if i not in years_with_results:
+            boost_years.remove(i)
+            continue
+        break  # found the newest year with results; keep everything older
     return boost_years
 
 
