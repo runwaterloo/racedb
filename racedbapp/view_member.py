@@ -8,6 +8,7 @@ from django.db.models import Count, Min
 from django.shortcuts import get_object_or_404, render
 
 from racedbapp.shared.shared import set_distance_display_name
+from racedbapp.shared.tracing import tracer
 
 from . import view_boost
 from .models import Bow, Bowathlete, Config, Event, Race, Result, Rwmember, Samerace
@@ -19,52 +20,62 @@ named_badge = namedtuple("nb", ["name", "date", "image", "url"])
 
 
 def index(request, member_slug):
-    member = get_object_or_404(Rwmember, slug=member_slug, active=True)
-    results, total_distance = get_memberresults(member)
-    fivek_pb = get_pb(results, "5-km")
-    tenk_pb = get_pb(results, "10-km")
-    results_with_gender_place = sorted(
-        [x for x in results if x.gender_place != ""], key=attrgetter("gender_place")
-    )
-    best_gender_place = best_category_place = ""
-    if len(results_with_gender_place) > 0:
-        best_gender_place = results_with_gender_place[0]
-    results_with_category_place = sorted(
-        [x for x in results if x.category_place != ""], key=attrgetter("category_place")
-    )
-    if len(results_with_category_place) > 0:
-        best_category_place = results_with_category_place[0]
-    total_distance = round(total_distance, 1)
-    racing_since = ""
-    if len(results) > 0:
-        racing_since = results[-1].result.event.date.year
-    badges = get_badges(member, results)
-    try:
-        nophoto_url = Config.objects.get(name="nophoto_url").value
-    except ObjectDoesNotExist:
-        nophoto_url = ""
+    with tracer.start_as_current_span("member: member lookup"):
+        member = get_object_or_404(Rwmember, slug=member_slug, active=True)
+    with tracer.start_as_current_span("member: memberresults"):
+        results, total_distance = get_memberresults(member)
+    with tracer.start_as_current_span("member: pbs + best places"):
+        fivek_pb = get_pb(results, "5-km")
+        tenk_pb = get_pb(results, "10-km")
+        results_with_gender_place = sorted(
+            [x for x in results if x.gender_place != ""], key=attrgetter("gender_place")
+        )
+        best_gender_place = best_category_place = ""
+        if len(results_with_gender_place) > 0:
+            best_gender_place = results_with_gender_place[0]
+        results_with_category_place = sorted(
+            [x for x in results if x.category_place != ""], key=attrgetter("category_place")
+        )
+        if len(results_with_category_place) > 0:
+            best_category_place = results_with_category_place[0]
+        total_distance = round(total_distance, 1)
+        racing_since = ""
+        if len(results) > 0:
+            racing_since = results[-1].result.event.date.year
+    with tracer.start_as_current_span("member: badges") as span:
+        badges = get_badges(member, results)
+        span.set_attribute("racedb.badges.count", len(badges))
+    with tracer.start_as_current_span("member: config lookup"):
+        try:
+            nophoto_url = Config.objects.get(name="nophoto_url").value
+        except ObjectDoesNotExist:
+            nophoto_url = ""
     if member.gender in ("M", "F"):
-        boost = get_boost(member, request)
+        with tracer.start_as_current_span("member: boost"):
+            boost = get_boost(member, request)
     else:
         boost = False
-    no_profile_camera = False
-    if "no-profile-camera" in [x.name for x in member.tags.all()]:
-        no_profile_camera = True
-    context = {
-        "member": member,
-        "results": results,
-        "total_distance": total_distance,
-        "racing_since": racing_since,
-        "fivek_pb": fivek_pb,
-        "tenk_pb": tenk_pb,
-        "best_gender_place": best_gender_place,
-        "best_category_place": best_category_place,
-        "badges": badges,
-        "nophoto_url": nophoto_url,
-        "boost": boost,
-        "no_profile_camera": no_profile_camera,
-    }
-    return render(request, "racedbapp/member.html", context)
+    with tracer.start_as_current_span("member: tags check"):
+        no_profile_camera = False
+        if "no-profile-camera" in [x.name for x in member.tags.all()]:
+            no_profile_camera = True
+    with tracer.start_as_current_span("member: context"):
+        context = {
+            "member": member,
+            "results": results,
+            "total_distance": total_distance,
+            "racing_since": racing_since,
+            "fivek_pb": fivek_pb,
+            "tenk_pb": tenk_pb,
+            "best_gender_place": best_gender_place,
+            "best_category_place": best_category_place,
+            "badges": badges,
+            "nophoto_url": nophoto_url,
+            "boost": boost,
+            "no_profile_camera": no_profile_camera,
+        }
+    with tracer.start_as_current_span("member: template render"):
+        return render(request, "racedbapp/member.html", context)
 
 
 def get_pb(results, distance_slug):
@@ -81,18 +92,28 @@ def get_pb(results, distance_slug):
 
 def get_badges(member, results):
     badges = []
-    badges += get_founders_badge(member)
-    badges += get_total_kms_badge(results)
-    badges += get_wc_finishes_badge(results)
-    badges += get_inaugural_finishes_badges(results)
-    badges += get_bow_finishes_badges(member, results)
-    badges += get_endurrun_finishes_badges(member, results)
-    badges += get_pb_badges(member, results)
-    badges += get_race_win_badges(results)
-    badges += get_endurrace_combined_badge(results)
+    with tracer.start_as_current_span("member: badge: founders"):
+        badges += get_founders_badge(member)
+    with tracer.start_as_current_span("member: badge: total kms"):
+        badges += get_total_kms_badge(results)
+    with tracer.start_as_current_span("member: badge: waterloo classic"):
+        badges += get_wc_finishes_badge(results)
+    with tracer.start_as_current_span("member: badge: inaugural"):
+        badges += get_inaugural_finishes_badges(results)
+    with tracer.start_as_current_span("member: badge: bow"):
+        badges += get_bow_finishes_badges(member, results)
+    with tracer.start_as_current_span("member: badge: endurrun"):
+        badges += get_endurrun_finishes_badges(member, results)
+    with tracer.start_as_current_span("member: badge: pb"):
+        badges += get_pb_badges(member, results)
+    with tracer.start_as_current_span("member: badge: race wins"):
+        badges += get_race_win_badges(results)
+    with tracer.start_as_current_span("member: badge: endurrace combined"):
+        badges += get_endurrace_combined_badge(results)
     # badges += get_event_finishes_badge(results)
     # badges += get_adventurer_badge(results)
-    badges = sorted(badges, key=attrgetter("date", "name"), reverse=True)
+    with tracer.start_as_current_span("member: badge: sort"):
+        badges = sorted(badges, key=attrgetter("date", "name"), reverse=True)
     return badges
 
 
@@ -488,37 +509,47 @@ def get_place_counts(dbresults):
 def get_memberresults(member):
     results = []
     total_distance = 0
-    dbresults = list(
-        Result.objects.select_related(
-            "event__race", "event__distance", "event__sequel", "rwmember", "category"
+    with tracer.start_as_current_span("member: results queryset"):
+        dbresults = list(
+            Result.objects.select_related(
+                "event__race", "event__distance", "event__sequel", "rwmember", "category"
+            )
+            .filter(rwmember=member)
+            .exclude(place__gte=990000)
+            .order_by("-event__date", "-event__distance__km")
         )
-        .filter(rwmember=member)
-        .exclude(place__gte=990000)
-        .order_by("-event__date", "-event__distance__km")
-    )
-    gender_counts, category_counts = get_place_counts(dbresults)
-    for r in dbresults:
-        guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
-        chiptime = ""
-        if r.chiptime:
-            chiptime = r.chiptime - timedelta(microseconds=r.chiptime.microseconds)
-        gender_place = gender_counts.get((r.event_id, r.gender, r.place))
-        category_place = ""
-        if r.category.name != "":
-            category_place = category_counts.get((r.event_id, r.category_id, r.place))
-        sequel = getattr(r.event, "sequel", None)
-        set_distance_display_name(r.event.distance, sequel)
-        results.append(named_result(r, guntime, gender_place, category_place, chiptime))
-        total_distance += r.event.distance.km
+    with tracer.start_as_current_span("member: place counts") as span:
+        gender_counts, category_counts = get_place_counts(dbresults)
+        span.set_attribute("racedb.results.count", len(dbresults))
+    with tracer.start_as_current_span("member: row loop"):
+        for r in dbresults:
+            guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
+            chiptime = ""
+            if r.chiptime:
+                chiptime = r.chiptime - timedelta(microseconds=r.chiptime.microseconds)
+            gender_place = gender_counts.get((r.event_id, r.gender, r.place))
+            category_place = ""
+            if r.category.name != "":
+                category_place = category_counts.get((r.event_id, r.category_id, r.place))
+            sequel = getattr(r.event, "sequel", None)
+            set_distance_display_name(r.event.distance, sequel)
+            results.append(named_result(r, guntime, gender_place, category_place, chiptime))
+            total_distance += r.event.distance.km
+        return results, total_distance
     return results, total_distance
 
 
 def get_boost(member, request):
     boost = []
-    boost_years = get_boost_years(member)
+    with tracer.start_as_current_span("member: boost years"):
+        boost_years = get_boost_years(member)
     for boost_year in boost_years:
-        boost_year_standings = view_boost.index(request, boost_year, standings_only=True)
-        member_boost_standings = [x for x in boost_year_standings if x.member_id == member.id]
+        with tracer.start_as_current_span("member: boost year") as span:
+            span.set_attribute("racedb.boost.year", boost_year)
+            boost_year_standings = view_boost.index(request, boost_year, standings_only=True)
+            member_boost_standings = [
+                x for x in boost_year_standings if x.member_id == member.id
+            ]
         if member_boost_standings:
             boost.append(member_boost_standings[0])
     return boost
