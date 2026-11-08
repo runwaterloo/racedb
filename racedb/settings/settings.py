@@ -197,7 +197,7 @@ if os.getenv("SETTINGS", "test") in ("prod", "dev", "min"):
         "disable_existing_loggers": False,
         "formatters": {
             "verbose": {
-                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s] %(message)s",
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
             "simple": {"format": "%(levelname)s %(message)s"},
@@ -339,3 +339,7 @@ if os.getenv("TRACING") == "on":
     trace.set_tracer_provider(provider)
     DjangoInstrumentor().instrument()
     PsycopgInstrumentor().instrument()
+    # Bridge OTel context into stdlib logging so exception tracebacks
+    # (django.request logger) carry the trace_id and join with Tempo.
+    from opentelemetry.instrumentation.logging import LoggingInstrumentor
+    LoggingInstrumentor().instrument()

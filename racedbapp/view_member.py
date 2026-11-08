@@ -19,6 +19,8 @@ named_badge = namedtuple("nb", ["name", "date", "image", "url"])
 
 
 def index(request, member_slug):
+    # TEMPORARY (trace-id verification): remove before merge.
+    raise RuntimeError("intentional test error for trace-id wiring check")
     member = get_object_or_404(Rwmember, slug=member_slug, active=True)
     results, total_distance = get_memberresults(member)
     fivek_pb = get_pb(results, "5-km")
