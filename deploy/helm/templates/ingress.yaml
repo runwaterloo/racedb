@@ -24,7 +24,7 @@ spec:
   entryPoints:
     - web
   routes:
-    - match: "Host(`{{ .Values.ingress.host}}`) && !PathPrefix(`/v1`)"
+    - match: "Host(`{{ .Values.ingress.host}}`) && !PathPrefix(`/v1`) && !PathPrefix(`/static`)"
       kind: Rule
       services:
         - name: "{{ include "racedb.fullname" . }}"
@@ -36,18 +36,53 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
+  name: "{{ include "racedb.fullname" . }}-insecure-static"
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: "Host(`{{ .Values.ingress.host}}`) && PathPrefix(`/static`)"
+      kind: Rule
+      services:
+        - name: "{{ include "racedb.fullname" . }}"
+          port: {{ .Values.service.port}}
+      middlewares:
+        - name: "{{ include "racedb.fullname" . }}-rate-limit-static"
+        - name: "{{ include "racedb.fullname" . }}-redirect"
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
   name: "{{ include "racedb.fullname" . }}-secure"
 spec:
   entryPoints:
     - websecure
   routes:
-    - match: "Host(`{{ .Values.ingress.host}}`) && !PathPrefix(`/v1`)"
+    - match: "Host(`{{ .Values.ingress.host}}`) && !PathPrefix(`/v1`) && !PathPrefix(`/static`)"
       kind: Rule
       services:
         - name: "{{ include "racedb.fullname" . }}"
           port: {{ .Values.service.port}}
       middlewares:
         - name: "{{ include "racedb.fullname" . }}-rate-limit"
+  tls:
+    certResolver: le
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: "{{ include "racedb.fullname" . }}-secure-static"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: "Host(`{{ .Values.ingress.host}}`) && PathPrefix(`/static`)"
+      kind: Rule
+      services:
+        - name: "{{ include "racedb.fullname" . }}"
+          port: {{ .Values.service.port}}
+      middlewares:
+        - name: "{{ include "racedb.fullname" . }}-rate-limit-static"
   tls:
     certResolver: le
 ---
