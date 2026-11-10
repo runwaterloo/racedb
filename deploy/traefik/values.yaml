@@ -24,10 +24,10 @@ accessLog:
   format: json
   fields:
     defaultMode: keep
-  headers:
-    names:
-      Referer: keep
-      Cf-Ray: keep
+    headers:
+      names:
+        Referer: keep
+        Cf-Ray: keep
 persistence:
   existingClaim: traefik-pvc
   enabled: true
