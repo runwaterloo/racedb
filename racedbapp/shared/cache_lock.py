@@ -128,13 +128,13 @@ def bump_generation(source):
 def purge_stale_cache():
     """Delete generation-stamped entries older than the current generation.
 
-    Called after warm_cache so the redis keyspace shows only fresh entries
+    Called from clear_cache so the redis keyspace shows only fresh entries
     (issue #430): bump_generation() marks entries stale but never deletes
     them, so without this sweep the keyspace count mixes fresh and stale
     entries and is not a meaningful instrument.
 
     Generation-aware: only entries whose stamped generation < current are
-    deleted, so a bump that lands mid-warm purges exactly the orphans.
+    deleted, so entries rendered after the bump are kept.
     Non-stamped keys (the generation counter, single-flight locks, watcher
     state) are skipped. Requires a redis backend to enumerate keys; any
     other backend (locmem in local dev/tests) or redis error just logs and
