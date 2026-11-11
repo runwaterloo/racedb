@@ -1,20 +1,33 @@
-from bisect import bisect_right
 from collections import namedtuple
 from datetime import date, timedelta
 from operator import attrgetter
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count, Min
+from django.db.models import Min
 from django.shortcuts import get_object_or_404, render
 
 from racedbapp.shared.shared import set_distance_display_name
 from racedbapp.shared.tracing import tracer
+from racedbapp.templatetags.racedbapp_extras import get_pace, get_place
 
 from . import view_boost
 from .models import Bow, Bowathlete, Config, Event, Race, Result, Rwmember, Samerace
 from .shared import utils
 
-named_result = namedtuple("nr", ["result", "guntime", "gender_place", "category_place", "chiptime"])
+named_result = namedtuple(
+    "nr",
+    [
+        "result",
+        "guntime",
+        "gender_place",
+        "category_place",
+        "chiptime",
+        "event_url",
+        "event_label",
+        "place",
+        "pace",
+    ],
+)
 named_pb = namedtuple("npb", ["time", "event"])
 named_badge = namedtuple("nb", ["name", "date", "image", "url"])
 
@@ -63,6 +76,7 @@ def index(request, member_slug):
         context = {
             "member": member,
             "results": results,
+            "results_count": len(results),
             "total_distance": total_distance,
             "racing_since": racing_since,
             "fivek_pb": fivek_pb,
@@ -442,73 +456,6 @@ def get_minutegroup(result, thresholds):
     return thisminutegroup
 
 
-def get_place_counts(dbresults):
-    """Compute gender_place and category_place for every result in bulk.
-
-    One GROUP BY aggregate returns the number of results at each
-    (event, gender, category, place); cumulative counts (count of places
-    <= p, ties included, matching the original COUNT(place__lte=...)
-    and later the RANGE window frame) are summed in Python per
-    partition. Place counts deliberately include places >= 990000
-    (e.g. DNF) to match the original per-row COUNT filters. This
-    avoids fetching every participant's full result row, which is what
-    made the window-function version slow for members with many events.
-    """
-    event_ids = list({r.event_id for r in dbresults})
-    gender_counts = {}
-    category_counts = {}
-    if not event_ids:
-        return gender_counts, category_counts
-    with tracer.start_as_current_span("member: place counts: query"):
-        rows = list(
-            Result.objects.filter(event_id__in=event_ids)
-            .values("event_id", "gender", "category_id", "place")
-            .annotate(n=Count("id"))
-            .values_list("event_id", "gender", "category_id", "place", "n")
-        )
-    with tracer.start_as_current_span("member: place counts: group"):
-        gender_groups = {}
-        category_groups = {}
-        for event_id, gender, category_id, place, n in rows:
-            gender_groups.setdefault((event_id, gender), []).append((place, n))
-            category_groups.setdefault((event_id, category_id), []).append((place, n))
-
-        def cumulative_counts(groups):
-            prefix = {}
-            for key, pairs in groups.items():
-                pairs.sort()
-                total = 0
-                places = []
-                sums = []
-                for place, n in pairs:
-                    total += n
-                    places.append(place)
-                    sums.append(total)
-                prefix[key] = (places, sums)
-            return prefix
-
-        gender_prefix = cumulative_counts(gender_groups)
-        category_prefix = cumulative_counts(category_groups)
-
-    def count_at(prefix, key, place):
-        entry = prefix.get(key)
-        if entry is None:
-            return None
-        places, sums = entry
-        idx = bisect_right(places, place)
-        return sums[idx - 1]
-
-    with tracer.start_as_current_span("member: place counts: lookup"):
-        for r in dbresults:
-            gender_counts[(r.event_id, r.gender, r.place)] = count_at(
-                gender_prefix, (r.event_id, r.gender), r.place
-            )
-            category_counts[(r.event_id, r.category_id, r.place)] = count_at(
-                category_prefix, (r.event_id, r.category_id), r.place
-            )
-    return gender_counts, category_counts
-
-
 def get_memberresults(member):
     results = []
     total_distance = 0
@@ -521,22 +468,37 @@ def get_memberresults(member):
             .exclude(place__gte=990000)
             .order_by("-event__date", "-event__distance__km")
         )
-    with tracer.start_as_current_span("member: place counts") as span:
-        gender_counts, category_counts = get_place_counts(dbresults)
-        span.set_attribute("racedb.results.count", len(dbresults))
     with tracer.start_as_current_span("member: row loop"):
         for r in dbresults:
             guntime = r.guntime - timedelta(microseconds=r.guntime.microseconds)
             chiptime = ""
             if r.chiptime:
                 chiptime = r.chiptime - timedelta(microseconds=r.chiptime.microseconds)
-            gender_place = gender_counts.get((r.event_id, r.gender, r.place))
+            gender_place = r.gender_place
             category_place = ""
             if r.category.name != "":
-                category_place = category_counts.get((r.event_id, r.category_id, r.place))
-            sequel = getattr(r.event, "sequel", None)
-            set_distance_display_name(r.event.distance, sequel)
-            results.append(named_result(r, guntime, gender_place, category_place, chiptime))
+                category_place = r.category_place
+            event = r.event
+            distance = event.distance
+            sequel = getattr(event, "sequel", None)
+            set_distance_display_name(distance, sequel)
+            event_url = f"/event/{event.date.year}/{event.race.slug}/{distance.slug}/"
+            if distance.sequel_slug:
+                event_url += f"{distance.sequel_slug}/"
+            event_label = f"{event.date.year} {event.race.shortname} {distance.display_name}"
+            results.append(
+                named_result(
+                    r,
+                    guntime,
+                    gender_place,
+                    category_place,
+                    chiptime,
+                    event_url,
+                    event_label,
+                    get_place(r.place),
+                    get_pace(guntime, distance.km),
+                )
+            )
             total_distance += r.event.distance.km
     return results, total_distance
 

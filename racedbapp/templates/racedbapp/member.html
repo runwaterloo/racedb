@@ -51,7 +51,7 @@
           </tr>
           <tr>
             <td>Total Events</td>
-            <td class="text-right">{{ results|length }}</td>
+            <td class="text-right">{{ results_count }}</td>
           </tr>
           <tr>
             <td>Total KMs Raced</td>
@@ -165,7 +165,7 @@
   <div class="row">
     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
       <h4>All Results</h4>
-      {% if results|length >= 8 %}
+      {% if results_count >= 8 %}
         <!-- search input -->
         <div class="row">
           <div class="col-xs-3">
@@ -198,15 +198,15 @@
           {% for r in results %}
             <tr>
               <td class="text-left" scope="col">
-                <a href="/event/{{ r.result.event.date.year }}/{{ r.result.event.race.slug }}/{{ r.result.event.distance.slug }}/{% if r.result.event.distance.sequel_slug %}{{ r.result.event.distance.sequel_slug }}/{% endif %}">{{ r.result.event.date.year }} {{ r.result.event.race.shortname }} {{ r.result.event.distance.display_name }}</a>
+                <a href="{{ r.event_url }}">{{ r.event_label }}</a>
               </td>
-              <td class="text-center" scope="col">{{ r.result.place|get_place }}</td>
+              <td class="text-center" scope="col">{{ r.place }}</td>
               <td class="text-center" scope="col">{{ r.result.bib }}</td>
               <td class="text-center" scope="col">{{ r.guntime }}</td>
               <td class="text-center" scope="col">{{ r.gender_place }}</td>
               <td class="text-center" scope="col">{{ r.result.category }}</td>
               <td class="text-center" scope="col">{{ r.category_place }}</td>
-              <td class="text-center" scope="col">{{ r.guntime|get_pace:r.result.event.distance.km }}</td>
+              <td class="text-center" scope="col">{{ r.pace }}</td>
               <td class="text-center" scope="col">{{ r.chiptime }}</td>
             </tr>
           {% endfor %}
