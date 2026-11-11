@@ -41,13 +41,13 @@ def index(request, member_slug):
         fivek_pb = get_pb(results, "5-km")
         tenk_pb = get_pb(results, "10-km")
         results_with_gender_place = sorted(
-            [x for x in results if x.gender_place != ""], key=attrgetter("gender_place")
+            [x for x in results if x.gender_place], key=attrgetter("gender_place")
         )
         best_gender_place = best_category_place = ""
         if len(results_with_gender_place) > 0:
             best_gender_place = results_with_gender_place[0]
         results_with_category_place = sorted(
-            [x for x in results if x.category_place != ""], key=attrgetter("category_place")
+            [x for x in results if x.category_place], key=attrgetter("category_place")
         )
         if len(results_with_category_place) > 0:
             best_category_place = results_with_category_place[0]
@@ -474,9 +474,9 @@ def get_memberresults(member):
             chiptime = ""
             if r.chiptime:
                 chiptime = r.chiptime - timedelta(microseconds=r.chiptime.microseconds)
-            gender_place = r.gender_place
+            gender_place = "" if r.gender_place is None else r.gender_place
             category_place = ""
-            if r.category.name != "":
+            if r.category.name != "" and r.category_place is not None:
                 category_place = r.category_place
             event = r.event
             distance = event.distance
