@@ -8,12 +8,26 @@ from django.shortcuts import get_object_or_404, render
 
 from racedbapp.shared.shared import set_distance_display_name
 from racedbapp.shared.tracing import tracer
+from racedbapp.templatetags.racedbapp_extras import get_pace, get_place
 
 from . import view_boost
 from .models import Bow, Bowathlete, Config, Event, Race, Result, Rwmember, Samerace
 from .shared import utils
 
-named_result = namedtuple("nr", ["result", "guntime", "gender_place", "category_place", "chiptime"])
+named_result = namedtuple(
+    "nr",
+    [
+        "result",
+        "guntime",
+        "gender_place",
+        "category_place",
+        "chiptime",
+        "event_url",
+        "event_label",
+        "place",
+        "pace",
+    ],
+)
 named_pb = namedtuple("npb", ["time", "event"])
 named_badge = namedtuple("nb", ["name", "date", "image", "url"])
 
@@ -62,6 +76,7 @@ def index(request, member_slug):
         context = {
             "member": member,
             "results": results,
+            "results_count": len(results),
             "total_distance": total_distance,
             "racing_since": racing_since,
             "fivek_pb": fivek_pb,
@@ -463,9 +478,27 @@ def get_memberresults(member):
             category_place = ""
             if r.category.name != "":
                 category_place = r.category_place
-            sequel = getattr(r.event, "sequel", None)
-            set_distance_display_name(r.event.distance, sequel)
-            results.append(named_result(r, guntime, gender_place, category_place, chiptime))
+            event = r.event
+            distance = event.distance
+            sequel = getattr(event, "sequel", None)
+            set_distance_display_name(distance, sequel)
+            event_url = f"/event/{event.date.year}/{event.race.slug}/{distance.slug}/"
+            if distance.sequel_slug:
+                event_url += f"{distance.sequel_slug}/"
+            event_label = f"{event.date.year} {event.race.shortname} {distance.display_name}"
+            results.append(
+                named_result(
+                    r,
+                    guntime,
+                    gender_place,
+                    category_place,
+                    chiptime,
+                    event_url,
+                    event_label,
+                    get_place(r.place),
+                    get_pace(guntime, distance.km),
+                )
+            )
             total_distance += r.event.distance.km
     return results, total_distance
 
