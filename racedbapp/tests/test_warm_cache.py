@@ -147,3 +147,34 @@ def test_warm_cache_runs_purge():
     ):
         tasks.warm_cache()
     mock_purge.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_warm_cache_includes_boost_years():
+    """Boost pages for each boost year are warmed after WARM_URLS."""
+    client = MagicMock(spec=Client)
+    client.get.return_value.status_code = 200
+    with (
+        patch.object(tasks, "WEBHOST", "http://localhost"),
+        patch.object(tasks.view_boost, "get_boost_years", return_value=[2026, 2025]),
+        patch.object(tasks.time, "sleep"),
+        patch("racedbapp.tasks.Client", return_value=client),
+    ):
+        tasks.warm_cache()
+    warmed = [call[0][0] for call in client.get.call_args_list]
+    assert warmed == ["/", "/boost/2026/", "/boost/2025/"]
+
+
+@pytest.mark.django_db
+def test_warm_cache_skipped_on_dev_host():
+    """warm_cache does nothing on the dev host (5s cache TTL makes it pointless)."""
+    with (
+        patch.object(tasks, "WEBHOST", "racedb.runwaterloo.com"),
+        patch.object(tasks, "view_boost") as mock_view_boost,
+        patch("racedbapp.tasks.Client") as mock_client,
+        patch("racedbapp.tasks.requests.get") as mock_get,
+    ):
+        tasks.warm_cache()
+    mock_client.assert_not_called()
+    mock_get.assert_not_called()
+    mock_view_boost.get_boost_years.assert_not_called()

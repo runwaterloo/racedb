@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 import urllib
 from datetime import date, timedelta
 
@@ -12,7 +13,7 @@ from django.test import Client
 from django.utils import timezone
 from django_slack import slack_message
 
-from . import process_photoupdate, view_member
+from . import process_photoupdate, view_boost, view_member
 from .models import Config, Endurathlete, Event, Rwmember, Rwmembertag
 from .shared import cache_lock
 from .shared.cache_lock import purge_stale_cache
@@ -23,6 +24,8 @@ logger = logging.getLogger(__name__)
 WARM_URLS = ["/"]
 
 WEBHOST = os.getenv("WEBHOST", "http://localhost")
+
+WARM_SLEEP_SECONDS = 1  # pause between warm requests so we don't hammer the web tier
 
 
 def safe_enqueue(task, *args, **kwargs):
@@ -302,15 +305,30 @@ def clear_cache(source):
 
 @shared_task
 def warm_cache():
-    """Render hot pages so the next visitors get cache hits, not cold renders."""
-    if WEBHOST == "http://localhost":
-        client = Client()
-        for url in WARM_URLS:
+    """Render hot pages so the next visitors get cache hits, not cold renders.
+
+    URLs are WARM_URLS plus the boost page for every boost year
+    (newest first). Boost entries power both /boost/<year>/ and the
+    standings shown on member pages, so a cold compute there makes the
+    first member view after an invalidation pay for all of a member's
+    boost years at once. Entries expire after 5 seconds on dev, so
+    warming only happens on prod (and via the test client locally).
+    """
+    if WEBHOST == "racedb.runwaterloo.com":
+        logger.info("Not production host, skipping warm_cache")
+        return
+    urls = list(WARM_URLS)
+    for year in view_boost.get_boost_years():
+        urls.append("/boost/{}/".format(year))
+    for i, url in enumerate(urls):
+        if i > 0:
+            time.sleep(WARM_SLEEP_SECONDS)
+        if WEBHOST == "http://localhost":
+            client = Client()
             logger.info("Warming cache: %s", url)
             response = client.get(url)
             logger.info("Warmed %s -> %s", url, response.status_code)
-    else:
-        for url in WARM_URLS:
+        else:
             host = WEBHOST
             if not host.startswith(("http://", "https://")):
                 host = "https://" + host
