@@ -1,19 +1,15 @@
 import logging
 import os
-import time
-import urllib
 from datetime import date, timedelta
 
-import requests
 from celery import shared_task
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import connection
-from django.test import Client
 from django.utils import timezone
 from django_slack import slack_message
 
-from . import process_photoupdate, view_boost, view_member
+from . import process_photoupdate, view_member
 from .models import Config, Endurathlete, Event, Rwmember, Rwmembertag
 from .shared import cache_lock
 from .shared.cache_lock import purge_stale_cache
@@ -21,11 +17,7 @@ from .shared.shared import get_config_value_or_false
 
 logger = logging.getLogger(__name__)
 
-WARM_URLS = ["/"]
-
 WEBHOST = os.getenv("WEBHOST", "http://localhost")
-
-WARM_SLEEP_SECONDS = 1  # pause between warm requests so we don't hammer the web tier
 
 
 def safe_enqueue(task, *args, **kwargs):
@@ -60,9 +52,6 @@ def webhook():
     os.system("git pull https://gitlab.com/sl70176/racedb.git")
     logging.info("Updating pip requirements")
     os.system("pip install -r requirements.txt")
-    # clear_cache bumps the generation and warms hot pages; the warm task
-    # survives the .restart (queued in the Redis broker, redelivered after
-    # startup) so post-deploy visitors hit warm cache, not cold renders.
     safe_enqueue(clear_cache, source="webhook")
     logging.info("Touching .restart")
     os.system("touch .restart")
@@ -291,7 +280,7 @@ def slack_missing_urls():
 
 @shared_task
 def clear_cache(source):
-    """Invalidate all generation-stamped cache entries, then warm hot pages.
+    """Invalidate all generation-stamped cache entries and sweep stale ones.
 
     source is required and flows into the generation-bump log line, so
     every invalidation is attributable (e.g. "watcher", "addraces",
@@ -300,48 +289,9 @@ def clear_cache(source):
     if not source or not isinstance(source, str):
         raise ValueError("clear_cache requires a source string")
     cache_lock.bump_generation(source=source)
-    safe_enqueue(warm_cache)
-
-
-@shared_task
-def warm_cache():
-    """Render hot pages so the next visitors get cache hits, not cold renders.
-
-    URLs are WARM_URLS plus the boost page for every boost year
-    (newest first). Boost entries power both /boost/<year>/ and the
-    standings shown on member pages, so a cold compute there makes the
-    first member view after an invalidation pay for all of a member's
-    boost years at once. Entries expire after 5 seconds on dev, so
-    warming only happens on prod (and via the test client locally).
-    """
-    if WEBHOST == "racedb.runwaterloo.com":
-        logger.info("Not production host, skipping warm_cache")
-        return
-    urls = list(WARM_URLS)
-    for year in view_boost.get_boost_years():
-        urls.append("/boost/{}/".format(year))
-    for i, url in enumerate(urls):
-        if i > 0:
-            time.sleep(WARM_SLEEP_SECONDS)
-        if WEBHOST == "http://localhost":
-            client = Client()
-            logger.info("Warming cache: %s", url)
-            response = client.get(url)
-            logger.info("Warmed %s -> %s", url, response.status_code)
-        else:
-            host = WEBHOST
-            if not host.startswith(("http://", "https://")):
-                host = "https://" + host
-            full_url = urllib.parse.urljoin(host, url)
-            logger.info("Warming cache: %s", full_url)
-            try:
-                response = requests.get(full_url, timeout=30)
-                logger.info("Warmed %s -> %s", full_url, response.status_code)
-            except requests.RequestException as e:
-                logger.warning("Failed to warm %s: %s", full_url, e)
-    # Purge entries stale before this warm so the redis keyspace counts
+    # Purge entries stale before this bump so the redis keyspace counts
     # fresh entries only (issue #430). A generation-aware sweep, so entries
-    # rendered during this warm survive even if a bump lands mid-task.
+    # rendered after this bump are kept.
     purge_stale_cache()
 
 
