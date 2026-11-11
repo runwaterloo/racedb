@@ -285,12 +285,6 @@ def clear_cache(source):
     source is required and flows into the generation-bump log line, so
     every invalidation is attributable (e.g. "watcher", "addraces",
     "clearcache-view", "webhook", "config_save", "command").
-
-    No warming: pages render on demand behind cache_lock single-flight,
-    so the first visitor after a bump pays the cold render and later
-    visitors get cache hits. Warming was removed (2026-11-11) as extra
-    machinery without a payoff that page fixes can't match - see
-    issue #430 discussion and the drop-cache-warming PR.
     """
     if not source or not isinstance(source, str):
         raise ValueError("clear_cache requires a source string")
