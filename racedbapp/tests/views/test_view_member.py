@@ -117,3 +117,22 @@ def test_inaugural_badge_batches_race_queries(create_event, create_race, create_
         q for q in ctx.captured_queries if "MIN(" in q["sql"].upper() and "event" in q["sql"]
     ]
     assert len(event_min_queries) <= 1
+
+
+@pytest.mark.django_db
+def test_member_null_place_columns(create_result, create_rwmember, db):
+    """Regression for prod 500 (2026-11-11): a result row with NULL
+    gender_place/category_place (empty gender or empty category) must not
+    crash sorting and must render blank, like the old computed sentinel ""."""
+    member = create_rwmember()
+    # empty gender -> gender_place stays NULL (prod import behavior)
+    create_result(rwmember=member, gender="", place=115, name_suffix="nullplace")
+    # empty category name -> category_place stays NULL (prod import behavior)
+    empty_category = Category.objects.create(name="")
+    create_result(rwmember=member, category=empty_category, place=60, name_suffix="nullcat")
+    create_result(rwmember=member, gender="M", place=50, name_suffix="placed")
+    from rest_framework.test import APIClient
+
+    response = APIClient().get(f"/member/{member.slug}/")
+    assert response.status_code == 200
+    assert b"None" not in response.content
