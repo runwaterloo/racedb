@@ -290,7 +290,8 @@ def index(request, division, results_only=False):
                     "",
                 )
             )
-    with tracer.start_as_current_span("endurrun: rank and gaps"):
+    with tracer.start_as_current_span("endurrun: rank and gaps") as rank_span:
+        rank_span.set_attribute("results", len(results))
         results = sorted(results, key=attrgetter("total_seconds"))
         results = sorted(results, key=attrgetter("stages"), reverse=True)
         results = addgap(results)
@@ -317,7 +318,9 @@ def index(request, division, results_only=False):
         ultimate_winners,
         ultimate_gold_jerseys,
     ) = racedbapp.shared.endurrun.get_ultimate_winners_and_gold_jerseys(years, athletes)
-    with tracer.start_as_current_span("endurrun: render"):
+    with tracer.start_as_current_span("endurrun: render") as render_span:
+        render_span.set_attribute("results", len(results))
+        render_span.set_attribute("years", len(years))
         context = {
             "events": events,
             "events_results_count": events_results_count,
