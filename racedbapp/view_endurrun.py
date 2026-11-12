@@ -319,8 +319,8 @@ def index(request, division, results_only=False):
         ultimate_gold_jerseys,
     ) = racedbapp.shared.endurrun.get_ultimate_winners_and_gold_jerseys(years, athletes)
     with tracer.start_as_current_span("endurrun: render") as render_span:
-        render_span.set_attribute("results", len(results))
-        render_span.set_attribute("years", len(years))
+        render_span.set_attribute("results", len(results or []))
+        render_span.set_attribute("years", len(years or []))
         context = {
             "events": events,
             "events_results_count": events_results_count,
