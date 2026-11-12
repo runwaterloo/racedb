@@ -123,6 +123,7 @@ STORAGES = {
 }
 
 
+# --- Env-specific ---
 CACHE_SIGNALS_ENABLED = os.getenv("SETTINGS", "none") != "min"
 
 if os.getenv("SETTINGS", "none") == "prod":
@@ -274,7 +275,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # every response, so a response that comes back from the cache differs from the
 # one that was originally rendered.
 ENABLE_DEBUG_TOOLBAR = (
-    os.getenv("ENABLE_DEBUG_TOOLBAR", "false") == "true" and "pytest" not in sys.modules
+    os.getenv("ENABLE_DEBUG_TOOLBAR", "false") == "true"
+    and "pytest" not in sys.modules
 )
 
 if ENABLE_DEBUG_TOOLBAR:
