@@ -6,6 +6,7 @@ from collections import namedtuple
 from datetime import date, datetime, timedelta
 
 import flickrapi  # https://github.com/sybrenstuvel/flickrapi
+from django.conf import settings
 
 from racedb import secrets
 
@@ -14,6 +15,26 @@ from .shared import shared
 
 flickrapi.set_log_level(logging.WARNING)
 logger = logging.getLogger(__name__)
+
+
+def tags_changed(new_tags, old_tags):
+    """True when the tag set differs (order-insensitive, issue #392)."""
+    return set(new_tags) != set(old_tags)
+
+
+def _clear_cache(source):
+    """Enqueue a cache clear (skipped in local dev, issue #392)."""
+    if not settings.CACHE_SIGNALS_ENABLED:
+        return
+    try:
+        from celery import current_app
+
+        current_app.send_task("racedbapp.tasks.clear_cache", args=[source])
+        logger.info("Enqueued clear_cache ({})".format(source))
+    except Exception:
+        logger.warning("Could not enqueue clear_cache (broker unavailable?) - continuing")
+
+
 runwaterloo_flickr_id = "136573113@N04"
 photos_per_page = 500
 
@@ -151,7 +172,7 @@ def update_event_tags(events):
         oldtags = Phototag.objects.filter(event=event).values_list("tag", flat=True)
         if len(tags) == 0:
             logger.info("No tags found for {} ({}). No changes made.".format(event, event.id))
-        elif list(event_ntags) == list(oldtags):
+        elif not tags_changed(event_ntags, oldtags):
             logger.info("{} tags unchanged for {} ({})".format(len(event_ntags), event, event.id))
         else:
             dbtags = []
@@ -159,6 +180,7 @@ def update_event_tags(events):
                 dbtags.append(Phototag(event=event, tag=t))
             Phototag.objects.filter(event=event).delete()
             Phototag.objects.bulk_create(dbtags)
+            _clear_cache("photoupdate")
             logger.info("{} tags processed for {} ({})".format(len(event_ntags), event, event.id))
         nophotomembers = list(
             Rwmember.objects.filter(active=True, hasphotos=False).values_list("id", flat=True)

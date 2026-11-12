@@ -124,6 +124,11 @@ STORAGES = {
 
 
 # --- Env-specific ---
+# Cache-invalidation signals (issue #392): local dev (SETTINGS=min) skips
+# cache-clear enqueues entirely so loaddata/fakedata setup stays quiet.
+# Prod and QA always enqueue.
+CACHE_SIGNALS_ENABLED = os.getenv("SETTINGS", "none") != "min"
+
 if os.getenv("SETTINGS", "none") == "prod":
     CACHES = {
         "default": {
@@ -273,8 +278,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # every response, so a response that comes back from the cache differs from the
 # one that was originally rendered.
 ENABLE_DEBUG_TOOLBAR = (
-    os.getenv("ENABLE_DEBUG_TOOLBAR", "false") == "true"
-    and "pytest" not in sys.modules
+    os.getenv("ENABLE_DEBUG_TOOLBAR", "false") == "true" and "pytest" not in sys.modules
 )
 
 if ENABLE_DEBUG_TOOLBAR:
