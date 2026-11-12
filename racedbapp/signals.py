@@ -24,9 +24,13 @@ def model_post_save(sender, **kwargs):
     _clear_cache("member_save")
 
 
+@receiver(post_delete, sender=Rwmember)
 @receiver(post_delete, sender=Rwmembercorrection)
 def model_post_delete(sender, **kwargs):
-    member = kwargs["instance"].rwmember
+    if "racedbapp.models.Rwmembercorrection" in str(sender):
+        member = kwargs["instance"].rwmember
+    else:
+        member = kwargs["instance"]
     membership.update_membership(member)
     _clear_cache("member_delete")
 

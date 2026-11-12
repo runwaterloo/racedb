@@ -47,6 +47,54 @@ def test_member_save_enqueues_clear(create_rwmember, monkeypatch):
     assert "member_save" in called
 
 
+def test_photoupdate_clear_cache_disabled(monkeypatch):
+    monkeypatch.setattr(process_photoupdate.settings, "CACHE_SIGNALS_ENABLED", False)
+    sent = Mock()
+    monkeypatch.setattr("celery.current_app.send_task", sent)
+    process_photoupdate._clear_cache("photoupdate")
+    sent.assert_not_called()
+
+
+def test_photoupdate_clear_cache_enqueues(monkeypatch):
+    monkeypatch.setattr(process_photoupdate.settings, "CACHE_SIGNALS_ENABLED", True)
+    sent = Mock()
+    monkeypatch.setattr("celery.current_app.send_task", sent)
+    process_photoupdate._clear_cache("photoupdate")
+    sent.assert_called_once()
+    args, kwargs = sent.call_args
+    assert args[0] == "racedbapp.tasks.clear_cache"
+    assert kwargs.get("args") == ["photoupdate"]
+
+
+def test_photoupdate_clear_cache_broker_failure(monkeypatch):
+    monkeypatch.setattr(process_photoupdate.settings, "CACHE_SIGNALS_ENABLED", True)
+    monkeypatch.setattr(
+        "celery.current_app.send_task", Mock(side_effect=Exception("broker down"))
+    )
+    # must not raise
+    process_photoupdate._clear_cache("photoupdate")
+
+
+def test_membercorrection_delete_uses_rwmember(monkeypatch):
+    upd = Mock()
+    monkeypatch.setattr(signals.membership, "update_membership", upd)
+    monkeypatch.setattr(signals, "_clear_cache", Mock())
+    signals.model_post_delete(
+        sender=Mock(**{"__str__": lambda s: "racedbapp.models.Rwmembercorrection"}),
+        instance=Mock(rwmember=Mock()),
+    )
+    assert upd.call_args.args[0] is not None
+
+
+@pytest.mark.django_db
+def test_member_delete_enqueues_clear(create_rwmember, monkeypatch):
+    called = []
+    monkeypatch.setattr(signals, "_clear_cache", lambda source: called.append(source))
+    member = create_rwmember()
+    member.delete()
+    assert "member_delete" in called
+
+
 @pytest.mark.django_db
 def test_config_raw_save_skips_clear(create_event, monkeypatch):
     called = []
