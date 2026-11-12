@@ -84,6 +84,13 @@ def get_ultimate_winners_and_gold_jerseys(years, athletes) -> tuple[set | None, 
     Get a list of names of people who have won the ENDURrun ultimate.
     If there is ever a tie for winner times in a year, this won't work.
     """
+    with tracer.start_as_current_span("endurrun: ultimate winners and gold jerseys") as span:
+        span.set_attribute("years", len(years))
+        span.set_attribute("athletes", len(athletes) if athletes else 0)
+        return _get_ultimate_winners_and_gold_jerseys(years, athletes)
+
+
+def _get_ultimate_winners_and_gold_jerseys(years, athletes):
     same_name_dict = get_endurrun_same_name_dict()
     ultimate_winners = []
     ultimate_gold_jerseys = []
@@ -155,6 +162,11 @@ def get_ultimate_gp():
     """
     Calculate the gender place of all ultimates regardless of filters, etc
     """
+    with tracer.start_as_current_span("endurrun: ultimate gp"):
+        return _get_ultimate_gp()
+
+
+def _get_ultimate_gp():
     ultimate_gp = {}
     ultimate_gp1 = {}
     ultimate_gp_female = {}

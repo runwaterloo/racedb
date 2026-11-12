@@ -15,7 +15,7 @@ cd /srv/racedb/deploy/helm
 
 git config --global --add safe.directory /srv/racedb
 runuser -u ubuntu -- git fetch --tags
-LATEST_TAG=$(git for-each-ref --sort=-creatordate --format '%(refname:short)' refs/tags | head -n 1)
+LATEST_TAG=$(git for-each-ref --sort=-creatordate --count=1 --format '%(refname:short)' refs/tags)
 if [ -z "$LATEST_TAG" ]; then
   echo "[ERROR] Failed to fetch latest tag from GitHub"
   exit 1
