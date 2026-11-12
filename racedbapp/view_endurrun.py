@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.utils.text import slugify
 
 import racedbapp.shared.endurrun
+from racedbapp.shared.tracing import tracer
 from racedbapp.shared.types import Choice, Filter
 
 from .models import Endurathlete, Endurteam, Event, Result
@@ -48,40 +49,45 @@ def index(request, division, results_only=False):
             year = int(rawyear)
         else:
             raise Http404('Year "{}" not found'.format(rawyear))
-    years = Endurathlete.objects.all().order_by("-year").values_list("year", flat=True).distinct()
-    contest_slug = False
-    if "contest" in qstring:
-        contest_slug = qstring["contest"][0]
-        if year:
-            ultimate_finished_all_events = (
-                racedbapp.shared.endurrun.get_ultimate_finished_all_events((year,))
-            )
+    with tracer.start_as_current_span("endurrun: events query") as events_span:
+        years = Endurathlete.objects.all().order_by("-year").values_list("year", flat=True).distinct()
+        contest_slug = False
+        if "contest" in qstring:
+            contest_slug = qstring["contest"][0]
+            if year:
+                ultimate_finished_all_events = (
+                    racedbapp.shared.endurrun.get_ultimate_finished_all_events((year,))
+                )
+            else:
+                ultimate_finished_all_events = (
+                    racedbapp.shared.endurrun.get_ultimate_finished_all_events(years)
+                )
+        events = Event.objects.filter(race__slug="endurrun").order_by("date")
+        if division == "sport":
+            events = events.exclude(distance__slug="half-marathon")
+            events = events.exclude(distance__slug="15-km")
+            events = events.exclude(distance__slug="30-km")
+            events = events.exclude(distance__slug="10-mi")
+        if contest_slug == "sprint":
+            events = events.exclude(distance__slug="half-marathon")
+            events = events.exclude(distance__slug="30-km")
+            events = events.exclude(distance__slug="10-mi")
+            events = events.exclude(distance__slug="25_6-km")
+            events = events.exclude(distance__slug="marathon")
+        if contest_slug == "trail":
+            events = events.exclude(distance__slug="half-marathon")
+            events = events.exclude(distance__slug="15-km")
+            events = events.exclude(distance__slug="10-mi")
+            events = events.exclude(distance__slug="10-km")
+            events = events.exclude(distance__slug="marathon")
+        if division in ("ultimate", "sport"):
+            athletes = Endurathlete.objects.filter(division=division.title()).order_by("id")
         else:
-            ultimate_finished_all_events = (
-                racedbapp.shared.endurrun.get_ultimate_finished_all_events(years)
-            )
-    events = Event.objects.filter(race__slug="endurrun").order_by("date")
-    if division == "sport":
-        events = events.exclude(distance__slug="half-marathon")
-        events = events.exclude(distance__slug="15-km")
-        events = events.exclude(distance__slug="30-km")
-        events = events.exclude(distance__slug="10-mi")
-    if contest_slug == "sprint":
-        events = events.exclude(distance__slug="half-marathon")
-        events = events.exclude(distance__slug="30-km")
-        events = events.exclude(distance__slug="10-mi")
-        events = events.exclude(distance__slug="25_6-km")
-        events = events.exclude(distance__slug="marathon")
-    if contest_slug == "trail":
-        events = events.exclude(distance__slug="half-marathon")
-        events = events.exclude(distance__slug="15-km")
-        events = events.exclude(distance__slug="10-mi")
-        events = events.exclude(distance__slug="10-km")
-        events = events.exclude(distance__slug="marathon")
-    if division in ("ultimate", "sport"):
-        athletes = Endurathlete.objects.filter(division=division.title()).order_by("id")
-    else:
-        athletes = Endurteam.objects.all()
+            athletes = Endurteam.objects.all()
+    events_span.set_attribute("division", str(division))
+    events_span.set_attribute("year", str(year))
+    events_span.set_attribute("contest", str(contest_slug))
+    events_span.set_attribute("years", len(years))
     if year:
         events = events.filter(date__icontains=year)
         athletes = athletes.filter(year=year)
@@ -122,26 +128,33 @@ def index(request, division, results_only=False):
     events_results_count = []
     flags = os.listdir("/srv/racedb/racedbapp/static/flags")
     valid_flag_slugs = {x.split("_")[0] for x in flags}
-    year_bibs = {}
-    for loopyear in years:
-        if year:
-            if loopyear != year:
-                continue
-        year_bibs[loopyear] = {}
-        events_results_count = []
-        all_event_results = []
-        for event in events.filter(date__icontains=loopyear):
-            event_results = Result.objects.filter(event=event)
-            if division == "ultimate":
-                event_results = event_results.filter(division="Ultimate")
-            if division == "sport":
-                event_results = event_results.filter(division="Sport")
-            events_results_count.append(event_results.count())
-            event_dict = dict(event_results.values_list("athlete", "guntime"))
-            if not year_bibs[loopyear]:
-                year_bibs[loopyear] = dict(event_results.values_list("athlete", "bib"))
-            all_event_results.append(event_dict)
-        year_events_results_dict[loopyear] = all_event_results
+    with tracer.start_as_current_span("endurrun: year results") as year_results_span:
+        year_results_span.set_attribute("division", str(division))
+        year_results_span.set_attribute("years", len(years))
+        year_bibs = {}
+        for loopyear in years:
+            with tracer.start_as_current_span("endurrun: year results") as loop_span:
+                loop_span.set_attribute("year", loopyear)
+                if year:
+                    if loopyear != year:
+                        continue
+                year_bibs[loopyear] = {}
+                events_results_count = []
+                all_event_results = []
+                for event in events.filter(date__icontains=loopyear):
+                    event_results = Result.objects.filter(event=event)
+                    if division == "ultimate":
+                        event_results = event_results.filter(division="Ultimate")
+                    if division == "sport":
+                        event_results = event_results.filter(division="Sport")
+                    events_results_count.append(event_results.count())
+                    event_dict = dict(event_results.values_list("athlete", "guntime"))
+                    if not year_bibs[loopyear]:
+                        year_bibs[loopyear] = dict(event_results.values_list("athlete", "bib"))
+                    all_event_results.append(event_dict)
+                year_events_results_dict[loopyear] = all_event_results
+                loop_span.set_attribute("events", len(all_event_results))
+                loop_span.set_attribute("results", sum(events_results_count))
     if len(events_results_count) > 7:
         events_results_count = events_results_count[0:7]
     if not year:
@@ -150,138 +163,142 @@ def index(request, division, results_only=False):
         if division == "sport":
             events_results_count = (1, 1, 1)
     membership = shared.get_membership()
-    for athlete in athletes:
-        if contest_slug:  # exclude athletes who haven't completed most recent event
-            if not ultimate_finished_all_events[athlete.year].get(athlete, False):
-                continue
-        final_status = 0  # 0: place, 1: dq, 2: dnf, 3: dns
-        mouseover = False
-        if division == "relay":
-            mouseover = "{}\n".format(athlete.name)
-        athyear = athlete.year
-        stages = 0
-        stage_times = []
-        total_time = timedelta(seconds=0)
-        count = 1
-        member_slug = False
-        if athlete.name.lower() in membership.names:
-            member_slug = membership.names[athlete.name.lower()].slug
-        for er in year_events_results_dict[athyear]:
-            try:
-                if division in ("ultimate", "sport"):
-                    athname = athlete.name
-                else:
-                    evalstr = "athlete.st{}".format(count)
-                    athname = eval(evalstr)
-                    if athname == "":
-                        athname = False
-                    mouseover += "\nStage {}: {}".format(count, athname)
-                stage_time = namedstagetime(athname, er[athname])
-            except Exception:
-                stage_time = namedstagetime("", "")
-            else:
-                if count <= stop_event and stage_time.time.days == 0:
-                    stages += 1
-                    total_time += stage_time.time
-                else:
-                    if 356400 <= stage_time.time.total_seconds() < 357000:
-                        stage_time = namedstagetime(athname, "DQ")
-                        final_status = 1
-                    elif 357000 <= stage_time.time.total_seconds() < 357600:
-                        stage_time = namedstagetime(athname, "DNF")
-                        final_status = 2
-                    elif stage_time.time.total_seconds() >= 357600:
-                        stage_time = namedstagetime(athname, "DNS")
-                        final_status = 3
-                if count > stop_event:
-                    stage_time = namedstagetime("", "")
-            stage_times.append(stage_time)
-            count += 1
-        if division == "sport":
-            stage_times = [
-                namedstagetime("", ""),
-                namedstagetime("", ""),
-                namedstagetime("", ""),
-                namedstagetime("", ""),
-            ] + stage_times
-        if total_time == timedelta(seconds=0):
-            total_seconds = 0
-        else:
-            total_seconds = total_time.total_seconds()
-        if total_time.total_seconds() > 86400:
-            strtime = str(total_time)
-            days = strtime.split(" ")[0]
-            hours, minutes, seconds = strtime.split(" ")[2].split(":")
-            total_hours = int(hours) + (24 * int(days))
-            total_time = "{}:{}:{}".format(total_hours, minutes, seconds)
-        if total_seconds == 0:
-            total_time = ""
-        flag_slug = False
-        if division in ("ultimate", "sport"):
-            flag_slug = slugify(athlete.country)
-            if flag_slug not in valid_flag_slugs:
-                flag_slug = False
-        lead_gap = place_gap = False
-        bib = year_bibs[athyear].get(athname)
-        results.append(
-            namedresult(
-                athlete,
-                stages,
-                total_time,
-                total_seconds,
-                stage_times,
-                flag_slug,
-                final_status,
-                mouseover,
-                lead_gap,
-                place_gap,
-                member_slug,
-                bib,
-                "",
-                "",
-            )
-        )
-        prev_total_time = total_time
-        prev_total_seconds = total_seconds
-        prev_stages = stages
-        completed_stage_times = [x for x in stage_times if x.name != ""]  # remove future stages
-        if completed_stage_times and year:
-            if not isinstance(
-                completed_stage_times[-1].time, str
-            ):  # ensure most recent stage completed
+    with tracer.start_as_current_span("endurrun: athlete loop") as athlete_span:
+        athlete_span.set_attribute("division", str(division))
+        athlete_span.set_attribute("athletes", len(athletes))
+        for athlete in athletes:
+            if contest_slug:  # exclude athletes who haven't completed most recent event
+                if not ultimate_finished_all_events[athlete.year].get(athlete, False):
+                    continue
+            final_status = 0  # 0: place, 1: dq, 2: dnf, 3: dns
+            mouseover = False
+            if division == "relay":
+                mouseover = "{}\n".format(athlete.name)
+            athyear = athlete.year
+            stages = 0
+            stage_times = []
+            total_time = timedelta(seconds=0)
+            count = 1
+            member_slug = False
+            if athlete.name.lower() in membership.names:
+                member_slug = membership.names[athlete.name.lower()].slug
+            for er in year_events_results_dict[athyear]:
                 try:
-                    prev_total_time = total_time - completed_stage_times[-1].time
+                    if division in ("ultimate", "sport"):
+                        athname = athlete.name
+                    else:
+                        evalstr = "athlete.st{}".format(count)
+                        athname = eval(evalstr)
+                        if athname == "":
+                            athname = False
+                        mouseover += "\nStage {}: {}".format(count, athname)
+                    stage_time = namedstagetime(athname, er[athname])
                 except Exception:
-                    prev_total_time = timedelta(seconds=0)
-                prev_total_seconds = prev_total_time.total_seconds()
-                prev_stages = stages - 1
-        prev_stage_results.append(
-            namedresult(
-                athlete,
-                prev_stages,
-                prev_total_time,
-                prev_total_seconds,
-                # placeholder data from here on
-                [],
-                "",
-                0,
-                "",
-                0,
-                0,
-                "",
-                "",
-                "",
-                "",
+                    stage_time = namedstagetime("", "")
+                else:
+                    if count <= stop_event and stage_time.time.days == 0:
+                        stages += 1
+                        total_time += stage_time.time
+                    else:
+                        if 356400 <= stage_time.time.total_seconds() < 357000:
+                            stage_time = namedstagetime(athname, "DQ")
+                            final_status = 1
+                        elif 357000 <= stage_time.time.total_seconds() < 357600:
+                            stage_time = namedstagetime(athname, "DNF")
+                            final_status = 2
+                        elif stage_time.time.total_seconds() >= 357600:
+                            stage_time = namedstagetime(athname, "DNS")
+                            final_status = 3
+                    if count > stop_event:
+                        stage_time = namedstagetime("", "")
+                stage_times.append(stage_time)
+                count += 1
+            if division == "sport":
+                stage_times = [
+                    namedstagetime("", ""),
+                    namedstagetime("", ""),
+                    namedstagetime("", ""),
+                    namedstagetime("", ""),
+                ] + stage_times
+            if total_time == timedelta(seconds=0):
+                total_seconds = 0
+            else:
+                total_seconds = total_time.total_seconds()
+            if total_time.total_seconds() > 86400:
+                strtime = str(total_time)
+                days = strtime.split(" ")[0]
+                hours, minutes, seconds = strtime.split(" ")[2].split(":")
+                total_hours = int(hours) + (24 * int(days))
+                total_time = "{}:{}:{}".format(total_hours, minutes, seconds)
+            if total_seconds == 0:
+                total_time = ""
+            flag_slug = False
+            if division in ("ultimate", "sport"):
+                flag_slug = slugify(athlete.country)
+                if flag_slug not in valid_flag_slugs:
+                    flag_slug = False
+            lead_gap = place_gap = False
+            bib = year_bibs[athyear].get(athname)
+            results.append(
+                namedresult(
+                    athlete,
+                    stages,
+                    total_time,
+                    total_seconds,
+                    stage_times,
+                    flag_slug,
+                    final_status,
+                    mouseover,
+                    lead_gap,
+                    place_gap,
+                    member_slug,
+                    bib,
+                    "",
+                    "",
+                )
             )
-        )
-    results = sorted(results, key=attrgetter("total_seconds"))
-    results = sorted(results, key=attrgetter("stages"), reverse=True)
-    results = addgap(results)
-    results_ranked_athletes = [x.athlete for x in results]
-    prev_stage_results = sorted(prev_stage_results, key=attrgetter("total_seconds"))
-    prev_stage_results = sorted(prev_stage_results, key=attrgetter("stages"), reverse=True)
-    prev_stage_ranked_athletes = [x.athlete for x in prev_stage_results]
-    results = addchange(results, results_ranked_athletes, prev_stage_ranked_athletes)
+            prev_total_time = total_time
+            prev_total_seconds = total_seconds
+            prev_stages = stages
+            completed_stage_times = [x for x in stage_times if x.name != ""]  # remove future stages
+            if completed_stage_times and year:
+                if not isinstance(
+                    completed_stage_times[-1].time, str
+                ):  # ensure most recent stage completed
+                    try:
+                        prev_total_time = total_time - completed_stage_times[-1].time
+                    except Exception:
+                        prev_total_time = timedelta(seconds=0)
+                    prev_total_seconds = prev_total_time.total_seconds()
+                    prev_stages = stages - 1
+            prev_stage_results.append(
+                namedresult(
+                    athlete,
+                    prev_stages,
+                    prev_total_time,
+                    prev_total_seconds,
+                    # placeholder data from here on
+                    [],
+                    "",
+                    0,
+                    "",
+                    0,
+                    0,
+                    "",
+                    "",
+                    "",
+                    "",
+                )
+            )
+    with tracer.start_as_current_span("endurrun: rank and gaps"):
+        results = sorted(results, key=attrgetter("total_seconds"))
+        results = sorted(results, key=attrgetter("stages"), reverse=True)
+        results = addgap(results)
+        results_ranked_athletes = [x.athlete for x in results]
+        prev_stage_results = sorted(prev_stage_results, key=attrgetter("total_seconds"))
+        prev_stage_results = sorted(prev_stage_results, key=attrgetter("stages"), reverse=True)
+        prev_stage_ranked_athletes = [x.athlete for x in prev_stage_results]
+        results = addchange(results, results_ranked_athletes, prev_stage_ranked_athletes)
     if results and not year and phase_choice == "Final Results":
         ultimate_gp = racedbapp.shared.endurrun.get_ultimate_gp()
         results = addgp(results, ultimate_gp)
@@ -300,22 +317,23 @@ def index(request, division, results_only=False):
         ultimate_winners,
         ultimate_gold_jerseys,
     ) = racedbapp.shared.endurrun.get_ultimate_winners_and_gold_jerseys(years, athletes)
-    context = {
-        "events": events,
-        "events_results_count": events_results_count,
-        "divisionfilter": divisionfilter,
-        "resultfilter": resultfilter,
-        "phasefilter": phasefilter,
-        "year": year,
-        "years": years,
-        "division": division,
-        "maxstages": maxstages,
-        "results": results,
-        "contest_slug": contest_slug,
-        "ultimate_winners": ultimate_winners,
-        "ultimate_gold_jerseys": ultimate_gold_jerseys,
-    }
-    return render(request, "racedbapp/endurrun.html", context)
+    with tracer.start_as_current_span("endurrun: render"):
+        context = {
+            "events": events,
+            "events_results_count": events_results_count,
+            "divisionfilter": divisionfilter,
+            "resultfilter": resultfilter,
+            "phasefilter": phasefilter,
+            "year": year,
+            "years": years,
+            "division": division,
+            "maxstages": maxstages,
+            "results": results,
+            "contest_slug": contest_slug,
+            "ultimate_winners": ultimate_winners,
+            "ultimate_gold_jerseys": ultimate_gold_jerseys,
+        }
+        return render(request, "racedbapp/endurrun.html", context)
 
 
 def getdivisionfilter(division, year, contest_slug):
@@ -750,3 +768,4 @@ def addgp(results, ultimate_gp):
             )
         )
     return newresults
+
