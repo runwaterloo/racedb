@@ -124,6 +124,8 @@ STORAGES = {
 
 
 # --- Env-specific ---
+CACHE_SIGNALS_ENABLED = os.getenv("SETTINGS", "none") != "min"
+
 if os.getenv("SETTINGS", "none") == "prod":
     CACHES = {
         "default": {
