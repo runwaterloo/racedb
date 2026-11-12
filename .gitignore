@@ -19,3 +19,4 @@ secrets.yml
 openspec
 .claude
 handoffs
+coverage.json
