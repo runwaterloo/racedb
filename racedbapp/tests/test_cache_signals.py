@@ -1,8 +1,6 @@
-from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
-from django.db import models
 
 from racedbapp import process_photoupdate, signals
 
