@@ -123,10 +123,6 @@ STORAGES = {
 }
 
 
-# --- Env-specific ---
-# Cache-invalidation signals (issue #392): local dev (SETTINGS=min) skips
-# cache-clear enqueues entirely so loaddata/fakedata setup stays quiet.
-# Prod and QA always enqueue.
 CACHE_SIGNALS_ENABLED = os.getenv("SETTINGS", "none") != "min"
 
 if os.getenv("SETTINGS", "none") == "prod":
