@@ -60,6 +60,7 @@ def _cache_key(qstring):
 
 def _render(request):
     qstring = urllib.parse.parse_qs(request.META["QUERY_STRING"])
+    noindex = bool(qstring)
     events = (
         Event.objects.select_related("race", "distance", "sequel")
         .filter(Exists(Result.objects.filter(event=OuterRef("pk"))))
@@ -149,6 +150,7 @@ def _render(request):
         "distancefilters": distancefilters,
         "malewinnersdict": malewinnersdict,
         "femalewinnersdict": femalewinnersdict,
+        "noindex": noindex,
     }
     with tracer.start_as_current_span("events: template render"):
         return render(request, "racedbapp/events.html", context)
