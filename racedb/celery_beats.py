@@ -3,7 +3,7 @@ from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = {
     "db_cache_watcher": {
         "task": "racedbapp.tasks.db_cache_watcher",
-        "schedule": crontab(minute="*"),
+        "schedule": crontab(minute="*/5"),
     },
     "heartbeat": {
         "task": "racedbapp.tasks.heartbeat",

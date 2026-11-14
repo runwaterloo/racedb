@@ -39,7 +39,7 @@ spec:
           command: [
             "/bin/sh",
             "-c",
-            "celery -A racedb worker --concurrency={{ .Values.racedb.celeryWorkers }} -l info --pidfile=/tmp/celery.pid",
+            "celery -A racedb worker --concurrency={{ .Values.racedb.celeryWorkers }} -l info --max-tasks-per-child=500 --prefetch-multiplier=1 --pidfile=/tmp/celery.pid",
             ]
           env:
             - name: CHART
