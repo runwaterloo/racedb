@@ -71,6 +71,12 @@ ingress:
     apiAverage: 100
     apiPeriod: 1m
     apiBurst: 500
+    # Aggregate cap for bot user-agents (see bot-ratelimit middleware). Sized
+    # below worker capacity so a crawl burst can't fill every thread: 2026-11-14
+    # saw ~821 Google requests in one minute with only 8 worker threads.
+    botAverage: 20
+    botPeriod: 1m
+    botBurst: 20
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
