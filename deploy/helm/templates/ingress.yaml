@@ -94,15 +94,8 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: "Host(`{{ .Values.ingress.host}}`) && PathPrefix(`/static`) && HeaderRegexp(`User-Agent`, `(?i)(bot|crawl|spider|slurp)`)"
+    - match: "Host(`{{ .Values.ingress.host}}`) && !PathPrefix(`/static`) && HeaderRegexp(`User-Agent`, `(?i)(bot|crawl|spider|slurp)`)"
       priority: 1000
-      kind: Rule
-      services:
-        - name: "{{ include "racedb.fullname" . }}"
-          port: {{ .Values.service.port}}
-      middlewares:
-        - name: "{{ include "racedb.fullname" . }}-rate-limit-static"
-    - match: "Host(`{{ .Values.ingress.host}}`) && HeaderRegexp(`User-Agent`, `(?i)(bot|crawl|spider|slurp)`)"
       kind: Rule
       services:
         - name: "{{ include "racedb.fullname" . }}"
