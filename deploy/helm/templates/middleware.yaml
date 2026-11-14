@@ -45,9 +45,5 @@ spec:
     average: {{ .Values.ingress.rateLimit.botAverage }}
     period: {{ .Values.ingress.rateLimit.botPeriod }}
     burst: {{ .Values.ingress.rateLimit.botBurst }}
-    # Bucket by the User-Agent header instead of client IP: crawler fleets
-    # (Googlebot etc.) send one shared UA from many IPs, so per-IP limits
-    # never catch them. Browsers sharing a UA string share a bucket, but the
-    # bot router only matches requests whose UA already looks like a bot.
     sourceCriterion:
       requestHeaderName: User-Agent
