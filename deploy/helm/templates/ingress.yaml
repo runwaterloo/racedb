@@ -94,8 +94,18 @@ spec:
   entryPoints:
     - websecure
   routes:
+    - match: "Host(`{{ .Values.ingress.host}}`) && PathPrefix(`/static`) && HeaderRegexp(`User-Agent`, `(?i)(bot|crawl|spider|slurp)`)"
+      priority: 1000
+      kind: Rule
+      services:
+        - name: "{{ include "racedb.fullname" . }}"
+          port: {{ .Values.service.port}}
+      middlewares:
+        - name: "{{ include "racedb.fullname" . }}-rate-limit-static"
     # Longer rule wins over the plain host routes, so bot UAs are throttled
-    # by the shared-UA limiter instead of the per-IP one.
+    # by the shared-UA limiter instead of the per-IP one. Static assets keep
+    # their own router (see above): bots don't need to be slowed on whitenoise
+    # assets, and static is already separately rate-limited.
     - match: "Host(`{{ .Values.ingress.host}}`) && HeaderRegexp(`User-Agent`, `(?i)(bot|crawl|spider|slurp)`)"
       kind: Rule
       services:
