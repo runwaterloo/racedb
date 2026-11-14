@@ -288,6 +288,7 @@ def _render_event(request, event, sequel, qstring):
             "ad": ad,
             "series": series,
             "race_logo_slug": race_logo_slug,
+            "noindex": bool(qstring),
         }
     row_flags = {
         "show_category": show_category,

@@ -136,3 +136,12 @@ def test_member_null_place_columns(create_result, create_rwmember, db):
     response = APIClient().get(f"/member/{member.slug}/")
     assert response.status_code == 200
     assert b"None" not in response.content
+
+
+@pytest.mark.django_db
+def test_member_noindex(create_rwmember):
+    client = APIClient()
+    rwmember = create_rwmember()
+    response = client.get(f"/member/{rwmember.slug}/")
+    assert response.status_code == 200
+    assert b'<meta name="robots" content="noindex">' in response.content

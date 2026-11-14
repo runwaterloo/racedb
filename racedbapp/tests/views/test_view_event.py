@@ -799,3 +799,23 @@ def test_event_hill_results_page(
     response = client.get(url)
     assert response.status_code == 200
     assert b"Hill" in response.content
+
+
+@pytest.mark.django_db
+def test_event_noindex_bare(create_event):
+    client = APIClient()
+    event = create_event()
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/"
+    response = client.get(url)
+    assert response.status_code == 200
+    assert b'name="robots"' not in response.content
+
+
+@pytest.mark.django_db
+def test_event_noindex_with_query(create_event):
+    client = APIClient()
+    event = create_event()
+    url = f"/event/{event.date.year}/{event.race.slug}/{event.distance.slug}/?division=Sport"
+    response = client.get(url)
+    assert response.status_code == 200
+    assert b'<meta name="robots" content="noindex">' in response.content

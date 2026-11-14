@@ -1,6 +1,7 @@
 {% extends "racedbapp/base.html" %}
 {% load static %}
 {% load racedbapp_extras %}
+{% block robots %}{% if noindex %}<meta name="robots" content="noindex">{% endif %}{% endblock robots %}
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />

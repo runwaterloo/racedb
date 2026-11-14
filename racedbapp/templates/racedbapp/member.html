@@ -5,6 +5,9 @@
   {{ member.name }}
   |
 {% endblock title %}
+{% block robots %}
+  <meta name="robots" content="noindex">
+{% endblock robots %}
 {% block ogmeta %}
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Run Waterloo Results" />

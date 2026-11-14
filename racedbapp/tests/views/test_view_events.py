@@ -116,3 +116,19 @@ def test_events_cache_key_per_filter_shape(create_f_m_results):
         response = client.get(f"/events/{qs}")
         assert response.status_code == 200
         assert response.content == b"sentinel"
+
+
+@pytest.mark.django_db
+def test_events_noindex_bare():
+    client = APIClient()
+    response = client.get("/events/")
+    assert response.status_code == 200
+    assert b'name="robots"' not in response.content
+
+
+@pytest.mark.django_db
+def test_events_noindex_with_query():
+    client = APIClient()
+    response = client.get("/events/?cache=false")
+    assert response.status_code == 200
+    assert b'<meta name="robots" content="noindex">' in response.content

@@ -253,3 +253,22 @@ def test_boost_leaderboard_only_ignores_member_param(
         RequestFactory().get("/boost/2025/?member=nobody"), "2025", leaderboard_only=True
     )
     assert "Female Under 40" in leaderboard
+
+
+@pytest.mark.django_db
+def test_boost_member_noindex(create_f_m_results, create_rwmember, create_result):
+    data = create_f_m_results
+    make_boost_config()
+    rwmember = create_rwmember()
+    rwmember.joindate = data["event"].date
+    rwmember.gender = "M"
+    rwmember.year_of_birth = 1990
+    rwmember.tags.add(make_boost_tag_2025())
+    rwmember.save()
+    result = create_result(event=data["event"], rwmember=rwmember, gender="M", place=3, name_suffix="m3")
+    result.gender_place = 2
+    result.save()
+    client = APIClient()
+    response = client.get(f"/boost/2025/?member={rwmember.slug}")
+    assert response.status_code == 200
+    assert b'<meta name="robots" content="noindex">' in response.content
