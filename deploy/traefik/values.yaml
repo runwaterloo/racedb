@@ -28,6 +28,7 @@ accessLog:
       names:
         Referer: keep
         Cf-Ray: keep
+        User-Agent: keep
 persistence:
   existingClaim: traefik-pvc
   enabled: true

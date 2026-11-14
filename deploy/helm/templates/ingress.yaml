@@ -89,6 +89,25 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
+  name: "{{ include "racedb.fullname" . }}-secure-bot"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: "Host(`{{ .Values.ingress.host}}`) && !PathPrefix(`/static`) && HeaderRegexp(`User-Agent`, `(?i)(bot|crawl|spider|slurp)`)"
+      priority: 1000
+      kind: Rule
+      services:
+        - name: "{{ include "racedb.fullname" . }}"
+          port: {{ .Values.service.port}}
+      middlewares:
+        - name: "{{ include "racedb.fullname" . }}-rate-limit-bot"
+  tls:
+    certResolver: le
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
   name: "{{ include "racedb.fullname" . }}-secure-api"
 spec:
   entryPoints:

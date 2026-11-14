@@ -81,3 +81,25 @@ def test_garbage_session_cookie_still_401(gated_client, user):
     gated_client.cookies["sessionid"] = "forged-value"
     response = gated_client.get("/index/")
     assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_request_logging_includes_referer(client, caplog):
+    import json
+
+    with caplog.at_level("INFO", logger="racedb.request"):
+        client.get("/health/", HTTP_REFERER="https://example.org/links.html")
+    rec = [r for r in caplog.records if r.name == "racedb.request"][-1]
+    entry = json.loads(rec.getMessage())
+    assert entry["referer"] == "https://example.org/links.html"
+
+
+@pytest.mark.django_db
+def test_request_logging_no_referer_uses_dash(client, caplog):
+    import json
+
+    with caplog.at_level("INFO", logger="racedb.request"):
+        client.get("/health/")
+    rec = [r for r in caplog.records if r.name == "racedb.request"][-1]
+    entry = json.loads(rec.getMessage())
+    assert entry["referer"] == "-"

@@ -35,3 +35,15 @@ spec:
     average: {{ .Values.ingress.rateLimit.staticAverage }}
     period: {{ .Values.ingress.rateLimit.staticPeriod }}
     burst: {{ .Values.ingress.rateLimit.staticBurst }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: "{{ include "racedb.fullname" . }}-rate-limit-bot"
+spec:
+  rateLimit:
+    average: {{ .Values.ingress.rateLimit.botAverage }}
+    period: {{ .Values.ingress.rateLimit.botPeriod }}
+    burst: {{ .Values.ingress.rateLimit.botBurst }}
+    sourceCriterion:
+      requestHeaderName: User-Agent

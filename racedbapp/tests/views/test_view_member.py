@@ -126,11 +126,11 @@ def test_member_null_place_columns(create_result, create_rwmember, db):
     crash sorting and must render blank, like the old computed sentinel ""."""
     member = create_rwmember()
     # empty gender -> gender_place stays NULL (prod import behavior)
-    create_result(rwmember=member, gender="", place=115, name_suffix="nullplace")
+    create_result(rwmember=member, gender="", place=115, name_suffix="nog")
     # empty category name -> category_place stays NULL (prod import behavior)
     empty_category = Category.objects.create(name="")
-    create_result(rwmember=member, category=empty_category, place=60, name_suffix="nullcat")
-    create_result(rwmember=member, gender="M", place=50, name_suffix="placed")
+    create_result(rwmember=member, category=empty_category, place=60, name_suffix="noc")
+    create_result(rwmember=member, gender="M", place=50, name_suffix="plc")
     from rest_framework.test import APIClient
 
     response = APIClient().get(f"/member/{member.slug}/")

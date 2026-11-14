@@ -71,6 +71,9 @@ ingress:
     apiAverage: 100
     apiPeriod: 1m
     apiBurst: 500
+    botAverage: 1
+    botPeriod: 1s
+    botBurst: 2
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
