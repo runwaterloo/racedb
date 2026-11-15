@@ -144,4 +144,4 @@ def test_member_noindex(create_rwmember):
     rwmember = create_rwmember()
     response = client.get(f"/member/{rwmember.slug}/")
     assert response.status_code == 200
-    assert b'<meta name="robots" content="noindex">' in response.content
+    assert b'<meta name="robots" content="noindex, nofollow">' in response.content

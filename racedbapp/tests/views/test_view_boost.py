@@ -271,4 +271,14 @@ def test_boost_member_noindex(create_f_m_results, create_rwmember, create_result
     client = APIClient()
     response = client.get(f"/boost/2025/?member={rwmember.slug}")
     assert response.status_code == 200
-    assert b'<meta name="robots" content="noindex">' in response.content
+    assert b'<meta name="robots" content="noindex, nofollow">' in response.content
+
+
+@pytest.mark.django_db
+def test_boost_nofollow():
+    make_boost_config()
+    client = APIClient()
+    response = client.get("/boost/2025/")
+    assert response.status_code == 200
+    assert b'<meta name="robots" content="nofollow">' in response.content
+    assert b"noindex" not in response.content
