@@ -271,4 +271,4 @@ def test_boost_member_noindex(create_f_m_results, create_rwmember, create_result
     client = APIClient()
     response = client.get(f"/boost/2025/?member={rwmember.slug}")
     assert response.status_code == 200
-    assert b'<meta name="robots" content="noindex">' in response.content
+    assert b'<meta name="robots" content="noindex, nofollow">' in response.content
