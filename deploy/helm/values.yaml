@@ -61,6 +61,10 @@ ingress:
     hostmatch: >-
       !(Host(`52.54.231.139`) || Host(`ec2-52-54-231-139.compute-1.amazonaws.com`))
       && Hostregexp(`.+`)
+    rateLimit:
+      average: 1
+      period: 1s
+      burst: 2
   rateLimit:
     average: 10
     period: 1m
