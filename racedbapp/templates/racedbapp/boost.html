@@ -5,6 +5,9 @@
  Boost {{ year }} 
   |
 {% endblock title %}
+{% block robots %}
+  <meta name="robots" content="nofollow">
+{% endblock robots %}
 
 {% block ogmeta %}
   <meta property="og:type" content="website" />
