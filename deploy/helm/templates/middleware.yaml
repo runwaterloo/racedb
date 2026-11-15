@@ -47,3 +47,15 @@ spec:
     burst: {{ .Values.ingress.rateLimit.botBurst }}
     sourceCriterion:
       requestHeaderName: User-Agent
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: racedb-catchall-rate-limit
+  annotations:
+    description: Tight per-IP limit for the catchall route (deploy-time + scanner traffic; 2026-11-15 flood ~3k req/55min reached Django).
+spec:
+  rateLimit:
+    average: 1
+    period: 1s
+    burst: 2
