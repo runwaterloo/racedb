@@ -275,8 +275,7 @@ def test_boost_member_noindex(create_f_m_results, create_rwmember, create_result
 
 
 @pytest.mark.django_db
-def test_boost_nofollow(create_f_m_results):
-    data = create_f_m_results
+def test_boost_nofollow():
     make_boost_config()
     client = APIClient()
     response = client.get("/boost/2025/")
