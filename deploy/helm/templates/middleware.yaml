@@ -56,6 +56,6 @@ metadata:
     description: Tight per-IP limit for the catchall route (deploy-time + scanner traffic; 2026-11-15 flood ~3k req/55min reached Django).
 spec:
   rateLimit:
-    average: 1
-    period: 1s
-    burst: 2
+    average: {{ .Values.ingress.catchall.rateLimit.average }}
+    period: {{ .Values.ingress.catchall.rateLimit.period }}
+    burst: {{ .Values.ingress.catchall.rateLimit.burst }}
