@@ -48,6 +48,7 @@ spec:
     sourceCriterion:
       requestHeaderName: User-Agent
 ---
+{{- if .Values.ingress.catchall.enabled -}}
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -59,3 +60,4 @@ spec:
     average: {{ .Values.ingress.catchall.rateLimit.average }}
     period: {{ .Values.ingress.catchall.rateLimit.period }}
     burst: {{ .Values.ingress.catchall.rateLimit.burst }}
+{{- end }}
