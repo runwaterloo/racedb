@@ -719,6 +719,14 @@ def addchange(results, results_ranked_athletes, prev_stage_ranked_athletes):
     newresults = []
     if not results:
         return None
+    # rank lookup dicts (pk -> first position): list.index() on model
+    # instances is O(n) per call with expensive __eq__, O(n^2) overall
+    cur_rank = {}
+    for i, a in enumerate(results_ranked_athletes):
+        cur_rank.setdefault(a.pk, i)
+    prev_rank = {}
+    for i, a in enumerate(prev_stage_ranked_athletes):
+        prev_rank.setdefault(a.pk, i)
     if results[0].stages < 2:
         change = False
         for r in results:
@@ -742,9 +750,7 @@ def addchange(results, results_ranked_athletes, prev_stage_ranked_athletes):
             )
     else:
         for r in results:
-            change = prev_stage_ranked_athletes.index(r.athlete) - results_ranked_athletes.index(
-                r.athlete
-            )
+            change = prev_rank[r.athlete.pk] - cur_rank[r.athlete.pk]
             newresults.append(
                 namedresult(
                     r.athlete,
