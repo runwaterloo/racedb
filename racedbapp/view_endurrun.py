@@ -133,10 +133,8 @@ def index(request, division, results_only=False):
         year_results_span.set_attribute("division", str(division))
         year_results_span.set_attribute("years", len(years))
         year_bibs = {}
-        # One pass over events (1 query) to group event ids by year, and one
-        # bulk query for all results of those events. The old code issued 3
-        # queries per event per year (COUNT + athlete/guntime + bib on the
-        # first event), ~340 SELECTs total.
+        # One pass over events to group event ids by year, then one bulk
+        # query for all results of those events.
         division_suffix = None
         if division == "ultimate":
             division_suffix = "Ultimate"
@@ -350,18 +348,11 @@ def index(request, division, results_only=False):
         "ultimate_gold_jerseys": ultimate_gold_jerseys or set(),
         "phasefilter": phasefilter,
     }
-    # NOTE: unorthodox — the results table is built as one HTML string in
-    # Python and dropped into endurrun.html with |safe, instead of being
-    # rendered by the template (same pattern as the event view). Rationale:
-    # the DTL row loop dominated cold renders (~1.2s of template lookups for
-    # 676 rows); building the table in Python cut that dramatically.
-    # _build_endurrun_table_html is GENERATED code: a mechanical
-    # transcription of the pre-pattern endurrun.html table section
-    # (template at commit 01c0255), byte-verified against the real DTL
-    # engine on 12 fixture cases. All interpolated values pass
-    # conditional_escape, so the |safe substitution is safe. The 9 golden
-    # endurrun pages (rrw-notes/endurrun-golden-urls) guard this output
-    # byte-for-byte.
+    # The results table is built as one HTML string in Python and dropped
+    # into endurrun.html with |safe (same pattern as the event view).
+    # All interpolated values pass conditional_escape, so the |safe
+    # substitution is safe. The endurrun golden pages
+    # (rrw-notes/endurrun-golden-urls) guard this output byte-for-byte.
     with tracer.start_as_current_span("endurrun: render table (python)") as table_span:
         table_span.set_attribute("results", len(results or []))
         results_table = _build_endurrun_table_html(results, row_flags)
@@ -746,8 +737,7 @@ def addchange(results, results_ranked_athletes, prev_stage_ranked_athletes):
     newresults = []
     if not results:
         return None
-    # rank lookup dicts (pk -> first position): list.index() on model
-    # instances is O(n) per call with expensive __eq__, O(n^2) overall
+    # rank lookup dicts (pk -> first position), kept first-occurrence
     cur_rank = {}
     for i, a in enumerate(results_ranked_athletes):
         cur_rank.setdefault(a.pk, i)
@@ -836,11 +826,10 @@ def _e(v):
 def _build_endurrun_table_html(results, row_flags):
     """Render the endurrun results table.
 
-    GENERATED from the pre-#468-pattern endurrun.html table section
-    (template at commit 01c0255) by a mechanical transcription that
-    preserves DTL whitespace exactly. Regenerate rather than hand-edit.
-    All interpolated values pass conditional_escape (the |safe contract
-    from the event-view pattern).
+    GENERATED from the endurrun.html table section by a mechanical
+    transcription that preserves DTL whitespace exactly. Regenerate
+    rather than hand-edit. All interpolated values pass
+    conditional_escape (the |safe contract).
     """
     from django.utils.html import conditional_escape
     division = row_flags["division"]

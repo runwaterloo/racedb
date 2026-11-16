@@ -97,7 +97,7 @@ def _get_ultimate_rows(years):
         )
     )
     # order_by matters: gold-jersey min() breaks cumulative-time ties by row
-    # order, so row order must be deterministic (same as the pre-bulk query).
+    # order, so row order must be deterministic.
 
 
 def get_ultimate_winners_and_gold_jerseys(years, athletes) -> tuple[set | None, set | None]:
