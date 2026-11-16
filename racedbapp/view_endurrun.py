@@ -1081,6 +1081,6 @@ def _build_endurrun_table_html(results, row_flags):
             _emit('    \n')
         _emit('  \n')
     _emit('  </tbody>' + chr(10))
-    _emit('</table>' + chr(10))
+    _emit('</table>')
     return "".join(parts)
 
