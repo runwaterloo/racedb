@@ -92,10 +92,12 @@ def _get_ultimate_rows(years):
             division="Ultimate",
             place__lt=990000,
             event__date__year__in=years,
-        ).values(
+        ).order_by("event__date").values(
             "event_id", "event__date__year", "athlete", "gender", "guntime"
         )
     )
+    # order_by matters: gold-jersey min() breaks cumulative-time ties by row
+    # order, so row order must be deterministic (same as the pre-bulk query).
 
 
 def get_ultimate_winners_and_gold_jerseys(years, athletes) -> tuple[set | None, set | None]:
