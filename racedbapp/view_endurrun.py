@@ -132,6 +132,29 @@ def index(request, division, results_only=False):
         year_results_span.set_attribute("division", str(division))
         year_results_span.set_attribute("years", len(years))
         year_bibs = {}
+        # One pass over events (1 query) to group event ids by year, and one
+        # bulk query for all results of those events. The old code issued 3
+        # queries per event per year (COUNT + athlete/guntime + bib on the
+        # first event), ~340 SELECTs total.
+        division_suffix = None
+        if division == "ultimate":
+            division_suffix = "Ultimate"
+        elif division == "sport":
+            division_suffix = "Sport"
+        event_year_map = list(events.values_list("id", "date__year"))
+        year_event_ids = {}
+        for event_id, event_year in event_year_map:
+            year_event_ids.setdefault(event_year, []).append(event_id)
+        event_rows = {}
+        if year_event_ids:
+            all_ids = [i for ids in year_event_ids.values() for i in ids]
+            rows_q = Result.objects.filter(event_id__in=all_ids)
+            if division_suffix:
+                rows_q = rows_q.filter(division=division_suffix)
+            for event_id, athlete, guntime, bib in rows_q.values_list(
+                "event_id", "athlete", "guntime", "bib"
+            ):
+                event_rows.setdefault(event_id, []).append((athlete, guntime, bib))
         for loopyear in years:
             with tracer.start_as_current_span("endurrun: year results") as loop_span:
                 loop_span.set_attribute("year", loopyear)
@@ -141,16 +164,14 @@ def index(request, division, results_only=False):
                 year_bibs[loopyear] = {}
                 events_results_count = []
                 all_event_results = []
-                for event in events.filter(date__icontains=loopyear):
-                    event_results = Result.objects.filter(event=event)
-                    if division == "ultimate":
-                        event_results = event_results.filter(division="Ultimate")
-                    if division == "sport":
-                        event_results = event_results.filter(division="Sport")
-                    events_results_count.append(event_results.count())
-                    event_dict = dict(event_results.values_list("athlete", "guntime"))
-                    if not year_bibs[loopyear]:
-                        year_bibs[loopyear] = dict(event_results.values_list("athlete", "bib"))
+                first_event = True
+                for event_id in year_event_ids.get(loopyear, []):
+                    rows = event_rows.get(event_id, [])
+                    events_results_count.append(len(rows))
+                    event_dict = {r[0]: r[1] for r in rows}
+                    if first_event:
+                        year_bibs[loopyear] = {r[0]: r[2] for r in rows}
+                        first_event = False
                     all_event_results.append(event_dict)
                 year_events_results_dict[loopyear] = all_event_results
                 loop_span.set_attribute("events", len(all_event_results))
