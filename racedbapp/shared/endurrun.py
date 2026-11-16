@@ -79,6 +79,27 @@ def get_endurrun_same_name_dict():
     return same_name_dict
 
 
+def _get_ultimate_rows(years):
+    """
+    One bulk fetch of all Ultimate results for the given years, as dicts.
+    Shared by the winners and gold-jersey calculation and the gender-place
+    calculation. Note: `years` is the Endurathlete year list, never
+    restricted by ?year, so this covers every year with Ultimate athletes.
+    """
+    return list(
+        Result.objects.filter(
+            event__race__slug="endurrun",
+            division="Ultimate",
+            place__lt=990000,
+            event__date__year__in=years,
+        ).order_by("event__date").values(
+            "event_id", "event__date__year", "athlete", "gender", "guntime"
+        )
+    )
+    # order_by matters: gold-jersey min() breaks cumulative-time ties by row
+    # order, so row order must be deterministic.
+
+
 def get_ultimate_winners_and_gold_jerseys(years, athletes) -> tuple[set | None, set | None]:
     """
     Get a list of names of people who have won the ENDURrun ultimate.
@@ -91,61 +112,57 @@ def get_ultimate_winners_and_gold_jerseys(years, athletes) -> tuple[set | None, 
 
 
 def _get_ultimate_winners_and_gold_jerseys(years, athletes):
+    """One bulk query for all years, cumulative logic in Python.
+
+    The old per-year loop re-evaluated the queryset once per event
+    (~147 SELECTs) plus one DISTINCT per year (~22 more). All rows are
+    now fetched in a single query and grouped by year/event in Python;
+    the gold-jersey logic is unchanged.
+    """
     same_name_dict = get_endurrun_same_name_dict()
     ultimate_winners = []
     ultimate_gold_jerseys = []
     if not athletes:
         return None, None
+    rows = _get_ultimate_rows(years)
+    year_events: dict[int, dict[int, list[dict]]] = {}
+    for row in rows:
+        events = year_events.setdefault(row["event__date__year"], {})
+        events.setdefault(row["event_id"], []).append(row)
     for year in years:
-        year_results = Result.objects.filter(
-            event__race__slug="endurrun",
-            division="Ultimate",
-            place__lt=990000,
-            event__date__icontains=year,
-        ).order_by("event__date")
+        events = year_events.get(year, {})
         athlete_event_count = {}
         female_cumulative_time = {}
         male_cumulative_time = {}
-        event_ids = year_results.values_list("event__id", flat=True).distinct()
         num_events = 0
-        for event_id in event_ids:
+        for event_id in events:
             num_events += 1
-            event_results = year_results.filter(event_id=event_id)
-            for result in event_results:
-                if result.athlete in athlete_event_count:
-                    athlete_event_count[result.athlete] += 1
-                else:
-                    athlete_event_count[result.athlete] = 1
-                if result.gender == "F":
-                    if result.athlete in female_cumulative_time:
-                        female_cumulative_time[result.athlete] += result.guntime
-                    else:
-                        female_cumulative_time[result.athlete] = result.guntime
-                if result.gender == "M":
-                    if result.athlete in male_cumulative_time:
-                        male_cumulative_time[result.athlete] += result.guntime
-                    else:
-                        male_cumulative_time[result.athlete] = result.guntime
-            if female_cumulative_time:
-                female_cumulative_time = {
-                    key: val
-                    for key, val in female_cumulative_time.items()
-                    if athlete_event_count[key] == num_events
-                }
-                female_gold_jersey = min(female_cumulative_time, key=female_cumulative_time.get)
-                ultimate_gold_jerseys.append(female_gold_jersey)
-                if num_events == 7:
-                    ultimate_winners.append(female_gold_jersey)
-            if male_cumulative_time:
-                male_cumulative_time = {
-                    key: val
-                    for key, val in male_cumulative_time.items()
-                    if athlete_event_count[key] == num_events
-                }
-                male_gold_jersey = min(male_cumulative_time, key=male_cumulative_time.get)
-                ultimate_gold_jerseys.append(male_gold_jersey)
-                if num_events == 7:
-                    ultimate_winners.append(male_gold_jersey)
+            for result in events[event_id]:
+                athlete = result["athlete"]
+                athlete_event_count[athlete] = athlete_event_count.get(athlete, 0) + 1
+                if result["gender"] == "F":
+                    female_cumulative_time[athlete] = (
+                        female_cumulative_time[athlete] + result["guntime"]
+                        if athlete in female_cumulative_time
+                        else result["guntime"]
+                    )
+                elif result["gender"] == "M":
+                    male_cumulative_time[athlete] = (
+                        male_cumulative_time[athlete] + result["guntime"]
+                        if athlete in male_cumulative_time
+                        else result["guntime"]
+                    )
+            for cumulative_time in (female_cumulative_time, male_cumulative_time):
+                if cumulative_time:
+                    eligible = {
+                        athlete: guntime
+                        for athlete, guntime in cumulative_time.items()
+                        if athlete_event_count[athlete] == num_events
+                    }
+                    gold_jersey = min(eligible, key=eligible.get)
+                    ultimate_gold_jerseys.append(gold_jersey)
+                    if num_events == 7:
+                        ultimate_winners.append(gold_jersey)
     for athlete in athletes:
         if athlete in same_name_dict:
             for same_name in same_name_dict[athlete]:
@@ -158,41 +175,38 @@ def _get_ultimate_winners_and_gold_jerseys(years, athletes):
     return ultimate_winners, ultimate_gold_jerseys
 
 
-def get_ultimate_gp():
+def get_ultimate_gp(years):
     """
     Calculate the gender place of all ultimates regardless of filters, etc
     """
     with tracer.start_as_current_span("endurrun: ultimate gp"):
-        return _get_ultimate_gp()
+        return _get_ultimate_gp(years)
 
 
-def _get_ultimate_gp():
+def _get_ultimate_gp(years):
     ultimate_gp = {}
     ultimate_gp1 = {}
     ultimate_gp_female = {}
     ultimate_gp_male = {}
     ultimate_gp_starters = {}
-    ultimate_results = Result.objects.filter(
-        event__race__slug="endurrun",
-        division="Ultimate",
-        place__lt=990000,
-    ).select_related("event")
-    years = ultimate_results.values("event__date__year").distinct().order_by()
-    for year in years:
-        ultimate_gp[year.get("event__date__year")] = {}
-        ultimate_gp1[year.get("event__date__year")] = {}
-        ultimate_gp_female[year.get("event__date__year")] = {}
-        ultimate_gp_male[year.get("event__date__year")] = {}
-    for result in ultimate_results:
-        if result.athlete in ultimate_gp1[result.event.date.year]:
-            ultimate_gp1[result.event.date.year][result.athlete]["events"] += 1
-            ultimate_gp1[result.event.date.year][result.athlete]["total_time"] += result.guntime
+    rows = _get_ultimate_rows(years)
+    for row in rows:
+        year = row["event__date__year"]
+        gp1 = ultimate_gp1.setdefault(year, {})
+        data = gp1.get(row["athlete"])
+        if data:
+            data["events"] += 1
+            data["total_time"] += row["guntime"]
         else:
-            ultimate_gp1[result.event.date.year][result.athlete] = {
+            gp1[row["athlete"]] = {
                 "events": 1,
-                "gender": result.gender,
-                "total_time": result.guntime,
+                "gender": row["gender"],
+                "total_time": row["guntime"],
             }
+    for year in years:
+        ultimate_gp[year] = {}
+        ultimate_gp_female[year] = {}
+        ultimate_gp_male[year] = {}
     for year, athlete in ultimate_gp1.items():  # copy over only results with 7 events
         ultimate_gp_starters[year] = {"F": 0, "M": 0}
         for name, data in athlete.items():
