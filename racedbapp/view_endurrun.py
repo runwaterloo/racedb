@@ -322,7 +322,7 @@ def index(request, division, results_only=False):
         prev_stage_ranked_athletes = [x.athlete for x in prev_stage_results]
         results = addchange(results, results_ranked_athletes, prev_stage_ranked_athletes)
     if results and not year and phase_choice == "Final Results":
-        ultimate_gp = racedbapp.shared.endurrun.get_ultimate_gp()
+        ultimate_gp = racedbapp.shared.endurrun.get_ultimate_gp(years)
         results = addgp(results, ultimate_gp)
     maxstages = 0
     if results and len(results) > 0:

@@ -79,6 +79,25 @@ def get_endurrun_same_name_dict():
     return same_name_dict
 
 
+def _get_ultimate_rows(years):
+    """
+    One bulk fetch of all Ultimate results for the given years, as dicts.
+    Shared by the winners and gold-jersey calculation and the gender-place
+    calculation. Note: `years` is the Endurathlete year list, never
+    restricted by ?year, so this covers every year with Ultimate athletes.
+    """
+    return list(
+        Result.objects.filter(
+            event__race__slug="endurrun",
+            division="Ultimate",
+            place__lt=990000,
+            event__date__year__in=years,
+        ).values(
+            "event_id", "event__date__year", "athlete", "gender", "guntime"
+        )
+    )
+
+
 def get_ultimate_winners_and_gold_jerseys(years, athletes) -> tuple[set | None, set | None]:
     """
     Get a list of names of people who have won the ENDURrun ultimate.
@@ -103,14 +122,7 @@ def _get_ultimate_winners_and_gold_jerseys(years, athletes):
     ultimate_gold_jerseys = []
     if not athletes:
         return None, None
-    rows = Result.objects.filter(
-        event__race__slug="endurrun",
-        division="Ultimate",
-        place__lt=990000,
-        event__date__year__in=years,
-    ).order_by("event__date").values(
-        "event_id", "event__date__year", "athlete", "gender", "guntime"
-    )
+    rows = _get_ultimate_rows(years)
     year_events: dict[int, dict[int, list[dict]]] = {}
     for row in rows:
         events = year_events.setdefault(row["event__date__year"], {})
@@ -161,41 +173,38 @@ def _get_ultimate_winners_and_gold_jerseys(years, athletes):
     return ultimate_winners, ultimate_gold_jerseys
 
 
-def get_ultimate_gp():
+def get_ultimate_gp(years):
     """
     Calculate the gender place of all ultimates regardless of filters, etc
     """
     with tracer.start_as_current_span("endurrun: ultimate gp"):
-        return _get_ultimate_gp()
+        return _get_ultimate_gp(years)
 
 
-def _get_ultimate_gp():
+def _get_ultimate_gp(years):
     ultimate_gp = {}
     ultimate_gp1 = {}
     ultimate_gp_female = {}
     ultimate_gp_male = {}
     ultimate_gp_starters = {}
-    ultimate_results = Result.objects.filter(
-        event__race__slug="endurrun",
-        division="Ultimate",
-        place__lt=990000,
-    ).select_related("event")
-    years = ultimate_results.values("event__date__year").distinct().order_by()
-    for year in years:
-        ultimate_gp[year.get("event__date__year")] = {}
-        ultimate_gp1[year.get("event__date__year")] = {}
-        ultimate_gp_female[year.get("event__date__year")] = {}
-        ultimate_gp_male[year.get("event__date__year")] = {}
-    for result in ultimate_results:
-        if result.athlete in ultimate_gp1[result.event.date.year]:
-            ultimate_gp1[result.event.date.year][result.athlete]["events"] += 1
-            ultimate_gp1[result.event.date.year][result.athlete]["total_time"] += result.guntime
+    rows = _get_ultimate_rows(years)
+    for row in rows:
+        year = row["event__date__year"]
+        gp1 = ultimate_gp1.setdefault(year, {})
+        data = gp1.get(row["athlete"])
+        if data:
+            data["events"] += 1
+            data["total_time"] += row["guntime"]
         else:
-            ultimate_gp1[result.event.date.year][result.athlete] = {
+            gp1[row["athlete"]] = {
                 "events": 1,
-                "gender": result.gender,
-                "total_time": result.guntime,
+                "gender": row["gender"],
+                "total_time": row["guntime"],
             }
+    for year in years:
+        ultimate_gp[year] = {}
+        ultimate_gp_female[year] = {}
+        ultimate_gp_male[year] = {}
     for year, athlete in ultimate_gp1.items():  # copy over only results with 7 events
         ultimate_gp_starters[year] = {"F": 0, "M": 0}
         for name, data in athlete.items():
