@@ -91,61 +91,64 @@ def get_ultimate_winners_and_gold_jerseys(years, athletes) -> tuple[set | None, 
 
 
 def _get_ultimate_winners_and_gold_jerseys(years, athletes):
+    """One bulk query for all years, cumulative logic in Python.
+
+    The old per-year loop re-evaluated the queryset once per event
+    (~147 SELECTs) plus one DISTINCT per year (~22 more). All rows are
+    now fetched in a single query and grouped by year/event in Python;
+    the gold-jersey logic is unchanged.
+    """
     same_name_dict = get_endurrun_same_name_dict()
     ultimate_winners = []
     ultimate_gold_jerseys = []
     if not athletes:
         return None, None
+    rows = Result.objects.filter(
+        event__race__slug="endurrun",
+        division="Ultimate",
+        place__lt=990000,
+        event__date__year__in=years,
+    ).order_by("event__date").values(
+        "event_id", "event__date__year", "athlete", "gender", "guntime"
+    )
+    year_events: dict[int, dict[int, list[dict]]] = {}
+    for row in rows:
+        events = year_events.setdefault(row["event__date__year"], {})
+        events.setdefault(row["event_id"], []).append(row)
     for year in years:
-        year_results = Result.objects.filter(
-            event__race__slug="endurrun",
-            division="Ultimate",
-            place__lt=990000,
-            event__date__icontains=year,
-        ).order_by("event__date")
+        events = year_events.get(year, {})
         athlete_event_count = {}
         female_cumulative_time = {}
         male_cumulative_time = {}
-        event_ids = year_results.values_list("event__id", flat=True).distinct()
         num_events = 0
-        for event_id in event_ids:
+        for event_id in events:
             num_events += 1
-            event_results = year_results.filter(event_id=event_id)
-            for result in event_results:
-                if result.athlete in athlete_event_count:
-                    athlete_event_count[result.athlete] += 1
-                else:
-                    athlete_event_count[result.athlete] = 1
-                if result.gender == "F":
-                    if result.athlete in female_cumulative_time:
-                        female_cumulative_time[result.athlete] += result.guntime
-                    else:
-                        female_cumulative_time[result.athlete] = result.guntime
-                if result.gender == "M":
-                    if result.athlete in male_cumulative_time:
-                        male_cumulative_time[result.athlete] += result.guntime
-                    else:
-                        male_cumulative_time[result.athlete] = result.guntime
-            if female_cumulative_time:
-                female_cumulative_time = {
-                    key: val
-                    for key, val in female_cumulative_time.items()
-                    if athlete_event_count[key] == num_events
-                }
-                female_gold_jersey = min(female_cumulative_time, key=female_cumulative_time.get)
-                ultimate_gold_jerseys.append(female_gold_jersey)
-                if num_events == 7:
-                    ultimate_winners.append(female_gold_jersey)
-            if male_cumulative_time:
-                male_cumulative_time = {
-                    key: val
-                    for key, val in male_cumulative_time.items()
-                    if athlete_event_count[key] == num_events
-                }
-                male_gold_jersey = min(male_cumulative_time, key=male_cumulative_time.get)
-                ultimate_gold_jerseys.append(male_gold_jersey)
-                if num_events == 7:
-                    ultimate_winners.append(male_gold_jersey)
+            for result in events[event_id]:
+                athlete = result["athlete"]
+                athlete_event_count[athlete] = athlete_event_count.get(athlete, 0) + 1
+                if result["gender"] == "F":
+                    female_cumulative_time[athlete] = (
+                        female_cumulative_time[athlete] + result["guntime"]
+                        if athlete in female_cumulative_time
+                        else result["guntime"]
+                    )
+                elif result["gender"] == "M":
+                    male_cumulative_time[athlete] = (
+                        male_cumulative_time[athlete] + result["guntime"]
+                        if athlete in male_cumulative_time
+                        else result["guntime"]
+                    )
+            for cumulative_time in (female_cumulative_time, male_cumulative_time):
+                if cumulative_time:
+                    eligible = {
+                        athlete: guntime
+                        for athlete, guntime in cumulative_time.items()
+                        if athlete_event_count[athlete] == num_events
+                    }
+                    gold_jersey = min(eligible, key=eligible.get)
+                    ultimate_gold_jerseys.append(gold_jersey)
+                    if num_events == 7:
+                        ultimate_winners.append(gold_jersey)
     for athlete in athletes:
         if athlete in same_name_dict:
             for same_name in same_name_dict[athlete]:
