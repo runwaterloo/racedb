@@ -4,7 +4,6 @@ from collections import namedtuple
 from datetime import timedelta
 from operator import attrgetter
 
-from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
 from django.utils.html import conditional_escape
@@ -349,17 +348,20 @@ def index(request, division, results_only=False):
         "phase_final": phasefilter.current == "Final Results",
         "ultimate_winners": ultimate_winners or set(),
         "ultimate_gold_jerseys": ultimate_gold_jerseys or set(),
+        "phasefilter": phasefilter,
     }
     # NOTE: unorthodox — the results table is built as one HTML string in
     # Python and dropped into endurrun.html with |safe, instead of being
     # rendered by the template (same pattern as the event view). Rationale:
     # the DTL row loop dominated cold renders (~1.2s of template lookups for
-    # 676 rows); building rows in Python with conditional_escape cut that
-    # dramatically. ALL result data passes through conditional_escape/_e in
-    # _build_endurrun_row_html, so the |safe substitution is safe as long as
-    # every value added there is escaped. The 9 golden endurrun pages
-    # (rrw-notes/endurrun-golden-urls) guard this output byte-for-byte. If
-    # you add a cell, add it in _build_endurrun_row_html AND a golden check.
+    # 676 rows); building the table in Python cut that dramatically.
+    # _build_endurrun_table_html is GENERATED code: a mechanical
+    # transcription of the pre-pattern endurrun.html table section
+    # (template at commit 01c0255), byte-verified against the real DTL
+    # engine on 12 fixture cases. All interpolated values pass
+    # conditional_escape, so the |safe substitution is safe. The 9 golden
+    # endurrun pages (rrw-notes/endurrun-golden-urls) guard this output
+    # byte-for-byte.
     with tracer.start_as_current_span("endurrun: render table (python)") as table_span:
         table_span.set_attribute("results", len(results or []))
         results_table = _build_endurrun_table_html(results, row_flags)
@@ -831,189 +833,254 @@ def _e(v):
     return conditional_escape(v) if v else ""
 
 
-_STAGE_SLUGS = {
-    1: "half-marathon",
-    2: "15-km",
-    3: "30-km",
-    4: "10-mi",
-    5: "25_6-km",
-    6: "10-km",
-    7: "marathon",
-}
-_HEADER_STAGE_COLS = {
-    "sprint": [2, 6],
-    "trail": [3, 5],
-    "sport": [5, 6, 7],
-}
+def _build_endurrun_table_html(results, row_flags):
+    """Render the endurrun results table.
 
-
-def _build_endurrun_table_html(results, f):
-    """Assemble the endurrun results table (thead + tbody) as one HTML string.
-
-    Mirrors the results-table markup in endurrun.html; row values are
-    escaped here. See the NOTE in index() for the rationale and rules.
+    GENERATED from the pre-#468-pattern endurrun.html table section
+    (template at commit 01c0255) by a mechanical transcription that
+    preserves DTL whitespace exactly. Regenerate rather than hand-edit.
+    All interpolated values pass conditional_escape (the |safe contract
+    from the event-view pattern).
     """
-    division = f["division"]
-    year = f["year"]
-    show_change = bool(year) and results and results[0].stages >= 2
-    first_total_time = bool(results and results[0].total_time)
-    show_camera = bool(year) and year >= 2014 and division != "relay" and first_total_time
-    show_year_col = not year
-    show_g = division != "relay"
-    show_gp = show_g and show_year_col and f["phase_final"]
-    show_total = first_total_time
-    if division == "sport":
-        header_stage_cols = _HEADER_STAGE_COLS["sport"]
-    elif f.get("contest_slug") == "sprint":
-        header_stage_cols = _HEADER_STAGE_COLS["sprint"]
-    elif f.get("contest_slug") == "trail":
-        header_stage_cols = _HEADER_STAGE_COLS["trail"]
-    else:
-        header_stage_cols = [1, 2, 3, 4, 5, 6, 7]
-
-    head = ['  <table class="table table-striped table-hover table-condensed">', "  <thead>", "  <tr>"]
-    if show_change:
-        head.append(
-            '    <th class="text-center"><i class="fa-regular fa-arrow-up-arrow-down" '
-            'title="Place change since previous Stage"></i></th>'
-        )
-    head.append('    <th class="text-center">Place</th>')
-    head.append("    <th>Name</th>")
-    if show_camera:
-        head.append(
-            '    <th class="text-center" scope="col">\n        <i class="fas fa-camera"></i>\n'
-            "    </th>"
-        )
-    if show_year_col:
-        head.append('    <th class="text-center">Year</th>')
-    if show_g:
-        head.append('    <th class="text-center" title="Gender">G</th>')
-        if show_gp:
-            head.append('    <th class="text-center" title="Gender place for that year">GP</th>')
-        head.append('    <th class="text-center">Age</th>')
-    if show_total:
-        head.append('    <th class="text-center">Total</th>')
-        head.append('    <th class="text-center" title="Time gap to 1st place">Gap 1</th>')
-        head.append('    <th class="text-center" title="Time gap to the next place up">Gap 2</th>')
-        for c in header_stage_cols:
-            head.append(f'    <th class="text-center">Stage {c}</th>')
-    head.append("  </tr>")
-    head.append("  </thead>")
-    head.append("  <tbody>")
-
-    rows = []
-    for i, r in enumerate(results or []):
-        rows.append(_build_endurrun_row_html(i + 1, r, f, show_change, show_camera, show_year_col, show_g, show_gp, show_total))
-    return "\n".join(head) + "\n" + "\n".join(rows) + "\n  </tbody>\n</table>"
-
-
-def _build_endurrun_row_html(
-    place, r, f, show_change, show_camera, show_year_col, show_g, show_gp, show_total
-):
-    division = f["division"]
-    year = f["year"]
-    maxstages = f["maxstages"]
-    cells = []
-    if show_change:
-        change = r.change
-        if change > 0:
-            cells.append(
-                '      <td class="text-center">\n'
-                '        <i class="fa-solid fa-chevron-up fa-lg" style="color:green"></i> '
-                f"{_e(change)}\n      </td>"
-            )
-        elif change < 0:
-            cells.append(
-                '      <td class="text-center">\n'
-                '        <i class="fa-solid fa-chevron-down fa-lg" style="color:red"></i> '
-                f"{_e(change * -1)}\n      </td>"
-            )
+    from django.utils.html import conditional_escape
+    division = row_flags["division"]
+    year = row_flags["year"]
+    maxstages = row_flags["maxstages"]
+    contest_slug = row_flags["contest_slug"]
+    phasefilter = row_flags["phasefilter"]
+    __prev_ic = object()
+    parts = []
+    _emit = parts.append
+    _emit('  <table class="table table-striped table-hover table-condensed">' + chr(10))
+    _emit('  <thead>' + chr(10))
+    _emit('  <tr>' + chr(10))
+    _emit('    \n')
+    if year and results and (results[0].stages is not None and results[0].stages >= 2):
+        _emit('    <th class="text-center"><i class="fa-regular fa-arrow-up-arrow-down" title="Place change since previous Stage"></i></th>' + chr(10))
+        _emit('    \n')
+    _emit('  <th class="text-center">Place</th>' + chr(10))
+    _emit('  <th>Name</th>' + chr(10))
+    _emit(chr(10))
+    _emit('  <!-- start temporary fix until better solution -->' + chr(10))
+    _emit('  \n')
+    if (year is not None and year >= 2014) and division != 'relay':
+        _emit('    \n')
+        if results and results[0].total_time:
+            _emit('    <th class="text-center" scope="col">' + chr(10))
+            _emit('        <i class="fas fa-camera"></i>' + chr(10))
+            _emit('    </th>' + chr(10))
+            _emit('    \n')
+        _emit('  \n')
+    _emit('  <!-- end temporary fix until better solution -->' + chr(10))
+    _emit(chr(10))
+    _emit('  \n')
+    if not year:
+        _emit('  <th class="text-center">Year</th>' + chr(10))
+        _emit('  \n')
+    _emit('  \n')
+    if division != 'relay':
+        _emit('    <th class="text-center" title="Gender">G</th>' + chr(10))
+        _emit('    \n')
+        if not year and phasefilter.current == "Final Results":
+            _emit('    <th class="text-center" title="Gender place for that year">GP</th>' + chr(10))
+            _emit('    \n')
+        _emit('    <th class="text-center">Age</th>' + chr(10))
+        _emit('  \n')
+    _emit('  \n')
+    if results and results[0].total_time:
+        _emit('    <th class="text-center">Total</th>' + chr(10))
+        _emit('    <th class="text-center" title="Time gap to 1st place">Gap 1</th>' + chr(10))
+        _emit('    <th class="text-center" title="Time gap to the next place up">Gap 2</th>' + chr(10))
+        _emit('    \n')
+        if contest_slug == "sprint":
+            _emit('    <th class="text-center">Stage 2</th>' + chr(10))
+            _emit('    <th class="text-center">Stage 6</th>' + chr(10))
+            _emit('    \n')
+        elif contest_slug == "trail":
+            _emit('    <th class="text-center">Stage 3</th>' + chr(10))
+            _emit('    <th class="text-center">Stage 5</th>' + chr(10))
+            _emit('    \n')
+        elif division == 'sport':
+            _emit('    <th class="text-center">Stage 5</th>' + chr(10))
+            _emit('    <th class="text-center">Stage 6</th>' + chr(10))
+            _emit('    <th class="text-center">Stage 7</th>' + chr(10))
+            _emit('    \n')
         else:
-            cells.append('      <td class="text-center">\n      </td>')
-    if r.final_status == 0:
-        if r.stages == maxstages:
-            cells.append(f'      <td class="text-center">{place}</td>')
-        else:
-            cells.append("      <td class=\"text-center\"></td>   <!-- Not started or in progress -->")
-    else:
-        if r.stages == maxstages:
-            cells.append(f'      <td class="text-center">{place}</td>')
-        elif r.final_status == 1:
-            cells.append('      <td class="text-center">DQ</td>')
-        else:
-            cells.append('      <td class="text-center">DNF</td>')
-    if r.mouseover:
-        cells.append(f'      <td title="{_e(r.mouseover)}">')
-    else:
-        cells.append("      <td>")
-    if r.flag_slug:
-        cells.append(
-            f'      <img title="{_e(r.athlete.country)}" '
-            f'src="{settings.STATIC_URL}flags/{_e(r.flag_slug)}_shiny_24px.png">'
-        )
-    if r.athlete.name in f["ultimate_winners"]:
-        cells.append(
-            '      <i class="fa-solid fa-shirt-running fa-icon-ultimate-gold-jersey" '
-            'title="Past ENDURrun Ultimate Champion"></i>'
-        )
-    elif r.athlete.name in f["ultimate_gold_jerseys"]:
-        cells.append(
-            '      <i class="fa-solid fa-shirt-tank-top fa-icon-ultimate-gold-jersey"  '
-            'title="Gold Jersey Club member"></i>'
-        )
-    if r.member_slug:
-        cells.append(f'        <a href="/member/{_e(r.member_slug)}/">{_e(r.athlete.name)}</a>')
-    else:
-        cells.append(f"        {_e(r.athlete.name)}")
-    cells.append("      </td>")
-    if show_camera:
-        cells.append(
-            '      <td class="text-center">\n'
-            f'      <a href="https://www.flickr.com/photos/runwaterloo/tags/{year}endurrun,{_e(r.bib)}" '
-            'target="_blank">\n        <i class="fas fa-camera"></i>      </a>\n    </td>'
-        )
-    if show_year_col:
-        cells.append(f'      <td class="text-center">{_e(r.athlete.year)}</td>')
-    if show_g:
-        cells.append(f'      <td class="text-center">{_e(r.athlete.gender)}</td>')
-        if show_gp:
-            if r.gp:
-                cells.append(f'      <td class="text-center">{_e(r.gp)}</td>')
+            _emit('    <th class="text-center">Stage 1</th>' + chr(10))
+            _emit('    <th class="text-center">Stage 2</th>' + chr(10))
+            _emit('    <th class="text-center">Stage 3</th>' + chr(10))
+            _emit('    <th class="text-center">Stage 4</th>' + chr(10))
+            _emit('    <th class="text-center">Stage 5</th>' + chr(10))
+            _emit('    <th class="text-center">Stage 6</th>' + chr(10))
+            _emit('    <th class="text-center">Stage 7</th>' + chr(10))
+            _emit('    \n')
+        _emit('  \n')
+    _emit('  </tr>' + chr(10))
+    _emit('  </thead>' + chr(10))
+    _emit('  <tbody>' + chr(10))
+    _emit('  \n')
+    for __rk, result in enumerate(results or [], 1):
+        _emit('    <tr>' + chr(10))
+        _emit('      \n')
+        if year and results and (results[0].stages is not None and results[0].stages >= 2):
+            _emit('      <td class="text-center">' + chr(10))
+            _emit('        \n')
+            if (result.change is not None and result.change > 0):
+                _emit('        <i class="fa-solid fa-chevron-up fa-lg" style="color:green"></i> ' + conditional_escape(str(result.change)) + chr(10))
+                _emit('        \n')
+            elif result.change < 0:
+                _emit('        <i class="fa-solid fa-chevron-down fa-lg" style="color:red"></i> ' + conditional_escape(-result.change) + chr(10))
+                _emit('        \n')
+            _emit('      </td>' + chr(10))
+            _emit('      \n')
+        _emit('      \n')
+        if result.final_status == 0:
+            _emit('      \n')
+            if (conditional_escape(str(result.total_time))) != __prev_ic:
+                _emit('        \n')
+                if result.stages == maxstages:
+                    _emit('        <td class="text-center">' + conditional_escape(str(__rk)) + '</td>' + chr(10))
+                    _emit('          \n')
+                else:
+                    _emit('            <td class="text-center"></td>   <!-- Not started or in progress -->' + chr(10))
+                    _emit('          \n')
+                _emit('        \n')
             else:
-                cells.append("      <td></td>")
-        if r.athlete.age:
-            cells.append(f'      <td class="text-center">{_e(r.athlete.age)}</td>')
+                _emit('          \n')
+                if result.stages == maxstages:
+                    _emit('            <td class="text-center">' + conditional_escape(str(__rk)) + '</td>' + chr(10))
+                    _emit('          \n')
+                else:
+                    _emit('            <td class="text-center"></td>   <!-- Not started or in progress -->' + chr(10))
+                    _emit('          \n')
+                _emit('        \n')
+            __prev_ic = conditional_escape(str(result.total_time))
+            _emit('      \n')
         else:
-            cells.append("      <td></td>")
-    if show_total:
-        cells.append(f'      <td class="text-center">{_e(r.total_time)}</td>')
-        cells.append(f'      <td class="text-center">{_e(r.lead_gap)}</td>')
-        cells.append(f'      <td class="text-center">{_e(r.place_gap)}</td>')
-        if not r.stage_times:
-            # quirk from the original template: </tr> only renders inside the
-            # stage_times else-branch, so these rows have no closing tag
-            return "    <tr>\n" + "\n".join(cells) + "\n      <td></td><td></td><td></td><td></td><td></td><td></td><td></td>"
+            _emit('        \n')
+            if result.stages == maxstages:
+                _emit('            <td class="text-center">' + conditional_escape(str(__rk)) + '</td>' + chr(10))
+                _emit('        \n')
+            else:
+                _emit('          \n')
+                if result.final_status == 1:
+                    _emit('            <td class="text-center">DQ</td>' + chr(10))
+                    _emit('          \n')
+                else:
+                    _emit('            <td class="text-center">DNF</td>' + chr(10))
+                    _emit('          \n')
+                _emit('        \n')
+            _emit('      \n')
+        _emit('      \n')
+        if result.mouseover:
+            _emit('      <td title="' + conditional_escape(str(result.mouseover)) + '">' + chr(10))
+            _emit('      \n')
         else:
-            for counter, t in enumerate(r.stage_times, start=1):
-                title = f' title="{_e(t.name)}"' if division == "relay" else ""
-                if counter <= 4 and division != "sport":
-                    cells.append(
-                        f'      <td class="text-center"{title}><a href="/event/{_e(r.athlete.year)}/'
-                        f'endurrun/{_STAGE_SLUGS[counter]}/?division={division.title()}">{_e(t.time)}</a></td>'
-                    )
-                if counter == 5:
-                    cells.append(
-                        f'      <td class="text-center"{title}><a href="/event/{_e(r.athlete.year)}/'
-                        f'endurrun/{_STAGE_SLUGS[5]}/?division={division.title()}">{_e(t.time)}</a></td>'
-                    )
-                elif counter == 6:
-                    cells.append(
-                        f'      <td class="text-center"{title}><a href="/event/{_e(r.athlete.year)}/'
-                        f'endurrun/{_STAGE_SLUGS[6]}/?division={division.title()}">{_e(t.time)}</a></td>'
-                    )
-                elif counter == 7:
-                    cells.append(
-                        f'      <td class="text-center"{title}><a href="/event/{_e(r.athlete.year)}/'
-                        f'endurrun/{_STAGE_SLUGS[7]}/?division={division.title()}">{_e(t.time)}</a></td>'
-                    )
-    return "    <tr>\n" + "\n".join(cells) + "\n    </tr>"
+            _emit('      <td>' + chr(10))
+            _emit('      \n')
+        _emit('      <!--' + chr(10))
+        _emit('      Flag images available at http://www.iconarchive.com/show/flag-icons-by-gosquared.html' + chr(10))
+        _emit('      Currently using default (shiny) 24px.' + chr(10))
+        _emit('      -->' + chr(10))
+        _emit('      \n')
+        if result.flag_slug:
+            _emit('      <img title="' + conditional_escape(str(result.athlete.country)) + '" src="' + "/static/flags/" + conditional_escape(result.flag_slug) + "_shiny_24px.png" + '">' + chr(10))
+            _emit('      \n')
+        _emit('      \n')
+        if result.athlete.name in row_flags["ultimate_winners"]:
+            _emit('      <i class="fa-solid fa-shirt-running fa-icon-ultimate-gold-jersey" title="Past ENDURrun Ultimate Champion"></i>' + chr(10))
+            _emit('      \n')
+        elif result.athlete.name in row_flags["ultimate_gold_jerseys"]:
+            _emit('      <i class="fa-solid fa-shirt-tank-top fa-icon-ultimate-gold-jersey"  title="Gold Jersey Club member"></i>' + chr(10))
+            _emit('      \n')
+        _emit('      \n')
+        if result.member_slug:
+            _emit('        <a href="/member/' + conditional_escape(str(result.member_slug)) + '/">' + conditional_escape(str(result.athlete.name)) + '</a>' + chr(10))
+            _emit('      \n')
+        else:
+            _emit('        ' + conditional_escape(str(result.athlete.name)) + chr(10))
+            _emit('      \n')
+        _emit('    </td>' + chr(10))
+        _emit(chr(10))
+        _emit('  <!-- start temporary fix until better solution -->' + chr(10))
+        _emit('  \n')
+        if (year is not None and year >= 2014) and division != 'relay':
+            _emit('    \n')
+            if results and results[0].total_time:
+                _emit('    <td class="text-center">' + chr(10))
+                _emit('      <a href="https://www.flickr.com/photos/runwaterloo/tags/' + conditional_escape(str(year)) + 'endurrun,' + conditional_escape(str(result.bib)) + '" target="_blank">' + chr(10))
+                _emit('        <i class="fas fa-camera"></i>      </a>' + chr(10))
+                _emit('    </td>' + chr(10))
+                _emit('    \n')
+            _emit('  \n')
+        _emit('  <!-- end temporary fix until better solution -->' + chr(10))
+        _emit(chr(10))
+        _emit('      \n')
+        if not year:
+            _emit('      <td class="text-center">' + conditional_escape(str(result.athlete.year)) + '</td>' + chr(10))
+            _emit('      \n')
+        _emit('      \n')
+        if division != 'relay':
+            _emit('          <td class="text-center">' + conditional_escape(str(result.athlete.gender)) + '</td>' + chr(10))
+            _emit('          \n')
+            if not year and phasefilter.current == "Final Results":
+                _emit('            \n')
+                if result.gp:
+                    _emit('            <td class="text-center">' + conditional_escape(str(result.gp)) + '</td>' + chr(10))
+                    _emit('            \n')
+                else:
+                    _emit('            <td></td>' + chr(10))
+                    _emit('            \n')
+                _emit('          \n')
+            _emit('        \n')
+            if result.athlete.age:
+                _emit('          <td class="text-center">' + conditional_escape(str(result.athlete.age)) + '</td>' + chr(10))
+                _emit('        \n')
+            else:
+                _emit('          <td></td>' + chr(10))
+                _emit('        \n')
+            _emit('      \n')
+        _emit('      <td class="text-center">' + conditional_escape(str(result.total_time)) + '</td>' + chr(10))
+        _emit('      <td class="text-center">' + conditional_escape(str(result.lead_gap)) + '</td>' + chr(10))
+        _emit('      <td class="text-center">' + conditional_escape(str(result.place_gap)) + '</td>' + chr(10))
+        _emit('      \n')
+        if not result.stage_times:
+            _emit('      <td></td><td></td><td></td><td></td><td></td><td></td><td></td>' + chr(10))
+            _emit('      \n')
+        else:
+            _emit('        \n')
+            for __sk, t in enumerate(result.stage_times, 1):
+                _emit('          \n')
+                if division != 'sport':
+                    _emit('            \n')
+                    if __sk == 1:
+                        _emit('              <td class="text-center" ' + (' title="' + conditional_escape(str(t.name)) + '" ' if division == 'relay' else "") + '><a href="/event/' + conditional_escape(str(result.athlete.year)) + '/endurrun/half-marathon/?division=' + conditional_escape(division.title()) + '">' + conditional_escape(str(t.time)) + '</a></td>' + chr(10))
+                        _emit('            \n')
+                    elif __sk == 2:
+                        _emit('              <td class="text-center" ' + (' title="' + conditional_escape(str(t.name)) + '" ' if division == 'relay' else "") + '><a href="/event/' + conditional_escape(str(result.athlete.year)) + '/endurrun/15-km/?division=' + conditional_escape(division.title()) + '">' + conditional_escape(str(t.time)) + '</a></td>' + chr(10))
+                        _emit('            \n')
+                    elif __sk == 3:
+                        _emit('              <td class="text-center" ' + (' title="' + conditional_escape(str(t.name)) + '" ' if division == 'relay' else "") + '><a href="/event/' + conditional_escape(str(result.athlete.year)) + '/endurrun/30-km/?division=' + conditional_escape(division.title()) + '">' + conditional_escape(str(t.time)) + '</a></td>' + chr(10))
+                        _emit('            \n')
+                    elif __sk == 4:
+                        _emit('              <td class="text-center" ' + (' title="' + conditional_escape(str(t.name)) + '" ' if division == 'relay' else "") + '><a href="/event/' + conditional_escape(str(result.athlete.year)) + '/endurrun/10-mi/?division=' + conditional_escape(division.title()) + '">' + conditional_escape(str(t.time)) + '</a></td>' + chr(10))
+                        _emit('            \n')
+                    _emit('          \n')
+                _emit('          \n')
+                if __sk == 5:
+                    _emit('            <td class="text-center" ' + (' title="' + conditional_escape(str(t.name)) + '" ' if division == 'relay' else "") + '><a href="/event/' + conditional_escape(str(result.athlete.year)) + '/endurrun/25_6-km/?division=' + conditional_escape(division.title()) + '">' + conditional_escape(str(t.time)) + '</a></td>' + chr(10))
+                    _emit('          \n')
+                elif __sk == 6:
+                    _emit('            <td class="text-center" ' + (' title="' + conditional_escape(str(t.name)) + '" ' if division == 'relay' else "") + '><a href="/event/' + conditional_escape(str(result.athlete.year)) + '/endurrun/10-km/?division=' + conditional_escape(division.title()) + '">' + conditional_escape(str(t.time)) + '</a></td>' + chr(10))
+                    _emit('          \n')
+                elif __sk == 7:
+                    _emit('            <td class="text-center" ' + (' title="' + conditional_escape(str(t.name)) + '" ' if division == 'relay' else "") + '><a href="/event/' + conditional_escape(str(result.athlete.year)) + '/endurrun/marathon/?division=' + conditional_escape(division.title()) + '">' + conditional_escape(str(t.time)) + '</a></td>' + chr(10))
+                    _emit('          \n')
+                _emit('        \n')
+            _emit('    </tr>' + chr(10))
+            _emit('    \n')
+        _emit('  \n')
+    _emit('  </tbody>' + chr(10))
+    _emit('</table>' + chr(10))
+    return "".join(parts)
+
