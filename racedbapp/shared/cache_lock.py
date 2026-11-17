@@ -28,7 +28,7 @@ Generation-based invalidation:
   and is ignored on read — cache.clear() while renders are in flight was the
   way stale pages could be re-cached and live forever.
 - A safety TTL (ENTRY_TTL_SECONDS) bounds staleness if invalidation stops
-  happening (e.g. a broken watcher): entries expire after 30 hours.
+  happening): entries expire after 30 hours.
 
 CONTRACT: all cache reads/writes of page content go through get() / set()
 (or get_or_render()) in this module. Direct cache.get/cache.set of content
@@ -109,7 +109,7 @@ def set(cache_key, value):
 def bump_generation(source):
     """Invalidate all generation-stamped cache entries.
 
-    source is required (a short string like "watcher", "addraces",
+    source is required (a short string like "addraces",
     "webhook") so every bump in the logs is attributable. There are no
     mystery callers: invalidation paths in this repo all pass one.
 
@@ -135,8 +135,8 @@ def purge_stale_cache():
 
     Generation-aware: only entries whose stamped generation < current are
     deleted, so entries rendered after the bump are kept.
-    Non-stamped keys (the generation counter, single-flight locks, watcher
-    state) are skipped. Requires a redis backend to enumerate keys; any
+    Non-stamped keys (the generation counter, single-flight
+    locks) are skipped. Requires a redis backend to enumerate keys; any
     other backend (locmem in local dev/tests) or redis error just logs and
     skips — the sweep is observational hygiene, not correctness (stale
     entries are already unreadable).

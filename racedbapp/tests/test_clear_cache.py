@@ -73,26 +73,22 @@ def test_purge_deletes_stale_keeps_current():
 
 @pytest.mark.django_db
 def test_purge_skips_non_stamped_keys():
-    """Generation counter, lock keys and watcher state survive the purge."""
+    """Generation counter and single-flight lock keys survive the purge."""
     from django.core.cache import cache
 
     from racedbapp.shared import cache_lock
 
     cache_lock.bump_generation(source="test")
-    cache.set("cache_watcher.fingerprint", "abc", 3600)
-    cache.set("cache_watcher.last_run", 123.0, 3600)
     cache.set("singleflight.index.", "lock-token", 120)
     keys = [
         cache.make_key("cache_generation"),
         cache.make_key("singleflight.index."),
-        cache.make_key("cache_watcher.fingerprint"),
     ]
     fake = FakeRedis(keys)
     with patch.object(cache_lock, "_redis_connection", return_value=fake):
         cache_lock.purge_stale_cache()
     assert cache.get("cache_generation") is not None
     assert cache.get("singleflight.index.") is not None
-    assert cache.get("cache_watcher.fingerprint") is not None
 
 
 @pytest.mark.django_db

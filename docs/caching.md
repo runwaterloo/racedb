@@ -32,50 +32,33 @@ The cache stores each rendered page under its key (for example `index.` or `even
 
 Why not `cache.clear()`? Clearing has a race: a render that started before the clear can finish after it and write pre-clear content into the now-empty cache, which then reads as a fresh hit for up to its TTL. Stamping entries with the generation read at render start kills that race — a late write is immediately recognized as stale.
 
-The 30-hour TTL is a safety net only. Normal invalidation happens long before it, because the daily `update_featured_member_id` job writes to the database and triggers the watcher.
+The 30-hour TTL is a safety net only. Normal invalidation happens long before it — every cache-relevant writer has a declared signal-driven path (see below).
 
 ### Invalidation paths
 
+Every cache-relevant writer declares its mechanism:
+
 | Path | Mechanism | Latency |
 |---|---|---|
-| `db_cache_watcher` (celery beat, every minute) | Compares a `pg_stat_user_tables` fingerprint over `racedbapp_%` tables against the previous run; a difference bumps the generation | ≤ 60 s |
-| `config_post_save` signal (any Config saved, including in admin) | Enqueues `clear_cache` | Immediate |
+| `Event` post_save signal | Enqueues `clear_cache` (source `event_save`) | Immediate |
+| `Rwmember` / `Rwmembercorrection` post_save and post_delete signals | Enqueues `clear_cache` (sources `member_save` / `member_delete`) | Immediate |
+| `Config` post_save signal (including admin edits and scheduled jobs like `update_featured_member_id`) | Enqueues `clear_cache` (source `config_save`) | Immediate |
+| `photoupdate` (Flickr photo/tag sync; bumps only when tags actually changed — order-insensitive comparison) | Enqueues `clear_cache` (source `photoupdate`) | Immediate |
 | `addraces` command (results added or changed) | Enqueues `clear_cache` | Immediate |
 | `/clearcache` view and `clear_cache` / `bump_cache_generation` management commands | Enqueue `clear_cache` | Immediate |
 | Deploy webhook | Enqueues `clear_cache`, then touches `.restart` | After restart |
 
 `clear_cache` bumps the generation and enqueues `warm_cache`, which re-renders the hot pages so visitors get cache hits instead of cold renders. It is idempotent, and because the Celery broker is Redis, an enqueued warm survives the post-deploy worker restart (it is redelivered after startup, warming with the newly deployed code).
 
-### Watcher details
-
-Every minute (celery beat), `db_cache_watcher` runs a cheap fingerprint query:
-
-```sql
-SELECT relname, n_tup_ins, n_tup_upd, n_tup_del
-FROM pg_stat_user_tables WHERE relname LIKE 'racedbapp_%'
-```
-
-This counts inserts, updates and deletes per table since the database last had its statistics reset. Comparing the snapshot to the previous run's snapshot shows whether anything in a `racedbapp_%` table changed. Framework tables (`django_session`, `django_admin_log`, `django_migrations`) are deliberately excluded: session churn and admin *browsing* are not cache-worthy, and admin saves always touch a `racedbapp` table anyway. The watcher is also the safety net for changes the app's signals can't see — bulk operations, raw SQL, external writers such as the photo updater.
-
-Knobs (Configs in the Django admin):
-
-| Config | Default | Purpose |
-|---|---|---|
-| `cache_watcher_dry_run` | `false` | `true`: log what would happen without bumping (used during rollout) |
-| `cache_watcher_debug` | `false` | Log the fingerprint comparison when nothing changed (debug level) |
-| `cache_watcher_interval_seconds` | `60` | Check frequency; beat still fires every minute, the task self-throttles via `cache_watcher.last_run` in the cache |
-
-If the fingerprint query fails, or the cache backend is not Redis-like (tests use a local cache), the watcher does nothing rather than bumping on bad data.
-
 ### Rules for future code
 
 - All cache reads and writes go through `shared/cache_lock`; entries are always stored as `(generation, value)` with the current generation.
 - Never call `cache.set` or `cache.clear` for page content directly.
-- To invalidate, call `bump_generation(source)` (or enqueue `clear_cache(source=...)` if warming is wanted). `source` is required — a short string identifying the caller (`watcher`, `addraces`, `clearcache-view`, `webhook`, `config_save`, `command`, ...). Never delete entries to invalidate.
-- New cache users don't need their own invalidation wiring — the watcher covers any DB change; only wire an immediate path if seconds matter.
+- To invalidate, call `bump_generation(source)` (or enqueue `clear_cache(source=...)`). `source` is required — a short string identifying the caller (`addraces`, `clearcache-view`, `webhook`, `config_save`, `command`, ...). Never delete entries to invalidate.
+- Every new DB write that can change rendered pages needs its own signal-driven clear (or an explicit bump in its command) — there is no watcher backstop any more.
 
 ### Debugging
 
-- `redis-cli -n 1 --scan --pattern '*'` — list cache entries (keys look like `:1:index.`, `:1:event.<id>.<filter>`, plus `cache_generation` and the watcher's state keys).
+- `redis-cli -n 1 --scan --pattern '*'` — list cache entries (keys look like `:1:index.`, `:1:event.<id>.<filter>`, plus `cache_generation` and the single-flight lock keys).
 - `redis-cli -n 1 GET cache_generation` — the current generation.
-- Logs: `{app="racedb"}` in Loki, search for `cache watcher` (watcher decisions), `cache bump` (invalidations — each line carries the source: `cache bump: gen=N source=addraces`) and `warm_cache` (warming runs).
+- Logs: `{app="racedb"}` in Loki, search for `cache bump` (invalidations — each line carries the source: `cache bump: gen=N source=addraces`).
