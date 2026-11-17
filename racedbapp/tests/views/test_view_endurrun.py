@@ -250,3 +250,14 @@ def test_relay_year(flags):
     seed_relay(race, 2025)
     response = make_client().get("/endurrun/relay/?year=2025")
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_guest_division_no_500(flags):
+    """Regression: guest (and guest+) resolve athlete to Endurteam, which has
+    no .age. The table builder must not touch .age outside ultimate/sport
+    (pre-#487 DTL silently blanked the missing attribute)."""
+    race = make_endurrun_race()
+    seed_relay(race, 2025)
+    response = make_client().get("/endurrun/guest/?year=2025")
+    assert response.status_code == 200
