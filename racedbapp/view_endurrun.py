@@ -1022,7 +1022,7 @@ def _build_endurrun_table_html(results, row_flags):
                     _emit('            \n')
                 _emit('          \n')
             _emit('        \n')
-            if result.athlete.age:
+            if division in ("ultimate", "sport") and result.athlete.age:
                 _emit('          <td class="text-center">' + conditional_escape(str(result.athlete.age)) + '</td>' + chr(10))
                 _emit('        \n')
             else:
