@@ -91,7 +91,7 @@ urlpatterns = [
     re_path(r"^member/(?P<member_slug>.*)/$", view_member.index, name="member"),
     re_path(r"^multiwins", view_multiwins.index, name="multiwins"),
     re_path(r"^name", view_name.index, name="name"),
-    re_path(r"^boost/(?P<year>.*)/$", view_boost.index, name="boost"),
+    re_path(r"^boost/(?P<year>[0-9]{4}|latest)/$", view_boost.index, name="boost"),
     path(
         "boost/",
         RedirectView.as_view(url="/boost/latest/", permanent=False),
