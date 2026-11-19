@@ -275,6 +275,17 @@ def test_boost_member_noindex(create_f_m_results, create_rwmember, create_result
 
 
 @pytest.mark.django_db
+def test_boost_junk_suffix_404s():
+    # Crawlers append "/series/<slug>/" to boost URLs (base.html nav link),
+    # e.g. /boost/2020/series/little-dipper/. The route must not match these;
+    # they should 404 instead of crashing the view with int(year).
+    make_boost_config()
+    client = APIClient()
+    response = client.get("/boost/2020/series/little-dipper/")
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
 def test_boost_nofollow():
     make_boost_config()
     client = APIClient()
