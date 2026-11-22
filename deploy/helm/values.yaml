@@ -10,6 +10,11 @@ racedb:
   threads: 1
   workers: 1  # prometheus reporting issues with more than 1 worker
   workerClass: gthread
+  # Recycle gunicorn workers after this many requests, so per-worker memory
+  # growth can't ramp until the box runs out (0 disables). Jitter staggers
+  # the recycles across replicas so they don't restart in lockstep.
+  maxRequests: 3000
+  maxRequestsJitter: 500
   storage: s3
   tracing: "off"
 
