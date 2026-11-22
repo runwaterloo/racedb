@@ -27,12 +27,6 @@ jobs:
       - name: Copy Django secrets file
         run: cp racedb/secrets.py.sample racedb/secrets.py
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            docker-compose
-
       - name: Install Python development dependencies
         run: pip install -r requirements/requirements-dev.txt
 
